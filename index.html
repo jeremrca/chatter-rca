@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chatter RCA Grading · Redes Content Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+  /* Redes Content Agency palette */
+  --bg:#120E22;
+  --surface:#1A1531;
+  --raised:#241D44;
+  --line:#352B62;
+  --line-soft:#281F4B;
+  --text:#F2EFFB;
+  --muted:#ABA3CC;
+  --faint:#736B98;
+  --flame:#F7A034;
+  --ember:#E0336A;
+  --purple:#5B3FD0;
+  --purple-soft:#A08CFF;
+  --brand-grad:linear-gradient(135deg,#F7A034 0%,#EE5B45 50%,#E0336A 100%);
+  --gold:var(--purple-soft);
+  --gold-deep:#E0336A;
+  --green:#45D08F;
+  --orange:#F2A43C;
+  --red:#F0605E;
+  --blue:#A08CFF;
+  --ui:"Schibsted Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --display:"Fraunces", Georgia, "Times New Roman", serif;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:14px/1.5 var(--ui);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--purple-soft)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Layout */
+.app{display:grid;grid-template-columns:256px 1fr;min-height:100vh}
+.side{overflow-y:auto;background:linear-gradient(180deg,#1E1739,var(--surface) 40%);border-right:1px solid var(--line-soft);padding:22px 14px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh}
+.brand{padding:0 8px}
+.logo-tile{display:block;background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 0 0 1px rgba(224,51,106,.35),0 8px 26px rgba(224,51,106,.18)}
+.logo-tile img{display:block;width:100%;height:auto}
+.brand .name{font-weight:700;font-size:15px;margin-top:14px;letter-spacing:-.1px}
+.brand .sub{color:var(--faint);font-size:12px}
+.nav{display:flex;flex-direction:column;gap:14px}
+.nav-group{display:flex;flex-direction:column;gap:2px}
+.nav-head{display:flex;align-items:center;gap:10px;padding:4px 10px 6px;font-weight:700;font-size:13.5px;color:var(--text)}
+.nav-group:not(.cur) .nav-head{color:var(--muted)}
+.pbadge{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 5px;border-radius:7px;font-family:var(--display);font-weight:700;font-size:11.5px;letter-spacing:.2px;color:#fff;flex:none}
+.pbadge.of{background:var(--brand-grad)}
+.pbadge.mym{background:linear-gradient(135deg,#8A6BFF,#4A2FB8)}
+.pbadge.lg{min-width:34px;height:34px;font-size:14px;border-radius:10px}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-sm);color:var(--muted);text-decoration:none;font-weight:500}
+.nav a:hover{background:var(--raised);color:var(--text)}
+.nav a.on{background:linear-gradient(90deg,rgba(224,51,106,.16),rgba(91,63,208,.12));color:var(--text);box-shadow:inset 3px 0 0 var(--ember)}
+.nav svg{width:17px;height:17px;flex:none;opacity:.85}
+.side-foot{margin-top:auto;font-size:12px;color:var(--faint);padding:0 8px}
+.selftest{display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;width:100%;cursor:pointer;color:var(--muted);font-size:12px;text-align:left}
+.selftest .dot{width:8px;height:8px;border-radius:50%;background:var(--faint)}
+.selftest.ok .dot{background:var(--green)} .selftest.bad .dot{background:var(--red)}
+.main{min-width:0;padding:22px 30px 60px}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.top h1{font-size:22px;font-weight:700;margin:0;letter-spacing:-.3px;margin-right:auto;display:flex;align-items:center;gap:12px}
+.top h1 .plat{color:var(--muted);font-weight:600}
+.picker{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+select,input[type=text],input[type=number],input[type=date],input[type=search],textarea{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;min-height:34px}
+select{padding-right:28px}
+textarea{width:100%;min-height:70px;resize:vertical}
+input[type=number]{width:100%}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--raised);color:var(--text);padding:7px 14px;border-radius:var(--r-sm);cursor:pointer;font-weight:600;font-size:13px;min-height:34px;text-decoration:none}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{background:var(--brand-grad);border-color:transparent;color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--red);border-color:#5A2E3A;background:transparent}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn svg{width:15px;height:15px}
+
+/* Panels */
+.panel{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:20px}
+.panel h2{font-size:15px;font-weight:700;margin:0 0 4px}
+.panel .hint{color:var(--muted);font-size:13px;margin:0 0 14px}
+.stack{display:flex;flex-direction:column;gap:18px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end;padding:26px 26px 22px;background:radial-gradient(90% 140% at 100% 0%,rgba(224,51,106,.16),transparent 60%),linear-gradient(180deg,#261D4C,var(--surface));border:1px solid var(--line-soft);border-radius:var(--r-lg)}
+.hero .period{font-family:var(--ui);font-weight:700;font-size:32px;font-weight:600;letter-spacing:-.6px;line-height:1.1}
+.hero .meta{color:var(--muted);margin-top:8px;font-size:13px}
+.dist{display:flex;gap:8px}
+.dist .g{width:74px;text-align:center;padding:10px 0 8px;border-radius:var(--r-md);background:var(--bg);border:1px solid var(--line-soft);cursor:pointer}
+.dist .g:hover{border-color:var(--faint)}
+.dist .letter{font-family:var(--display);font-size:34px;font-weight:600;line-height:1}
+.dist .n{font-size:13px;color:var(--muted);margin-top:4px}
+.dist .g.S{border-color:var(--ember);background:radial-gradient(120% 90% at 50% 0%,rgba(247,160,52,.22),var(--bg))}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--line-soft);border-radius:var(--r-lg);background:var(--surface)}
+.stat{padding:14px 18px;border-left:1px solid var(--line-soft)}
+.stat:first-child{border-left:0}
+.stat .k{color:var(--muted);font-size:12.5px}
+.stat .v{font-size:21px;font-weight:700;margin-top:2px;letter-spacing:-.3px}
+.stat .d{font-size:12px;color:var(--faint)}
+
+.stats-auto{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line-soft);overflow:hidden}
+.stats-auto .stat{background:var(--surface);border:0!important}
+/* Grade glyphs */
+.gS{color:#FF7A45} .gA{color:var(--green)} .gB{color:var(--blue)} .gC{color:var(--orange)} .gD{color:var(--red)}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;font-family:var(--display);font-weight:600;font-size:18px;background:var(--bg);border:1px solid var(--line)}
+.badge.S{border-color:var(--ember);background:rgba(238,91,69,.14);box-shadow:0 0 0 1px rgba(224,51,106,.2),0 0 14px rgba(238,91,69,.28)}
+.capnote{font-size:11px;color:var(--orange);margin-left:6px;white-space:nowrap}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.pill.Critical{background:rgba(240,96,94,.15);color:var(--red)}
+.pill.Warning{background:rgba(242,164,60,.15);color:var(--orange)}
+.pill.Strong{background:rgba(69,208,143,.14);color:var(--green)}
+.pill.OnTrack{background:rgba(160,140,255,.14);color:var(--purple-soft)}
+.pill.AtRisk{background:rgba(240,96,94,.1);color:#F59A98}
+
+/* Tables */
+.tbl-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.tbl-controls input[type=search]{min-width:220px;flex:1 1 220px;max-width:340px}
+.tbl-controls input[type=number]{width:112px}
+.tbl-controls .count{color:var(--muted);font-size:13px;margin-left:auto}
+.tbl-wrap{overflow:auto;max-height:72vh;border:1px solid var(--line-soft);border-radius:var(--r-md)}
+table{border-collapse:collapse;width:100%}
+th,td{padding:9px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line-soft)}
+thead th{position:sticky;top:0;background:var(--raised);font-size:12.5px;font-weight:600;color:var(--muted);z-index:1}
+th.sort{cursor:pointer;user-select:none}
+th.sort:hover{color:var(--text)}
+th.sort[aria-sort]::after{content:"";display:inline-block;margin-left:5px;border:4px solid transparent;vertical-align:middle}
+th.sort[aria-sort=descending]::after{border-top-color:var(--flame);margin-top:4px}
+th.sort[aria-sort=ascending]::after{border-bottom-color:var(--flame);margin-top:-4px}
+td.num,th.num{text-align:right}
+tbody tr:hover{background:rgba(255,255,255,.025)}
+tbody tr.click{cursor:pointer}
+.sub{color:var(--faint);font-size:12px;margin-left:6px}
+.sc-hi{color:var(--green)} .sc-mid{color:var(--orange)} .sc-lo{color:var(--red)}
+.scorecell{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.minibar{width:56px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.minibar i{display:block;height:100%}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+
+/* Detail */
+.detail-head{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center}
+.biggrade{width:92px;height:92px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:60px;font-weight:600;background:var(--bg);border:1px solid var(--line)}
+.biggrade.S{border:0;background:var(--brand-grad);color:#fff;box-shadow:0 0 34px rgba(224,51,106,.35)}
+.detail-head .who{font-size:26px;font-weight:700;letter-spacing:-.4px}
+.detail-head .line{color:var(--muted);margin-top:4px}
+.scorebox{text-align:right}
+.scorebox .v{font-family:var(--display);font-size:44px;font-weight:600;line-height:1}
+.scorebox .k{color:var(--muted);font-size:12.5px}
+.kpi-row{display:grid;grid-template-columns:170px 120px minmax(120px,1fr) 190px;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line-soft)}
+.kpi-row:last-child{border-bottom:0}
+.kpi-row .lab{font-weight:600}
+.kpi-row .raw{color:var(--muted)}
+.bar{height:9px;border-radius:5px;background:var(--bg);border:1px solid var(--line-soft);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px}
+.kpi-row .math{text-align:right;font-size:13px;color:var(--muted)}
+.kpi-row .math b{color:var(--text)}
+.obs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.obs li{padding:9px 12px 9px 14px;border-radius:var(--r-sm);background:var(--bg);border-left:3px solid var(--faint)}
+.obs li.info{border-left-color:var(--purple-soft)} .obs li.good{border-left-color:var(--green)} .obs li.warn{border-left-color:var(--orange)} .obs li.crit{border-left-color:var(--red)}
+.back{background:none;border:0;color:var(--muted);cursor:pointer;padding:0;margin-bottom:14px;font-weight:500}
+.back:hover{color:var(--text)}
+
+/* Import */
+.drop{border:1.5px dashed var(--line);border-radius:var(--r-lg);padding:34px 20px;text-align:center;background:var(--bg);cursor:pointer}
+.drop.over{border-color:var(--ember);background:rgba(224,51,106,.06)}
+.drop strong{display:block;font-size:16px;margin-bottom:4px}
+.drop span{color:var(--muted)}
+.maprow{display:grid;grid-template-columns:170px minmax(0,1fr) 90px;gap:10px;align-items:center;padding:6px 0}
+.maprow select{width:100%}
+.tag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;text-align:center}
+.tag.exact{background:rgba(69,208,143,.13);color:var(--green)}
+.tag.partial{background:rgba(242,164,60,.14);color:var(--orange)}
+.tag.manual{background:rgba(160,140,255,.14);color:var(--purple-soft)}
+.tag.derived{background:rgba(160,140,255,.14);color:var(--purple-soft)}
+.tag.optional{background:var(--raised);color:var(--muted)}
+.tag.missing{background:rgba(240,96,94,.14);color:var(--red)}
+.alert{padding:12px 14px;border-radius:var(--r-md);border:1px solid;font-size:13.5px}
+.alert.err{border-color:#5A2E3A;background:rgba(240,96,94,.08);color:#F7B3B2}
+.alert.warn{border-color:#5B4424;background:rgba(242,164,60,.07);color:#F5CB8E}
+.alert.ok{border-color:#1F4A38;background:rgba(69,208,143,.07);color:#A5E8C7}
+.summary{display:flex;gap:26px;flex-wrap:wrap;align-items:baseline}
+.summary b{font-size:22px;font-weight:700;margin-right:6px}
+tr.issue-error td{background:rgba(240,96,94,.05)}
+tr.issue-warn td{background:rgba(242,164,60,.05)}
+.issues{color:var(--orange);font-size:12.5px;white-space:normal;min-width:220px}
+tr.issue-error .issues{color:var(--red)}
+.fieldrow{display:flex;gap:14px;flex-wrap:wrap}
+.fieldrow label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+.check{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+
+/* Settings */
+.set-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.set-grid label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+.bands{width:auto}
+.bands td,.bands th{padding:5px 8px;border:0}
+.bands input{width:110px}
+.sumline{margin-top:10px;font-size:13px}
+.sumline.bad{color:var(--red)} .sumline.good{color:var(--green)}
+.savebar{position:sticky;bottom:12px;display:flex;gap:10px;align-items:center;justify-content:flex-end;padding:12px 16px;background:rgba(36,29,68,.94);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:var(--r-lg)}
+.savebar .msg{margin-right:auto;font-size:13px}
+
+/* Charts */
+.chart-box{position:relative;height:230px}
+.chart-box.tall{height:280px}
+.nochart{color:var(--faint);font-size:13px;padding:30px;text-align:center}
+
+/* Toast + modal */
+.toast{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--raised);border:1px solid var(--line);border-left:3px solid var(--green);padding:11px 16px;border-radius:var(--r-md);max-width:380px;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.toast.err{border-left-color:var(--red)}
+.modal-bg{position:fixed;inset:0;background:rgba(10,7,22,.72);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px;max-width:560px;width:100%;max-height:85vh;overflow:auto}
+.modal h3{margin:0 0 10px;font-size:16px}
+.modal .acts{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.testlist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.testlist li{padding:8px 10px;background:var(--bg);border-radius:var(--r-sm);font-size:13px}
+.testlist .p{color:var(--green);font-weight:600} .testlist .f{color:var(--red);font-weight:600}
+.testlist small{display:block;color:var(--faint)}
+
+@media (max-width:1180px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.stat:nth-child(4){border-left:0}.stat:nth-child(n+4){border-top:1px solid var(--line-soft)}}
+@media (max-width:980px){
+  .app{grid-template-columns:1fr}
+  .side{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;padding:10px 12px;gap:12px;z-index:10;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line-soft);padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  .brand .name,.brand .sub,.side-foot{display:none}
+  .logo-tile{padding:6px 10px;border-radius:10px}
+  .logo-tile img{width:auto;height:40px}
+  .nav{flex-direction:row;gap:10px}
+  .nav-group{flex-direction:row;align-items:center}
+  .nav-head{padding:0 4px}
+  .nav-head span{display:none}
+  .nav a{white-space:nowrap}
+  .nav a span{display:none}
+  .main{padding:18px 16px 50px}
+  .hero{grid-template-columns:1fr}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr 1fr;gap:6px 14px}
+  .kpi-row .bar{grid-column:1/-1}
+  .kpi-row .math{text-align:left}
+  .detail-head{grid-template-columns:auto 1fr}
+  .scorebox{grid-column:1/-1;text-align:left}
+}
+@media (max-width:620px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat{border-left:0;border-top:1px solid var(--line-soft)}.dist .g{width:auto;flex:1}.maprow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo-tile"><img src="data:image/webp;base64,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" alt="Redes Content Agency" width="426" height="240"></div>
+      <div class="name">Chatter RCA Grading</div>
+      <div class="sub">Notation pondérée des chatters OnlyFans et MYM</div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      <button class="selftest" id="selftest-btn" type="button"><span class="dot"></span><span id="selftest-label">Auto-test en cours…</span></button>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<!-- ============ MOTEUR : plateformes, notation, détection et validation (sans DOM) ============ -->
+<script id="engine">
+const RCA = (() => {
+  const GRADE_ORDER = ['S','A','B','C','D'];
+  const NAME_ALIASES = ['name','chatter','chatter name','username','user name','agent','operator','employes','employe','employee','employees','employee name','chatters','full name','nom','nom du chatter','operateur','pseudo'];
+
+  /* ---------- Plateformes ----------
+     kind: money | pct | count | seconds
+     scoring: target (proportionnel à un objectif) | bands (paliers « à partir de ») | info (affiché, non noté)
+     lowerIsBetter: pour les paliers dont les points baissent quand la valeur monte (réactivité)
+     pctRule: unlock (≤ 1 = fraction) | golden (< 0,1 = fraction) */
+  const PLATFORMS = {
+    of: {
+      id:'of', name:'OnlyFans', short:'OF', currency:'$',
+      kpis: [
+        {key:'revenue', label:'CA total', kind:'money', scoring:'target',
+          aliases:['revenue','total revenue','total ca','ca','gross revenue','sales revenue','sales','total sales','total earnings','net revenue','ca total',"chiffre d'affaires",'chiffre d affaires total','revenu total','revenus']},
+        {key:'unlock', label:'Unlock Ratio', kind:'pct', pctRule:'unlock', scoring:'bands',
+          aliases:['unlock ratio','unlock %','unlock rate','unlock','unlocked ratio','unlock ratio %','taux d unlock','taux de deblocage','ratio unlock']},
+        {key:'ppv', label:'Ventes PPV / brutes', kind:'money', scoring:'target',
+          aliases:['ppv','ppv sales','gross sales','sales','gross ppv','gross sales / ppv sales','ppv revenue','gross ppv sales','ppv gross sales','ventes ppv','ventes brutes','ventes ppv brutes']},
+        {key:'tips', label:'Tips', kind:'money', scoring:'target',
+          aliases:['tips','tip','total tips','tips revenue','pourboires','total pourboires']},
+        {key:'golden', label:'Golden Ratio', kind:'pct', pctRule:'golden', scoring:'bands',
+          aliases:['golden ratio','golden %','golden rate','golden','ratio golden']},
+        {key:'fan', label:'Dépense moyenne par fan', kind:'money', dec:2, scoring:'bands',
+          aliases:['average fan spend','avg fan spend','average spend','avg spend','fan spend','avg earnings per fan who spent money','average earnings per fan who spent money','earnings per fan who spent money','avg earnings per paying fan','average earnings per paying fan','depense moyenne par fan','depense moyenne','depense par fan','panier moyen']}
+      ],
+      dashStats: [['sum','revenue',`CA de l'équipe`],['avg','unlock','Unlock Ratio moyen'],['sum','ppv','Ventes PPV'],['sum','tips','Tips']],
+      defaults: {
+        weights: {revenue:25, unlock:25, ppv:20, tips:10, golden:10, fan:10},
+        targets: {revenue:7000, ppv:5000, tips:1500},
+        bands: {
+          unlock: [[0,0],[20,30],[30,50],[40,65],[50,80],[60,90],[70,100]],
+          golden: [[0,30],[0.5,50],[0.75,70],[1,85],[1.25,95],[1.5,100]],
+          fan: [[0,40],[75,55],[100,70],[125,80],[150,90],[175,100]]
+        },
+        caps: {enabled:true, kpi:'unlock', criticalBelow:20, criticalCap:'C', warnBelow:30, warnCap:'B'},
+        grades: {S:90, A:80, B:70, C:60}
+      }
+    },
+    mym: {
+      id:'mym', name:'MYM', short:'M', currency:'€',
+      kpis: [
+        {key:'react', label:'Réactivité', kind:'seconds', scoring:'bands', lowerIsBetter:true,
+          aliases:['reactivite','reactivity','temps de reponse','temps de reponse moyen','response time','avg response time','delai de reponse']},
+        {key:'proposed', label:'Proposé', kind:'count', scoring:'info', optional:true,
+          aliases:['propose','proposes','ppv proposes','medias proposes','offered','sent','ppv sent']},
+        {key:'sold', label:'Vendu', kind:'count', scoring:'info', optional:true,
+          aliases:['vendu','vendus','ppv vendus','medias vendus','sold','ppv sold']},
+        {key:'conv', label:'Taux de conversion', kind:'pct', pctRule:'unlock', scoring:'bands',
+          derive:{from:['sold','proposed'], fn:(sold, prop) => prop > 0 ? sold / prop * 100 : null},
+          aliases:['taux conv','taux conv %','taux de conversion','conversion','conversion rate','conv','taux conversion']},
+        {key:'ppv', label:'CA PPV', kind:'money', dec:2, scoring:'target',
+          aliases:['ca ppv','ppv','ventes ppv','revenu ppv','ppv revenue']},
+        {key:'tips', label:'CA Tips', kind:'money', dec:2, scoring:'target',
+          aliases:['ca tips','tips','pourboires','ca pourboires','tips revenue']},
+        {key:'total', label:'CA total', kind:'money', dec:2, scoring:'target',
+          aliases:['ca total','total','chiffre d affaires','chiffre d affaires total','revenue','total revenue','revenu total']}
+      ],
+      dashStats: [['sum','total',`CA de l'équipe`],['avg','conv','Taux de conversion moyen'],['sum','ppv','CA PPV'],['sum','tips','CA Tips']],
+      defaults: {
+        weights: {react:15, conv:25, ppv:20, tips:10, total:30},
+        targets: {ppv:3500, tips:1200, total:5000},
+        bands: {
+          react: [[0,100],[60,90],[120,80],[180,65],[240,50],[300,30],[420,0]],
+          conv: [[0,0],[10,30],[15,50],[20,65],[25,80],[30,90],[35,100]]
+        },
+        caps: {enabled:true, kpi:'conv', criticalBelow:10, criticalCap:'C', warnBelow:15, warnCap:'B'},
+        grades: {S:90, A:80, B:70, C:60}
+      }
+    }
+  };
+  for (const P of Object.values(PLATFORMS)) {
+    P.fields = [{key:'name', label:'Nom du chatter', aliases:NAME_ALIASES}, ...P.kpis];
+    P.scored = P.kpis.filter(k => k.scoring !== 'info');
+    P.kpi = Object.fromEntries(P.kpis.map(k => [k.key, k]));
+    P.defaults.aliases = Object.fromEntries(P.fields.map(f => [f.key, []]));
+  }
+
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const r1 = x => Math.round((x + 1e-9) * 10) / 10;
+  const r6 = x => Math.round(x * 1e6) / 1e6;
+  const fr = (v, d = 2) => Number(v).toLocaleString('fr-FR', {maximumFractionDigits:d});
+  const defaultSettings = pid => clone(PLATFORMS[pid].defaults);
+
+  function mergeSettings(pid, saved) {
+    const d = defaultSettings(pid);
+    if (!saved || typeof saved !== 'object') return d;
+    for (const k of ['weights','targets','caps','grades','aliases']) if (saved[k]) Object.assign(d[k], saved[k]);
+    if (saved.bands) for (const b of Object.keys(d.bands)) if (Array.isArray(saved.bands[b])) d.bands[b] = saved.bands[b];
+    return d;
+  }
+  // Anciens paramètres (version OF seule) → nouveau format
+  function migrateLegacyOF(old) {
+    if (!old || typeof old !== 'object') return null;
+    return {weights: old.weights, targets: old.targets, grades: old.grades, aliases: old.aliases,
+      bands: {unlock: old.unlockBands, golden: old.goldenBands, fan: old.fanBands},
+      caps: Object.assign({enabled:true, kpi:'unlock'}, old.unlockCaps || {})};
+  }
+
+  /* ---------- Notation ---------- */
+  function bandScore(v, bands) {
+    const sorted = [...bands].sort((a,b) => a[0] - b[0]);
+    let pts = sorted.length ? sorted[0][1] : 0;
+    for (const [min, p] of sorted) if (v >= min - 1e-9) pts = p;
+    return pts;
+  }
+  const propScore = (v, target) => target > 0 ? r1(Math.min(100, Math.max(0, v / target * 100))) : 0;
+  function gradeFor(score, g) {
+    if (score >= g.S) return 'S';
+    if (score >= g.A) return 'A';
+    if (score >= g.B) return 'B';
+    if (score >= g.C) return 'C';
+    return 'D';
+  }
+  const worseOf = (a, b) => GRADE_ORDER[Math.max(GRADE_ORDER.indexOf(a), GRADE_ORDER.indexOf(b))];
+
+  // status : clé interne (Critical, Warning, At risk, Strong, On track), traduite à l'affichage.
+  function scoreChatter(row, P, s) {
+    const scores = {}, contrib = {};
+    let total = 0;
+    for (const k of P.scored) {
+      scores[k.key] = k.scoring === 'target' ? propScore(row[k.key], s.targets[k.key]) : bandScore(row[k.key], s.bands[k.key]);
+      contrib[k.key] = scores[k.key] * s.weights[k.key] / 100;
+      total += contrib[k.key];
+    }
+    const final = r1(total);
+    const scoreGrade = gradeFor(final, s.grades);
+    const c = s.caps;
+    let cap = null, critical = false;
+    const warnings = [];
+    if (c && c.enabled && row[c.kpi] != null) {
+      const lab = P.kpi[c.kpi].label, v = row[c.kpi];
+      if (v < c.criticalBelow) { critical = true; cap = c.criticalCap; warnings.push(`${lab} critique : inférieur à ${fr(c.criticalBelow)} %`); }
+      else if (v < c.warnBelow) { cap = c.warnCap; warnings.push(`${lab} inférieur à ${fr(c.warnBelow)} %`); }
+    }
+    const grade = cap ? worseOf(scoreGrade, cap) : scoreGrade;
+    const capped = grade !== scoreGrade;
+    if (capped) warnings.push(`Grade plafonné à ${grade} (grade du score : ${scoreGrade})`);
+    let status;
+    if (critical) status = 'Critical';
+    else if (cap) status = 'Warning';
+    else if (grade === 'D') status = 'At risk';
+    else if (grade === 'S' || grade === 'A') status = 'Strong';
+    else status = 'On track';
+    return {name: row.name, row, scores, contrib, final, scoreGrade, grade, capped, cap, critical, warnings, status};
+  }
+
+  function computePeriod(period, s) {
+    const P = PLATFORMS[period.platform || 'of'];
+    const results = period.rows.map(r => scoreChatter(r, P, s));
+    results.sort((a,b) => b.final - a.final || a.name.localeCompare(b.name, 'fr'));
+    let lastScore = null, lastRank = 0;
+    results.forEach((r, i) => {
+      if (r.final !== lastScore) { lastRank = i + 1; lastScore = r.final; }
+      r.rank = lastRank;
+    });
+    const n = results.length;
+    const sum = {}, avg = {}, avgScores = {};
+    for (const k of P.kpis) {
+      const vals = results.map(r => r.row[k.key]).filter(v => v != null);
+      sum[k.key] = vals.reduce((a, v) => a + v, 0);
+      avg[k.key] = vals.length ? sum[k.key] / vals.length : null;
+    }
+    for (const k of P.scored) avgScores[k.key] = n ? results.reduce((a, r) => a + r.scores[k.key], 0) / n : 0;
+    const grades = {S:0, A:0, B:0, C:0, D:0};
+    results.forEach(r => grades[r.grade]++);
+    return {period, platform: P, results, stats: {
+      count: n, grades, sum, avg, avgScores,
+      avgScore: r1(n ? results.reduce((a, r) => a + r.final, 0) / n : 0),
+      critical: results.filter(r => r.critical).length,
+      capped: results.filter(r => r.capped).length
+    }};
+  }
+
+  // Le store met en cache les résultats par période et vide le cache quand les paramètres changent :
+  // chaque période est recalculée à partir de ses données brutes avec les paramètres de sa plateforme.
+  function createStore(periods, settingsByPlatform) {
+    const cache = new Map();
+    return {
+      periods,
+      settings: pid => settingsByPlatform[pid],
+      setSettings(pid, ns) { settingsByPlatform[pid] = ns; cache.clear(); },
+      invalidate() { cache.clear(); },
+      results(id) {
+        if (!cache.has(id)) {
+          const p = periods.find(x => x.id === id);
+          cache.set(id, p ? computePeriod(p, settingsByPlatform[p.platform || 'of']) : null);
+        }
+        return cache.get(id);
+      }
+    };
+  }
+
+  /* ---------- Lecture des valeurs ---------- */
+  function normHeader(s) {
+    return String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/%/g, ' % ').replace(/[^a-z0-9%]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function cellText(c) {
+    if (c == null) return '';
+    if (typeof c === 'object' && 'v' in c) return c.w != null ? String(c.w) : String(c.v);
+    return String(c);
+  }
+  // Renvoie {value, pct} | {empty:true} | {invalid:true, text}
+  function parseCell(c) {
+    if (c == null) return {empty:true};
+    if (typeof c === 'object' && 'v' in c) {
+      if (typeof c.v === 'number') return {value: c.pct ? r6(c.v * 100) : c.v, pct: !!c.pct};
+      c = c.v;
+    }
+    if (typeof c === 'number') return Number.isFinite(c) ? {value:c, pct:false} : {invalid:true, text:String(c)};
+    const orig = String(c);
+    let s = orig.trim();
+    if (!s || /^(-|—|–|n\/?a|null|none|nd)$/i.test(s)) return {empty:true, text:s};
+    const pct = s.includes('%');
+    let neg = false;
+    if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1); }
+    s = s.replace(/usd|eur|gbp/ig, '').replace(/[%$€£¥\s\u00a0\u202f']/g, '');
+    if (s.startsWith('-')) { neg = !neg; s = s.slice(1); }
+    else if (s.startsWith('+')) s = s.slice(1);
+    const hasC = s.includes(','), hasD = s.includes('.');
+    if (hasC && hasD) {
+      s = s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+    } else if (hasC) {
+      s = /^\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g, '') : s.replace(',', '.');
+    }
+    if (!/^(\d+\.?\d*|\.\d+)$/.test(s)) return {invalid:true, text:orig};
+    let v = parseFloat(s);
+    if (neg) v = -v;
+    return {value:v, pct};
+  }
+  // Durées : « 140s », « 140 s », « 2m20s », « 2 min 20 s », « 02:20 », « 1:02:20 », « 140 » → secondes
+  function parseDuration(c) {
+    if (c == null) return {empty:true};
+    if (typeof c === 'object' && 'v' in c) c = typeof c.v === 'number' ? c.v : c.w ?? c.v;
+    if (typeof c === 'number') return Number.isFinite(c) ? {value:c} : {invalid:true, text:String(c)};
+    const orig = String(c), s = orig.trim().toLowerCase().replace(/\s+/g, '');
+    if (!s || /^(-|—|–|n\/?a|nd)$/.test(s)) return {empty:true, text:orig};
+    if (/^-/.test(s)) return {value:-1};
+    let m;
+    if ((m = s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/))) return {value: m[3] != null ? (+m[1]) * 3600 + (+m[2]) * 60 + (+m[3]) : (+m[1]) * 60 + (+m[2])};
+    if ((m = s.match(/^(?:(\d+(?:[.,]\d+)?)h)?(?:(\d+(?:[.,]\d+)?)(?:min|mn|m))?(?:(\d+(?:[.,]\d+)?)(?:sec|s))?$/)) && (m[1] || m[2] || m[3]))
+      return {value: [m[1], m[2], m[3]].map((x, i) => x ? parseFloat(x.replace(',', '.')) * [3600, 60, 1][i] : 0).reduce((a, b) => a + b, 0)};
+    const p = parseCell(orig);
+    return p.invalid || p.empty ? p : {value: p.value};
+  }
+  // Pourcentages : un % explicite est toujours respecté ; aucune valeur n'est convertie deux fois.
+  // Règle « unlock » : valeur brute ≤ 1 = fraction (×100). Règle « golden » : seules les valeurs < 0,1 sont des fractions.
+  function toPercent(p, rule) {
+    if (p.pct) return r6(p.value);
+    if (rule === 'golden') return p.value < 0.1 ? r6(p.value * 100) : r6(p.value);
+    return p.value <= 1 ? r6(p.value * 100) : r6(p.value);
+  }
+
+  function parseCSV(text) {
+    text = text.replace(/^\uFEFF/, '');
+    const firstLine = text.split(/\r?\n/).find(l => l.trim()) || '';
+    const counts = {',':0, ';':0, '\t':0};
+    let q = false;
+    for (const ch of firstLine) { if (ch === '"') q = !q; else if (!q && ch in counts) counts[ch]++; }
+    const top = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
+    const delim = top[1] > 0 ? top[0] : ',';
+    const rows = []; let row = []; let field = ''; q = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (q) {
+        if (ch === '"') { if (text[i+1] === '"') { field += '"'; i++; } else q = false; }
+        else field += ch;
+      } else if (ch === '"') q = true;
+      else if (ch === delim) { row.push(field); field = ''; }
+      else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && text[i+1] === '\n') i++;
+        row.push(field); rows.push(row); row = []; field = '';
+      } else field += ch;
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.some(c => String(c).trim() !== ''));
+  }
+
+  /* ---------- Détection des colonnes ---------- */
+  function aliasList(P, field, s) {
+    const f = P.fields.find(x => x.key === field);
+    const custom = (s && s.aliases && s.aliases[field]) || [];
+    const seen = new Set(); const out = [];
+    for (const a of [...custom, ...f.aliases]) { const n = normHeader(a); if (n && !seen.has(n)) { seen.add(n); out.push(n); } }
+    return out;
+  }
+  // Passe 1 : correspondance exacte (normalisée), champ par champ dans l'ordre de priorité.
+  // Passe 2 : correspondance partielle sur mots entiers, alias le plus long d'abord. Une colonne n'est jamais utilisée deux fois.
+  function detectColumns(P, headers, s) {
+    const nh = headers.map(normHeader);
+    const used = new Set();
+    const map = {};
+    const order = [P.fields[0], ...P.scored, ...P.kpis.filter(k => k.scoring === 'info')];
+    for (const f of order) {
+      map[f.key] = {idx:-1, type:'missing'};
+      for (const a of aliasList(P, f.key, s)) {
+        const i = nh.findIndex((h, j) => !used.has(j) && h === a);
+        if (i >= 0) { map[f.key] = {idx:i, type:'exact', alias:a}; used.add(i); break; }
+      }
+    }
+    const cands = [];
+    order.forEach((f, ord) => {
+      if (map[f.key].idx >= 0) return;
+      for (const a of aliasList(P, f.key, s)) {
+        if (a.length < 2) continue;
+        nh.forEach((h, i) => {
+          if (used.has(i) || !h) return;
+          if (f.key === 'name' && /\b(creator|createur|creatrice|model|modele|account|compte|page)\b/.test(h)) return;
+          if ((' ' + h + ' ').includes(' ' + a + ' ')) cands.push({f:f.key, i, len:a.length, ord, a});
+        });
+      }
+    });
+    cands.sort((x, y) => y.len - x.len || x.ord - y.ord || x.i - y.i);
+    for (const c of cands) {
+      if (map[c.f].idx >= 0 || used.has(c.i)) continue;
+      map[c.f] = {idx:c.i, type:'partial', alias:c.a};
+      used.add(c.i);
+    }
+    return map;
+  }
+  function findHeaderRow(P, grid, s) {
+    let best = 0, bestCount = -1;
+    for (let r = 0; r < Math.min(grid.length, 15); r++) {
+      const det = detectColumns(P, grid[r].map(cellText), s);
+      const cnt = P.fields.filter(f => det[f.key].idx >= 0).length;
+      if (cnt > bestCount) { best = r; bestCount = cnt; }
+    }
+    return best;
+  }
+  // Champs obligatoires sans colonne (un KPI calculable à partir d'autres colonnes n'est pas manquant)
+  function missingFields(P, mapping) {
+    return P.fields.filter(f => mapping[f.key] < 0 && !f.optional && !(f.derive && f.derive.from.every(x => mapping[x] >= 0)));
+  }
+
+  /* ---------- Validation ---------- */
+  const TOTAL_RE = /^(grand\s*)?totals?$|^total g[eé]n[eé]ral$|^sum$|^somme$|^all( chatters)?$|^tous$|^average$|^moyenne$|^team( total)?$|^[eé]quipe$/i;
+  function buildRows(P, grid, headerRow, mapping) {
+    const out = [];
+    for (let r = headerRow + 1; r < grid.length; r++) {
+      const cells = grid[r] || [];
+      if (!cells.some(c => cellText(c).trim() !== '')) continue;
+      const issues = [];
+      const name = mapping.name >= 0 ? cellText(cells[mapping.name]).trim().replace(/\s+/g, ' ') : '';
+      if (!name) issues.push({sev:'error', msg:'Nom du chatter vide'});
+      const values = {}, derived = {};
+      for (const k of P.kpis) {
+        const idx = mapping[k.key];
+        values[k.key] = null;
+        if (idx < 0) continue;
+        const p = k.kind === 'seconds' ? parseDuration(cells[idx]) : parseCell(cells[idx]);
+        if (p.empty) { if (!k.optional) issues.push({sev:'error', msg:`Valeur manquante : ${k.label}`}); continue; }
+        if (p.invalid) { issues.push({sev:'error', msg:`Valeur non numérique pour ${k.label} (« ${p.text} »)`}); continue; }
+        if (p.value < 0) { issues.push({sev:'error', msg:`Valeur négative pour ${k.label}`}); continue; }
+        const v = k.kind === 'pct' ? toPercent(p, k.pctRule) : r6(p.value);
+        if (k.kind === 'pct' && v > 100) { issues.push({sev:'error', msg:`${k.label} hors de la plage 0–100 % (${fr(v)} %)`}); continue; }
+        values[k.key] = v;
+      }
+      for (const k of P.kpis) {
+        if (!k.derive || mapping[k.key] >= 0) continue;
+        const args = k.derive.from.map(x => values[x]);
+        if (args.every(a => a != null)) {
+          const v = k.derive.fn(...args);
+          if (v == null) issues.push({sev:'error', msg:`${k.label} impossible à calculer (division par zéro)`});
+          else if (v > 100) issues.push({sev:'error', msg:`${k.label} calculé supérieur à 100 %`});
+          else { values[k.key] = r6(v); derived[k.key] = true; }
+        } else if (!issues.some(i => i.sev === 'error')) issues.push({sev:'error', msg:`Valeur manquante : ${k.label}`});
+      }
+      if (name && TOTAL_RE.test(name)) issues.push({sev:'warn', msg:'Ressemble à une ligne de total'});
+      out.push({line: r + 1, name, values, derived, issues, include: false});
+    }
+    const counts = {};
+    out.forEach(o => { if (o.name) { const k = o.name.toLowerCase(); counts[k] = (counts[k] || 0) + 1; } });
+    out.forEach(o => {
+      if (o.name && counts[o.name.toLowerCase()] > 1) o.issues.push({sev:'warn', msg:'Nom de chatter en double'});
+      o.include = o.issues.length === 0;
+    });
+    return out;
+  }
+  function summarize(rows) {
+    const total = rows.length;
+    const valid = rows.filter(r => r.issues.length === 0).length;
+    const errors = rows.filter(r => r.issues.some(i => i.sev === 'error')).length;
+    return {total, valid, review: total - valid, errors, included: rows.filter(r => r.include).length};
+  }
+
+  /* ---------- Auto-tests ---------- */
+  function runSelfTests(storedPeriods) {
+    const OF = PLATFORMS.of, MYM = PLATFORMS.mym;
+    const s = defaultSettings('of'), sm = defaultSettings('mym');
+    const strong = {revenue:20000, ppv:10000, tips:5000, golden:2, fan:300};
+    const tests = [];
+    const t = (name, fn) => { try { const d = fn(); tests.push({name, pass: d.pass, detail: d.detail}); } catch (e) { tests.push({name, pass:false, detail:String(e)}); } };
+
+    t('OF · Unlock Ratio à 15 % → alerte critique + grade plafonné à C', () => {
+      const r = scoreChatter({name:'t1', ...strong, unlock:15}, OF, s);
+      const pass = r.critical && r.status === 'Critical' && GRADE_ORDER.indexOf(r.grade) >= GRADE_ORDER.indexOf('C') && r.warnings.some(w => w.startsWith('Unlock Ratio critique'));
+      return {pass, detail:`score ${fr(r.final, 1)}, grade du score ${r.scoreGrade}, grade final ${r.grade}, critique = ${r.critical ? 'oui' : 'non'}`};
+    });
+    t('OF · Unlock Ratio à 65 % → score Unlock de 90/100', () => {
+      const r = scoreChatter({name:'t2', ...strong, unlock:65}, OF, s);
+      return {pass: r.scores.unlock === 90, detail:`score Unlock ${r.scores.unlock}`};
+    });
+    t('OF · Unlock Ratio à 72 % → score Unlock de 100/100', () => {
+      const r = scoreChatter({name:'t3', ...strong, unlock:72}, OF, s);
+      return {pass: r.scores.unlock === 100, detail:`score Unlock ${r.scores.unlock}`};
+    });
+    t('OF · CA élevé + Unlock Ratio très faible → jamais S', () => {
+      const rs = [5, 15, 25, 29.99].map(u => scoreChatter({name:'t4', ...strong, revenue:1e6, unlock:u}, OF, s));
+      return {pass: rs.every(r => r.grade !== 'S' && GRADE_ORDER.indexOf(r.grade) >= GRADE_ORDER.indexOf('B')), detail: rs.map(r => `${fr(r.row.unlock)} % → ${fr(r.final, 1)} ${r.grade}`).join(' ; ')};
+    });
+    t(`OF · Changer l'objectif de CA recalcule toutes les périodes enregistrées`, () => {
+      let periods = (storedPeriods || []).filter(p => (p.platform || 'of') === 'of' && p.rows && p.rows.length);
+      const source = periods.length ? 'périodes enregistrées' : 'périodes de test';
+      if (!periods.length) periods = [
+        {id:'a', platform:'of', rows:[{name:'X', revenue:3500, unlock:55, ppv:2500, tips:700, golden:1, fan:120}, {name:'Y', revenue:9000, unlock:72, ppv:6000, tips:1600, golden:1.6, fan:190}]},
+        {id:'b', platform:'of', rows:[{name:'X', revenue:5000, unlock:61, ppv:4000, tips:900, golden:1.2, fan:140}]}
+      ];
+      const store = createStore(clone(periods), {of: clone(s), mym: clone(sm)});
+      const before = store.periods.map(p => store.results(p.id));
+      const ns = clone(store.settings('of')); ns.targets.revenue = ns.targets.revenue * 2;
+      store.setSettings('of', ns);
+      let ok = true, changed = 0, checked = 0;
+      store.periods.forEach((p, pi) => {
+        store.results(p.id).results.forEach(r => {
+          checked++;
+          const exp = propScore(r.row.revenue, ns.targets.revenue);
+          const expFinal = r1(OF.scored.reduce((a, k) => a + r.scores[k.key] * ns.weights[k.key] / 100, 0));
+          if (r.scores.revenue !== exp || r.final !== expFinal) ok = false;
+          const old = before[pi].results.find(o => o.name === r.name);
+          if (old && (old.scores.revenue !== r.scores.revenue || old.final !== r.final)) changed++;
+        });
+      });
+      return {pass: ok && changed > 0, detail:`${source} : ${checked} résultats revérifiés, ${changed} modifiés après doublement de l'objectif`};
+    });
+    t('MYM · « 140s » de réactivité → 140 secondes, 80/100', () => {
+      const v = parseDuration('140s').value, r = scoreChatter({name:'m', react:v, conv:25, ppv:3000, tips:800, total:4000}, MYM, sm);
+      return {pass: v === 140 && r.scores.react === 80, detail:`${v} s → ${r.scores.react}/100`};
+    });
+    t('MYM · Taux de conversion à 8 % → alerte critique + grade plafonné', () => {
+      const r = scoreChatter({name:'m', react:30, conv:8, ppv:99999, tips:99999, total:99999}, MYM, sm);
+      return {pass: r.critical && r.grade !== 'S' && GRADE_ORDER.indexOf(r.grade) >= GRADE_ORDER.indexOf(sm.caps.criticalCap), detail:`score ${fr(r.final, 1)}, grade final ${r.grade}`};
+    });
+    t('MYM · Montants « 4 966,31 EUR » et taux calculé si la colonne manque', () => {
+      const grid = [['Chatter','Réactivité','Proposé','Vendu','CA PPV','CA Tips','CA Total'], ['A','140s','1173','248','4 966,31 EUR','684,48 EUR','5 650,79 EUR']];
+      const map = Object.fromEntries(Object.entries(detectColumns(MYM, grid[0], sm)).map(([k, v]) => [k, v.idx]));
+      const row = buildRows(MYM, grid, 0, map)[0];
+      const ok = row.values.ppv === 4966.31 && row.values.total === 5650.79 && Math.abs(row.values.conv - 21.142) < 0.01 && row.derived.conv && missingFields(MYM, map).length === 0;
+      return {pass: ok, detail:`CA PPV ${fr(row.values.ppv)} €, taux calculé ${fr(row.values.conv)} %`};
+    });
+    return tests;
+  }
+
+  return {GRADE_ORDER, PLATFORMS, clone, r1, defaultSettings, mergeSettings, migrateLegacyOF,
+    bandScore, propScore, gradeFor, scoreChatter, computePeriod, createStore,
+    normHeader, cellText, parseCell, parseDuration, toPercent, parseCSV, aliasList, detectColumns, findHeaderRow, missingFields, buildRows, summarize, runSelfTests};
+})();
+if (typeof module !== 'undefined') module.exports = RCA;
+</script>
+
+<!-- ============ APPLICATION : interface, stockage, import, graphiques ============ -->
+<script>
+(() => {
+const {GRADE_ORDER, PLATFORMS} = RCA;
+const PIDS = ['of', 'mym'];
+const LS = {settings:'rca.settings.v2', legacySettings:'rca.settings.v1', periods:'rca.periods.v1', ui:'rca.ui.v2'};
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { toast(`Le stockage du navigateur est indisponible ou plein. Les modifications ne dureront que pendant cette session.`, true); return false; } };
+
+/* ---------- Chargement + migration de l'ancienne version (OF seul) ---------- */
+const savedSettings = lsGet(LS.settings, null) || {of: RCA.migrateLegacyOF(lsGet(LS.legacySettings, null))};
+const allSettings = Object.fromEntries(PIDS.map(p => [p, RCA.mergeSettings(p, savedSettings[p])]));
+const periods = lsGet(LS.periods, []);
+periods.forEach(p => { if (!p.platform) p.platform = 'of'; });
+const store = RCA.createStore(periods, allSettings);
+const ui = Object.assign({period:{}, historyName:{}}, lsGet(LS.ui, {}));
+const tbl = {sortKey:'final', dir:'desc', q:'', grade:'all', min:'', max:''};
+const importDraft = {of:null, mym:null};
+const settingsDraft = {of:null, mym:null};
+let charts = [];
+
+const saveSettings = () => lsSet(LS.settings, allSettings);
+const savePeriods = () => lsSet(LS.periods, store.periods);
+const saveUI = () => lsSet(LS.ui, {period: ui.period});
+const platformPeriods = pid => store.periods.filter(p => p.platform === pid);
+const sortedPeriods = pid => platformPeriods(pid).sort((a,b) => (b.start || '').localeCompare(a.start || '') || b.createdAt - a.createdAt);
+const chronoPeriods = pid => platformPeriods(pid).sort((a,b) => (a.start || '').localeCompare(b.start || '') || a.createdAt - b.createdAt);
+function currentPeriod(pid) {
+  const list = sortedPeriods(pid);
+  if (!list.length) return null;
+  let p = list.find(x => x.id === ui.period[pid]);
+  if (!p) { p = list[0]; ui.period[pid] = p.id; saveUI(); }
+  return p;
+}
+
+/* ---------- Formatage (fr-FR) ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf = (v, min, max) => Number(v).toLocaleString('fr-FR', {minimumFractionDigits:min, maximumFractionDigits:max});
+const num = (v, d = 1) => nf(v, d, d);
+const pct = (v, d = 2) => v == null ? '—' : nf(v, 0, d) + '\u00a0%';
+const moneyP = (P, v, d = 0) => v == null ? '—' : nf(v, d, d) + '\u00a0' + P.currency;
+function fmtK(P, k, v, dec) {
+  if (v == null) return '—';
+  if (k.kind === 'money') return moneyP(P, v, dec ?? k.dec ?? 0);
+  if (k.kind === 'pct') return pct(v, 2);
+  if (k.kind === 'seconds') return nf(v, 0, 0) + '\u00a0s';
+  return nf(v, 0, 0);
+}
+const unitOf = (P, k) => k.kind === 'money' ? P.currency : k.kind === 'pct' ? '%' : k.kind === 'seconds' ? 's' : '';
+const scClass = v => v >= 80 ? 'sc-hi' : v >= 50 ? 'sc-mid' : 'sc-lo';
+const scColor = v => v >= 80 ? 'var(--green)' : v >= 50 ? 'var(--orange)' : 'var(--red)';
+const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
+const ordinal = n => n === 1 ? '1er' : n + 'e';
+function parseDate(s) { const [y,m,d] = (s || '').split('-').map(Number); return y ? new Date(y, m - 1, d) : null; }
+function fmtRange(a, b) {
+  const A = parseDate(a), B = parseDate(b);
+  if (!A || !B) return 'Période sans date';
+  const o = {day:'numeric', month:'short'};
+  if (A.getFullYear() === B.getFullYear()) return `${A.toLocaleDateString('fr-FR', o)} – ${B.toLocaleDateString('fr-FR', o)} ${B.getFullYear()}`;
+  return `${A.toLocaleDateString('fr-FR', {...o, year:'numeric'})} – ${B.toLocaleDateString('fr-FR', {...o, year:'numeric'})}`;
+}
+const STATUS_LABEL = {'Critical':'Critique', 'Warning':'Attention', 'At risk':'À risque', 'Strong':'Excellent', 'On track':'Correct'};
+const capLabel = P => P.kpi[allSettings[P.id].caps.kpi]?.label || 'KPI';
+const gradeBadge = (P, r) => `<span class="badge ${r.grade} g${r.grade}" title="${r.capped ? `Grade du score ${r.scoreGrade}, plafonné à ${r.grade} par le ${esc(capLabel(P))}` : `Grade ${r.grade}`}">${r.grade}</span>${r.capped ? `<span class="capnote">plafonné (${r.scoreGrade})</span>` : ''}`;
+const statusPill = s => `<span class="pill ${s.replace(/\s/g,'')}">${esc(STATUS_LABEL[s] || s)}</span>`;
+const pbadge = (P, lg) => `<span class="pbadge ${P.id}${lg ? ' lg' : ''}" aria-hidden="true">${P.short}</span>`;
+
+/* ---------- Notification + fenêtre ---------- */
+let toastTimer;
+function toast(msg, err) {
+  document.querySelector('.toast')?.remove();
+  const el = document.createElement('div');
+  el.className = 'toast' + (err ? ' err' : '');
+  el.setAttribute('role', 'status');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.remove(), 4200);
+}
+function modal(title, bodyHTML, okLabel, cancelLabel = 'Annuler') {
+  return new Promise(res => {
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><h3>${esc(title)}</h3><div>${bodyHTML}</div><div class="acts">${cancelLabel ? `<button class="btn ghost" data-a="0">${esc(cancelLabel)}</button>` : ''}${okLabel ? `<button class="btn primary" data-a="1">${esc(okLabel)}</button>` : ''}</div></div>`;
+    const close = v => { bg.remove(); document.removeEventListener('keydown', onKey); res(v); };
+    const onKey = e => { if (e.key === 'Escape') close(false); };
+    bg.addEventListener('click', e => { if (e.target === bg) close(false); const a = e.target.closest('[data-a]'); if (a) close(a.dataset.a === '1'); });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(bg);
+    bg.querySelector('[data-a="1"],[data-a="0"]')?.focus();
+  });
+}
+
+/* ---------- Navigation ---------- */
+const ICONS = {
+  dashboard:'<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
+  chatters:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.7 3 2.4 3.5 5.2"/>',
+  analytics:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  history:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
+  import:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  download:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>'
+};
+const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
+const PAGES = [['dashboard','Tableau de bord'],['chatters','Chatters'],['analytics',`Analyse d'équipe`],['history','Historique'],['import','Import'],['settings','Paramètres']];
+const PAGE_LABEL = Object.fromEntries(PAGES);
+function route() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  const m = h.match(/^(of|mym)\/(.*)$/);
+  const pid = m ? m[1] : 'of', rest = m ? m[2] : h;
+  if (rest.startsWith('chatter/')) return {pid, page:'chatters', chatter:rest.slice(8)};
+  return {pid, page: PAGE_LABEL[rest] ? rest : 'dashboard'};
+}
+const go = h => { location.hash = h; };
+window.addEventListener('hashchange', render);
+
+function renderNav(rt) {
+  document.getElementById('nav').innerHTML = PIDS.map(pid => {
+    const P = PLATFORMS[pid];
+    return `<div class="nav-group ${rt.pid === pid ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
+      ${PAGES.map(([k, l]) => { const on = rt.pid === pid && rt.page === k; return `<a href="#${pid}/${k}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(l)} ${P.name}">${icon(k)}<span>${esc(l)}</span></a>`; }).join('')}</div>`;
+  }).join('');
+}
+function topbar(P, title, withPicker) {
+  let right = '';
+  if (withPicker && platformPeriods(P.id).length) {
+    const cur = currentPeriod(P.id);
+    right = `<label class="picker">Période <select id="period-pick">${sortedPeriods(P.id).map(p => `<option value="${p.id}" ${p.id === cur.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>
+      <button class="btn" id="export-btn" type="button">${icon('download')}Exporter en CSV</button>`;
+  }
+  return `<div class="top"><h1>${pbadge(P, true)}<span>${esc(title)} <span class="plat">${P.name}</span></span></h1>${right}</div>`;
+}
+function bindTopbar(P) {
+  document.getElementById('period-pick')?.addEventListener('change', e => { ui.period[P.id] = e.target.value; saveUI(); render(); });
+  document.getElementById('export-btn')?.addEventListener('click', () => exportCSV(P));
+}
+function destroyCharts() { charts.forEach(c => { try { c.destroy(); } catch {} }); charts = []; }
+
+function render() {
+  destroyCharts();
+  const rt = route(), P = PLATFORMS[rt.pid];
+  renderNav(rt);
+  const main = document.getElementById('main');
+  main.dataset.platform = P.id;
+  if (rt.page === 'dashboard') renderDashboard(main, P);
+  else if (rt.page === 'chatters') rt.chatter != null ? renderDetail(main, P, rt.chatter) : renderChatters(main, P);
+  else if (rt.page === 'analytics') renderAnalytics(main, P);
+  else if (rt.page === 'history') renderHistory(main, P);
+  else if (rt.page === 'import') renderImport(main, P);
+  else if (rt.page === 'settings') renderSettings(main, P);
+  bindTopbar(P);
+}
+
+function emptyState(P, title) {
+  return topbar(P, title, false) + `<div class="panel empty"><h2 style="font-size:18px;margin-bottom:6px">Aucune période ${P.name} importée</h2><p class="hint" style="margin:0 auto 16px;max-width:460px">Importez un rapport ${P.name} (CSV ou XLSX). Chaque chatter est noté et classé automatiquement.</p><a class="btn primary" href="#${P.id}/import">Importer un rapport ${P.name}</a></div>`;
+}
+
+/* ---------- Tableau de classement ---------- */
+const STATUS_ORDER = ['Strong','On track','Warning','At risk','Critical'];
+function columns(P) {
+  return [
+    {k:'rank', l:'Rang', num:true, v:r => r.rank, h:r => r.rank === 1 ? '1<sup>er</sup>' : `${r.rank}<sup>e</sup>`},
+    {k:'name', l:'Chatter', v:r => r.name.toLowerCase(), h:r => `<strong>${esc(r.name)}</strong>`},
+    {k:'final', l:'Score final', num:true, v:r => r.final, h:r => `<div class="scorecell"><span class="minibar"><i style="width:${r.final}%;background:${scColor(r.final)}"></i></span><strong>${num(r.final)}</strong></div>`},
+    {k:'grade', l:'Grade', v:r => GRADE_ORDER.indexOf(r.grade), h:r => gradeBadge(P, r)},
+    ...P.kpis.map(k => ({k:k.key, l:k.label, num:true, v:r => r.row[k.key] ?? -Infinity,
+      h:r => `${fmtK(P, k, r.row[k.key])}${k.scoring !== 'info' ? `<span class="sub ${scClass(r.scores[k.key])}">${num(r.scores[k.key], 0)}</span>` : ''}`})),
+    {k:'status', l:'Statut', v:r => STATUS_ORDER.indexOf(r.status), h:r => statusPill(r.status)}
+  ];
+}
+function rankingHTML(P, id) {
+  const cols = columns(P);
+  if (!cols.some(c => c.k === tbl.sortKey)) { tbl.sortKey = 'final'; tbl.dir = 'desc'; }
+  return `<div class="tbl-controls">
+    <input type="search" id="${id}-q" placeholder="Rechercher un chatter" value="${esc(tbl.q)}" aria-label="Rechercher un chatter par nom">
+    <select id="${id}-grade" aria-label="Filtrer par grade"><option value="all">Tous les grades</option>${GRADE_ORDER.map(g => `<option value="${g}" ${tbl.grade === g ? 'selected' : ''}>Grade ${g}</option>`).join('')}</select>
+    <input type="number" id="${id}-min" placeholder="Score min" min="0" max="100" value="${esc(tbl.min)}" aria-label="Score minimum">
+    <input type="number" id="${id}-max" placeholder="Score max" min="0" max="100" value="${esc(tbl.max)}" aria-label="Score maximum">
+    <span class="count" id="${id}-count"></span>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr>${cols.map(c => `<th class="sort ${c.num ? 'num' : ''}" data-k="${c.k}" tabindex="0" ${tbl.sortKey === c.k ? `aria-sort="${tbl.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>${esc(c.l)}</th>`).join('')}</tr></thead><tbody id="${id}-body"></tbody></table></div>
+  <p class="hint" style="margin:8px 0 0;font-size:12px">Le petit chiffre à côté d'un KPI est son score sur 100.${P.kpis.some(k => k.scoring === 'info') ? ` ${P.kpis.filter(k => k.scoring === 'info').map(k => k.label).join(' et ')} sont affichés à titre d'information et ne sont pas notés.` : ''} Le classement utilise toujours le score pondéré complet.</p>`;
+}
+function bindRanking(P, id, res) {
+  const cols = columns(P);
+  const body = document.getElementById(id + '-body');
+  const draw = () => {
+    const q = tbl.q.trim().toLowerCase();
+    const mn = tbl.min === '' ? -Infinity : Number(tbl.min), mx = tbl.max === '' ? Infinity : Number(tbl.max);
+    const col = cols.find(c => c.k === tbl.sortKey) || cols[2];
+    const rows = res.results.filter(r => (!q || r.name.toLowerCase().includes(q)) && (tbl.grade === 'all' || r.grade === tbl.grade) && r.final >= mn && r.final <= mx)
+      .sort((a, b) => { const x = col.v(a), y = col.v(b); const c = x < y ? -1 : x > y ? 1 : 0; return (tbl.dir === 'asc' ? c : -c) || a.rank - b.rank; });
+    body.innerHTML = rows.length ? rows.map(r => `<tr class="click" data-name="${esc(r.name)}" tabindex="0">${cols.map(c => `<td class="${c.num ? 'num' : ''}">${c.h(r)}</td>`).join('')}</tr>`).join('')
+      : `<tr><td colspan="${cols.length}" class="empty">Aucun chatter ne correspond à ces filtres.</td></tr>`;
+    document.getElementById(id + '-count').textContent = `${rows.length} sur ${plural(res.results.length, 'chatter', 'chatters')}`;
+  };
+  const on = (sfx, ev, fn) => document.getElementById(id + sfx).addEventListener(ev, fn);
+  on('-q', 'input', e => { tbl.q = e.target.value; draw(); });
+  on('-grade', 'change', e => { tbl.grade = e.target.value; draw(); });
+  on('-min', 'input', e => { tbl.min = e.target.value; draw(); });
+  on('-max', 'input', e => { tbl.max = e.target.value; draw(); });
+  const table = body.closest('table');
+  const sortBy = th => {
+    const k = th.dataset.k;
+    if (tbl.sortKey === k) tbl.dir = tbl.dir === 'asc' ? 'desc' : 'asc';
+    else { tbl.sortKey = k; tbl.dir = (k === 'name' || k === 'rank' || k === 'grade' || k === 'status' || P.kpi[k]?.lowerIsBetter) ? 'asc' : 'desc'; }
+    table.querySelectorAll('th').forEach(t => t.removeAttribute('aria-sort'));
+    th.setAttribute('aria-sort', tbl.dir === 'asc' ? 'ascending' : 'descending');
+    draw();
+  };
+  table.querySelector('thead').addEventListener('click', e => { const th = e.target.closest('th'); if (th) sortBy(th); });
+  table.querySelector('thead').addEventListener('keydown', e => { const th = e.target.closest('th'); if (th && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); sortBy(th); } });
+  const open = tr => go(`${P.id}/chatter/` + encodeURIComponent(tr.dataset.name));
+  body.addEventListener('click', e => { const tr = e.target.closest('tr[data-name]'); if (tr) open(tr); });
+  body.addEventListener('keydown', e => { const tr = e.target.closest('tr[data-name]'); if (tr && e.key === 'Enter') open(tr); });
+  draw();
+  return draw;
+}
+
+/* ---------- Tableau de bord ---------- */
+function renderDashboard(main, P) {
+  const p = currentPeriod(P.id);
+  if (!p) { main.innerHTML = emptyState(P, 'Tableau de bord'); return; }
+  const s = allSettings[P.id], res = store.results(p.id), st = res.stats;
+  const statCell = ([agg, key, label]) => {
+    const k = P.kpi[key];
+    if (agg === 'sum') return `<div class="stat"><div class="k">${esc(label)}</div><div class="v">${fmtK(P, k, st.sum[key], 0)}</div><div class="d">${fmtK(P, k, st.avg[key], 0)} par chatter</div></div>`;
+    const capNote = s.caps.enabled && s.caps.kpi === key ? `Critique sous ${pct(s.caps.criticalBelow)}` : 'Moyenne des chatters';
+    return `<div class="stat"><div class="k">${esc(label)}</div><div class="v">${fmtK(P, k, st.avg[key])}</div><div class="d">${capNote}</div></div>`;
+  };
+  main.innerHTML = topbar(P, 'Tableau de bord', true) + `<div class="stack">
+    <section class="hero">
+      <div>
+        <div class="period">${esc(fmtRange(p.start, p.end))}</div>
+        <div class="meta">${plural(st.count, 'chatter noté', 'chatters notés')} à partir de ${esc(p.fileName || `l'import`)}${p.excluded ? `, ${plural(p.excluded, 'ligne exclue', 'lignes exclues')} à l'import` : ''}${st.critical ? ` · <span style="color:var(--red)">${st.critical} avec un ${esc(capLabel(P))} critique</span>` : ''}</div>
+      </div>
+      <div class="dist" aria-label="Chatters par grade">${GRADE_ORDER.map(g => `<button type="button" class="g ${g}" data-grade="${g}" title="Afficher uniquement le grade ${g}"><div class="letter g${g}">${g}</div><div class="n">${st.grades[g]}</div></button>`).join('')}</div>
+    </section>
+    <section class="stats">
+      <div class="stat"><div class="k">Chatters</div><div class="v">${st.count}</div><div class="d">${plural(st.capped, 'grade plafonné', 'grades plafonnés')}</div></div>
+      <div class="stat"><div class="k">Score moyen de l'équipe</div><div class="v ${scClass(st.avgScore)}">${num(st.avgScore)}</div><div class="d">Niveau grade ${RCA.gradeFor(st.avgScore, s.grades)}</div></div>
+      ${P.dashStats.map(statCell).join('')}
+    </section>
+    <section class="panel"><h2>Classement de l'équipe</h2><p class="hint">Les ${st.count} chatters, classés par score final pondéré. Cliquez sur une ligne pour voir le détail complet.</p>${rankingHTML(P, 'dash')}</section>
+  </div>`;
+  const draw = bindRanking(P, 'dash', res);
+  main.querySelectorAll('.dist .g').forEach(b => b.addEventListener('click', () => {
+    tbl.grade = tbl.grade === b.dataset.grade ? 'all' : b.dataset.grade;
+    document.getElementById('dash-grade').value = tbl.grade; draw();
+  }));
+}
+
+/* ---------- Chatters ---------- */
+function renderChatters(main, P) {
+  const p = currentPeriod(P.id);
+  if (!p) { main.innerHTML = emptyState(P, 'Chatters'); return; }
+  main.innerHTML = topbar(P, 'Chatters', true) + `<section class="panel"><h2>${esc(p.name)}</h2><p class="hint">Triez par n'importe quelle colonne, cherchez par nom ou filtrez par grade et par score. Cliquez sur un chatter pour le détail de ses KPI.</p>${rankingHTML(P, 'ch')}</section>`;
+  bindRanking(P, 'ch', store.results(p.id));
+}
+
+// Palier suivant dans le « bon » sens : vers le haut pour la plupart des KPI, vers le bas pour la réactivité.
+function improvement(k, v, bands) {
+  const sorted = [...bands].sort((a,b) => a[0] - b[0]);
+  const i = sorted.reduce((acc, b, j) => v >= b[0] - 1e-9 ? j : acc, 0);
+  if (!k.lowerIsBetter) { const nb = sorted[i + 1]; return nb && nb[1] > sorted[i][1] ? {verb:'atteindre', v:nb[0], pts:nb[1]} : null; }
+  const pb = sorted[i - 1]; return pb && pb[1] > sorted[i][1] ? {verb:'descendre sous', v:sorted[i][0], pts:pb[1]} : null;
+}
+function observations(P, r, res) {
+  const s = allSettings[P.id], o = [], c = s.caps;
+  const capKpi = c.enabled ? P.kpi[c.kpi] : null;
+  if (capKpi && r.row[c.kpi] != null) {
+    const v = r.row[c.kpi];
+    if (r.critical) o.push(['crit', `${capKpi.label} critique : ${pct(v)}, sous le seuil de ${pct(c.criticalBelow)}. Grade plafonné à ${c.criticalCap}.`]);
+    else if (v < c.warnBelow) o.push(['warn', `${capKpi.label} de ${pct(v)}, sous ${pct(c.warnBelow)}. Grade plafonné à ${c.warnCap}.`]);
+  }
+  if (r.capped) o.push(['warn', `Le score de ${num(r.final)} correspond au grade ${r.scoreGrade} ; le plafond lié au ${capKpi ? capKpi.label : 'KPI'} fixe le grade final à ${r.grade}.`]);
+  for (const k of P.scored) {
+    const v = r.row[k.key], sc = r.scores[k.key];
+    if (k.scoring === 'target') {
+      const t = s.targets[k.key], share = t ? v / t * 100 : 0;
+      if (v >= t) o.push(['good', `${k.label} : objectif atteint (${fmtK(P, k, v)} pour un objectif de ${fmtK(P, k, t)}).`]);
+      else o.push([share < 50 ? 'crit' : 'warn', `${k.label} sous l'objectif : ${fmtK(P, k, v)} sur ${fmtK(P, k, t)} (${num(share, 0)} %), il manque ${fmtK(P, k, t - v)}.`]);
+    } else {
+      if (r.critical && k.key === c.kpi) continue;
+      const imp = improvement(k, v, s.bands[k.key]);
+      const lowest = Math.min(...s.bands[k.key].map(b => b[1]));
+      if (sc >= 100) o.push(['good', `Excellent ${k.label} (${fmtK(P, k, v)}) : palier maximum atteint.`]);
+      else o.push([sc <= lowest ? 'crit' : sc >= 80 ? 'good' : 'warn', `${k.label} de ${fmtK(P, k, v)} : ${sc}/100${imp ? ` ; ${imp.verb} ${fmtK(P, k, imp.v)} le fait passer à ${imp.pts}` : ''}.`]);
+    }
+  }
+  if (P.id === 'mym' && r.row.sold != null && r.row.proposed != null) o.push(['info', `${nf(r.row.sold, 0, 0)} ventes pour ${nf(r.row.proposed, 0, 0)} médias proposés.`]);
+  const losses = P.scored.map(k => [k, (100 - r.scores[k.key]) * s.weights[k.key] / 100]).sort((a,b) => b[1] - a[1]);
+  if (losses.length && losses[0][1] > 0.05) o.push(['warn', `Plus grosse perte de points : ${losses[0][0].label}, qui coûte ${num(losses[0][1], 2)} points pondérés.`]);
+  const diff = RCA.r1(r.final - res.stats.avgScore);
+  o.push([diff >= 0 ? 'good' : 'warn', `Classé ${ordinal(r.rank)} sur ${res.stats.count}, ${diff >= 0 ? '+' : ''}${num(diff)} points par rapport à la moyenne de l'équipe (${num(res.stats.avgScore)}).`]);
+  return o;
+}
+function renderDetail(main, P, name) {
+  const p = currentPeriod(P.id);
+  if (!p) { main.innerHTML = emptyState(P, 'Chatter'); return; }
+  const res = store.results(p.id);
+  const r = res.results.find(x => x.name === name);
+  if (!r) {
+    main.innerHTML = topbar(P, 'Chatter', true) + `<a class="back" href="#${P.id}/chatters" style="display:inline-block;text-decoration:none">‹ Tous les chatters</a><div class="panel empty">${esc(name)} n'a pas de données sur ${esc(p.name)}. Choisissez une autre période ci-dessus ou ouvrez l'<a href="#${P.id}/history">Historique</a>.</div>`;
+    return;
+  }
+  const s = allSettings[P.id];
+  const info = P.kpis.filter(k => k.scoring === 'info');
+  main.innerHTML = topbar(P, 'Détail du chatter', true) + `<button class="back" type="button" id="back">‹ Tous les chatters</button>
+  <div class="stack">
+    <section class="panel detail-head">
+      <div class="biggrade ${r.grade} g${r.grade}" aria-label="Grade final ${r.grade}">${r.grade}</div>
+      <div><div class="who">${esc(r.name)}</div>
+        <div class="line">${ordinal(r.rank)} sur ${res.stats.count} · ${esc(p.name)} · ${statusPill(r.status)}</div>
+        <div class="line">${r.capped ? `Grade du score <b class="g${r.scoreGrade}">${r.scoreGrade}</b>, grade final <b class="g${r.grade}">${r.grade}</b> après le plafond lié au ${esc(capLabel(P))}.` : `Le grade final correspond au grade du score.`}</div>
+      </div>
+      <div class="scorebox"><div class="v ${scClass(r.final)}">${num(r.final)}</div><div class="k">Score final / 100</div></div>
+    </section>
+    <section class="panel"><h2>Détail des KPI</h2><p class="hint">Chaque KPI est noté sur 100, puis multiplié par son poids. La somme des contributions donne le score final.</p>
+      ${P.scored.map(k => `<div class="kpi-row">
+        <div class="lab">${k.label}</div>
+        <div class="raw">${fmtK(P, k, r.row[k.key])}</div>
+        <div class="bar" role="img" aria-label="Score ${esc(k.label)} : ${r.scores[k.key]} sur 100"><i style="width:${r.scores[k.key]}%;background:${scColor(r.scores[k.key])}"></i></div>
+        <div class="math"><b class="${scClass(r.scores[k.key])}">${num(r.scores[k.key], r.scores[k.key] % 1 ? 1 : 0)}</b>/100 × ${nf(s.weights[k.key], 0, 2)} % = <b>${num(r.contrib[k.key], 2)}</b></div>
+      </div>`).join('')}
+      ${info.map(k => `<div class="kpi-row"><div class="lab">${k.label}</div><div class="raw">${fmtK(P, k, r.row[k.key])}</div><div></div><div class="math">Information, non noté</div></div>`).join('')}
+      <div class="kpi-row" style="border-top:1px solid var(--line)"><div class="lab">Score final</div><div></div><div></div><div class="math"><b>${num(r.final)}</b> → grade <b class="g${r.grade}">${r.grade}</b></div></div>
+    </section>
+    <div class="grid2">
+      <section class="panel"><h2>Observations</h2><p class="hint">Générées à partir des chiffres de ce chatter et des paramètres ${P.name} actuels.</p><ul class="obs">${observations(P, r, res).map(([t, m]) => `<li class="${t}">${esc(m)}</li>`).join('')}</ul></section>
+      <section class="panel"><h2>Score sur les périodes</h2><p class="hint">L'évolution complète est sur la page <a href="#${P.id}/history" id="hist-link">Historique</a>.</p><div class="chart-box" id="mini-box"><canvas id="mini"></canvas></div></section>
+    </div>
+  </div>`;
+  document.getElementById('back').addEventListener('click', () => go(`${P.id}/chatters`));
+  document.getElementById('hist-link').addEventListener('click', () => { ui.historyName[P.id] = r.name; });
+  const series = chronoPeriods(P.id).map(pp => ({p: pp, r: store.results(pp.id).results.find(x => x.name === r.name)}));
+  lineChart('mini', series.map(x => x.p.name), [{label:'Score final', data: series.map(x => x.r ? x.r.final : null), color:'#EE5B45', grades: series.map(x => x.r ? x.r.grade : null)}], {min:0, max:100});
+}
+
+/* ---------- Graphiques ---------- */
+function chartsReady(boxId) {
+  if (window.Chart) return true;
+  const b = document.getElementById(boxId);
+  if (b) b.innerHTML = `<div class="nochart">Les graphiques n'ont pas pu se charger (Chart.js inaccessible). Les scores et les tableaux fonctionnent toujours.</div>`;
+  return false;
+}
+function lineChart(canvasId, labels, sets, yopt = {}, fmt) {
+  const cv = document.getElementById(canvasId);
+  if (!cv || !chartsReady(cv.parentElement.id)) return;
+  Chart.defaults.color = '#ABA3CC';
+  Chart.defaults.borderColor = '#281F4B';
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+  charts.push(new Chart(cv, {
+    type:'line',
+    data:{labels, datasets: sets.map(d => ({label:d.label, data:d.data, borderColor:d.color, backgroundColor:d.color, pointRadius:4, pointHoverRadius:6, tension:.25, spanGaps:false, borderWidth:2}))},
+    options:{responsive:true, maintainAspectRatio:false, animation:false, locale:'fr-FR',
+      plugins:{legend:{display: sets.length > 1}, tooltip:{callbacks:{label: ctx => {
+        const d = sets[ctx.datasetIndex]; const v = ctx.parsed.y;
+        const g = d.grades && d.grades[ctx.dataIndex] ? `, grade ${d.grades[ctx.dataIndex]}` : '';
+        return `${d.label} : ${fmt ? fmt(v) : num(v)}${g}`; }}}},
+      scales:{y:{min:yopt.min, max:yopt.max, beginAtZero:true, reverse:!!yopt.reverse, ticks:{callback: v => fmt ? fmt(v) : nf(v, 0, 1)}}, x:{grid:{display:false}}}}
+  }));
+}
+function barChart(canvasId, labels, data, colors, yopt = {}) {
+  const cv = document.getElementById(canvasId);
+  if (!cv || !chartsReady(cv.parentElement.id)) return;
+  charts.push(new Chart(cv, {type:'bar', data:{labels, datasets:[{data, backgroundColor:colors, borderRadius:6, maxBarThickness:48}]},
+    options:{responsive:true, maintainAspectRatio:false, animation:false, locale:'fr-FR', plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, min:yopt.min, max:yopt.max}, x:{grid:{display:false}}}}}));
+}
+
+/* ---------- Analyse d'équipe ---------- */
+// Cible : l'objectif configuré, ou le seuil qui donne le maximum de points pour les KPI à paliers.
+function kpiTarget(P, k, s) {
+  if (k.scoring === 'target') return {v: s.targets[k.key], note:'objectif configuré', meets: v => v >= s.targets[k.key] - 1e-9, sign:''};
+  const sorted = [...s.bands[k.key]].sort((a,b) => a[0] - b[0]);
+  const maxPts = Math.max(...sorted.map(b => b[1]));
+  if (k.lowerIsBetter) {
+    const i = sorted.findIndex(b => b[1] === maxPts), next = sorted[i + 1];
+    const lim = next ? next[0] : Infinity;
+    return {v: lim, note:'seuil du score maximum', meets: v => v < lim - 1e-9, sign:'< '};
+  }
+  const top = sorted.filter(b => b[1] === maxPts)[0];
+  return {v: top[0], note:'seuil du score maximum', meets: v => v >= top[0] - 1e-9, sign:''};
+}
+function renderAnalytics(main, P) {
+  const p = currentPeriod(P.id);
+  if (!p) { main.innerHTML = emptyState(P, `Analyse d'équipe`); return; }
+  const s = allSettings[P.id], res = store.results(p.id), st = res.stats;
+  const rows = P.scored.map(k => {
+    const t = kpiTarget(P, k, s);
+    const meeting = res.results.filter(r => t.meets(r.row[k.key])).length;
+    return {k, t, avg: st.avg[k.key], avgScore: st.avgScores[k.key], meeting, below: !t.meets(st.avg[k.key])};
+  });
+  const below = rows.filter(r => r.below);
+  main.innerHTML = topbar(P, `Analyse d'équipe`, true) + `<div class="stack">
+    <section class="stats stats-auto">
+      <div class="stat"><div class="k">Score moyen</div><div class="v ${scClass(st.avgScore)}">${num(st.avgScore)}</div></div>
+      ${P.kpis.map(k => k.kind === 'money' || k.kind === 'count'
+        ? `<div class="stat"><div class="k">${esc(k.label)} (total)</div><div class="v">${fmtK(P, k, st.sum[k.key], 0)}</div></div>`
+        : `<div class="stat"><div class="k">${esc(k.label)} (moyenne)</div><div class="v">${fmtK(P, k, st.avg[k.key])}</div></div>`).join('')}
+    </section>
+    <section class="panel"><h2>KPI sous l'objectif</h2>
+      ${below.length ? `<p class="hint">La moyenne de l'équipe est en dessous de l'objectif sur ${below.length} KPI sur ${P.scored.length} pour ${esc(p.name)}.</p><ul class="obs">${below.map(r => `<li class="${r.avgScore < 50 ? 'crit' : 'warn'}"><strong>${r.k.label}</strong> : moyenne de l'équipe ${fmtK(P, r.k, r.avg)} pour un ${r.t.note} de ${r.t.sign}${fmtK(P, r.k, r.t.v)}. ${r.meeting} chatter${r.meeting > 1 ? 's' : ''} sur ${st.count} l'atteigne${r.meeting > 1 ? 'nt' : ''}.</li>`).join('')}</ul>`
+      : `<div class="alert ok">La moyenne de l'équipe atteint l'objectif sur tous les KPI de cette période.</div>`}
+    </section>
+    <section class="panel"><h2>Vue d'ensemble des KPI</h2><p class="hint">Les KPI à objectif utilisent les montants des Paramètres ${P.name}. Les KPI à paliers utilisent le seuil qui donne 100 points.</p>
+      <div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>KPI</th><th class="num">Poids</th><th class="num">Moyenne équipe</th><th class="num">Objectif</th><th class="num">Score moyen</th><th class="num">À l'objectif</th><th>Statut</th></tr></thead><tbody>
+      ${rows.map(r => `<tr><td><strong>${r.k.label}</strong></td><td class="num">${nf(s.weights[r.k.key], 0, 2)} %</td><td class="num">${fmtK(P, r.k, r.avg)}</td><td class="num">${r.t.sign}${fmtK(P, r.k, r.t.v)}</td><td class="num ${scClass(r.avgScore)}">${num(r.avgScore)}</td><td class="num">${r.meeting} / ${st.count}</td><td>${r.below ? statusPill(r.avgScore < 50 ? 'Critical' : 'Warning') : `<span class="pill Strong">Atteint</span>`}</td></tr>`).join('')}
+      </tbody></table></div>
+    </section>
+    <div class="grid2">
+      <section class="panel"><h2>Score moyen par KPI</h2><div class="chart-box tall" id="kpi-box"><canvas id="kpi-chart"></canvas></div></section>
+      <section class="panel"><h2>Répartition des grades</h2><div class="chart-box tall" id="grade-box"><canvas id="grade-chart"></canvas></div></section>
+    </div>
+  </div>`;
+  barChart('kpi-chart', P.scored.map(k => k.label), P.scored.map(k => RCA.r1(st.avgScores[k.key])), P.scored.map(k => st.avgScores[k.key] >= 80 ? '#45D08F' : st.avgScores[k.key] >= 50 ? '#F2A43C' : '#F0605E'), {min:0, max:100});
+  barChart('grade-chart', GRADE_ORDER.map(g => 'Grade ' + g), GRADE_ORDER.map(g => st.grades[g]), ['#EE5B45','#45D08F','#A08CFF','#F2A43C','#F0605E']);
+}
+
+/* ---------- Historique ---------- */
+const SERIES_COLORS = ['#45D08F','#5B3FD0','#A08CFF','#F2A43C','#F7A034','#E0336A','#5FD3D0'];
+function renderHistory(main, P) {
+  const periods = chronoPeriods(P.id);
+  if (!periods.length) { main.innerHTML = emptyState(P, 'Historique'); return; }
+  const names = [...new Set(periods.flatMap(p => p.rows.map(r => r.name)))].sort((a,b) => a.localeCompare(b, 'fr'));
+  const TEAM = '__team__';
+  let sel = ui.historyName[P.id];
+  if (!sel || (sel !== TEAM && !names.includes(sel))) sel = ui.historyName[P.id] = names[0] || TEAM;
+  const s = allSettings[P.id];
+  const series = periods.map(p => {
+    const res = store.results(p.id);
+    if (sel === TEAM) return {p, r: {final: res.stats.avgScore, grade: RCA.gradeFor(res.stats.avgScore, s.grades), row: res.stats.avg}};
+    return {p, r: res.results.find(x => x.name === sel) || null};
+  });
+  main.innerHTML = topbar(P, 'Historique', false) + `<div class="stack">
+    <section class="panel">
+      <div class="fieldrow" style="align-items:flex-end">
+        <label>Chatter<select id="hist-sel"><option value="${TEAM}" ${sel === TEAM ? 'selected' : ''}>Moyenne de l'équipe</option>${names.map(n => `<option ${n === sel ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
+        <p class="hint" style="margin:0 0 8px">${plural(periods.length, 'période', 'périodes')} ${P.name} par ordre chronologique. Un trou signifie que le chatter n'était pas dans cet import.</p>
+      </div>
+    </section>
+    <div class="grid2">
+      <section class="panel"><h2>Score final et grade</h2><div class="chart-box" id="h-score-box"><canvas id="h-score"></canvas></div></section>
+      ${P.kpis.map(k => `<section class="panel"><h2>${k.label}${k.lowerIsBetter ? ' <span class="sub">(plus bas = mieux)</span>' : ''}</h2><div class="chart-box" id="h-${k.key}-box"><canvas id="h-${k.key}"></canvas></div></section>`).join('')}
+      <section class="panel"><h2>Grade par période</h2><div class="tbl-wrap" style="max-height:230px"><table><thead><tr><th>Période</th><th class="num">Score</th><th>Grade</th></tr></thead><tbody>
+        ${[...series].reverse().map(x => `<tr><td>${esc(x.p.name)}</td><td class="num">${x.r ? num(x.r.final) : '—'}</td><td>${x.r ? (x.r.scores ? gradeBadge(P, x.r) : `<span class="badge ${x.r.grade} g${x.r.grade}">${x.r.grade}</span>`) : `<span class="sub">absent de l'import</span>`}</td></tr>`).join('')}
+      </tbody></table></div></section>
+    </div>
+  </div>`;
+  document.getElementById('hist-sel').addEventListener('change', e => { ui.historyName[P.id] = e.target.value; render(); });
+  const labels = series.map(x => x.p.name);
+  const get = f => series.map(x => x.r ? f(x.r) : null);
+  lineChart('h-score', labels, [{label:'Score final', data:get(r => r.final), color:'#EE5B45', grades:get(r => r.grade)}], {min:0, max:100});
+  P.kpis.forEach((k, i) => lineChart('h-' + k.key, labels, [{label:k.label, data:get(r => r.row[k.key] ?? null), color:SERIES_COLORS[i % SERIES_COLORS.length]}], k.kind === 'pct' && k.pctRule === 'unlock' ? {min:0, max:100} : {}, v => fmtK(P, k, v)));
+}
+
+/* ---------- Import ---------- */
+function gridFromWorkbook(wb) {
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  if (!ws || !ws['!ref']) return [];
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  const grid = [];
+  for (let r = range.s.r; r <= range.e.r; r++) {
+    const row = [];
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cell = ws[XLSX.utils.encode_cell({r, c})];
+      if (!cell) row.push(null);
+      else if (cell.t === 'n') row.push({v: cell.v, pct: /%/.test(cell.z || ''), w: cell.w});
+      else row.push(cell.w != null ? String(cell.w) : String(cell.v ?? ''));
+    }
+    grid.push(row);
+  }
+  return grid.filter(r => r.some(c => RCA.cellText(c).trim() !== ''));
+}
+async function handleFile(P, file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  let grid;
+  try {
+    if (ext === 'csv' || ext === 'tsv' || ext === 'txt') {
+      grid = RCA.parseCSV(await file.text());
+    } else if (ext === 'xlsx' || ext === 'xls') {
+      if (!window.XLSX) { toast(`Le lecteur XLSX n'a pas pu se charger. Exportez le rapport en CSV à la place.`, true); return; }
+      grid = gridFromWorkbook(XLSX.read(await file.arrayBuffer(), {type:'array', cellNF:true}));
+    } else { toast(`« ${file.name} » n'est pas un fichier CSV ou XLSX.`, true); return; }
+  } catch (e) { toast(`Impossible de lire « ${file.name} » : ${e.message}`, true); return; }
+  if (grid.length < 2) { toast(`« ${file.name} » ne contient aucune ligne de données.`, true); return; }
+  const s = allSettings[P.id];
+  const headerRow = RCA.findHeaderRow(P, grid, s);
+  const headers = grid[headerRow].map(c => RCA.cellText(c).trim());
+  const det = RCA.detectColumns(P, headers, s);
+  const dates = (file.name.match(/\d{4}-\d{2}-\d{2}/g) || []);
+  const d = importDraft[P.id] = {fileName: file.name, grid, headerRow, headers, det, mapping: Object.fromEntries(P.fields.map(f => [f.key, det[f.key].idx])), manual:{}, onlyIssues:false, remember:true,
+    start: dates[0] || '', end: dates[1] || dates[0] || ''};
+  d.rows = RCA.buildRows(P, grid, headerRow, d.mapping);
+  const matched = P.fields.filter(f => d.mapping[f.key] >= 0).length;
+  if (matched <= 2) toast(`Très peu de colonnes reconnues. Vérifiez qu'il s'agit bien d'un export ${P.name}.`, true);
+  render();
+}
+const TAG_LABEL = {exact:'exacte', partial:'partielle', manual:'manuelle', missing:'manquante', derived:'calculée', optional:'facultative'};
+function renderImport(main, P) {
+  const d = importDraft[P.id];
+  const hint = P.id === 'mym'
+    ? `Exportez l'onglet « Résumé chatter » de MYM en CSV ou XLSX. Colonnes attendues : Chatter, Réactivité, Proposé, Vendu, Taux conv., CA PPV, CA Tips, CA Total. Si le taux de conversion manque, il est calculé à partir de Vendu ÷ Proposé.`
+    : `Exportez le rapport de performance Infloww en CSV ou XLSX. Les colonnes sont détectées automatiquement, dans n'importe quel ordre.`;
+  let html = topbar(P, 'Import', false) + `<div class="stack">
+    <section class="panel"><h2>Importer un export ${P.name}</h2><p class="hint">${hint} Vous pouvez corriger la correspondance des colonnes avant l'enregistrement.</p>
+      <label class="drop" id="drop" tabindex="0"><input type="file" id="file" accept=".csv,.xlsx,.xls,.tsv,.txt" hidden>
+        <strong>${d ? esc(d.fileName) : `Déposez un rapport ${P.name} ici ou choisissez un fichier`}</strong><span>${d ? 'Déposez un autre fichier pour le remplacer' : 'Formats acceptés : .csv, .xlsx'}</span></label>
+    </section>`;
+  if (d) {
+    const missing = RCA.missingFields(P, d.mapping);
+    const partial = P.fields.filter(f => d.mapping[f.key] >= 0 && !d.manual[f.key] && d.det[f.key].type === 'partial');
+    const sum = RCA.summarize(d.rows);
+    const incl = d.rows.filter(r => r.include);
+    const dupIncluded = (() => { const seen = new Set(); for (const r of incl) { const k = r.name.toLowerCase(); if (seen.has(k)) return r.name; seen.add(k); } return null; })();
+    const dateErr = !d.start || !d.end ? 'Choisissez les dates de début et de fin de la période.' : d.end < d.start ? 'La date de fin est antérieure à la date de début.' : '';
+    const sameDates = platformPeriods(P.id).find(p => p.start === d.start && p.end === d.end);
+    const blocker = missing.length ? `Colonne manquante : ${missing.map(f => f.label).join(', ')}.` : dateErr || (!incl.length ? 'Aucune ligne sélectionnée pour la notation.' : '') || (dupIncluded ? `« ${dupIncluded} » est inclus plusieurs fois. Ne gardez qu'une seule des lignes en double.` : '');
+    const tagFor = f => d.mapping[f.key] >= 0 ? (d.manual[f.key] ? 'manual' : d.det[f.key].type) : (f.derive && f.derive.from.every(x => d.mapping[x] >= 0)) ? 'derived' : f.optional ? 'optional' : 'missing';
+    html += `<section class="panel"><h2>Période</h2><p class="hint">Chaque import est enregistré comme une période ${P.name} distincte et n'est jamais mélangé aux autres.</p>
+      <div class="fieldrow"><label>Date de début<input type="date" id="d-start" value="${esc(d.start)}"></label><label>Date de fin<input type="date" id="d-end" value="${esc(d.end)}"></label>
+      <label style="flex:1;min-width:200px">Nom (facultatif)<input type="text" id="d-label" value="${esc(d.label || '')}" placeholder="${esc(d.start && d.end ? fmtRange(d.start, d.end) : 'Reprend les dates')}"></label></div>
+      ${sameDates ? `<div class="alert warn" style="margin-top:12px">Une période ${P.name} avec ces dates existe déjà (${esc(sameDates.name)}). Cet import sera enregistré à part ; supprimez l'ancienne ci-dessous s'il s'agit d'un réimport.</div>` : ''}
+    </section>
+    <section class="panel"><h2>Correspondance des colonnes</h2><p class="hint">Ligne d'en-têtes trouvée à la ligne ${d.headerRow + 1}. Vérifiez les correspondances partielles et choisissez la bonne colonne pour celles qui manquent.</p>
+      ${missing.length ? `<div class="alert err" style="margin-bottom:12px">Aucune colonne trouvée pour <strong>${missing.map(f => f.label).join(', ')}</strong>. Les scores ne sont jamais calculés avec des KPI manquants. Sélectionnez la colonne correspondante ci-dessous, ou réexportez le rapport en incluant ${missing.length > 1 ? 'ces KPI' : 'ce KPI'}. En-têtes de votre fichier : ${d.headers.filter(Boolean).map(h => `« ${esc(h)} »`).join(', ')}.</div>` : ''}
+      ${partial.length ? `<div class="alert warn" style="margin-bottom:12px">Correspondance partielle pour ${partial.map(f => f.label).join(', ')}. Vérifiez que ce sont bien les bonnes colonnes.</div>` : ''}
+      ${P.fields.map(f => { const t = tagFor(f); return `<div class="maprow"><strong>${f.label}${f.scoring === 'info' ? ' <span class="sub">(info)</span>' : ''}</strong>
+        <select data-map="${f.key}"><option value="-1">${t === 'derived' ? 'Calculé (Vendu ÷ Proposé)' : 'Non associée'}</option>${d.headers.map((h, i) => `<option value="${i}" ${d.mapping[f.key] === i ? 'selected' : ''}>${esc(h || `(colonne ${i + 1})`)}</option>`).join('')}</select>
+        <span class="tag ${t}">${TAG_LABEL[t]}</span></div>`; }).join('')}
+      <label class="check" style="margin-top:10px"><input type="checkbox" id="remember" ${d.remember ? 'checked' : ''}> Mémoriser les en-têtes choisis à la main comme alias pour les prochains imports ${P.name}</label>
+    </section>
+    <section class="panel"><h2>Validation</h2>
+      <div class="summary"><span><b>${sum.total}</b>importé${sum.total > 1 ? 's' : ''}</span><span><b class="sc-hi">${sum.valid}</b>valide${sum.valid > 1 ? 's' : ''}</span><span><b class="${sum.review ? 'sc-mid' : ''}">${sum.review}</b>à vérifier</span><span><b>${sum.included}</b>seront notés</span></div>
+      <p class="hint" style="margin-top:8px">Les lignes en erreur ne peuvent pas être notées. Les doublons et les lignes de total sont exclus par défaut ; cochez une ligne pour l'inclure.</p>
+      <label class="check" style="margin-bottom:10px"><input type="checkbox" id="only-issues" ${d.onlyIssues ? 'checked' : ''}> Afficher uniquement les lignes à vérifier</label>
+      <div class="tbl-wrap" style="max-height:420px"><table><thead><tr><th>Noter</th><th class="num">Ligne</th><th>Chatter</th>${P.kpis.map(k => `<th class="num">${k.label}</th>`).join('')}<th>Problèmes</th></tr></thead><tbody>
+        ${d.rows.map((r, i) => ({r, i})).filter(x => !d.onlyIssues || x.r.issues.length).map(({r, i}) => { const err = r.issues.some(x => x.sev === 'error'); return `<tr class="${err ? 'issue-error' : r.issues.length ? 'issue-warn' : ''}">
+          <td><input type="checkbox" data-inc="${i}" ${r.include ? 'checked' : ''} ${err ? 'disabled' : ''} aria-label="Inclure ${esc(r.name)}"></td><td class="num">${r.line}</td><td>${esc(r.name) || '<span class="sub">vide</span>'}</td>
+          ${P.kpis.map(k => `<td class="num">${r.values[k.key] == null ? '<span class="sub">—</span>' : fmtK(P, k, r.values[k.key]) + (r.derived[k.key] ? '<span class="sub">calc.</span>' : '')}</td>`).join('')}
+          <td class="issues">${r.issues.map(x => esc(x.msg)).join(' ; ')}</td></tr>`; }).join('') || `<tr><td colspan="${P.kpis.length + 4}" class="empty">Toutes les lignes sont valides.</td></tr>`}
+      </tbody></table></div>
+    </section>
+    <div class="savebar"><span class="msg ${blocker ? 'sc-lo' : 'sc-hi'}">${blocker ? esc(blocker) : `Prêt : ${plural(incl.length, 'chatter sera noté', 'chatters seront notés')}.`}</span>
+      <button class="btn ghost" id="cancel-import" type="button">Abandonner</button>
+      <button class="btn primary" id="confirm-import" type="button" ${blocker ? 'disabled' : ''}>Importer et noter ${plural(incl.length, 'chatter', 'chatters')}</button></div>`;
+  }
+  const list = sortedPeriods(P.id);
+  html += `<section class="panel"><h2>Périodes ${P.name} enregistrées</h2>${list.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Période</th><th>Dates</th><th class="num">Chatters</th><th>Fichier source</th><th>Importée le</th><th></th></tr></thead><tbody>
+    ${list.map(p => `<tr><td><strong>${esc(p.name)}</strong></td><td>${esc(fmtRange(p.start, p.end))}</td><td class="num">${p.rows.length}</td><td>${esc(p.fileName || '')}</td><td>${new Date(p.createdAt).toLocaleDateString('fr-FR')}</td>
+    <td class="num"><button class="btn ghost" data-open="${p.id}" type="button">Ouvrir</button> <button class="btn danger" data-del="${p.id}" type="button">Supprimer</button></td></tr>`).join('')}</tbody></table></div>` : `<p class="hint" style="margin:0">Aucune période ${P.name} pour l'instant.</p>`}</section></div>`;
+  main.innerHTML = html;
+  bindImport(P);
+}
+function bindImport(P) {
+  const drop = document.getElementById('drop'), file = document.getElementById('file');
+  file.addEventListener('change', () => file.files[0] && handleFile(P, file.files[0]));
+  drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) handleFile(P, f); });
+  document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { ui.period[P.id] = b.dataset.open; saveUI(); go(`${P.id}/dashboard`); }));
+  document.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+    const p = store.periods.find(x => x.id === b.dataset.del);
+    if (!(await modal('Supprimer la période', `<p>Supprimer la période ${P.name} <strong>${esc(p.name)}</strong> et ses ${plural(p.rows.length, 'chatter noté', 'chatters notés')} ? Cette action est définitive.</p>`, 'Supprimer la période'))) return;
+    store.periods.splice(store.periods.indexOf(p), 1);
+    store.invalidate(); savePeriods(); if (ui.period[P.id] === p.id) ui.period[P.id] = null;
+    toast(`${p.name} supprimée.`); render();
+  }));
+  const d = importDraft[P.id];
+  if (!d) return;
+  const keep = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
+  document.getElementById('d-start').addEventListener('change', e => { d.start = e.target.value; keep(); });
+  document.getElementById('d-end').addEventListener('change', e => { d.end = e.target.value; keep(); });
+  document.getElementById('d-label').addEventListener('input', e => { d.label = e.target.value; });
+  document.getElementById('remember').addEventListener('change', e => { d.remember = e.target.checked; });
+  document.getElementById('only-issues').addEventListener('change', e => { d.onlyIssues = e.target.checked; keep(); });
+  document.querySelectorAll('[data-map]').forEach(sel => sel.addEventListener('change', () => {
+    const f = sel.dataset.map, idx = Number(sel.value);
+    for (const k of Object.keys(d.mapping)) if (k !== f && idx >= 0 && d.mapping[k] === idx) { d.mapping[k] = -1; d.manual[k] = true; }
+    d.mapping[f] = idx; d.manual[f] = true;
+    d.rows = RCA.buildRows(P, d.grid, d.headerRow, d.mapping);
+    keep();
+  }));
+  document.querySelectorAll('[data-inc]').forEach(cb => cb.addEventListener('change', () => { d.rows[Number(cb.dataset.inc)].include = cb.checked; keep(); }));
+  document.getElementById('cancel-import').addEventListener('click', () => { importDraft[P.id] = null; render(); });
+  document.getElementById('confirm-import').addEventListener('click', () => confirmImport(P));
+}
+function confirmImport(P) {
+  const d = importDraft[P.id];
+  const rows = d.rows.filter(r => r.include && !r.issues.some(i => i.sev === 'error')).map(r => ({name: r.name, ...r.values}));
+  if (rows.some(r => P.scored.some(k => r[k.key] == null))) { toast('Certaines lignes sélectionnées ont des KPI manquants.', true); return; }
+  if (d.remember) {
+    const s = RCA.clone(allSettings[P.id]); let added = 0;
+    for (const [k, man] of Object.entries(d.manual)) {
+      const idx = d.mapping[k]; if (!man || idx < 0) continue;
+      const h = d.headers[idx]; if (!h) continue;
+      if (!RCA.aliasList(P, k, s).includes(RCA.normHeader(h))) { s.aliases[k] = [...(s.aliases[k] || []), h]; added++; }
+    }
+    if (added) { store.setSettings(P.id, s); saveSettings(); }
+  }
+  const period = {id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), platform: P.id, name: (d.label || '').trim() || fmtRange(d.start, d.end), start: d.start, end: d.end,
+    fileName: d.fileName, createdAt: Date.now(), excluded: d.rows.length - rows.length, rows};
+  store.periods.push(period); store.invalidate(); savePeriods();
+  ui.period[P.id] = period.id; saveUI();
+  importDraft[P.id] = null;
+  toast(`${plural(rows.length, 'chatter importé', 'chatters importés')} dans ${P.name} · ${period.name}.`);
+  go(`${P.id}/dashboard`);
+}
+
+/* ---------- Export (format Excel français : séparateur ; et virgule décimale) ---------- */
+function csvCell(v) {
+  const s = typeof v === 'number' ? String(v).replace('.', ',') : String(v ?? '');
+  return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+async function exportCSV(P) {
+  const p = currentPeriod(P.id); if (!p) return;
+  const res = store.results(p.id);
+  const unit = k => k.kind === 'pct' ? ' (%)' : k.kind === 'seconds' ? ' (s)' : k.kind === 'money' ? ` (${P.currency})` : '';
+  const head = ['Chatter','Plateforme','Période', ...P.kpis.flatMap(k => k.scoring === 'info' ? [k.label + unit(k)] : [k.label + unit(k), 'Score ' + k.label]), 'Score final','Grade','Alertes'];
+  const lines = [head.map(csvCell).join(';')].concat(res.results.map(r => [r.name, P.name, p.name,
+    ...P.kpis.flatMap(k => k.scoring === 'info' ? [r.row[k.key] ?? ''] : [r.row[k.key], r.scores[k.key]]), r.final, r.grade, r.warnings.join(' ; ')].map(csvCell).join(';')));
+  const data = '\uFEFF' + lines.join('\r\n');
+  const filename = `notation-${P.id}_${p.start || 'periode'}${p.end ? '_' + p.end : ''}.csv`;
+  let dl = null;
+  try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch { dl = null; }
+  if (dl) {
+    try { await dl.save({filename, data}); toast('Export enregistré.'); }
+    catch (e) { if (e && e.code !== 'declined') toast(`L'export n'a pas pu être enregistré ici.`, true); }
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], {type:'text/csv;charset=utf-8'}));
+  a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* ---------- Paramètres ---------- */
+function bandTable(P, k, draft) {
+  const bands = draft.bands[k.key], u = unitOf(P, k);
+  return `<div><h3 style="font-size:14px;margin:0 0 4px">${k.label}</h3>
+    ${k.lowerIsBetter ? `<p class="hint" style="margin:0 0 6px;font-size:12px">Plus la valeur est basse, plus il y a de points.</p>` : ''}
+    <table class="bands"><thead><tr><th>À partir de (${u})</th><th>Points</th></tr></thead><tbody>
+    ${bands.map((b, i) => `<tr><td><input type="number" step="any" data-band="${k.key}" data-i="${i}" data-j="0" value="${b[0]}" ${i === 0 ? `readonly title="Le premier palier commence toujours à 0"` : ''}></td><td><input type="number" step="any" min="0" max="100" data-band="${k.key}" data-i="${i}" data-j="1" value="${b[1]}"></td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+function validateSettings(P, s) {
+  const errs = [];
+  const wsum = P.scored.reduce((a, k) => a + Number(s.weights[k.key]), 0);
+  if (P.scored.some(k => !Number.isFinite(Number(s.weights[k.key])) || s.weights[k.key] < 0)) errs.push('Les poids doivent être des nombres positifs ou nuls.');
+  if (Math.abs(wsum - 100) > 1e-6) errs.push(`La somme des poids est de ${nf(wsum, 0, 1)} %. Elle doit être exactement de 100 %.`);
+  for (const k of P.scored.filter(k => k.scoring === 'target')) if (!(s.targets[k.key] > 0)) errs.push(`L'objectif ${k.label} doit être supérieur à 0.`);
+  for (const k of P.scored.filter(k => k.scoring === 'bands')) {
+    const b = s.bands[k.key];
+    if (b.some(x => !Number.isFinite(x[0]) || !Number.isFinite(x[1]))) errs.push(`Paliers ${k.label} : chaque case doit contenir un nombre.`);
+    else if (b.some((x, i) => i > 0 && x[0] <= b[i - 1][0])) errs.push(`Paliers ${k.label} : les seuils doivent augmenter de haut en bas.`);
+    if (b.some(x => x[1] < 0 || x[1] > 100)) errs.push(`Paliers ${k.label} : les points doivent être compris entre 0 et 100.`);
+  }
+  const g = s.grades;
+  if (!(g.S > g.A && g.A > g.B && g.B > g.C && g.C > 0 && g.S <= 100)) errs.push('Les seuils de grade doivent être décroissants : S > A > B > C > 0, avec S au maximum à 100.');
+  const c = s.caps;
+  if (c.enabled && !(c.criticalBelow >= 0 && c.warnBelow >= c.criticalBelow && c.warnBelow <= 100)) errs.push(`Le seuil critique du plafond doit être inférieur ou égal au seuil d'alerte.`);
+  return errs;
+}
+function renderSettings(main, P) {
+  if (!settingsDraft[P.id]) settingsDraft[P.id] = RCA.clone(allSettings[P.id]);
+  const s = settingsDraft[P.id];
+  const wsum = P.scored.reduce((a, k) => a + Number(s.weights[k.key] || 0), 0);
+  const gradeOpts = v => ['S','A','B','C','D'].map(g => `<option ${v === g ? 'selected' : ''}>${g}</option>`).join('');
+  const sumText = t => `Total : ${nf(t, 0, 1)} %${Math.abs(t - 100) > 1e-6 ? ' — doit être exactement 100 % pour enregistrer' : ''}`;
+  const targets = P.scored.filter(k => k.scoring === 'target'), banded = P.scored.filter(k => k.scoring === 'bands');
+  const capOptions = P.scored.filter(k => k.kind === 'pct');
+  const capK = P.kpi[s.caps.kpi];
+  main.innerHTML = topbar(P, 'Paramètres', false) + `<div class="stack">
+    <div class="alert ok">Ces paramètres ne s'appliquent qu'à ${P.name}. ${P.id === 'of' ? 'Les réglages MYM se trouvent dans Paramètres MYM.' : 'Les réglages OnlyFans se trouvent dans Paramètres OnlyFans.'}</div>
+    <section class="panel"><h2>Poids des KPI</h2><p class="hint">Le score final est la somme des scores de chaque KPI multipliés par leur poids.${P.kpis.some(k => k.scoring === 'info') ? ` ${P.kpis.filter(k => k.scoring === 'info').map(k => k.label).join(' et ')} sont affichés sans être notés.` : ''}</p>
+      <div class="set-grid">${P.scored.map(k => `<label>${k.label} (%)<input type="number" step="any" min="0" max="100" data-path="weights.${k.key}" value="${s.weights[k.key]}"></label>`).join('')}</div>
+      <div class="sumline ${Math.abs(wsum - 100) > 1e-6 ? 'bad' : 'good'}" id="wsum">${sumText(wsum)}</div>
+    </section>
+    <section class="panel"><h2>Objectifs</h2><p class="hint">Ces KPI sont notés proportionnellement : atteindre l'objectif donne 100 points, 90 % de l'objectif donne 90 points, etc.</p>
+      <div class="set-grid">${targets.map(k => `<label>Objectif ${k.label} (${P.currency})<input type="number" step="any" min="0" data-path="targets.${k.key}" value="${s.targets[k.key]}"></label>`).join('')}</div>
+    </section>
+    <section class="panel"><h2>Paliers</h2><p class="hint">Une valeur obtient les points du palier le plus haut qu'elle atteint.</p>
+      <div class="grid2">${banded.map(k => bandTable(P, k, s)).join('')}</div>
+    </section>
+    <section class="panel"><h2>Plafond de grade</h2><p class="hint">Si le KPI choisi est trop bas, le grade est plafonné, quel que soit le score. Le plafond s'applique après le calcul du grade.</p>
+      <label class="check" style="margin-bottom:12px"><input type="checkbox" id="cap-on" ${s.caps.enabled ? 'checked' : ''}> Activer le plafond de grade</label>
+      <div class="set-grid">
+        <label>KPI surveillé<select data-path="caps.kpi">${capOptions.map(k => `<option value="${k.key}" ${s.caps.kpi === k.key ? 'selected' : ''}>${k.label}</option>`).join('')}</select></label>
+        <label>Critique en dessous de (%)<input type="number" step="any" data-path="caps.criticalBelow" value="${s.caps.criticalBelow}"></label>
+        <label>Grade plafond si critique<select data-path="caps.criticalCap">${gradeOpts(s.caps.criticalCap)}</select></label>
+        <label>Alerte en dessous de (%)<input type="number" step="any" data-path="caps.warnBelow" value="${s.caps.warnBelow}"></label>
+        <label>Grade plafond si alerte<select data-path="caps.warnCap">${gradeOpts(s.caps.warnCap)}</select></label>
+      </div>
+      ${capK ? '' : '<p class="hint">Aucun KPI en pourcentage disponible.</p>'}
+    </section>
+    <section class="panel"><h2>Seuils des grades</h2><p class="hint">Score final minimum pour chaque grade. En dessous de C, c'est D.</p>
+      <div class="set-grid">${['S','A','B','C'].map(g => `<label>${g} à partir de<input type="number" step="any" min="0" max="100" data-path="grades.${g}" value="${s.grades[g]}"></label>`).join('')}</div>
+    </section>
+    <section class="panel"><h2>Alias de colonnes</h2><p class="hint">Noms d'en-têtes supplémentaires à reconnaître dans les exports ${P.name}, un par ligne. Ils sont vérifiés avant les noms intégrés.</p>
+      <div class="grid3">${P.fields.map(f => `<label style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)"><strong style="color:var(--text)">${f.label}</strong>
+        <textarea data-alias="${f.key}" placeholder="ex. : votre en-tête exact">${esc((s.aliases[f.key] || []).join('\n'))}</textarea>
+        <span style="font-size:12px;color:var(--faint)">Intégrés : ${esc(f.aliases.join(', '))}</span></label>`).join('')}</div>
+    </section>
+    <section class="panel"><h2>Données</h2><p class="hint">Les périodes et les paramètres sont stockés uniquement dans ce navigateur.</p>
+      <button class="btn danger" id="wipe" type="button">Supprimer toutes les périodes ${P.name}</button></section>
+    <div class="savebar"><span class="msg" id="set-msg"></span>
+      <button class="btn ghost" id="reset" type="button">Rétablir les paramètres par défaut</button>
+      <button class="btn ghost" id="revert" type="button">Annuler les modifications</button>
+      <button class="btn primary" id="save" type="button">Enregistrer et recalculer</button></div>
+  </div>`;
+  const setPath = (path, val) => { const [a, b] = path.split('.'); s[a][b] = val; };
+  main.querySelectorAll('input[data-path]').forEach(el => el.addEventListener('input', () => {
+    setPath(el.dataset.path, el.value === '' ? NaN : Number(el.value));
+    if (el.dataset.path.startsWith('weights.')) {
+      const t = P.scored.reduce((a, k) => a + (Number(s.weights[k.key]) || 0), 0), bad = Math.abs(t - 100) > 1e-6;
+      const w = document.getElementById('wsum'); w.className = 'sumline ' + (bad ? 'bad' : 'good'); w.textContent = sumText(t);
+    }
+  }));
+  main.querySelectorAll('select[data-path]').forEach(el => el.addEventListener('change', () => setPath(el.dataset.path, el.value)));
+  document.getElementById('cap-on').addEventListener('change', e => { s.caps.enabled = e.target.checked; });
+  main.querySelectorAll('[data-band]').forEach(el => el.addEventListener('input', () => { s.bands[el.dataset.band][Number(el.dataset.i)][Number(el.dataset.j)] = el.value === '' ? NaN : Number(el.value); }));
+  main.querySelectorAll('[data-alias]').forEach(el => el.addEventListener('input', () => { s.aliases[el.dataset.alias] = el.value.split('\n').map(x => x.trim()).filter(Boolean); }));
+  const count = () => plural(platformPeriods(P.id).length, `période ${P.name} recalculée`, `périodes ${P.name} recalculées`);
+  document.getElementById('save').addEventListener('click', () => {
+    const errs = validateSettings(P, s);
+    const msg = document.getElementById('set-msg');
+    if (errs.length) { msg.className = 'msg sc-lo'; msg.textContent = errs[0]; toast(errs.join(' '), true); return; }
+    store.setSettings(P.id, RCA.clone(s)); saveSettings();
+    settingsDraft[P.id] = null;
+    toast(`Paramètres ${P.name} enregistrés. ${count()}.`);
+    render();
+  });
+  document.getElementById('revert').addEventListener('click', () => { settingsDraft[P.id] = null; render(); });
+  document.getElementById('reset').addEventListener('click', async () => {
+    if (!(await modal(`Rétablir les paramètres ${P.name} par défaut`, `<p>Remettre tous les poids, objectifs, paliers et plafonds ${P.name} à leur valeur par défaut et supprimer les alias de colonnes personnalisés ? Les périodes ${P.name} seront recalculées. Les paramètres de l'autre plateforme ne changent pas.</p>`, 'Rétablir'))) return;
+    store.setSettings(P.id, RCA.defaultSettings(P.id)); saveSettings(); settingsDraft[P.id] = null;
+    toast(`Paramètres ${P.name} par défaut rétablis. ${count()}.`); render();
+  });
+  document.getElementById('wipe').addEventListener('click', async () => {
+    const n = platformPeriods(P.id).length;
+    if (!n) { toast(`Il n'y a aucune période ${P.name} à supprimer.`); return; }
+    if (!(await modal(`Supprimer toutes les périodes ${P.name}`, `<p>Supprimer les ${plural(n, `période ${P.name} enregistrée`, `périodes ${P.name} enregistrées`)} de ce navigateur ? Les périodes de l'autre plateforme sont conservées. Cette action est définitive.</p>`, 'Tout supprimer'))) return;
+    for (let i = store.periods.length - 1; i >= 0; i--) if (store.periods[i].platform === P.id) store.periods.splice(i, 1);
+    store.invalidate(); savePeriods(); ui.period[P.id] = null; saveUI();
+    toast(`Toutes les périodes ${P.name} ont été supprimées.`); render();
+  });
+}
+
+/* ---------- Auto-test ---------- */
+function selfTest() {
+  const tests = RCA.runSelfTests(store.periods);
+  const passed = tests.filter(t => t.pass).length;
+  console.groupCollapsed(`%cChatter RCA Grading — auto-test : ${passed}/${tests.length} réussis`, `color:${passed === tests.length ? '#45D08F' : '#F0605E'};font-weight:bold`);
+  tests.forEach((t, i) => console[t.pass ? 'log' : 'error'](`${t.pass ? '✓' : '✗'} ${i + 1}. ${t.name} — ${t.detail}`));
+  console.groupEnd();
+  const btn = document.getElementById('selftest-btn');
+  btn.className = 'selftest ' + (passed === tests.length ? 'ok' : 'bad');
+  document.getElementById('selftest-label').textContent = `Auto-test : ${passed}/${tests.length} réussis`;
+  btn.onclick = () => modal(`Résultats de l'auto-test`, `<ul class="testlist">${tests.map((t, i) => `<li><span class="${t.pass ? 'p' : 'f'}">${t.pass ? 'Réussi' : 'Échec'}</span> ${i + 1}. ${esc(t.name)}<small>${esc(t.detail)}</small></li>`).join('')}</ul>`, null, 'Fermer');
+}
+
+if (!location.hash || !/^#(of|mym)\//.test(location.hash)) {
+  const r = route(); history.replaceState(null, '', `#${r.pid}/${r.chatter != null ? 'chatter/' + encodeURIComponent(r.chatter) : r.page}`);
+}
+render();
+selfTest();
+})();
+</script>
+</body>
+</html>
