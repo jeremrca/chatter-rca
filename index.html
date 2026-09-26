@@ -176,7 +176,7 @@ tbody tr.click{cursor:pointer}
 .back:hover{color:var(--text)}
 
 /* Import */
-.drop{border:1.5px dashed var(--line);border-radius:var(--r-lg);padding:34px 20px;text-align:center;background:var(--bg);cursor:pointer}
+.drop{display:block;border:1.5px dashed var(--line);border-radius:var(--r-lg);padding:34px 20px;text-align:center;background:var(--bg);cursor:pointer}
 .drop.over{border-color:var(--ember);background:rgba(224,51,106,.06)}
 .drop strong{display:block;font-size:16px;margin-bottom:4px}
 .drop span{color:var(--muted)}
@@ -254,6 +254,91 @@ tr.issue-error .issues{color:var(--red)}
   .scorebox{grid-column:1/-1;text-align:left}
 }
 @media (max-width:620px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat{border-left:0;border-top:1px solid var(--line-soft)}.dist .g{width:auto;flex:1}.maprow{grid-template-columns:1fr}}
+/* ===== Analyse ASV : DA « trame néon » ===== */
+.main.neon{background-color:#181312;background-size:cover;background-position:center top;background-attachment:fixed;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:#fff;min-height:100vh}
+.neon .nc{background:rgba(22,14,18,.62);border:1px solid rgba(var(--core-rgb),.5);border-radius:14px;padding:18px 20px}
+.neon .nc h2{font-weight:700;font-size:15px;margin:0 0 10px;color:#fff}
+.neon .muted{color:rgba(255,255,255,.55)}
+.nh{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px}
+.nh-brand b{display:block;font-weight:700;font-size:13px}
+.nh-brand span{color:rgba(255,255,255,.55);font-size:12px}
+.nh-period{font-weight:700;color:#ffd23f;font-size:14px;text-align:right}
+.neon-hero{display:flex;align-items:center;gap:16px;margin:6px 0 20px}
+.neon-title{font-size:36px;font-weight:700;margin:0;letter-spacing:-.3px;color:#fff;text-shadow:0 0 4px var(--core),0 0 10px var(--g1),0 0 22px var(--g1),0 0 40px rgba(var(--g1-rgb),.55),0 0 64px rgba(var(--g1-rgb),.35)}
+.neon-title span{color:var(--core)}
+.neon .neon-hero .pbadge.lg{min-width:44px;height:44px;font-size:17px;border-radius:12px;box-shadow:0 0 10px var(--g1),0 0 28px rgba(var(--g1-rgb),.6)}
+.ntabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.ntabs a{padding:7px 13px;border-radius:99px;color:rgba(255,255,255,.72);text-decoration:none;font-weight:700;font-size:13px;border:1px solid rgba(255,255,255,.14);background:rgba(22,14,18,.55)}
+.ntabs a:hover{color:#fff;border-color:rgba(var(--core-rgb),.6)}
+.ntabs a.on{color:#fff;border-color:var(--core);box-shadow:0 0 12px rgba(var(--g1-rgb),.5),inset 0 0 8px rgba(var(--g1-rgb),.25)}
+.nstack{display:flex;flex-direction:column;gap:14px}
+.nperiod{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.neon .nc.nperiod{margin-bottom:14px}
+.neon label.f,.neon .f{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:rgba(255,255,255,.6)}
+.ngrid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.nbest{display:flex;align-items:center;gap:22px}
+.nbest .v{font-size:44px;font-weight:700;color:#ffd23f;text-shadow:0 0 18px rgba(255,210,63,.45)}
+.nstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.nstats .k{color:rgba(255,255,255,.55);font-size:12.5px}
+.nstats .v{font-size:26px;font-weight:700;margin-top:2px}
+.neon .tbl-wrap{border-color:rgba(255,255,255,.1);border-radius:10px}
+.neon thead th{background:rgba(16,10,13,.95);color:rgba(255,255,255,.6)}
+.neon td,.neon th{border-bottom-color:rgba(255,255,255,.08)}
+.neon tbody tr:hover{background:rgba(255,255,255,.04)}
+.dlt{display:inline-block;font-weight:700;font-size:12.5px;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.dlt.up{color:#4ade80;background:rgba(74,222,128,.12)}
+.dlt.down{color:#f87171;background:rgba(248,113,113,.14)}
+.dlt.stable{color:rgba(255,255,255,.65);background:rgba(255,255,255,.08)}
+.goal{display:inline-block;font-weight:700;padding:3px 11px;border-radius:99px;border:1px solid rgba(255,210,63,.6);color:#ffd23f;background:rgba(255,210,63,.08);white-space:nowrap}
+.goal.stable{border-color:var(--core);color:var(--core);background:rgba(var(--core-rgb),.1)}
+.gold{color:#ffd23f}
+.bestcol{color:#ffd23f;font-weight:700}
+.gap-red{color:#ef4444;font-weight:700}
+.gap-orange{color:#fb923c;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 6px 4px 12px;border-radius:99px;border:1px solid rgba(var(--core-rgb),.45);background:rgba(22,14,18,.75);font-weight:700;font-size:13px}
+.chip.arch{opacity:.55}
+.chip button{background:none;border:0;color:rgba(255,255,255,.65);cursor:pointer;padding:2px 6px;border-radius:6px;font-size:13px}
+.chip button:hover{color:#fff;background:rgba(255,255,255,.12)}
+.ndet{border-top:1px solid rgba(255,255,255,.08);padding:10px 0}
+.ndet summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none}
+.ndet summary::-webkit-details-marker{display:none}
+.ndet summary::before{content:"›";color:var(--core);font-weight:700;transition:transform .15s}
+.ndet[open] summary::before{transform:rotate(90deg)}
+.nfoot{text-align:center;color:rgba(255,255,255,.4);font-size:11px;margin-top:24px}
+.neon select,.neon input[type=text],.neon input[type=number],.neon input[type=date],.neon textarea{background:rgba(10,7,9,.78);border-color:rgba(255,255,255,.18);color:#fff}
+.neon .btn{background:rgba(22,14,18,.8);border-color:rgba(255,255,255,.22);color:#fff}
+.neon .btn.primary{background:var(--core);color:#12060d;border-color:var(--core);box-shadow:0 0 14px rgba(var(--g1-rgb),.55)}
+.neon .btn.primary:hover{filter:brightness(1.08)}
+.neon .check{color:rgba(255,255,255,.7)}
+.neon .alert.warn{background:rgba(251,146,60,.1);border-color:rgba(251,146,60,.4);color:#fed7aa}
+@media (max-width:980px){.ngrid2{grid-template-columns:1fr}.neon-title{font-size:26px}.nbest{flex-wrap:wrap}.nbest .v{margin-left:0!important;font-size:34px}}
+
+.nh-period.gold{color:#ffd23f}
+.nh-brand b{letter-spacing:.3px}
+.neon-hero.center{flex-direction:column;justify-content:center;text-align:center;gap:10px;margin:26px 0 30px}
+.neon-hero.center .neon-title{font-size:44px}
+.neon-title.big{font-size:40px!important;letter-spacing:.5px;text-shadow:0 0 6px rgba(var(--g1-rgb),.6),0 0 22px rgba(var(--g1-rgb),.45)}
+.hero-sub{margin:0;color:rgba(255,255,255,.6);font-size:14px}
+.nlabel{color:rgba(255,255,255,.55);font-size:12px;letter-spacing:.3px}
+.nbest-name{font-size:30px;font-weight:700;margin-top:4px}
+.nbest-val{margin-left:auto}
+.nbest-val .v{font-size:46px;font-weight:700;color:#ffd23f;line-height:1;text-shadow:0 0 18px rgba(255,210,63,.4)}
+.ncard-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.ncard-head h2{margin:0!important}
+.ncard-head .check{margin-left:auto}
+.nrank{border-color:rgba(255,210,63,.55)!important;padding:10px 26px!important;max-width:880px;margin:0 auto;width:100%}
+.nrow{display:grid;grid-template-columns:48px minmax(0,auto) 1fr auto;align-items:center;gap:14px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:17px}
+.nrow:last-child{border-bottom:0}
+.nr-rank{font-weight:700;color:rgba(255,255,255,.75)}
+.nr-rank.r1{color:#ffd23f}.nr-rank.r3{color:#fb923c}
+.nrow.ntop .nr-name{font-weight:700}
+.nr-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nr-tag{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700}
+.nr-tag.of{color:#22d3ee}.nr-tag.mym{color:#f472b6}
+.nr-tag .pbadge{min-width:20px;height:20px;font-size:10px;border-radius:6px}
+.nr-val{font-weight:700;text-align:right;white-space:nowrap}
+@media (max-width:620px){.nrow{grid-template-columns:36px 1fr auto;font-size:15px}.nr-tag{display:none}.neon-hero.center .neon-title,.neon-title.big{font-size:28px!important}.nbest-name{font-size:22px}}
 </style>
 </head>
 <body>
@@ -272,7 +357,7 @@ tr.issue-error .issues{color:var(--red)}
   <main class="main" id="main"></main>
 </div>
 
-<!-- ============ MOTEUR : plateformes, notation, détection et validation (sans DOM) ============ -->
+<!-- ============ MOTEUR : plateformes, notation, ASV, détection et validation (sans DOM) ============ -->
 <script id="engine">
 const RCA = (() => {
   const GRADE_ORDER = ['S','A','B','C','D'];
@@ -732,6 +817,232 @@ const RCA = (() => {
     normHeader, cellText, parseCell, parseDuration, toPercent, parseCSV, aliasList, detectColumns, findHeaderRow, missingFields, buildRows, summarize, runSelfTests};
 })();
 if (typeof module !== 'undefined') module.exports = RCA;
+
+RCA.ASV = (() => {
+  const {normHeader, cellText, parseCell, parseCSV} = RCA;
+  const CURRENCY = {of:'$', mym:'€'};
+  // Correspondance handle d'export → nom utilisé dans l'agence (reprise du cahier des charges, modifiable dans Réglages)
+  const DEFAULT_MAPPING = {
+    'Carlababyy':'Carla baby', 'Petitabricot':'Ava', 'Tablondinette_':'Flavie', 'Chloesanchez':'Chloé', 'Carlatrans':'Carla trans',
+    'Chachasurmym':'Charlotte', 'Edensurmym':'Eden', 'Marie_lrc':'Marie', 'Victoriahot':'Victoria', 'Thaisgauchkarian':'Thais',
+    'Nayasurmym':'Naya', 'Steffysurmym':'Steffy', 'Tiasurmym':'Tia', 'Angeltonpain':'Angel', 'Margauxbabyyy':'Margaux'
+  };
+  const DEFAULTS = {of:{paliers:[5,8,10], dropAlert:10}, mym:{paliers:[5,8,10], dropAlert:10}, eurToUsd:1, mapping:DEFAULT_MAPPING};
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  /* ---------- Calculs ---------- */
+  // ASV = CA net ÷ nouveaux abonnés, toujours recalculé (jamais la colonne LTV de la plateforme)
+  const asv = (revenue, fans) => fans > 0 ? revenue / fans : null;
+  // Objectif = premier palier strictement au-dessus de l'ASV ; au-delà du dernier palier → null = STABLE
+  function targetFor(v, paliers) {
+    if (v == null) return undefined;
+    const t = [...paliers].sort((a,b) => a - b).find(p => v < p - 1e-9);
+    return t === undefined ? null : t;
+  }
+  function delta(cur, prev) {
+    if (cur == null || prev == null || prev === 0) return null;
+    const pct = (cur - prev) / prev * 100;
+    return {pct, dir: Math.abs(pct) < 0.5 ? 'stable' : pct > 0 ? 'up' : 'down'};
+  }
+
+  /* ---------- Dates (chaînes AAAA-MM-JJ) ---------- */
+  const pad = n => String(n).padStart(2, '0');
+  const toStr = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return toStr(d); };
+  const lastDay = (y, m) => new Date(y, m, 0).getDate();
+  const monthRange = ym => { const [y,m] = ym.split('-').map(Number); return {start:`${ym}-01`, end:`${ym}-${pad(lastDay(y, m))}`}; };
+  const daysBetween = (a, b) => Math.round((parse(b) - parse(a)) / 86400000);
+  function rangeFor(type, a, b) {
+    if (type === 'day') return {start:a, end:a};
+    if (type === 'week') return {start:a, end:addDays(a, 6)};
+    if (type === 'month') return monthRange(a);
+    if (type === 'half') { const r = monthRange(a); return b === '2' ? {start:`${a}-16`, end:r.end} : {start:`${a}-01`, end:`${a}-15`}; }
+    return {start:a, end:b};
+  }
+  // Période équivalente précédente : mois → mois précédent, quinzaine → quinzaine précédente, sinon même durée juste avant.
+  function previousRange(start, end) {
+    const [y, m, d] = start.split('-').map(Number), ym = start.slice(0, 7);
+    const full = monthRange(ym);
+    const prevYm = m === 1 ? `${y - 1}-12` : `${y}-${pad(m - 1)}`;
+    if (start === full.start && end === full.end) return monthRange(prevYm);
+    if (d === 1 && end === `${ym}-15`) { const r = monthRange(prevYm); return {start:`${prevYm}-16`, end:r.end}; }
+    if (d === 16 && end === full.end) return {start:`${ym}-01`, end:`${ym}-15`};
+    const len = daysBetween(start, end) + 1;
+    return {start:addDays(start, -len), end:addDays(start, -1)};
+  }
+
+  /* ---------- Agrégation ---------- */
+  // Somme des entrées comprises dans la plage. Une entrée contenue dans une autre entrée retenue (ex. un jour
+  // dans un mois déjà saisi) est ignorée pour ne jamais compter deux fois le même CA.
+  // Une entrée peut contenir CA + abonnés (ASV recalculé) ou directement l'ASV (abonnés facultatifs).
+  const hasNum = v => v != null && Number.isFinite(v);
+  function entryASV(e) { return hasNum(e.revenue) && e.fans > 0 ? e.revenue / e.fans : hasNum(e.asv) ? e.asv : null; }
+  function entryRevenue(e) { return hasNum(e.revenue) ? e.revenue : hasNum(e.asv) && hasNum(e.fans) ? e.asv * e.fans : null; }
+  function aggregate(entries, modelId, start, end) {
+    const c = entries.filter(e => e.modelId === modelId && e.start >= start && e.end <= end);
+    const kept = c.filter(e => !c.some(o => o !== e && o.start <= e.start && o.end >= e.end && (o.start !== e.start || o.end !== e.end)));
+    if (!kept.length) return null;
+    const allFans = kept.every(e => hasNum(e.fans)), allRev = kept.every(e => entryRevenue(e) != null);
+    const fans = allFans ? kept.reduce((a, e) => a + e.fans, 0) : null;
+    const realRev = kept.every(e => hasNum(e.revenue)) ? kept.reduce((a, e) => a + e.revenue, 0) : null;
+    let v, approx = false;
+    if (allFans && allRev) v = asv(kept.reduce((a, e) => a + entryRevenue(e), 0), fans);
+    else if (kept.length === 1) v = entryASV(kept[0]);
+    else { const vals = kept.map(entryASV).filter(hasNum); v = vals.length ? vals.reduce((a, x) => a + x, 0) / vals.length : null; approx = true; }
+    return {fans, revenue: realRev, asv: v, n: kept.length, approx};
+  }
+  function months(entries) {
+    return [...new Set(entries.filter(e => e.start.slice(0, 7) === e.end.slice(0, 7)).map(e => e.start.slice(0, 7)))].sort();
+  }
+  // Import : les entrées déjà enregistrées pour ce modèle et comprises dans la plage importée sont remplacées.
+  function applyImport(state, modelId, start, end, row, source) {
+    const same = state.entries.some(e => e.modelId === modelId && e.start === start && e.end === end);
+    state.entries = state.entries.filter(e => !(e.modelId === modelId && e.start >= start && e.end <= end));
+    const fans = hasNum(row.fans) ? row.fans : null, revenue = hasNum(row.revenue) ? row.revenue : null;
+    state.entries.push({id: 'e' + Math.random().toString(36).slice(2, 10), modelId, start, end, fans, revenue, asv: revenue != null && fans > 0 ? null : row.asv, source});
+    return {updated: same};
+  }
+
+  /* ---------- Lecture des exports ---------- */
+  const FIELDS_P = (() => {
+    const f = [
+      {key:'name', label:'Modèle', aliases:['creator','createur','creatrice','modele','model','name','nom','creator name','modeles','compte']},
+      {key:'asv', label:'ASV', kind:'money', scoring:'target', aliases:['asv','asv moyen','asv net','average subscriber value','valeur moyenne par abonne','panier moyen','new subscriber ltv','ltv / new sub','ltv new sub','ltv']},
+      {key:'revenue', label:'CA net', kind:'money', scoring:'target', aliases:['total earnings (net)','total earnings net','total earnings','ca net','ca','ca total','revenue','chiffre d affaires','revenus','earnings']},
+      {key:'fans', label:'Nouveaux abonnés', kind:'count', scoring:'target', aliases:['new subscribers','nouveaux subs','nouveaux abonnes','nouveaux abonnés','abonnes','abonnés','nombre d abonnes','new subs','nouveaux fans','fans','subs','subscribers']},
+      {key:'date', label:'Date', kind:'date', scoring:'info', optional:true, aliases:['date/time europe/brussels','date time europe brussels','date/time','date','jour']}
+    ];
+    return {fields: f, kpis: f.slice(1), scored: f.filter(x => x.scoring === 'target'), kpi: Object.fromEntries(f.map(x => [x.key, x]))};
+  })();
+  const TOTAL_RE = /^(grand\s*)?totals?$|^total g[eé]n[eé]ral$|^sum$|^somme$|^tous$|^all$/i;
+  const stripSuffix = s => s.replace(/\s+(of|mym)$/i, '').trim();
+  function canonical(handle, mapping) {
+    const base = stripSuffix(String(handle).trim().replace(/\s+/g, ' '));
+    const key = normHeader(base);
+    for (const [h, n] of Object.entries(mapping || {})) if (normHeader(h) === key) return {name: n, mapped: true};
+    return {name: base, mapped: false};
+  }
+  function parseDateCell(c) {
+    const t = cellText(c).trim();
+    let m;
+    if ((m = t.match(/^(\d{4})-(\d{2})-(\d{2})/))) return `${m[1]}-${m[2]}-${m[3]}`;
+    if ((m = t.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{4})/))) return `${m[3]}-${pad(m[2])}-${pad(m[1])}`;
+    if (c && typeof c === 'object' && typeof c.v === 'number' && c.v > 30000 && c.v < 80000) { const d = new Date(Math.round((c.v - 25569) * 86400000)); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; }
+    return null;
+  }
+  // Grille (CSV/XLSX/tableau collé) → lignes agrégées par modèle. Plusieurs lignes d'un même modèle (ex. une par jour) sont additionnées.
+  function rowsFromGrid(grid, mapping) {
+    const hr = RCA.findHeaderRow(FIELDS_P, grid, null);
+    const headers = grid[hr].map(c => cellText(c).trim());
+    const det = RCA.detectColumns(FIELDS_P, headers, null);
+    const idx = Object.fromEntries(Object.entries(det).map(([k, v]) => [k, v.idx]));
+    const hasRF = idx.revenue >= 0 && idx.fans >= 0;
+    if (idx.name < 0 || (idx.asv < 0 && !hasRF)) return {error:`Il faut une colonne Modèle et une colonne ASV (ou CA net + nouveaux abonnés). En-têtes lus : ${headers.filter(Boolean).join(', ')}.`};
+    const by = new Map(), issues = [], dates = [];
+    const num = (cells, k) => { if (idx[k] < 0) return null; const p = parseCell(cells[idx[k]]); return p.empty || p.invalid ? (p.invalid ? NaN : null) : p.value; };
+    for (let r = hr + 1; r < grid.length; r++) {
+      const cells = grid[r] || [];
+      const handle = cellText(cells[idx.name]).trim();
+      if (!handle || TOTAL_RE.test(handle)) continue;
+      const rev = num(cells, 'revenue'), fans = num(cells, 'fans'), given = num(cells, 'asv');
+      if ([rev, fans, given].some(v => Number.isNaN(v))) { issues.push(`Ligne ${r + 1} (${handle}) ignorée : une valeur est illisible.`); continue; }
+      if (!(rev != null && fans != null) && given == null) { issues.push(`Ligne ${r + 1} (${handle}) ignorée : ni ASV, ni CA + abonnés.`); continue; }
+      if ([rev, fans, given].some(v => v != null && v < 0)) { issues.push(`Ligne ${r + 1} (${handle}) ignorée : valeur négative.`); continue; }
+      if (idx.date >= 0) { const d = parseDateCell(cells[idx.date]); if (d) dates.push(d); }
+      const k = normHeader(handle);
+      const cur = by.get(k) || {handle, parts:[]};
+      cur.parts.push({revenue: rev, fans, given});
+      by.set(k, cur);
+    }
+    const rows = [...by.values()].map(x => {
+      const P = x.parts, full = P.every(p => p.revenue != null && p.fans != null);
+      let revenue = null, fans = P.every(p => p.fans != null) ? P.reduce((a, p) => a + p.fans, 0) : null, v, given = P.length === 1 ? P[0].given : null;
+      if (full) { revenue = P.reduce((a, p) => a + p.revenue, 0); v = asv(revenue, fans); }
+      else if (P.length === 1) v = P[0].given;
+      else if (fans > 0) v = P.reduce((a, p) => a + (p.revenue != null ? p.revenue : p.given * p.fans), 0) / fans;
+      else { v = P.reduce((a, p) => a + (p.given ?? 0), 0) / P.length; issues.push(`${x.handle} : ${P.length} lignes sans abonnés, ASV moyen simple utilisé.`); }
+      return {handle: x.handle, revenue, fans, asv: v, given, lines: P.length, ...canonical(x.handle, mapping)};
+    });
+    dates.sort();
+    return {rows, issues, start: dates[0] || null, end: dates[dates.length - 1] || null};
+  }
+  // JSON du tracker : {section, periodType, startDate, endDate, entries:[{modele|name, fans, ca|revenue}]}
+  function rowsFromJSON(text, mapping) {
+    let j;
+    try { j = JSON.parse(text); } catch (e) { return {error:`JSON illisible : ${e.message}`}; }
+    if (!j || !Array.isArray(j.entries)) return {error:'Le JSON doit contenir une liste « entries ».'};
+    const section = String(j.section || '').toLowerCase();
+    const rows = [], issues = [];
+    j.entries.forEach((e, i) => {
+      const handle = e.modele ?? e.name;
+      const n = v => v == null || v === '' ? null : Number(v);
+      const rev = n(e.ca ?? e.revenue), fans = n(e.fans ?? e.abonnes), given = n(e.asv);
+      const ok = x => x == null || Number.isFinite(x);
+      if (!handle || !ok(rev) || !ok(fans) || !ok(given) || (!(rev != null && fans != null) && given == null)) { issues.push(`Entrée ${i + 1} ignorée : il faut le modèle et l'ASV (ou CA + fans).`); return; }
+      rows.push({handle: String(handle), revenue: rev != null && fans != null ? rev : null, fans, asv: rev != null && fans != null ? asv(rev, fans) : given, given, lines: 1, ...canonical(handle, mapping)});
+    });
+    return {rows, issues, section: section === 'of' || section === 'mym' ? section : null, start: j.startDate || null, end: j.endDate || null, periodType: j.periodType || null};
+  }
+  function parseInput(text, mapping) {
+    const t = text.trim();
+    if (!t) return {error:'La zone est vide.'};
+    if (t.startsWith('{')) return rowsFromJSON(t, mapping);
+    return rowsFromGrid(parseCSV(t), mapping);
+  }
+
+  /* ---------- Auto-tests ---------- */
+  function selfTests() {
+    const tests = [];
+    const t = (name, fn) => { try { const d = fn(); tests.push({name, pass:d.pass, detail:d.detail}); } catch (e) { tests.push({name, pass:false, detail:String(e)}); } };
+    const P = [5, 8, 10];
+    t('ASV · paliers d’objectif 5 / 8 / 10 / STABLE', () => {
+      const cases = [[4.99,5],[5,8],[7.99,8],[8,10],[9.99,10],[10,null],[14,null]];
+      const got = cases.map(([v]) => targetFor(v, P));
+      return {pass: cases.every(([, e], i) => got[i] === e), detail: cases.map(([v], i) => `${v} → ${got[i] ?? 'STABLE'}`).join(' ; ')};
+    });
+    t('ASV · recalcul CA ÷ nouveaux abonnés, 0 abonné = pas de division', () => {
+      const a = asv(33071.55, 5853), b = asv(500, 0);
+      return {pass: Math.abs(a - 5.6504) < 0.001 && b === null, detail:`33 071,55 € ÷ 5 853 = ${a.toFixed(2)} ; 0 abonné → ${b}`};
+    });
+    t('ASV · évolution sous 0,5 % = stable', () => {
+      const s = delta(10.03, 10), u = delta(11, 10), d = delta(9, 10);
+      return {pass: s.dir === 'stable' && u.dir === 'up' && d.dir === 'down', detail:`+0,3 % → ${s.dir}, +10 % → ${u.dir}, −10 % → ${d.dir}`};
+    });
+    t('ASV · un jour déjà inclus dans un mois n’est pas compté deux fois', () => {
+      const E = [{modelId:'m', start:'2026-09-01', end:'2026-09-30', fans:100, revenue:1000}, {modelId:'m', start:'2026-09-05', end:'2026-09-05', fans:10, revenue:300}];
+      const a = aggregate(E, 'm', '2026-09-01', '2026-09-30');
+      const st = {entries: JSON.parse(JSON.stringify(E))};
+      applyImport(st, 'm', '2026-09-01', '2026-09-30', {fans:120, revenue:1200}, 't');
+      return {pass: a.revenue === 1000 && a.fans === 100 && st.entries.length === 1 && st.entries[0].revenue === 1200, detail:`mois ${a.revenue} € / ${a.fans} fans ; réimport du mois → ${st.entries.length} entrée`};
+    });
+    t('ASV · quinzaine précédente et mois précédent', () => {
+      const a = previousRange('2026-09-01', '2026-09-15'), b = previousRange('2026-09-16', '2026-09-30'), c = previousRange('2026-01-01', '2026-01-31');
+      return {pass: a.start === '2026-08-16' && a.end === '2026-08-31' && b.start === '2026-09-01' && c.start === '2025-12-01' && c.end === '2025-12-31',
+        detail:`1–15 sept. → ${a.start}/${a.end} ; 16–30 sept. → ${b.start}/${b.end} ; janv. → ${c.start}/${c.end}`};
+    });
+    t('ASV · lecture d’un export Infloww (une ligne par jour) et correspondance des noms', () => {
+      const grid = [['Date/Time Europe/Brussels','Creator','Total earnings (Net)','New subscribers','New subscriber LTV'],
+        ['2026-09-01','Carlababyy','$1,000.00','100','9.5'], ['2026-09-02','Carlababyy','$500.00','50','9.5'], ['2026-09-01','Angeltonpain','$675.00','100','4.89']];
+      const r = rowsFromGrid(grid, DEFAULT_MAPPING);
+      const carla = r.rows.find(x => x.name === 'Carla baby');
+      return {pass: carla && carla.revenue === 1500 && carla.fans === 150 && r.rows.some(x => x.name === 'Angel') && r.start === '2026-09-01' && r.end === '2026-09-02',
+        detail:`Carla baby : ${carla && carla.revenue} $ / ${carla && carla.fans} abonnés ; période lue ${r.start} → ${r.end}`};
+    });
+    t('ASV · import avec l’ASV direct (Modèle + Abonnés + ASV)', () => {
+      const r = parseInput('Modèle;Abonnés;ASV\nLila OF;25;19,18 $\nEden MYM;672;9,48 €\nTia;;1,45', DEFAULT_MAPPING);
+      const st = {entries: []};
+      r.rows.forEach((x, i) => applyImport(st, 'm' + i, '2026-09-01', '2026-09-15', x, 't'));
+      const a = aggregate(st.entries, 'm0', '2026-09-01', '2026-09-30'), c = aggregate(st.entries, 'm2', '2026-09-01', '2026-09-30');
+      return {pass: r.rows.length === 3 && r.rows[0].name === 'Lila' && a.asv === 19.18 && a.fans === 25 && c.asv === 1.45 && c.fans === null,
+        detail:`${r.rows.map(x => `${x.name} ${x.asv}`).join(' ; ')}`};
+    });
+    return tests;
+  }
+
+  return {CURRENCY, DEFAULTS, DEFAULT_MAPPING, clone, asv, targetFor, delta, rangeFor, previousRange, monthRange, addDays, aggregate, months, applyImport,
+    canonical, parseInput, rowsFromGrid, stripSuffix, entryASV, entryRevenue, selfTests};
+})();
 </script>
 
 <!-- ============ APPLICATION : interface, stockage, import, graphiques ============ -->
@@ -835,20 +1146,44 @@ const ICONS = {
   history:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
   import:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
   settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
-  download:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>'
+  download:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+  asv:'<circle cx="12" cy="12" r="9"/><path d="M15 9.2c-.4-1-1.6-1.7-3-1.7-1.8 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2-1.5 0-2.7-.7-3.1-1.8M12 6v1.5M12 16.5V18"/>'
 };
 const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
-const PAGES = [['dashboard','Tableau de bord'],['chatters','Chatters'],['analytics',`Analyse d'équipe`],['history','Historique'],['import','Import'],['settings','Paramètres']];
+const PAGES = [['dashboard','Tableau de bord'],['chatters','Chatters'],['analytics',`Analyse d'équipe`],['history','Historique'],['asv','Analyse ASV'],['import','Import'],['settings','Paramètres']];
 const PAGE_LABEL = Object.fromEntries(PAGES);
+// Navigation interne : l'adresse de la page est mise à jour quand c'est possible, mais la page
+// fonctionne même dans un aperçu où l'historique et l'adresse sont bloqués.
+let routeHash = (() => { try { return location.hash.slice(1); } catch { return ''; } })();
 function route() {
-  const h = decodeURIComponent(location.hash.slice(1));
+  let h = '';
+  try { h = decodeURIComponent(routeHash); } catch { h = routeHash; }
   const m = h.match(/^(of|mym)\/(.*)$/);
   const pid = m ? m[1] : 'of', rest = m ? m[2] : h;
   if (rest.startsWith('chatter/')) return {pid, page:'chatters', chatter:rest.slice(8)};
+  if (rest === 'asv' || rest.startsWith('asv/')) return {pid, page:'asv', sub: rest.split('/')[1] || 'dashboard'};
   return {pid, page: PAGE_LABEL[rest] ? rest : 'dashboard'};
 }
-const go = h => { location.hash = h; };
-window.addEventListener('hashchange', render);
+function go(h) {
+  routeHash = h;
+  try { if (location.hash.slice(1) !== h) location.hash = h; } catch {}
+  render();
+  try { window.scrollTo(0, 0); } catch {}
+}
+window.addEventListener('hashchange', () => {
+  let h = '';
+  try { h = location.hash.slice(1); } catch { return; }
+  if (h === routeHash) return;
+  routeHash = h; render();
+});
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a[href^="#"]');
+  if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  const h = a.getAttribute('href').slice(1);
+  if (!h) return;
+  e.preventDefault();
+  go(h);
+});
 
 function renderNav(rt) {
   document.getElementById('nav').innerHTML = PIDS.map(pid => {
@@ -878,7 +1213,9 @@ function render() {
   renderNav(rt);
   const main = document.getElementById('main');
   main.dataset.platform = P.id;
-  if (rt.page === 'dashboard') renderDashboard(main, P);
+  if (rt.page !== 'asv') clearNeon(main);
+  if (rt.page === 'asv') renderASV(main, P, rt.sub);
+  else if (rt.page === 'dashboard') renderDashboard(main, P);
   else if (rt.page === 'chatters') rt.chatter != null ? renderDetail(main, P, rt.chatter) : renderChatters(main, P);
   else if (rt.page === 'analytics') renderAnalytics(main, P);
   else if (rt.page === 'history') renderHistory(main, P);
@@ -1356,8 +1693,10 @@ async function exportCSV(P) {
   const head = ['Chatter','Plateforme','Période', ...P.kpis.flatMap(k => k.scoring === 'info' ? [k.label + unit(k)] : [k.label + unit(k), 'Score ' + k.label]), 'Score final','Grade','Alertes'];
   const lines = [head.map(csvCell).join(';')].concat(res.results.map(r => [r.name, P.name, p.name,
     ...P.kpis.flatMap(k => k.scoring === 'info' ? [r.row[k.key] ?? ''] : [r.row[k.key], r.scores[k.key]]), r.final, r.grade, r.warnings.join(' ; ')].map(csvCell).join(';')));
-  const data = '\uFEFF' + lines.join('\r\n');
-  const filename = `notation-${P.id}_${p.start || 'periode'}${p.end ? '_' + p.end : ''}.csv`;
+  saveFile(`notation-${P.id}_${p.start || 'periode'}${p.end ? '_' + p.end : ''}.csv`, lines.join('\r\n'));
+}
+async function saveFile(filename, text) {
+  const data = '\uFEFF' + text;
   let dl = null;
   try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch { dl = null; }
   if (dl) {
@@ -1483,9 +1822,562 @@ function renderSettings(main, P) {
   });
 }
 
+/* =====================================================================
+   ANALYSE ASV — DA « trame néon » (mur de brique + halos + cartes néon)
+   ===================================================================== */
+const ASVE = RCA.ASV;
+const LS_ASV = 'rca.asv.v1';
+function mergeAsvSettings(x) {
+  const d = ASVE.clone(ASVE.DEFAULTS);
+  if (!x) return d;
+  for (const p of PIDS) if (x[p]) Object.assign(d[p], x[p]);
+  if (x.eurToUsd > 0) d.eurToUsd = x.eurToUsd;
+  if (x.mapping && typeof x.mapping === 'object') d.mapping = x.mapping;
+  return d;
+}
+const asvState = (() => { const s = lsGet(LS_ASV, null) || {models:[], entries:[]}; s.models ||= []; s.entries ||= []; s.settings = mergeAsvSettings(s.settings); return s; })();
+const saveAsv = () => lsSet(LS_ASV, asvState);
+const asvUI = {period:{}, draft:{of:null, mym:null}, allLines:{of:false, mym:false}, compare:{of:false, mym:false}};
+const aid = () => 'm' + Math.random().toString(36).slice(2, 10);
+const modelsOf = (pid, withArchived) => asvState.models.filter(m => m.platform === pid && (withArchived || !m.archived)).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
+const entriesOf = pid => { const ids = new Set(asvState.models.filter(m => m.platform === pid).map(m => m.id)); return asvState.entries.filter(e => ids.has(e.modelId)); };
+const findModel = (pid, name) => asvState.models.find(m => m.platform === pid && m.name.toLowerCase() === name.trim().toLowerCase());
+const cur = pid => ASVE.CURRENCY[pid];
+const fa = (pid, v, d = 2) => v == null ? '—' : nf(v, d, d) + '\u00a0' + cur(pid);
+const fint = v => v == null ? '—' : nf(v, 0, 0);
+const deltaBadge = d => !d ? '<span class="dlt stable">—</span>' : d.dir === 'stable' ? '<span class="dlt stable">= stable</span>' : `<span class="dlt ${d.dir}">${d.dir === 'up' ? '▲' : '▼'} ${nf(Math.abs(d.pct), 1, 1)}\u00a0%</span>`;
+const goalPill = (pid, t) => t === null ? '<span class="goal stable">STABLE</span>' : t === undefined ? '—' : `<span class="goal">${fa(pid, t)}</span>`;
+const monthDone = (E, ym) => E.some(e => e.end === ASVE.monthRange(ym).end);
+const monthHead = (E, ym) => monthLabel(ym) + (monthDone(E, ym) ? '' : ' (partiel)');
+const PCODE = {of:'OF', mym:'MYM'};
+const MONTHS_UP = ['JANVIER','FÉVRIER','MARS','AVRIL','MAI','JUIN','JUILLET','AOÛT','SEPTEMBRE','OCTOBRE','NOVEMBRE','DÉCEMBRE'];
+// « 1 — 15 SEPTEMBRE 2026 », « SEPTEMBRE 2026 », « 16 AOÛT — 15 SEPTEMBRE 2026 »
+function periodUpper(r) {
+  const [y1, m1, d1] = r.start.split('-').map(Number), [y2, m2, d2] = r.end.split('-').map(Number);
+  const full = ASVE.monthRange(r.start.slice(0, 7));
+  if (r.start === full.start && r.end === full.end) return `${MONTHS_UP[m1 - 1]} ${y1}`;
+  if (r.start === r.end) return `${d1} ${MONTHS_UP[m1 - 1]} ${y1}`;
+  if (y1 === y2 && m1 === m2) return `${d1} — ${d2} ${MONTHS_UP[m1 - 1]} ${y1}`;
+  if (y1 === y2) return `${d1} ${MONTHS_UP[m1 - 1]} — ${d2} ${MONTHS_UP[m2 - 1]} ${y1}`;
+  return `${d1} ${MONTHS_UP[m1 - 1]} ${y1} — ${d2} ${MONTHS_UP[m2 - 1]} ${y2}`;
+}
+const monthLabel = ym => { const [y, m] = ym.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString('fr-FR', {month:'short', year:'numeric'}); };
+
+/* ---------- Fond néon-brique généré (spécification §6) ---------- */
+const NEON = {
+  of: {core:'#22d3ee', g1:'#38bdf8', g2:'#7c3aed', seed:11},
+  mym: {core:'#f472b6', g1:'#ec4899', g2:'#7c3aed', seed:23},
+  rank: {core:'#a78bfa', g1:'#a78bfa', g2:'#38bdf8', seed:37},
+  priority: {core:'#fb923c', g1:'#f97316', g2:'#7c3aed', seed:41}
+};
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const bgCache = {};
+function neonBackground(key) {
+  if (bgCache[key]) return bgCache[key];
+  const {g1, g2, seed} = NEON[key];
+  const W = 1600, H = 1000;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const img = ctx.createImageData(W, H), px = img.data;
+  let s = seed >>> 0;
+  const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  const gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd());
+  const BW = 70, BH = 30, J = 6, base = [48, 22, 19], mortar = [24, 19, 18];
+  const lum = new Float32Array(W * H).fill(-999), shadeRow = new Float32Array(H);
+  for (let row = 0, y0 = 0; y0 < H; row++, y0 += BH + J) {
+    const off = row % 2 ? (BW + J) / 2 : 0;
+    for (let x0 = -off; x0 < W; x0 += BW + J) {
+      const v = (rnd() * 2 - 1) * 13;
+      for (let y = Math.max(0, y0); y < Math.min(H, y0 + BH); y++) {
+        const t = (y - y0) / BH, sh = -6 * (1 - t) + 6 * t * 0.3;
+        for (let x = Math.max(0, Math.round(x0)); x < Math.min(W, Math.round(x0 + BW)); x++) lum[y * W + x] = v + sh;
+      }
+    }
+  }
+  const halo = (cx, cy, rx, ry, amax, col) => ({cx: cx * W, cy: cy * H, rx: rx * W, ry: ry * H, amax, c: hexRgb(col).map(v => v / 255)});
+  const halos = [halo(.5, .3, .55, .3, .8, g1), halo(.85, .85, .5, .35, .45, g2)];
+  const hx = W / 2, hy = H / 2, maxR = Math.hypot(hx, hy);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x, L = lum[i], n = gauss() * 5;
+    const b = L === -999 ? mortar : base, add = L === -999 ? 0 : L;
+    let rgb = [0, 1, 2].map(k => Math.min(1, Math.max(0, (b[k] + add + n) / 255)));
+    for (const h of halos) {
+      const d = Math.hypot((x - h.cx) / h.rx, (y - h.cy) / h.ry);
+      const a = Math.pow(Math.min(1, Math.max(0, 1 - d)), 1.6) * h.amax;
+      if (a > 0) rgb = rgb.map((v, k) => 1 - (1 - v) * (1 - h.c[k] * a));
+    }
+    const r = Math.hypot(x - hx, y - hy) / maxR;
+    const vig = r < .35 ? 1 : Math.max(.25, 1 - (r - .35) / .65 * .75);
+    px[i * 4] = rgb[0] * vig * 255; px[i * 4 + 1] = rgb[1] * vig * 255; px[i * 4 + 2] = rgb[2] * vig * 255; px[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return bgCache[key] = cv.toDataURL('image/jpeg', .86);
+}
+function applyNeon(main, key) {
+  const n = NEON[key];
+  main.classList.add('neon');
+  main.style.setProperty('--core', n.core); main.style.setProperty('--g1', n.g1);
+  main.style.setProperty('--core-rgb', hexRgb(n.core).join(',')); main.style.setProperty('--g1-rgb', hexRgb(n.g1).join(','));
+  try { main.style.backgroundImage = `url(${neonBackground(key)})`; } catch { main.style.backgroundImage = ''; }
+}
+function clearNeon(main) {
+  main.classList.remove('neon');
+  ['--core','--g1','--core-rgb','--g1-rgb'].forEach(v => main.style.removeProperty(v));
+  main.style.backgroundImage = '';
+}
+
+/* ---------- Période sélectionnée ---------- */
+const PTYPES = [['month','Mois'],['half','Quinzaine'],['week','Semaine'],['day','Jour'],['custom','Plage perso.']];
+function defaultPeriod(pid) {
+  const E = entriesOf(pid);
+  if (!E.length) { const d = new Date(), ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; return {type:'month', a:ym, b:''}; }
+  const last = [...E].sort((x, y) => y.end.localeCompare(x.end) || x.start.localeCompare(y.start))[0];
+  const ym = last.start.slice(0, 7), full = ASVE.monthRange(ym);
+  if (last.start === full.start && last.end === full.end) return {type:'month', a:ym, b:''};
+  if (last.start === `${ym}-01` && last.end === `${ym}-15`) return {type:'half', a:ym, b:'1'};
+  if (last.start === `${ym}-16` && last.end === full.end) return {type:'half', a:ym, b:'2'};
+  return {type:'custom', a:last.start, b:last.end};
+}
+const periodOf = pid => asvUI.period[pid] ||= defaultPeriod(pid);
+function rangeOf(pid) { const p = periodOf(pid); const r = ASVE.rangeFor(p.type, p.a, p.b); return r.start && r.end && r.end >= r.start ? r : null; }
+function monthOptions(pid, selected) {
+  const set = new Set(ASVE.months(asvState.entries).concat(entriesOf(pid).map(e => e.start.slice(0, 7))));
+  const d = new Date(); set.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  if (selected) set.add(selected);
+  return [...set].sort().reverse().map(ym => `<option value="${ym}" ${ym === selected ? 'selected' : ''}>${esc(monthLabel(ym))}</option>`).join('');
+}
+function periodControls(pid, idp, p) {
+  const t = p.type;
+  let inputs = '';
+  if (t === 'month') inputs = `<label class="f">Mois<select data-pa="${idp}">${monthOptions(pid, p.a.slice(0, 7))}</select></label>`;
+  else if (t === 'half') inputs = `<label class="f">Mois<select data-pa="${idp}">${monthOptions(pid, p.a.slice(0, 7))}</select></label><label class="f">Quinzaine<select data-pb="${idp}"><option value="1" ${p.b !== '2' ? 'selected' : ''}>1 – 15</option><option value="2" ${p.b === '2' ? 'selected' : ''}>16 – fin du mois</option></select></label>`;
+  else if (t === 'week') inputs = `<label class="f">Début de semaine<input type="date" data-pa="${idp}" value="${esc(p.a)}"></label>`;
+  else if (t === 'day') inputs = `<label class="f">Jour<input type="date" data-pa="${idp}" value="${esc(p.a)}"></label>`;
+  else inputs = `<label class="f">Du<input type="date" data-pa="${idp}" value="${esc(p.a)}"></label><label class="f">Au<input type="date" data-pb="${idp}" value="${esc(p.b)}"></label>`;
+  return `<label class="f">Période<select data-pt="${idp}">${PTYPES.map(([k, l]) => `<option value="${k}" ${k === t ? 'selected' : ''}>${l}</option>`).join('')}</select></label>${inputs}`;
+}
+// Convertit un changement de type en valeurs par défaut cohérentes
+function switchType(p, type) {
+  const r = ASVE.rangeFor(p.type, p.a, p.b) || {};
+  const start = r.start || new Date().toISOString().slice(0, 10);
+  if (type === 'month' || type === 'half') return {type, a:start.slice(0, 7), b:'1'};
+  if (type === 'custom') return {type, a:start, b:r.end || start};
+  return {type, a:start, b:''};
+}
+function bindPeriod(root, idp, get, set, after) {
+  root.querySelector(`[data-pt="${idp}"]`)?.addEventListener('change', e => { set(switchType(get(), e.target.value)); after(); });
+  root.querySelector(`[data-pa="${idp}"]`)?.addEventListener('change', e => { set({...get(), a:e.target.value}); after(); });
+  root.querySelector(`[data-pb="${idp}"]`)?.addEventListener('change', e => { set({...get(), b:e.target.value}); after(); });
+}
+
+/* ---------- Données calculées pour une période ---------- */
+function periodRows(pid, r) {
+  const prev = ASVE.previousRange(r.start, r.end), E = entriesOf(pid);
+  return modelsOf(pid).map(m => {
+    const a = ASVE.aggregate(E, m.id, r.start, r.end), b = ASVE.aggregate(E, m.id, prev.start, prev.end);
+    if (!a) return null;
+    return {m, pid, fans:a.fans, revenue:a.revenue, asv:a.asv, approx:a.approx, prev:b ? b.asv : null, delta:ASVE.delta(a.asv, b ? b.asv : null)};
+  }).filter(Boolean).sort((x, y) => (y.asv ?? -1) - (x.asv ?? -1));
+}
+
+/* ---------- Structure des pages ASV ---------- */
+const ASV_TABS = [['dashboard','Tableau de bord'],['objectifs','Objectifs'],['priorites','À prioriser'],['general','Classement général'],['modeles','Détail par modèle'],['saisie','Saisie & import'],['reglages','Réglages']];
+function neonShell(P, sub, body, withPeriod) {
+  const r = rangeOf(P.id), global = sub === 'general' || sub === 'priorites';
+  const caption = sub === 'general' ? 'Suivi ASV · classement toutes plateformes' : sub === 'priorites' ? 'Suivi ASV · modèles à prioriser' : `Suivi ASV · ${P.name}`;
+  const hero = sub === 'general' ? `<div class="neon-hero center"><h1 class="neon-title big">CLASSEMENT GÉNÉRAL</h1><p class="hero-sub">OnlyFans + MYM · meilleur au moins bon ASV</p></div>`
+    : sub === 'priorites' ? `<div class="neon-hero center"><h1 class="neon-title big">MODÈLES À PRIORISER</h1><p class="hero-sub">OnlyFans + MYM · les plus loin de leur objectif en premier</p></div>`
+    : `<div class="neon-hero center">${pbadge(P, true)}<h1 class="neon-title">Analyse ASV <span>${P.name}</span></h1></div>`;
+  return `<header class="nh"><div class="nh-brand"><b>REDES CONTENT AGENCY</b><span>${caption}</span></div>
+      <div class="nh-period ${global ? 'gold' : ''}">${r ? esc(periodUpper(r)) : ''}</div></header>
+    <nav class="ntabs" aria-label="Sections ASV">${ASV_TABS.map(([k, l]) => `<a href="#${P.id}/asv/${k}" class="${k === sub ? 'on' : ''}" ${k === sub ? 'aria-current="page"' : ''}>${l}</a>`).join('')}</nav>
+    ${hero}
+    ${withPeriod ? `<div class="nc nperiod">${periodControls(P.id, 'main', periodOf(P.id))}${r ? `<span class="muted" style="margin-left:auto;font-size:12.5px">Comparée à : ${esc(fmtRange(ASVE.previousRange(r.start, r.end).start, ASVE.previousRange(r.start, r.end).end))}</span>` : '<span class="sc-lo">Plage de dates invalide.</span>'}</div>` : ''}
+    <div class="nstack">${body}</div>
+    <footer class="nfoot">Suivi ASV — rapport généré automatiquement</footer>`;
+}
+function renderASV(main, P, sub) {
+  if (!ASV_TABS.some(t => t[0] === sub)) sub = 'dashboard';
+  applyNeon(main, sub === 'general' ? 'rank' : sub === 'priorites' ? 'priority' : P.id);
+  const hasData = entriesOf(P.id).length > 0;
+  const r = rangeOf(P.id);
+  const needsData = ['dashboard','objectifs'].includes(sub);
+  let body;
+  if (needsData && !hasData) body = `<section class="nc" style="text-align:center;padding:40px 20px"><h2 style="font-size:19px">Aucune donnée ASV ${P.name} pour l'instant</h2><p class="muted">Importez un tableau avec une colonne Modèle et une colonne ASV (les abonnés sont facultatifs), ou saisissez des chiffres à la main.</p><a class="btn primary" href="#${P.id}/asv/saisie">Importer des données</a></section>`;
+  else if (sub === 'dashboard') body = r ? asvDashboard(P, r) : '';
+  else if (sub === 'objectifs') body = r ? asvObjectifs(P, r) : '';
+  else if (sub === 'priorites') body = r ? asvPriorites(P, r) : '';
+  else if (sub === 'general') body = r ? asvGeneral(P, r) : '';
+  else if (sub === 'modeles') body = asvModeles(P);
+  else if (sub === 'saisie') body = asvSaisie(P);
+  else body = asvReglages(P);
+  main.innerHTML = neonShell(P, sub, body, ['dashboard','objectifs','priorites','general'].includes(sub));
+  bindPeriod(main, 'main', () => periodOf(P.id), v => { asvUI.period[P.id] = v; }, render);
+  ({dashboard:bindAsvDashboard, modeles:bindAsvModeles, saisie:bindAsvSaisie, reglages:bindAsvReglages}[sub] || (() => {}))(main, P, r);
+}
+
+/* ---------- Tableau de bord (mise en page du rapport PDF) ---------- */
+function asvDashboard(P, r) {
+  const rows = periodRows(P.id, r);
+  if (!rows.length) return `<section class="nc"><h2>Aucune donnée sur cette période</h2><p class="muted">Choisissez une autre période ci-dessus : ${plural(entriesOf(P.id).length, 'entrée enregistrée', 'entrées enregistrées')} pour ${P.name}.</p></section>`;
+  const best = rows.find(x => x.asv != null);
+  const E = entriesOf(P.id), ms = ASVE.months(E);
+  const withFans = rows.filter(x => x.fans != null), withRev = rows.filter(x => x.revenue != null);
+  const tf = withFans.length === rows.length ? withFans.reduce((a, x) => a + x.fans, 0) : null;
+  const tr = withRev.length === rows.length ? withRev.reduce((a, x) => a + x.revenue, 0) : null;
+  const weighted = tf > 0 && rows.every(x => x.fans != null && x.asv != null) ? rows.reduce((a, x) => a + x.asv * x.fans, 0) / tf : null;
+  const avg = rows.filter(x => x.asv != null).reduce((a, x, _, arr) => a + x.asv / arr.length, 0);
+  const bestSub = best ? [best.revenue != null ? `${fa(P.id, best.revenue, 0)} de CA net` : null, best.fans != null ? `${fint(best.fans)} nouveaux fans` : null].filter(Boolean).join(' · ') : '';
+  const table = `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th class="num">#</th><th>Modèle</th><th class="num">Nouveaux fans</th><th class="num">CA net</th><th class="num">ASV</th><th>Objectif</th><th>Évolution</th></tr></thead><tbody>
+    ${rows.map((x, i) => `<tr><td class="num ${i === 0 ? 'gold' : ''}">${String(i + 1).padStart(2, '0')}</td><td><strong class="${i === 0 ? 'gold' : ''}">${esc(x.m.name)} ${PCODE[P.id]}</strong></td><td class="num">${fint(x.fans)}</td><td class="num">${x.revenue == null ? '<span class="muted">—</span>' : fa(P.id, x.revenue)}</td><td class="num"><strong>${x.asv == null ? '<span class="muted">0 abonné</span>' : fa(P.id, x.asv)}</strong>${x.approx ? ' <span class="muted" title="Moyenne simple de plusieurs périodes sans abonnés">≈</span>' : ''}</td><td>${goalPill(P.id, ASVE.targetFor(x.asv, asvState.settings[P.id].paliers))}</td><td>${deltaBadge(x.delta)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+  const cross = ms.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Modèle</th>${ms.map(ym => `<th class="num">${esc(monthHead(E, ym))}</th>`).join('')}</tr></thead><tbody>
+    ${(() => {
+      const grid = modelsOf(P.id).map(m => ({m, v: ms.map(ym => { const mr = ASVE.monthRange(ym); const a = ASVE.aggregate(E, m.id, mr.start, mr.end); return a ? a.asv : null; })}));
+      const bestCol = ms.map((_, j) => Math.max(...grid.map(g => g.v[j] ?? -Infinity)));
+      return grid.filter(g => g.v.some(v => v != null)).map(g => `<tr><td><strong>${esc(g.m.name)} ${PCODE[P.id]}</strong></td>${g.v.map((v, j) => `<td class="num ${v != null && v === bestCol[j] ? 'bestcol' : ''}">${v == null ? '<span class="muted">—</span>' : fa(P.id, v)}</td>`).join('')}</tr>`).join('');
+    })()}
+  </tbody></table></div>` : `<p class="muted">Aucune donnée mensuelle : la vue mensuelle ne compte que les périodes comprises dans un seul mois.</p>`;
+  const n = rows.filter(x => x.asv != null).length;
+  return `
+    <section class="nc nbest"><div><div class="nlabel">MEILLEUR ASV DE LA PÉRIODE</div><div class="nbest-name">${best ? `${esc(best.m.name)} ${PCODE[P.id]}` : '—'}</div>
+      ${bestSub ? `<div class="muted" style="margin-top:4px">${bestSub}</div>` : ''}</div>
+      <div class="nbest-val"><div class="v">${best ? fa(P.id, best.asv) : '—'}</div><div class="muted" style="font-size:12px;text-align:right">ASV</div></div></section>
+    <section class="nc"><div class="ncard-head"><h2>Classement — ASV par modèle</h2>
+      <label class="check"><input type="checkbox" id="asv-cmp" ${asvUI.compare[P.id] ? 'checked' : ''}> Comparer à la période précédente</label></div>
+      <div class="chart-box" id="asv-bars-box" style="height:${Math.max(200, n * (asvUI.compare[P.id] ? 40 : 24) + 30)}px;max-width:760px;margin:0 auto"><canvas id="asv-bars"></canvas></div></section>
+    <section class="nc"><div class="ncard-head"><h2>Évolution mensuelle ${asvUI.allLines[P.id] ? '(tous les modèles)' : '(top 3)'}</h2>
+      <label class="check"><input type="checkbox" id="asv-all" ${asvUI.allLines[P.id] ? 'checked' : ''}> Afficher tous les modèles</label></div>
+      <div class="chart-box tall" id="asv-lines-box"><canvas id="asv-lines"></canvas></div></section>
+    <section class="nstats">
+      <div class="nc"><div class="k">${weighted != null ? `ASV de l'équipe` : 'ASV moyen'}</div><div class="v">${fa(P.id, weighted ?? avg)}</div><div class="muted" style="font-size:12px;margin-top:4px">${weighted != null ? 'pondéré par les nouveaux fans' : 'moyenne des modèles'}</div></div>
+      ${tf != null ? `<div class="nc"><div class="k">Nouveaux fans</div><div class="v">${fint(tf)}</div></div>` : ''}
+      ${tr != null ? `<div class="nc"><div class="k">CA net</div><div class="v">${fa(P.id, tr, 0)}</div></div>` : ''}
+      <div class="nc"><div class="k">Modèles classées</div><div class="v">${n}<span class="muted" style="font-size:14px"> / ${modelsOf(P.id).length}</span></div></div>
+    </section>
+    <section class="nc"><h2>Détail du classement</h2>${table}</section>
+    <section class="nc"><div class="ncard-head"><h2>Vue mensuelle croisée</h2><span class="muted" style="font-size:12.5px">Meilleure valeur du mois en or · « partiel » = mois incomplet</span>
+      <button class="btn" id="asv-cross-csv" type="button" style="margin-left:auto">${icon('download')}Exporter en CSV</button></div>${cross}</section>`;
+}
+const valueLabels = fmt => ({id:'vl', afterDatasetsDraw(chart) {
+  const {ctx} = chart, ds = chart.data.datasets[0], meta = chart.getDatasetMeta(0);
+  ctx.save(); ctx.font = 'bold 13px "Helvetica Neue", Helvetica, Arial, sans-serif'; ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
+  meta.data.forEach((bar, i) => { const v = ds.data[i]; if (v != null) ctx.fillText(fmt(v), bar.x + 6, bar.y); });
+  ctx.restore();
+}});
+function bindAsvDashboard(main, P, r) {
+  if (!r || !entriesOf(P.id).length) return;
+  const rows = periodRows(P.id, r).filter(x => x.asv != null);
+  document.getElementById('asv-all')?.addEventListener('change', e => { asvUI.allLines[P.id] = e.target.checked; render(); });
+  document.getElementById('asv-cmp')?.addEventListener('change', e => { asvUI.compare[P.id] = e.target.checked; render(); });
+  const cmp = asvUI.compare[P.id];
+  document.getElementById('asv-cross-csv')?.addEventListener('click', () => {
+    const E = entriesOf(P.id), ms = ASVE.months(E);
+    const head = ['Modèle', ...ms.map(ym => monthHead(E, ym))];
+    const lines = modelsOf(P.id).map(m => [m.name, ...ms.map(ym => { const mr = ASVE.monthRange(ym); const a = ASVE.aggregate(E, m.id, mr.start, mr.end); return a && a.asv != null ? Math.round(a.asv * 100) / 100 : ''; })]);
+    saveFile(`asv-mensuel-${P.id}.csv`, [head, ...lines].map(l => l.map(csvCell).join(';')).join('\r\n'));
+  });
+  if (!window.Chart) { ['asv-bars-box','asv-lines-box'].forEach(chartsReady); return; }
+  const n = NEON[P.id], GOLD = '#ffd23f';
+  Chart.defaults.color = 'rgba(255,255,255,.75)';
+  Chart.defaults.font.family = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+  charts.push(new Chart(document.getElementById('asv-bars'), {
+    type:'bar', plugins:[valueLabels(v => fa(P.id, v))],
+    data:{labels: rows.map(x => `${x.m.name} ${PCODE[P.id]}`), datasets:[
+      {label:'Période', data: rows.map(x => x.asv), backgroundColor: rows.map((_, i) => i === 0 ? GOLD : n.core), borderRadius:2, barPercentage:.9, categoryPercentage: cmp ? .8 : .72},
+      ...(cmp ? [{label:'Période précédente', data: rows.map(x => x.prev), backgroundColor:'rgba(255,255,255,.2)', borderRadius:2, barPercentage:.9, categoryPercentage:.8}] : [])]},
+    options:{indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{right:78}},
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label: c => `${c.dataset.label} : ${fa(P.id, c.parsed.x)}`}}},
+      scales:{x:{display:false, beginAtZero:true}, y:{grid:{display:false}, border:{display:false}, ticks:{color:'#fff', font:{size:13}}}}}
+  }));
+  const E = entriesOf(P.id), ms = ASVE.months(E);
+  const pal = [GOLD, n.core, '#c4b5fd', '#4ade80', '#fb923c', '#60a5fa', '#f87171', '#facc15', '#2dd4bf', '#e879f9'];
+  const chosen = asvUI.allLines[P.id] ? modelsOf(P.id) : rows.slice(0, 3).map(x => x.m);
+  charts.push(new Chart(document.getElementById('asv-lines'), {
+    type:'line',
+    data:{labels: ms.map(ym => monthHead(E, ym)), datasets: chosen.map((m, i) => ({label:`${m.name} ${PCODE[P.id]}`, borderColor:pal[i % pal.length], backgroundColor:pal[i % pal.length], pointRadius:4, pointHoverRadius:6, borderWidth:2.5, tension:.25,
+      data: ms.map(ym => { const mr = ASVE.monthRange(ym); const a = ASVE.aggregate(E, m.id, mr.start, mr.end); return a ? a.asv : null; })}))},
+    options:{responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{legend:{position:'top', labels:{usePointStyle:true, color:'#fff'}}, tooltip:{callbacks:{label: c => `${c.dataset.label} : ${fa(P.id, c.parsed.y)}`}}},
+      scales:{y:{ticks:{display:false}, grid:{color:'rgba(255,255,255,.1)'}, border:{display:false}, beginAtZero:false, grace:'15%'}, x:{grid:{display:false}, ticks:{color:'rgba(255,255,255,.75)'}}}}
+  }));
+}
+
+/* ---------- Objectifs ---------- */
+function asvObjectifs(P, r) {
+  const set = asvState.settings[P.id];
+  const rows = periodRows(P.id, r).filter(x => x.asv != null);
+  if (!rows.length) return `<section class="nc"><h2>Aucune donnée sur cette période</h2><p class="muted">Choisissez une autre période ci-dessus.</p></section>`;
+  const pal = [...set.paliers].sort((a, b) => a - b);
+  return `<section class="nc"><h2>Objectifs ASV ${P.name}</h2><p class="muted" style="margin-top:0">Paliers : sous ${fa(P.id, pal[0], 0)} → ${fa(P.id, pal[0], 0)}${pal.slice(1).map((p, i) => ` · de ${fa(P.id, pal[i], 0)} à ${fa(P.id, p, 0)} → ${fa(P.id, p, 0)}`).join('')} · à partir de ${fa(P.id, pal[pal.length - 1], 0)} → STABLE (maintenir).</p>
+    <div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Modèle</th><th class="num">ASV actuel</th><th>Objectif</th><th class="num">Écart</th><th>Évolution</th></tr></thead><tbody>
+    ${rows.map(x => { const t = ASVE.targetFor(x.asv, set.paliers); return `<tr><td><strong>${esc(x.m.name)}</strong></td><td class="num"><strong>${fa(P.id, x.asv)}</strong></td><td>${goalPill(P.id, t)}</td><td class="num">${t ? `<span class="gap-orange">+${fa(P.id, t - x.asv)}</span>` : '<span class="muted">—</span>'}</td><td>${deltaBadge(x.delta)}</td></tr>`; }).join('')}
+    </tbody></table></div></section>`;
+}
+
+/* ---------- À prioriser (plateformes mélangées) ---------- */
+function asvPriorites(P, r) {
+  const all = PIDS.flatMap(pid => periodRows(pid, r).filter(x => x.asv != null).map(x => ({...x, t: ASVE.targetFor(x.asv, asvState.settings[pid].paliers)})));
+  const prio = all.filter(x => x.t != null).map(x => ({...x, gap: x.t - x.asv})).sort((a, b) => b.gap - a.gap);
+  const stable = all.filter(x => x.t === null);
+  if (!all.length) return `<section class="nc"><h2>Aucune donnée sur cette période</h2><p class="muted">Aucune plateforme n'a de chiffres pour ${esc(fmtRange(r.start, r.end))}.</p></section>`;
+  const drop = x => x.delta && x.delta.dir === 'down' && Math.abs(x.delta.pct) >= asvState.settings[x.pid].dropAlert;
+  return `<section class="nc"><h2>Modèles à prioriser</h2><p class="muted" style="margin-top:0">OnlyFans et MYM mélangés, triés par écart à l'objectif (le plus loin en premier). « En baisse » signale une chute d'ASV supérieure au seuil des Réglages. Les écarts sont exprimés dans la devise de chaque plateforme.</p>
+    ${prio.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th class="num">Rang</th><th>Modèle</th><th class="num">ASV actuel</th><th>Objectif</th><th class="num">Écart</th><th>Évolution</th><th>Alerte</th></tr></thead><tbody>
+    ${prio.map((x, i) => `<tr><td class="num"><strong class="${i < 3 ? 'gap-red' : ''}">${i + 1}</strong></td><td>${pbadge(PLATFORMS[x.pid])} <strong style="margin-left:6px">${esc(x.m.name)}</strong></td><td class="num">${fa(x.pid, x.asv)}</td><td>${goalPill(x.pid, x.t)}</td><td class="num"><span class="${i < 3 ? 'gap-red' : 'gap-orange'}">−${fa(x.pid, x.gap)}</span></td><td>${deltaBadge(x.delta)}</td><td>${drop(x) ? '<span class="dlt down">En baisse</span>' : ''}</td></tr>`).join('')}
+    </tbody></table></div>` : '<p>Toutes les modèles sont au palier « STABLE » sur cette période.</p>'}
+    ${stable.length ? `<p class="muted" style="margin-bottom:0">Au palier STABLE : ${stable.map(x => `${esc(x.m.name)} (${PLATFORMS[x.pid].short}, ${fa(x.pid, x.asv)})`).join(', ')}.</p>` : ''}</section>`;
+}
+
+/* ---------- Classement général (mise en page du rapport PDF) ---------- */
+function asvGeneral(P, r) {
+  const rate = asvState.settings.eurToUsd;
+  const all = PIDS.flatMap(pid => periodRows(pid, r).filter(x => x.asv != null)).map(x => ({...x, cmp: x.pid === 'mym' ? x.asv * rate : x.asv})).sort((a, b) => b.cmp - a.cmp);
+  if (!all.length) return `<section class="nc"><h2>Aucune donnée sur cette période</h2><p class="muted">Aucune plateforme n'a de chiffres pour ${esc(fmtRange(r.start, r.end))}.</p></section>`;
+  return `<section class="nc nrank">
+    ${all.map((x, i) => `<div class="nrow ${i < 3 ? 'ntop' : ''}"><span class="nr-rank ${i === 0 ? 'r1' : i === 2 ? 'r3' : ''}">${String(i + 1).padStart(2, '0')}</span>
+      <span class="nr-name">${esc(x.m.name)} ${PCODE[x.pid]}</span><span class="nr-tag ${x.pid}">${pbadge(PLATFORMS[x.pid])}${PLATFORMS[x.pid].name}</span>
+      <span class="nr-val ${i === 0 ? 'gold' : ''}">${fa(x.pid, x.asv)}${rate !== 1 && x.pid === 'mym' ? `<small class="muted"> ≈ ${fa('of', x.cmp)}</small>` : ''}</span></div>`).join('')}
+    </section>
+    <p class="muted" style="text-align:center;font-size:12px;margin:0">${rate === 1 ? `OnlyFans ($) et MYM (€) sont comparés sans conversion de change ; un taux peut être défini dans Réglages.` : `Classement calculé en dollars, avec 1 € = ${nf(rate, 2, 4)} $.`}</p>`;
+}
+
+/* ---------- Détail par modèle ---------- */
+function asvModeles(P) {
+  const ms = modelsOf(P.id, true);
+  if (!ms.length) return `<section class="nc"><h2>Aucun modèle ${P.name}</h2><p class="muted">Ajoutez des modèles ou importez un export dans « Saisie & import ».</p></section>`;
+  return `<section class="nc"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px"><h2 style="margin:0">Historique complet</h2><span class="muted" style="font-size:12.5px">Modèles archivées comprises</span>
+    <button class="btn" id="asv-all-csv" type="button" style="margin-left:auto">${icon('download')}Exporter toutes les données (OF + MYM)</button></div>
+    ${ms.map(m => {
+      const E = asvState.entries.filter(e => e.modelId === m.id).sort((a, b) => b.start.localeCompare(a.start));
+      const complete = E.filter(e => e.fans != null && ASVE.entryRevenue(e) != null);
+      const tf = complete.reduce((a, e) => a + e.fans, 0), tr = complete.reduce((a, e) => a + ASVE.entryRevenue(e), 0);
+      return `<details class="ndet"><summary><strong>${esc(m.name)}</strong>${m.archived ? ' <span class="muted">(archivée)</span>' : ''}<span class="muted" style="margin-left:auto">${plural(E.length, 'entrée', 'entrées')}</span></summary>
+        ${E.length ? `<div class="tbl-wrap" style="max-height:none;margin-top:10px"><table><thead><tr><th>Période</th><th class="num">Fans</th><th class="num">CA</th><th class="num">ASV</th><th>Source</th><th></th></tr></thead><tbody>
+        ${E.map(e => `<tr><td>${esc(fmtRange(e.start, e.end))}</td><td class="num">${fint(e.fans)}</td><td class="num">${e.revenue == null ? '<span class="muted">—</span>' : fa(P.id, e.revenue)}</td><td class="num"><strong>${fa(P.id, ASVE.entryASV(e))}</strong></td><td class="muted">${esc(e.source || '')}</td><td class="num"><button class="btn ghost" data-del-e="${e.id}" type="button">Supprimer</button></td></tr>`).join('')}
+        ${complete.length ? `<tr><td><strong>Total de l'historique</strong></td><td class="num"><strong>${fint(tf)}</strong></td><td class="num"><strong>${fa(P.id, tr)}</strong></td><td class="num"><strong>${fa(P.id, ASVE.asv(tr, tf))}</strong></td><td></td><td></td></tr>` : ''}
+        </tbody></table></div><p class="muted" style="font-size:12px;margin:6px 0 0">Le total ne compte que les entrées avec des abonnés, et additionne tout : des périodes qui se chevauchent y sont comptées deux fois.</p>` : '<p class="muted">Aucune entrée.</p>'}</details>`;
+    }).join('')}</section>`;
+}
+function bindAsvModeles(main, P) {
+  main.querySelectorAll('[data-del-e]').forEach(b => b.addEventListener('click', async () => {
+    const e = asvState.entries.find(x => x.id === b.dataset.delE); if (!e) return;
+    if (!(await modal('Supprimer cette entrée', `<p>Supprimer l'entrée du ${esc(fmtRange(e.start, e.end))} (ASV ${fa(P.id, ASVE.entryASV(e))}) ? Cette action est définitive.</p>`, 'Supprimer'))) return;
+    asvState.entries = asvState.entries.filter(x => x !== e); saveAsv(); toast('Entrée supprimée.'); render();
+  }));
+  document.getElementById('asv-all-csv')?.addEventListener('click', () => {
+    const head = ['Plateforme','Modèle','Archivée','Début','Fin','Nouveaux abonnés','CA net','Devise','ASV'];
+    const lines = asvState.entries.map(e => { const m = asvState.models.find(x => x.id === e.modelId); const v = ASVE.entryASV(e); return m ? [PLATFORMS[m.platform].name, m.name, m.archived ? 'oui' : 'non', e.start, e.end, e.fans ?? '', e.revenue ?? '', cur(m.platform), v == null ? '' : Math.round(v * 100) / 100] : null; }).filter(Boolean);
+    saveFile('asv-toutes-donnees.csv', [head, ...lines].map(l => l.map(csvCell).join(';')).join('\r\n'));
+  });
+}
+
+/* ---------- Saisie & import ---------- */
+function asvSaisie(P) {
+  const d = asvUI.draft[P.id];
+  const ms = modelsOf(P.id, true);
+  const man = asvUI.manual?.[P.id] || (asvUI.manual = {...asvUI.manual, [P.id]: {p: periodOf(P.id), model:'', fans:'', rev:'', asv:''}})[P.id];
+  let html = `<section class="nc"><h2>Importer un export ${P.name}</h2><p class="muted" style="margin-top:0">Le plus simple : un tableau avec une colonne <strong>Modèle</strong> et une colonne <strong>ASV</strong>, plus si possible les <strong>nouveaux abonnés</strong> (ils servent à pondérer les moyennes). Les exports ${P.id === 'of' ? 'Infloww' : 'MyPulse'} avec CA net + nouveaux abonnés et le JSON du tracker marchent aussi : l'ASV est alors recalculé.</p>
+    <label class="drop" id="asv-drop" tabindex="0" style="background:rgba(10,7,9,.55);border-color:rgba(var(--core-rgb),.5)"><input type="file" id="asv-file" accept=".csv,.xlsx,.xls,.tsv,.txt,.json" hidden><strong>Déposez un fichier ici ou choisissez-le</strong><span class="muted">.xlsx, .csv ou .json</span></label>
+    <label class="f" style="margin-top:12px">Ou collez un tableau (copié depuis Excel ou le dashboard) ou un JSON<textarea id="asv-paste" rows="4" placeholder="Modèle&#9;Abonnés&#9;ASV&#10;Lila&#9;25&#9;19,18&#10;Flavie&#9;310&#9;13,73"></textarea></label>
+    <button class="btn" id="asv-parse" type="button" style="margin-top:10px">Analyser le texte collé</button></section>`;
+  if (d) {
+    const r = ASVE.rangeFor(d.p.type, d.p.a, d.p.b);
+    const valid = r.start && r.end && r.end >= r.start;
+    const incl = d.rows.filter(x => x.include);
+    html += `<section class="nc"><h2>Vérification avant import · ${esc(d.source)}</h2>
+      ${d.issues.length ? `<div class="alert warn" style="margin-bottom:10px">${d.issues.map(esc).join('<br>')}</div>` : ''}
+      <div class="nperiod" style="margin-bottom:12px">${periodControls(P.id, 'imp', d.p)}${valid ? '' : '<span class="sc-lo">Choisissez une période valide.</span>'}</div>
+      <div class="tbl-wrap" style="max-height:440px"><table><thead><tr><th>Importer</th><th>Nom dans l'export</th><th>Nom dans l'agence</th><th>Statut</th><th class="num">Nouveaux abonnés</th><th class="num">CA net</th><th class="num">ASV retenu</th><th class="num">ASV du fichier</th></tr></thead><tbody>
+      ${d.rows.map((x, i) => { const a = x.asv; const ex = findModel(P.id, x.name); const recalc = x.revenue != null && x.fans != null; const gap = recalc && x.given != null && a != null && Math.abs(x.given - a) > 0.15;
+        return `<tr><td><input type="checkbox" data-ainc="${i}" ${x.include ? 'checked' : ''}></td><td class="muted">${esc(x.handle)}</td><td><input type="text" data-aname="${i}" value="${esc(x.name)}" style="min-width:150px"></td>
+        <td>${ex ? (ex.archived ? '<span class="dlt stable">Archivée</span>' : '<span class="dlt up">Existante</span>') : '<span class="dlt stable" style="color:var(--core)">Nouvelle</span>'}</td>
+        <td class="num">${fint(x.fans)}</td><td class="num">${x.revenue == null ? '<span class="muted">—</span>' : fa(P.id, x.revenue)}</td><td class="num"><strong>${a == null ? '<span class="sc-lo">0 abonné</span>' : fa(P.id, a)}</strong>${recalc ? ' <span class="muted" style="font-size:11px">recalculé</span>' : ''}</td>
+        <td class="num">${x.given == null ? '<span class="muted">—</span>' : `${fa(P.id, x.given)}${gap ? ` <span class="dlt down" title="L'ASV du fichier diffère de plus de 0,15 de l'ASV recalculé à partir du CA et des abonnés. L'ASV recalculé est utilisé.">écart ${fa(P.id, Math.abs(x.given - a))}</span>` : ''}`}</td></tr>`; }).join('')}
+      </tbody></table></div>
+      <label class="check" style="margin-top:10px;color:rgba(255,255,255,.75)"><input type="checkbox" id="asv-remember" ${d.remember ? 'checked' : ''}> Mémoriser les noms modifiés comme correspondances pour les prochains imports</label>
+      <p class="muted" style="font-size:12.5px">Les entrées déjà enregistrées pour ces modèles et comprises dans cette période sont remplacées, pour ne jamais compter deux fois le même CA.</p>
+      <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn ghost" id="asv-cancel" type="button">Abandonner</button><button class="btn primary" id="asv-confirm" type="button" ${valid && incl.length ? '' : 'disabled'}>Importer ${plural(incl.length, 'modèle', 'modèles')}</button></div></section>`;
+  }
+  const mr = ASVE.rangeFor(man.p.type, man.p.a, man.p.b);
+  html += `<section class="nc"><h2>Saisie manuelle</h2><p class="muted" style="margin-top:0">Renseignez l'ASV, ou le CA net et les nouveaux abonnés pour qu'il soit recalculé. Une entrée existante (même modèle, même période) est mise à jour.</p>
+    <div class="nperiod">${ms.length ? `<label class="f">Modèle<select id="man-model">${modelsOf(P.id).map(m => `<option value="${m.id}" ${m.id === man.model ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label>` : '<span class="muted">Ajoutez d\'abord un modèle ci-dessous.</span>'}
+      ${periodControls(P.id, 'man', man.p)}
+      <label class="f">Nouveaux abonnés (facultatif)<input type="number" id="man-fans" min="0" step="1" value="${esc(man.fans)}" style="width:130px"></label>
+      <label class="f">ASV (${cur(P.id)})<input type="number" id="man-asv" min="0" step="any" value="${esc(man.asv)}" style="width:110px"></label>
+      <label class="f">ou CA net (${cur(P.id)})<input type="number" id="man-rev" min="0" step="any" value="${esc(man.rev)}" style="width:130px"></label>
+      <button class="btn primary" id="man-save" type="button" ${ms.length ? '' : 'disabled'}>Enregistrer</button></div>
+    ${mr.start && mr.end ? `<p class="muted" style="font-size:12.5px;margin-bottom:0">Période : ${esc(fmtRange(mr.start, mr.end))}</p>` : ''}</section>
+    <section class="nc"><h2>Modèles suivis ${P.name}</h2>
+      <div class="chips">${ms.map(m => `<span class="chip ${m.archived ? 'arch' : ''}">${esc(m.name)}${m.archived ? ' <span class="muted">(archivée)</span>' : ''}
+        <button type="button" data-mren="${m.id}" title="Renommer" aria-label="Renommer ${esc(m.name)}">✎</button>
+        <button type="button" data-mmove="${m.id}" title="Déplacer vers ${P.id === 'of' ? 'MYM' : 'OnlyFans'}" aria-label="Déplacer ${esc(m.name)}">⇄</button>
+        <button type="button" data-march="${m.id}" title="${m.archived ? 'Réactiver' : 'Archiver'}" aria-label="${m.archived ? 'Réactiver' : 'Archiver'} ${esc(m.name)}">${m.archived ? '↺' : '📦'}</button>
+        <button type="button" data-mdel="${m.id}" title="Supprimer" aria-label="Supprimer ${esc(m.name)}">×</button></span>`).join('') || '<span class="muted">Aucun modèle pour l\'instant.</span>'}</div>
+      <label class="f" style="margin-top:12px">Ajouter des modèles (séparés par des virgules ou des retours à la ligne)<textarea id="add-models" rows="2" placeholder="Carla baby, Ava, Flavie"></textarea></label>
+      <button class="btn" id="add-models-btn" type="button" style="margin-top:8px">Ajouter à ${P.name}</button></section>`;
+  return html;
+}
+async function asvReadFile(P, file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  try {
+    let res;
+    if (ext === 'xlsx' || ext === 'xls') {
+      if (!window.XLSX) { toast(`Le lecteur XLSX n'a pas pu se charger. Exportez en CSV.`, true); return; }
+      res = ASVE.rowsFromGrid(gridFromWorkbook(XLSX.read(await file.arrayBuffer(), {type:'array', cellNF:true})), asvState.settings.mapping);
+    } else res = ASVE.parseInput(await file.text(), asvState.settings.mapping);
+    asvDraftFrom(P, res, file.name);
+  } catch (e) { toast(`Impossible de lire « ${file.name} » : ${e.message}`, true); }
+}
+function asvDraftFrom(P, res, source) {
+  if (res.error) { toast(res.error, true); return; }
+  if (res.section && res.section !== P.id) { toast(`Ce JSON concerne ${PLATFORMS[res.section].name} : importez-le depuis Analyse ASV ${PLATFORMS[res.section].name}.`, true); return; }
+  if (!res.rows.length) { toast('Aucune ligne exploitable trouvée.', true); return; }
+  const dates = (source.match(/\d{4}-\d{2}-\d{2}/g) || []);
+  const start = res.start || dates[0] || '', end = res.end || dates[1] || dates[0] || '';
+  let p = start && end ? {type:'custom', a:start, b:end} : periodOf(P.id);
+  if (start && end) { const ym = start.slice(0, 7), full = ASVE.monthRange(ym);
+    if (start === full.start && end === full.end) p = {type:'month', a:ym, b:''};
+    else if (start === `${ym}-01` && end === `${ym}-15`) p = {type:'half', a:ym, b:'1'};
+    else if (start === `${ym}-16` && end === full.end) p = {type:'half', a:ym, b:'2'}; }
+  asvUI.draft[P.id] = {source, issues: res.issues || [], p, remember:true, rows: res.rows.map(x => ({...x, origName:x.name, include: x.asv != null}))};
+  render();
+}
+async function promptModal(title, label, value) {
+  return new Promise(res => {
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><h3>${esc(title)}</h3><label class="f" style="display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:13px">${esc(label)}<input type="text" id="pm-in" value="${esc(value)}"></label><div class="acts"><button class="btn ghost" data-a="0">Annuler</button><button class="btn primary" data-a="1">Enregistrer</button></div></div>`;
+    const input = bg.querySelector('#pm-in');
+    const close = ok => { const v = input.value.trim(); bg.remove(); res(ok ? v : null); };
+    bg.addEventListener('click', e => { if (e.target === bg) close(false); const a = e.target.closest('[data-a]'); if (a) close(a.dataset.a === '1'); });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') close(true); if (e.key === 'Escape') close(false); });
+    document.body.appendChild(bg); input.focus(); input.select();
+  });
+}
+function bindAsvSaisie(main, P) {
+  const keep = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
+  const drop = document.getElementById('asv-drop'), file = document.getElementById('asv-file');
+  file.addEventListener('change', () => file.files[0] && asvReadFile(P, file.files[0]));
+  drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) asvReadFile(P, f); });
+  document.getElementById('asv-parse').addEventListener('click', () => asvDraftFrom(P, ASVE.parseInput(document.getElementById('asv-paste').value, asvState.settings.mapping), 'texte collé'));
+  const d = asvUI.draft[P.id];
+  if (d) {
+    bindPeriod(main, 'imp', () => d.p, v => { d.p = v; }, keep);
+    main.querySelectorAll('[data-ainc]').forEach(cb => cb.addEventListener('change', () => { d.rows[+cb.dataset.ainc].include = cb.checked; keep(); }));
+    main.querySelectorAll('[data-aname]').forEach(inp => inp.addEventListener('change', () => { d.rows[+inp.dataset.aname].name = inp.value.trim() || d.rows[+inp.dataset.aname].handle; keep(); }));
+    document.getElementById('asv-remember').addEventListener('change', e => { d.remember = e.target.checked; });
+    document.getElementById('asv-cancel').addEventListener('click', () => { asvUI.draft[P.id] = null; render(); });
+    document.getElementById('asv-confirm').addEventListener('click', () => {
+      const r = ASVE.rangeFor(d.p.type, d.p.a, d.p.b);
+      let created = 0, updated = 0, newModels = 0;
+      for (const x of d.rows.filter(x => x.include)) {
+        let m = findModel(P.id, x.name);
+        if (!m) { m = {id: aid(), name: x.name, platform: P.id, archived:false}; asvState.models.push(m); newModels++; }
+        const res = ASVE.applyImport(asvState, m.id, r.start, r.end, x, d.source);
+        res.updated ? updated++ : created++;
+        if (d.remember && x.name !== x.origName) asvState.settings.mapping[ASVE.stripSuffix(x.handle)] = x.name;
+      }
+      saveAsv();
+      asvUI.draft[P.id] = null;
+      asvUI.period[P.id] = {...d.p};
+      toast(`Import ${P.name} ${r.start} → ${r.end} : ${created} créée(s), ${updated} mise(s) à jour${newModels ? `, ${plural(newModels, 'nouveau modèle', 'nouveaux modèles')}` : ''}.`);
+      go(`${P.id}/asv/dashboard`);
+    });
+  }
+  const man = asvUI.manual[P.id];
+  bindPeriod(main, 'man', () => man.p, v => { man.p = v; }, keep);
+  document.getElementById('man-model')?.addEventListener('change', e => { man.model = e.target.value; });
+  document.getElementById('man-fans').addEventListener('input', e => { man.fans = e.target.value; });
+  document.getElementById('man-rev').addEventListener('input', e => { man.rev = e.target.value; });
+  document.getElementById('man-asv').addEventListener('input', e => { man.asv = e.target.value; });
+  document.getElementById('man-save').addEventListener('click', () => {
+    const modelId = document.getElementById('man-model')?.value, r = ASVE.rangeFor(man.p.type, man.p.a, man.p.b);
+    const fans = man.fans === '' ? null : Number(man.fans), rev = man.rev === '' ? null : Number(man.rev), av = man.asv === '' ? null : Number(man.asv);
+    if (!modelId) { toast('Choisissez un modèle.', true); return; }
+    if (!r.start || !r.end || r.end < r.start) { toast('Choisissez une période valide.', true); return; }
+    if ((fans != null && !(fans >= 0 && Number.isInteger(fans))) || (rev != null && !(rev >= 0)) || (av != null && !(av >= 0))) { toast('Les valeurs doivent être positives, et les abonnés un nombre entier.', true); return; }
+    if (av == null && !(rev != null && fans > 0)) { toast(`Renseignez l'ASV, ou le CA net avec les nouveaux abonnés.`, true); return; }
+    const row = {fans, revenue: rev != null && fans > 0 ? rev : null, asv: av};
+    const ex = asvState.entries.find(e => e.modelId === modelId && e.start === r.start && e.end === r.end);
+    if (ex) asvState.entries = asvState.entries.filter(e => e !== ex);
+    ASVE.applyImport(asvState, modelId, r.start, r.end, row, 'saisie manuelle');
+    saveAsv(); man.fans = ''; man.rev = ''; man.asv = '';
+    const m = asvState.models.find(x => x.id === modelId);
+    const saved = asvState.entries.find(e => e.modelId === modelId && e.start === r.start && e.end === r.end);
+    toast(`${m.name} : ${ex ? 'entrée mise à jour' : 'entrée enregistrée'} (${fmtRange(r.start, r.end)}, ASV ${fa(P.id, ASVE.entryASV(saved))}).`);
+    keep();
+  });
+  document.getElementById('add-models-btn').addEventListener('click', () => {
+    const names = document.getElementById('add-models').value.split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+    let n = 0;
+    for (const name of names) if (!findModel(P.id, name)) { asvState.models.push({id: aid(), name, platform: P.id, archived:false}); n++; }
+    saveAsv(); toast(`${n} modèle(s) ajouté(s) à ${P.name}${names.length > n ? ` (${names.length - n} déjà présent(s))` : ''}.`); keep();
+  });
+  const byId = id => asvState.models.find(m => m.id === id);
+  main.querySelectorAll('[data-mren]').forEach(b => b.addEventListener('click', async () => {
+    const m = byId(b.dataset.mren); const v = await promptModal('Renommer le modèle', 'Nouveau nom', m.name);
+    if (!v || v === m.name) return;
+    if (findModel(P.id, v) && findModel(P.id, v) !== m) { toast(`« ${v} » existe déjà dans ${P.name}.`, true); return; }
+    m.name = v; saveAsv(); toast(`Modèle renommé en « ${v} ».`); keep();
+  }));
+  main.querySelectorAll('[data-mmove]').forEach(b => b.addEventListener('click', async () => {
+    const m = byId(b.dataset.mmove), to = m.platform === 'of' ? 'mym' : 'of';
+    if (findModel(to, m.name)) { toast(`« ${m.name} » existe déjà dans ${PLATFORMS[to].name}.`, true); return; }
+    if (!(await modal('Déplacer le modèle', `<p>Déplacer <strong>${esc(m.name)}</strong> et tout son historique vers ${PLATFORMS[to].name} ? Les montants garderont leur valeur, mais seront affichés en ${ASVE.CURRENCY[to]}.</p>`, 'Déplacer'))) return;
+    m.platform = to; saveAsv(); toast(`« ${m.name} » déplacée vers ${PLATFORMS[to].name}.`); keep();
+  }));
+  main.querySelectorAll('[data-march]').forEach(b => b.addEventListener('click', () => {
+    const m = byId(b.dataset.march); m.archived = !m.archived; saveAsv();
+    toast(m.archived ? `« ${m.name} » archivée — masquée des tableaux, historique conservé.` : `« ${m.name} » réactivée.`); keep();
+  }));
+  main.querySelectorAll('[data-mdel]').forEach(b => b.addEventListener('click', async () => {
+    const m = byId(b.dataset.mdel), n = asvState.entries.filter(e => e.modelId === m.id).length;
+    if (!(await modal('Supprimer le modèle', `<p>Supprimer <strong>${esc(m.name)}</strong> et ${plural(n, 'entrée', 'entrées')} d'historique ? Pour garder l'historique, archivez-la plutôt. Cette action est définitive.</p>`, 'Supprimer'))) return;
+    asvState.models = asvState.models.filter(x => x !== m); asvState.entries = asvState.entries.filter(e => e.modelId !== m.id);
+    saveAsv(); toast(`« ${m.name} » supprimée.`); keep();
+  }));
+}
+
+/* ---------- Réglages ASV ---------- */
+function asvReglages(P) {
+  const s = asvState.settings, ps = s[P.id];
+  return `<section class="nc"><h2>Paliers d'objectif ${P.name}</h2><p class="muted" style="margin-top:0">L'objectif d'un modèle est le premier palier au-dessus de son ASV. Au-delà du dernier palier, l'objectif devient « STABLE ».</p>
+      <div class="nperiod"><label class="f">Paliers (${cur(P.id)}, séparés par des virgules)<input type="text" id="set-pal" value="${esc(ps.paliers.join(', '))}" style="width:200px"></label>
+      <label class="f">Alerte « En baisse » à partir de (%)<input type="number" id="set-drop" min="0" step="any" value="${ps.dropAlert}" style="width:120px"></label></div></section>
+    <section class="nc"><h2>Classement général</h2><p class="muted" style="margin-top:0">Pour comparer OnlyFans ($) et MYM (€) dans un même classement. Laissez 1 pour comparer les valeurs sans conversion.</p>
+      <label class="f">Taux de change : 1 € = … $<input type="number" id="set-rate" min="0" step="any" value="${s.eurToUsd}" style="width:120px"></label></section>
+    <section class="nc"><h2>Correspondance des noms</h2><p class="muted" style="margin-top:0">Une ligne par modèle : nom dans l'export = nom dans l'agence. Commune à OnlyFans et MYM. Les suffixes « OF » et « MYM » sont retirés automatiquement.</p>
+      <textarea id="set-map" rows="10">${esc(Object.entries(s.mapping).map(([h, n]) => `${h} = ${n}`).join('\n'))}</textarea></section>
+    <div class="nc" style="display:flex;gap:10px;justify-content:flex-end;align-items:center"><span class="muted" id="asv-set-msg" style="margin-right:auto"></span>
+      <button class="btn ghost" id="asv-set-reset" type="button">Rétablir les valeurs par défaut</button><button class="btn primary" id="asv-set-save" type="button">Enregistrer</button></div>`;
+}
+function bindAsvReglages(main, P) {
+  document.getElementById('asv-set-save').addEventListener('click', () => {
+    const pal = document.getElementById('set-pal').value.split(/[,;\s]+/).filter(Boolean).map(v => Number(v.replace(',', '.')));
+    const drop = Number(document.getElementById('set-drop').value), rate = Number(document.getElementById('set-rate').value);
+    const msg = document.getElementById('asv-set-msg');
+    const err = !pal.length || pal.some(v => !(v > 0)) ? 'Les paliers doivent être des nombres positifs.' : !(drop >= 0) ? `Le seuil d'alerte doit être positif ou nul.` : !(rate > 0) ? 'Le taux de change doit être supérieur à 0.' : '';
+    if (err) { msg.textContent = err; msg.className = 'sc-lo'; return; }
+    const mapping = {};
+    for (const line of document.getElementById('set-map').value.split('\n')) { const [h, ...n] = line.split('='); if (h && h.trim() && n.join('=').trim()) mapping[h.trim()] = n.join('=').trim(); }
+    Object.assign(asvState.settings[P.id], {paliers: [...new Set(pal)].sort((a, b) => a - b), dropAlert: drop});
+    asvState.settings.eurToUsd = rate; asvState.settings.mapping = mapping;
+    saveAsv(); toast(`Réglages ASV enregistrés.`); render();
+  });
+  document.getElementById('asv-set-reset').addEventListener('click', async () => {
+    if (!(await modal('Rétablir les réglages ASV', `<p>Remettre les paliers ${P.name} à 5 / 8 / 10, l'alerte à 10 %, le taux à 1 et la table de correspondance d'origine ?</p>`, 'Rétablir'))) return;
+    const d = ASVE.clone(ASVE.DEFAULTS);
+    asvState.settings[P.id] = d[P.id]; asvState.settings.eurToUsd = d.eurToUsd; asvState.settings.mapping = d.mapping;
+    saveAsv(); toast('Réglages ASV par défaut rétablis.'); render();
+  });
+}
+
 /* ---------- Auto-test ---------- */
 function selfTest() {
-  const tests = RCA.runSelfTests(store.periods);
+  const tests = RCA.runSelfTests(store.periods).concat(RCA.ASV.selfTests());
   const passed = tests.filter(t => t.pass).length;
   console.groupCollapsed(`%cChatter RCA Grading — auto-test : ${passed}/${tests.length} réussis`, `color:${passed === tests.length ? '#45D08F' : '#F0605E'};font-weight:bold`);
   tests.forEach((t, i) => console[t.pass ? 'log' : 'error'](`${t.pass ? '✓' : '✗'} ${i + 1}. ${t.name} — ${t.detail}`));
@@ -1496,11 +2388,15 @@ function selfTest() {
   btn.onclick = () => modal(`Résultats de l'auto-test`, `<ul class="testlist">${tests.map((t, i) => `<li><span class="${t.pass ? 'p' : 'f'}">${t.pass ? 'Réussi' : 'Échec'}</span> ${i + 1}. ${esc(t.name)}<small>${esc(t.detail)}</small></li>`).join('')}</ul>`, null, 'Fermer');
 }
 
-if (!location.hash || !/^#(of|mym)\//.test(location.hash)) {
-  const r = route(); history.replaceState(null, '', `#${r.pid}/${r.chatter != null ? 'chatter/' + encodeURIComponent(r.chatter) : r.page}`);
+if (!/^(of|mym)\//.test(routeHash)) {
+  const r = route();
+  routeHash = `${r.pid}/${r.chatter != null ? 'chatter/' + encodeURIComponent(r.chatter) : r.page === 'asv' ? 'asv/' + r.sub : r.page}`;
 }
-render();
-selfTest();
+try { render(); } catch (e) {
+  console.error(e);
+  document.getElementById('main').innerHTML = `<div class="panel empty"><h2>Une erreur a empêché l'affichage</h2><p class="hint">${esc(e.message)}</p></div>`;
+}
+try { selfTest(); } catch (e) { console.error(e); }
 })();
 </script>
 </body>
