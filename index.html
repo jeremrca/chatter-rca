@@ -619,8 +619,9 @@ const RCA = (() => {
     const counts = {',':0, ';':0, '\t':0};
     let q = false;
     for (const ch of firstLine) { if (ch === '"') q = !q; else if (!q && ch in counts) counts[ch]++; }
-    const top = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
-    const delim = top[1] > 0 ? top[0] : ',';
+    // Une tabulation (copier-coller depuis Excel ou une page web) l'emporte toujours ; sinon « ; » avant « , »
+    // pour ne pas couper les nombres à virgule décimale (« 45,19 »).
+    const delim = counts['\t'] > 0 ? '\t' : counts[';'] > 0 && counts[';'] >= counts[','] ? ';' : counts[','] > 0 ? ',' : '\t';
     const rows = []; let row = []; let field = ''; q = false;
     for (let i = 0; i < text.length; i++) {
       const ch = text[i];
@@ -937,15 +938,29 @@ RCA.ASV = (() => {
     const headers = grid[hr].map(c => cellText(c).trim());
     const det = RCA.detectColumns(FIELDS_P, headers, null);
     const idx = Object.fromEntries(Object.entries(det).map(([k, v]) => [k, v.idx]));
-    const hasRF = idx.revenue >= 0 && idx.fans >= 0;
-    if (idx.name < 0 || (idx.asv < 0 && !hasRF)) return {error:`Il faut une colonne Modèle et une colonne ASV (ou CA net + nouveaux abonnés). En-têtes lus : ${headers.filter(Boolean).join(', ')}.`};
-    const by = new Map(), issues = [], dates = [];
+    let hasRF = idx.revenue >= 0 && idx.fans >= 0, noHeader = false;
+    const issues = [];
+    if (idx.name < 0 || (idx.asv < 0 && !hasRF)) {
+      // Pas d'en-têtes : 2 colonnes = Modèle + ASV ; 3 colonnes = Modèle + Abonnés + ASV (abonnés entiers)
+      const rowsNE = grid.filter(r => r.some(c => cellText(c).trim() !== ''));
+      const width = Math.max(...rowsNE.map(r => { let w = r.length; while (w > 0 && cellText(r[w - 1]).trim() === '') w--; return w; }));
+      const isNum = c => { const p = parseCell(c); return !p.empty && !p.invalid; };
+      const textFirst = rowsNE.every(r => cellText(r[0]).trim() !== '' && !isNum(r[0]));
+      const intCol = j => rowsNE.every(r => { const p = parseCell(r[j]); return p.empty || (!p.invalid && Number.isInteger(p.value)); });
+      if (textFirst && (width === 2 || width === 1)) { idx.name = 0; idx.asv = 1; idx.revenue = idx.fans = idx.date = -1; }
+      else if (textFirst && width === 3 && intCol(1)) { idx.name = 0; idx.fans = 1; idx.asv = 2; idx.revenue = idx.date = -1; }
+      else return {error:`Il faut une colonne Modèle et une colonne ASV (ou CA net + nouveaux abonnés). Ajoutez une ligne d'en-têtes, par exemple « Modèle	ASV ». En-têtes lus : ${headers.filter(Boolean).join(', ')}.`};
+      noHeader = true; hasRF = false;
+      issues.push(width === 3 ? 'Pas de ligne d’en-têtes : colonne 1 = modèle, colonne 2 = abonnés, colonne 3 = ASV.' : 'Pas de ligne d’en-têtes : colonne 1 = modèle, colonne 2 = ASV.');
+    }
+    const by = new Map(), dates = [];
     const num = (cells, k) => { if (idx[k] < 0) return null; const p = parseCell(cells[idx[k]]); return p.empty || p.invalid ? (p.invalid ? NaN : null) : p.value; };
-    for (let r = hr + 1; r < grid.length; r++) {
+    for (let r = noHeader ? 0 : hr + 1; r < grid.length; r++) {
       const cells = grid[r] || [];
       const handle = cellText(cells[idx.name]).trim();
       if (!handle || TOTAL_RE.test(handle)) continue;
       const rev = num(cells, 'revenue'), fans = num(cells, 'fans'), given = num(cells, 'asv');
+      if (rev == null && fans == null && given == null) { issues.push(`${handle} : aucune valeur, ligne ignorée.`); continue; }
       if ([rev, fans, given].some(v => Number.isNaN(v))) { issues.push(`Ligne ${r + 1} (${handle}) ignorée : une valeur est illisible.`); continue; }
       if (!(rev != null && fans != null) && given == null) { issues.push(`Ligne ${r + 1} (${handle}) ignorée : ni ASV, ni CA + abonnés.`); continue; }
       if ([rev, fans, given].some(v => v != null && v < 0)) { issues.push(`Ligne ${r + 1} (${handle}) ignorée : valeur négative.`); continue; }
@@ -1028,6 +1043,11 @@ RCA.ASV = (() => {
       const carla = r.rows.find(x => x.name === 'Carla baby');
       return {pass: carla && carla.revenue === 1500 && carla.fans === 150 && r.rows.some(x => x.name === 'Angel') && r.start === '2026-09-01' && r.end === '2026-09-02',
         detail:`Carla baby : ${carla && carla.revenue} $ / ${carla && carla.fans} abonnés ; période lue ${r.start} → ${r.end}`};
+    });
+    t('ASV · copier-coller sans en-têtes (« Lila OF → 45,19 $ »)', () => {
+      const r = parseInput('Lila OF\t45,19 $\nAVA OF\t\nThais OF\t18,21 $', DEFAULT_MAPPING);
+      return {pass: !r.error && r.rows.length === 2 && r.rows[0].name === 'Lila' && r.rows[0].asv === 45.19 && r.rows[1].asv === 18.21 && r.issues.some(i => i.startsWith('AVA OF')),
+        detail: r.error || `${r.rows.map(x => `${x.name} ${x.asv}`).join(' ; ')} · ${r.issues.length} avertissements`};
     });
     t('ASV · import avec l’ASV direct (Modèle + Abonnés + ASV)', () => {
       const r = parseInput('Modèle;Abonnés;ASV\nLila OF;25;19,18 $\nEden MYM;672;9,48 €\nTia;;1,45', DEFAULT_MAPPING);
@@ -2179,7 +2199,7 @@ function asvSaisie(P) {
   const man = asvUI.manual?.[P.id] || (asvUI.manual = {...asvUI.manual, [P.id]: {p: periodOf(P.id), model:'', fans:'', rev:'', asv:''}})[P.id];
   let html = `<section class="nc"><h2>Importer un export ${P.name}</h2><p class="muted" style="margin-top:0">Le plus simple : un tableau avec une colonne <strong>Modèle</strong> et une colonne <strong>ASV</strong>, plus si possible les <strong>nouveaux abonnés</strong> (ils servent à pondérer les moyennes). Les exports ${P.id === 'of' ? 'Infloww' : 'MyPulse'} avec CA net + nouveaux abonnés et le JSON du tracker marchent aussi : l'ASV est alors recalculé.</p>
     <label class="drop" id="asv-drop" tabindex="0" style="background:rgba(10,7,9,.55);border-color:rgba(var(--core-rgb),.5)"><input type="file" id="asv-file" accept=".csv,.xlsx,.xls,.tsv,.txt,.json" hidden><strong>Déposez un fichier ici ou choisissez-le</strong><span class="muted">.xlsx, .csv ou .json</span></label>
-    <label class="f" style="margin-top:12px">Ou collez un tableau (copié depuis Excel ou le dashboard) ou un JSON<textarea id="asv-paste" rows="4" placeholder="Modèle&#9;Abonnés&#9;ASV&#10;Lila&#9;25&#9;19,18&#10;Flavie&#9;310&#9;13,73"></textarea></label>
+    <label class="f" style="margin-top:12px">Ou collez un tableau (copié depuis Excel ou le dashboard) ou un JSON<textarea id="asv-paste" rows="4" placeholder="Lila OF&#9;45,19 $&#10;Flavie OF&#9;13,29 $&#10;(les en-têtes « Modèle », « Abonnés », « ASV » sont facultatifs)"></textarea></label>
     <button class="btn" id="asv-parse" type="button" style="margin-top:10px">Analyser le texte collé</button></section>`;
   if (d) {
     const r = ASVE.rangeFor(d.p.type, d.p.a, d.p.b);
@@ -2233,6 +2253,9 @@ function asvDraftFrom(P, res, source) {
   if (res.error) { toast(res.error, true); return; }
   if (res.section && res.section !== P.id) { toast(`Ce JSON concerne ${PLATFORMS[res.section].name} : importez-le depuis Analyse ASV ${PLATFORMS[res.section].name}.`, true); return; }
   if (!res.rows.length) { toast('Aucune ligne exploitable trouvée.', true); return; }
+  const other = P.id === 'of' ? /\sMYM$/i : /\sOF$/i;
+  const wrong = res.rows.filter(x => other.test(x.handle.trim()));
+  if (wrong.length) (res.issues ||= []).push(`${plural(wrong.length, 'ligne se termine', 'lignes se terminent')} par « ${P.id === 'of' ? 'MYM' : 'OF'} » alors que vous êtes dans ${P.name} : vérifiez que c'est la bonne plateforme.`);
   const dates = (source.match(/\d{4}-\d{2}-\d{2}/g) || []);
   const start = res.start || dates[0] || '', end = res.end || dates[1] || dates[0] || '';
   let p = start && end ? {type:'custom', a:start, b:end} : periodOf(P.id);
