@@ -241,7 +241,7 @@ tr.issue-error .issues{color:var(--red)}
   .nav{flex-direction:row;gap:10px}
   .nav-group{flex-direction:row;align-items:center}
   .nav-head{padding:0 4px}
-  .nav-head span{display:none}
+  .nav-head > span:not(.pbadge){display:none}
   .nav a{white-space:nowrap}
   .nav a span{display:none}
   .main{padding:18px 16px 50px}
@@ -362,6 +362,19 @@ tr.issue-error .issues{color:var(--red)}
 .login{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
 .login .f{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
 input[type=email],input[type=password]{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;min-height:38px}
+.nav-sec{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:var(--r-sm);border:0;background:none;color:var(--muted);font-weight:600;cursor:pointer;text-align:left}
+.nav-sec:hover{background:var(--raised);color:var(--text)}
+.nav-sec svg{width:17px;height:17px;flex:none;opacity:.85}
+.nav-sec .chev{margin-left:auto;width:15px;height:15px;transition:transform .15s}
+.nav-sec[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.nav-sec.has-on{color:var(--text)}
+.nav-sec.has-on[aria-expanded="false"]{box-shadow:inset 3px 0 0 var(--ember);background:var(--raised)}
+.nav-sub{display:flex;flex-direction:column;gap:1px;margin:1px 0 4px 14px;padding-left:8px;border-left:1px solid var(--line)}
+.nav-sub[hidden]{display:none}
+.nav-sub a{padding:7px 10px;font-size:13.5px}
+.nav-sub a svg{width:15px;height:15px}
+.nav-top{font-weight:600}
+@media (max-width:980px){.nav-sub{flex-direction:row;margin:0;padding-left:4px;border-left:0}.nav-sec span,.nav-sec .chev{display:none}.nav-sec{width:auto}}
 </style>
 </head>
 <body>
@@ -424,30 +437,32 @@ const RCA = (() => {
     },
     mym: {
       id:'mym', name:'MYM', short:'M', currency:'€',
+      // Score MYM : uniquement CA total, taux de conversion (l'« unlock ratio » de MYM) et réactivité.
       kpis: [
+        {key:'total', label:'CA total', kind:'money', dec:2, scoring:'target',
+          aliases:['ca total','total','chiffre d affaires','chiffre d affaires total','revenue','total revenue','revenu total']},
+        {key:'conv', label:'Taux de conversion (unlock)', kind:'pct', pctRule:'unlock', scoring:'bands',
+          derive:{from:['sold','proposed'], fn:(sold, prop) => prop > 0 ? sold / prop * 100 : null},
+          aliases:['taux conv','taux conv %','taux de conversion','conversion','conversion rate','conv','taux conversion','unlock ratio','unlock']},
         {key:'react', label:'Réactivité', kind:'seconds', scoring:'bands', lowerIsBetter:true,
           aliases:['reactivite','reactivity','temps de reponse','temps de reponse moyen','response time','avg response time','delai de reponse']},
+        {key:'ppv', label:'CA PPV', kind:'money', dec:2, scoring:'info', optional:true,
+          aliases:['ca ppv','ppv','ventes ppv','revenu ppv','ppv revenue']},
+        {key:'tips', label:'CA Tips', kind:'money', dec:2, scoring:'info', optional:true,
+          aliases:['ca tips','tips','pourboires','ca pourboires','tips revenue']},
         {key:'proposed', label:'Proposé', kind:'count', scoring:'info', optional:true,
           aliases:['propose','proposes','ppv proposes','medias proposes','offered','sent','ppv sent']},
         {key:'sold', label:'Vendu', kind:'count', scoring:'info', optional:true,
-          aliases:['vendu','vendus','ppv vendus','medias vendus','sold','ppv sold']},
-        {key:'conv', label:'Taux de conversion', kind:'pct', pctRule:'unlock', scoring:'bands',
-          derive:{from:['sold','proposed'], fn:(sold, prop) => prop > 0 ? sold / prop * 100 : null},
-          aliases:['taux conv','taux conv %','taux de conversion','conversion','conversion rate','conv','taux conversion']},
-        {key:'ppv', label:'CA PPV', kind:'money', dec:2, scoring:'target',
-          aliases:['ca ppv','ppv','ventes ppv','revenu ppv','ppv revenue']},
-        {key:'tips', label:'CA Tips', kind:'money', dec:2, scoring:'target',
-          aliases:['ca tips','tips','pourboires','ca pourboires','tips revenue']},
-        {key:'total', label:'CA total', kind:'money', dec:2, scoring:'target',
-          aliases:['ca total','total','chiffre d affaires','chiffre d affaires total','revenue','total revenue','revenu total']}
+          aliases:['vendu','vendus','ppv vendus','medias vendus','sold','ppv sold']}
       ],
-      dashStats: [['sum','total',`CA de l'équipe`],['avg','conv','Taux de conversion moyen'],['sum','ppv','CA PPV'],['sum','tips','CA Tips']],
+      dashStats: [['sum','total',`CA de l'équipe`],['avg','conv','Taux de conversion moyen'],['avg','react','Réactivité moyenne'],['sum','ppv','CA PPV (info)']],
       defaults: {
-        weights: {react:15, conv:25, ppv:20, tips:10, total:30},
-        targets: {ppv:3500, tips:1200, total:5000},
+        schema: 2,
+        weights: {total:40, conv:35, react:25},
+        targets: {total:5000},
         bands: {
-          react: [[0,100],[60,90],[120,80],[180,65],[240,50],[300,30],[420,0]],
-          conv: [[0,0],[10,30],[15,50],[20,65],[25,80],[30,90],[35,100]]
+          conv: [[0,0],[10,25],[15,45],[20,60],[25,75],[30,90],[35,100]],
+          react: [[0,100],[90,90],[150,80],[210,65],[270,50],[330,30],[420,10],[600,0]]
         },
         caps: {enabled:true, kpi:'conv', criticalBelow:10, criticalCap:'C', warnBelow:15, warnCap:'B'},
         grades: {S:90, A:80, B:70, C:60}
@@ -470,6 +485,12 @@ const RCA = (() => {
   function mergeSettings(pid, saved) {
     const d = defaultSettings(pid);
     if (!saved || typeof saved !== 'object') return d;
+    // Anciens réglages MYM (5 KPI notés) : on passe au nouveau barème à 3 KPI en gardant grades, plafond et alias.
+    if (pid === 'mym' && saved.schema !== 2) {
+      for (const k of ['grades','aliases']) if (saved[k]) Object.assign(d[k], saved[k]);
+      if (saved.caps) Object.assign(d.caps, saved.caps, {kpi:'conv'});
+      return d;
+    }
     for (const k of ['weights','targets','caps','grades','aliases']) if (saved[k]) Object.assign(d[k], saved[k]);
     if (saved.bands) for (const b of Object.keys(d.bands)) if (Array.isArray(saved.bands[b])) d.bands[b] = saved.bands[b];
     return d;
@@ -770,6 +791,28 @@ const RCA = (() => {
     return {total, valid, review: total - valid, errors, included: rows.filter(r => r.include).length};
   }
 
+  /* ---------- Tableau copié-collé depuis une page web ---------- */
+  // MyPulse « Résumé chatter » copié : le nom sur une ligne, ses valeurs (séparées par des tabulations) sur la suivante.
+  const MYM_COLS = ['Chatter','Réactivité','Proposé','Vendu','Taux conv.','CA PPV','CA Tips','CA Total'];
+  function pasteToGrid(pid, text) {
+    const raw = String(text).replace(/\r/g, '').split('\n').map(l => l.replace(/[\u00a0\u202f]/g, ' ').replace(/\s+$/, '')).filter(l => l.trim());
+    const lines = [];
+    for (let i = 0; i < raw.length; i++) {
+      const l = raw[i], nx = raw[i + 1];
+      const isValues = nx && nx.includes('\t') && /^[\d(+\-.,]/.test(nx.trim());
+      const isHeader = nx && nx.includes('\t') && normHeader(l) === 'chatter';
+      if (!l.includes('\t') && (isValues || isHeader)) { lines.push(l.trim() + '\t' + nx.trim()); i++; }
+      else lines.push(l.trim());
+    }
+    let grid = parseCSV(lines.join('\n'));
+    if (!grid.length) return grid;
+    const P = PLATFORMS[pid];
+    const found = P.fields.filter(f => detectColumns(P, grid[0].map(cellText), null)[f.key].idx >= 0).length;
+    const width = Math.max(...grid.map(r => r.length));
+    if (found < 3 && pid === 'mym' && width === MYM_COLS.length) grid = [MYM_COLS.slice(), ...grid];
+    return grid;
+  }
+
   /* ---------- Auto-tests ---------- */
   function runSelfTests(storedPeriods) {
     const OF = PLATFORMS.of, MYM = PLATFORMS.mym;
@@ -819,9 +862,20 @@ const RCA = (() => {
       });
       return {pass: ok && changed > 0, detail:`${source} : ${checked} résultats revérifiés, ${changed} modifiés après doublement de l'objectif`};
     });
-    t('MYM · « 140s » de réactivité → 140 secondes, 80/100', () => {
-      const v = parseDuration('140s').value, r = scoreChatter({name:'m', react:v, conv:25, ppv:3000, tips:800, total:4000}, MYM, sm);
-      return {pass: v === 140 && r.scores.react === 80, detail:`${v} s → ${r.scores.react}/100`};
+    t('MYM · tableau « Résumé chatter » copié-collé (nom puis valeurs)', () => {
+      const txt = 'Vonjy Mym\n140s\t1173\t248\t21.1%\t4 966,31 EUR\t684,48 EUR\t5 650,79 EUR\nAntonio\n215s\t607\t132\t21.7%\t3 207,48 EUR\t1 403,58 EUR\t4 611,06 EUR';
+      const g = pasteToGrid('mym', txt);
+      const hr = findHeaderRow(MYM, g, sm);
+      const map = Object.fromEntries(Object.entries(detectColumns(MYM, g[hr].map(cellText), sm)).map(([k, v]) => [k, v.idx]));
+      const rows = buildRows(MYM, g, hr, map);
+      const a = rows[0];
+      return {pass: rows.length === 2 && rows.every(r => !r.issues.length) && a.name === 'Vonjy Mym' && a.values.react === 140 && a.values.conv === 21.1 && a.values.total === 5650.79 && a.values.sold === 248,
+        detail: `${rows.length} lignes · ${a.name} : ${a.values.react} s, ${a.values.conv} %, ${a.values.total} €`};
+    });
+    t('MYM · score sur 3 critères seulement (CA total, taux de conversion, réactivité)', () => {
+      const v = parseDuration('140s').value, r = scoreChatter({name:'m', react:v, conv:21.1, ppv:4966.31, tips:684.48, total:5650.79}, MYM, sm);
+      const keys = Object.keys(r.scores).sort().join(',');
+      return {pass: v === 140 && r.scores.react === 90 && keys === 'conv,react,total' && r.final === 83.5, detail:`notés : ${keys} · 140 s → ${r.scores.react}/100 · score ${fr(r.final, 1)}`};
     });
     t('MYM · Taux de conversion à 8 % → alerte critique + grade plafonné', () => {
       const r = scoreChatter({name:'m', react:30, conv:8, ppv:99999, tips:99999, total:99999}, MYM, sm);
@@ -839,7 +893,7 @@ const RCA = (() => {
 
   return {GRADE_ORDER, PLATFORMS, clone, r1, defaultSettings, mergeSettings, migrateLegacyOF,
     bandScore, propScore, gradeFor, scoreChatter, computePeriod, createStore,
-    normHeader, cellText, parseCell, parseDuration, toPercent, parseCSV, aliasList, detectColumns, findHeaderRow, missingFields, buildRows, summarize, runSelfTests};
+    normHeader, cellText, parseCell, parseDuration, toPercent, parseCSV, pasteToGrid, aliasList, detectColumns, findHeaderRow, missingFields, buildRows, summarize, runSelfTests};
 })();
 if (typeof module !== 'undefined') module.exports = RCA;
 
@@ -1201,7 +1255,8 @@ const allSettings = Object.fromEntries(PIDS.map(p => [p, RCA.mergeSettings(p, sa
 const periods = lsGet(LS.periods, []);
 periods.forEach(p => { if (!p.platform) p.platform = 'of'; });
 const store = RCA.createStore(periods, allSettings);
-const ui = Object.assign({period:{}, historyName:{}}, lsGet(LS.ui, {}));
+const ui = Object.assign({period:{}, historyName:{}, navOpen:{}}, lsGet(LS.ui, {}));
+ui.navOpen ||= {};
 const tbl = {sortKey:'final', dir:'desc', q:'', grade:'all', min:'', max:''};
 const importDraft = {of:null, mym:null};
 const settingsDraft = {of:null, mym:null};
@@ -1209,7 +1264,7 @@ let charts = [];
 
 const saveSettings = () => { lsSet(LS.settings, allSettings); Sync.changed('settings'); };
 const savePeriods = () => { lsSet(LS.periods, store.periods); Sync.changed('periods'); };
-const saveUI = () => lsSet(LS.ui, {period: ui.period});
+const saveUI = () => lsSet(LS.ui, {period: ui.period, navOpen: ui.navOpen});
 const platformPeriods = pid => store.periods.filter(p => p.platform === pid);
 const sortedPeriods = pid => platformPeriods(pid).sort((a,b) => (b.start || '').localeCompare(a.start || '') || b.createdAt - a.createdAt);
 const chronoPeriods = pid => platformPeriods(pid).sort((a,b) => (a.start || '').localeCompare(b.start || '') || a.createdAt - b.createdAt);
@@ -1238,6 +1293,7 @@ const unitOf = (P, k) => k.kind === 'money' ? P.currency : k.kind === 'pct' ? '%
 const scClass = v => v >= 80 ? 'sc-hi' : v >= 50 ? 'sc-mid' : 'sc-lo';
 const scColor = v => v >= 80 ? 'var(--green)' : v >= 50 ? 'var(--orange)' : 'var(--red)';
 const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
+const listFr = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' et ' + a[a.length - 1];
 const ordinal = n => n === 1 ? '1er' : n + 'e';
 function parseDate(s) { const [y,m,d] = (s || '').split('-').map(Number); return y ? new Date(y, m - 1, d) : null; }
 function fmtRange(a, b) {
@@ -1327,13 +1383,35 @@ document.addEventListener('click', e => {
   go(h);
 });
 
+// Menu : pour chaque plateforme, une rubrique « Analyse chatter » dépliable, puis « Analyse ASV ».
+// Pour ajouter une rubrique plus tard (ex. Planning), ajoutez-la à NAV_SECTIONS.
+const CHAT_PAGES = [['dashboard','Tableau de bord'],['chatters','Chatters'],['analytics',`Analyse d'équipe`],['history','Historique'],['import','Import'],['settings','Paramètres']];
+const NAV_SECTIONS = [
+  {id:'chat', label:'Analyse chatter', icon:'chatters', pages: CHAT_PAGES},
+  {id:'asv', label:'Analyse ASV', icon:'asv', link:'asv'}
+];
+let navRt = null;
 function renderNav(rt) {
+  navRt = rt;
+  // La rubrique de la page ouverte est toujours dépliée
+  for (const s of NAV_SECTIONS) if (s.pages && s.pages.some(([k]) => k === rt.page)) { const key = `${rt.pid}-${s.id}`; if (!ui.navOpen[key]) { ui.navOpen[key] = true; saveUI(); } }
   document.getElementById('nav').innerHTML = PIDS.map(pid => {
     const P = PLATFORMS[pid];
     return `<div class="nav-group ${rt.pid === pid ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
-      ${PAGES.map(([k, l]) => { const on = rt.pid === pid && rt.page === k; return `<a href="#${pid}/${k}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(l)} ${P.name}">${icon(k)}<span>${esc(l)}</span></a>`; }).join('')}</div>`;
+      ${NAV_SECTIONS.map(s => {
+        if (s.link) { const on = rt.pid === pid && rt.page === s.link; return `<a href="#${pid}/${s.link}" class="nav-top ${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span></a>`; }
+        const key = `${pid}-${s.id}`, open = !!ui.navOpen[key], inside = rt.pid === pid && s.pages.some(([k]) => k === rt.page);
+        return `<button type="button" class="nav-sec ${inside ? 'has-on' : ''}" data-sec="${key}" aria-expanded="${open}" title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+          <div class="nav-sub" ${open ? '' : 'hidden'}>${s.pages.map(([k, l]) => { const on = rt.pid === pid && rt.page === k; return `<a href="#${pid}/${k}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(l)} ${P.name}">${icon(k)}<span>${esc(l)}</span></a>`; }).join('')}</div>`;
+      }).join('')}</div>`;
   }).join('');
 }
+document.getElementById('nav').addEventListener('click', e => {
+  const b = e.target.closest('.nav-sec');
+  if (!b) return;
+  ui.navOpen[b.dataset.sec] = !ui.navOpen[b.dataset.sec]; saveUI();
+  if (navRt) renderNav(navRt);
+});
 function topbar(P, title, withPicker) {
   let right = '';
   if (withPicker && platformPeriods(P.id).length) {
@@ -1397,7 +1475,7 @@ function rankingHTML(P, id) {
     <span class="count" id="${id}-count"></span>
   </div>
   <div class="tbl-wrap"><table><thead><tr>${cols.map(c => `<th class="sort ${c.num ? 'num' : ''}" data-k="${c.k}" tabindex="0" ${tbl.sortKey === c.k ? `aria-sort="${tbl.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>${esc(c.l)}</th>`).join('')}</tr></thead><tbody id="${id}-body"></tbody></table></div>
-  <p class="hint" style="margin:8px 0 0;font-size:12px">Le petit chiffre à côté d'un KPI est son score sur 100.${P.kpis.some(k => k.scoring === 'info') ? ` ${P.kpis.filter(k => k.scoring === 'info').map(k => k.label).join(' et ')} sont affichés à titre d'information et ne sont pas notés.` : ''} Le classement utilise toujours le score pondéré complet.</p>`;
+  <p class="hint" style="margin:8px 0 0;font-size:12px">Le petit chiffre à côté d'un KPI est son score sur 100.${P.kpis.some(k => k.scoring === 'info') ? ` ${listFr(P.kpis.filter(k => k.scoring === 'info').map(k => k.label))} sont affichés à titre d'information et ne sont pas notés.` : ''} Le classement utilise toujours le score pondéré complet.</p>`;
 }
 function bindRanking(P, id, res) {
   const cols = columns(P);
@@ -1702,6 +1780,10 @@ async function handleFile(P, file) {
     } else { toast(`« ${file.name} » n'est pas un fichier CSV ou XLSX.`, true); return; }
   } catch (e) { toast(`Impossible de lire « ${file.name} » : ${e.message}`, true); return; }
   if (grid.length < 2) { toast(`« ${file.name} » ne contient aucune ligne de données.`, true); return; }
+  startDraft(P, grid, file.name);
+}
+function startDraft(P, grid, sourceName) {
+  const file = {name: sourceName};
   const s = allSettings[P.id];
   const headerRow = RCA.findHeaderRow(P, grid, s);
   const headers = grid[headerRow].map(c => RCA.cellText(c).trim());
@@ -1718,12 +1800,14 @@ const TAG_LABEL = {exact:'exacte', partial:'partielle', manual:'manuelle', missi
 function renderImport(main, P) {
   const d = importDraft[P.id];
   const hint = P.id === 'mym'
-    ? `Exportez l'onglet « Résumé chatter » de MYM en CSV ou XLSX. Colonnes attendues : Chatter, Réactivité, Proposé, Vendu, Taux conv., CA PPV, CA Tips, CA Total. Si le taux de conversion manque, il est calculé à partir de Vendu ÷ Proposé.`
+    ? `Le plus simple : sur MyPulse, onglet « Résumé chatter », sélectionnez le tableau, copiez-le et collez-le dans la zone ci-dessous. Un fichier CSV ou XLSX fonctionne aussi. Colonnes lues : Chatter, Réactivité, Proposé, Vendu, Taux conv., CA PPV, CA Tips, CA Total.`
     : `Exportez le rapport de performance Infloww en CSV ou XLSX. Les colonnes sont détectées automatiquement, dans n'importe quel ordre.`;
   let html = topbar(P, 'Import', false) + `<div class="stack">
     <section class="panel"><h2>Importer un export ${P.name}</h2><p class="hint">${hint} Vous pouvez corriger la correspondance des colonnes avant l'enregistrement.</p>
       <label class="drop" id="drop" tabindex="0"><input type="file" id="file" accept=".csv,.xlsx,.xls,.tsv,.txt" hidden>
         <strong>${d ? esc(d.fileName) : `Déposez un rapport ${P.name} ici ou choisissez un fichier`}</strong><span>${d ? 'Déposez un autre fichier pour le remplacer' : 'Formats acceptés : .csv, .xlsx'}</span></label>
+      <label style="display:flex;flex-direction:column;gap:6px;margin-top:14px;font-size:13px;color:var(--muted)">Ou collez le tableau copié${P.id === 'mym' ? ' depuis MyPulse (« Résumé chatter »)' : ''} — la lecture est automatique
+        <textarea id="imp-paste" rows="5" placeholder="${P.id === 'mym' ? 'Vonjy Mym&#10;140s&#9;1173&#9;248&#9;21.1%&#9;4 966,31 EUR&#9;684,48 EUR&#9;5 650,79 EUR' : 'Collez ici le tableau copié, avec sa ligne d’en-têtes'}"></textarea></label>
     </section>`;
   if (d) {
     const missing = RCA.missingFields(P, d.mapping);
@@ -1777,6 +1861,19 @@ function bindImport(P) {
   ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
   ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
   drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) handleFile(P, f); });
+  const pasteBox = document.getElementById('imp-paste');
+  let pasteTimer;
+  const readPaste = () => {
+    const txt = pasteBox.value;
+    if (!txt.trim()) return;
+    const grid = RCA.pasteToGrid(P.id, txt);
+    if (grid.length < 2) { toast('Aucune ligne de données reconnue dans le texte collé.', true); return; }
+    const prev = importDraft[P.id];
+    startDraft(P, grid, 'Tableau collé');
+    if (prev && importDraft[P.id]) { importDraft[P.id].start = prev.start; importDraft[P.id].end = prev.end; importDraft[P.id].label = prev.label; render(); }
+  };
+  pasteBox.addEventListener('paste', () => { clearTimeout(pasteTimer); pasteTimer = setTimeout(readPaste, 0); });
+  pasteBox.addEventListener('input', () => { clearTimeout(pasteTimer); pasteTimer = setTimeout(readPaste, 600); });
   document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { ui.period[P.id] = b.dataset.open; saveUI(); go(`${P.id}/dashboard`); }));
   document.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
     const p = store.periods.find(x => x.id === b.dataset.del);
@@ -1893,11 +1990,11 @@ function renderSettings(main, P) {
   const capK = P.kpi[s.caps.kpi];
   main.innerHTML = topbar(P, 'Paramètres', false) + `<div class="stack">
     <div class="alert ok">Ces paramètres ne s'appliquent qu'à ${P.name}. ${P.id === 'of' ? 'Les réglages MYM se trouvent dans Paramètres MYM.' : 'Les réglages OnlyFans se trouvent dans Paramètres OnlyFans.'}</div>
-    <section class="panel"><h2>Poids des KPI</h2><p class="hint">Le score final est la somme des scores de chaque KPI multipliés par leur poids.${P.kpis.some(k => k.scoring === 'info') ? ` ${P.kpis.filter(k => k.scoring === 'info').map(k => k.label).join(' et ')} sont affichés sans être notés.` : ''}</p>
+    <section class="panel"><h2>Poids des KPI</h2><p class="hint">Le score final est la somme des scores de chaque KPI multipliés par leur poids.${P.kpis.some(k => k.scoring === 'info') ? ` ${listFr(P.kpis.filter(k => k.scoring === 'info').map(k => k.label))} sont affichés sans être notés.` : ''}</p>
       <div class="set-grid">${P.scored.map(k => `<label>${k.label} (%)<input type="number" step="any" min="0" max="100" data-path="weights.${k.key}" value="${s.weights[k.key]}"></label>`).join('')}</div>
       <div class="sumline ${Math.abs(wsum - 100) > 1e-6 ? 'bad' : 'good'}" id="wsum">${sumText(wsum)}</div>
     </section>
-    <section class="panel"><h2>Objectifs</h2><p class="hint">Ces KPI sont notés proportionnellement : atteindre l'objectif donne 100 points, 90 % de l'objectif donne 90 points, etc.</p>
+    <section class="panel"><h2>Objectifs</h2><p class="hint">Ces KPI sont notés proportionnellement : atteindre l'objectif donne 100 points, 90 % de l'objectif donne 90 points, etc. L'objectif vaut pour une période importée : si vous importez par quinzaine, c'est un objectif par quinzaine.</p>
       <div class="set-grid">${targets.map(k => `<label>Objectif ${k.label} (${P.currency})<input type="number" step="any" min="0" data-path="targets.${k.key}" value="${s.targets[k.key]}"></label>`).join('')}</div>
     </section>
     <section class="panel"><h2>Paliers</h2><p class="hint">Une valeur obtient les points du palier le plus haut qu'elle atteint.</p>
@@ -1922,7 +2019,7 @@ function renderSettings(main, P) {
         <textarea data-alias="${f.key}" placeholder="ex. : votre en-tête exact">${esc((s.aliases[f.key] || []).join('\n'))}</textarea>
         <span style="font-size:12px;color:var(--faint)">Intégrés : ${esc(f.aliases.join(', '))}</span></label>`).join('')}</div>
     </section>
-    <section class="panel"><h2>Données</h2><p class="hint">Les périodes et les paramètres sont stockés uniquement dans ce navigateur.</p>
+    <section class="panel"><h2>Données</h2><p class="hint">${Sync.connected() ? `Les périodes et les paramètres sont partagés avec toute l'équipe : une suppression s'applique pour tout le monde.` : 'Les périodes et les paramètres sont stockés uniquement dans ce navigateur.'}</p>
       <button class="btn danger" id="wipe" type="button">Supprimer toutes les périodes ${P.name}</button></section>
     <div class="savebar"><span class="msg" id="set-msg"></span>
       <button class="btn ghost" id="reset" type="button">Rétablir les paramètres par défaut</button>
