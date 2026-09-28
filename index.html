@@ -339,6 +339,29 @@ tr.issue-error .issues{color:var(--red)}
 .nr-tag .pbadge{min-width:20px;height:20px;font-size:10px;border-radius:6px}
 .nr-val{font-weight:700;text-align:right;white-space:nowrap}
 @media (max-width:620px){.nrow{grid-template-columns:36px 1fr auto;font-size:15px}.nr-tag{display:none}.neon-hero.center .neon-title,.neon-title.big{font-size:28px!important}.nbest-name{font-size:22px}}
+.imp.over{border-color:var(--core)!important;box-shadow:0 0 22px rgba(var(--g1-rgb),.55)}
+.step{display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;padding:16px 0;border-top:1px solid rgba(255,255,255,.08)}
+.step:first-of-type{border-top:0}
+.stepn{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;background:var(--core);color:#12060d;box-shadow:0 0 12px rgba(var(--g1-rgb),.6)}
+.stepb>b{font-size:15px}
+.bigp{font-size:24px;font-weight:700;color:#ffd23f;margin-top:12px;letter-spacing:.3px;text-shadow:0 0 14px rgba(255,210,63,.3)}
+.neon .small{font-size:12.5px}
+.imp-actions{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.okline{color:#4ade80;font-weight:700}
+.plist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.pitem{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border-left:3px solid #ffd23f;background:rgba(255,210,63,.05);border-radius:0 8px 8px 0}
+.btn.big{padding:10px 18px;font-size:14px}
+.neon .alert.err{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.45);color:#fecaca}
+.side-foot{display:flex;flex-direction:column;gap:8px}
+.sync{font-size:12px;border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px}
+.sync .sync-link{display:flex;align-items:center;gap:8px;color:var(--muted);text-decoration:none}
+.sync .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+.sync.ok .dot{background:var(--green)} .sync.wait .dot{background:var(--orange)} .sync.bad .dot{background:var(--red)} .sync.off .dot{background:var(--red)}
+.sync-who{display:block;color:var(--faint);font-size:11px;margin:2px 0 0 16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.login-wrap{display:flex;justify-content:center;padding-top:8vh}
+.login{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
+.login .f{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+input[type=email],input[type=password]{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;min-height:38px}
 </style>
 </head>
 <body>
@@ -351,6 +374,7 @@ tr.issue-error .issues{color:var(--red)}
     </div>
     <nav class="nav" id="nav"></nav>
     <div class="side-foot">
+      <div id="sync-status" class="sync"></div>
       <button class="selftest" id="selftest-btn" type="button"><span class="dot"></span><span id="selftest-label">Auto-test en cours…</span></button>
     </div>
   </aside>
@@ -932,8 +956,68 @@ RCA.ASV = (() => {
     if (c && typeof c === 'object' && typeof c.v === 'number' && c.v > 30000 && c.v < 80000) { const d = new Date(Math.round((c.v - 25569) * 86400000)); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; }
     return null;
   }
+  /* ---------- Tableaux « une colonne par période » ---------- */
+  const MONTHS = {janvier:1,janv:1,jan:1,january:1,fevrier:2,fevr:2,fev:2,feb:2,february:2,mars:3,mar:3,march:3,avril:4,avr:4,apr:4,april:4,
+    mai:5,may:5,juin:6,jun:6,june:6,juillet:7,juil:7,jul:7,july:7,aout:8,aug:8,august:8,septembre:9,sept:9,sep:9,september:9,
+    octobre:10,oct:10,october:10,novembre:11,nov:11,november:11,decembre:12,dec:12,december:12};
+  // « Juillet 2026 » → mois complet ; « Septembre 2026 (1-15) », « 16-30 sept. 2026 » → plage de jours ; « 2026-09 » → mois
+  function parsePeriodHeader(txt) {
+    const raw = String(txt || '').trim();
+    if (!raw || raw.length > 40) return null;
+    let m = raw.match(/^(\d{4})-(\d{2})-(\d{2})\s*(?:→|->|–|—|-|au|à)\s*(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return {start:`${m[1]}-${m[2]}-${m[3]}`, end:`${m[4]}-${m[5]}-${m[6]}`};
+    if ((m = raw.match(/^(\d{4})-(\d{2})$/)) || (m = raw.match(/^(\d{2})\/(\d{4})$/))) { const [y, mo] = m[1].length === 4 ? [m[1], m[2]] : [m[2], m[1]]; if (+mo >= 1 && +mo <= 12) return monthRange(`${y}-${mo}`); }
+    const tokens = normHeader(raw).split(' ').filter(Boolean);
+    const monthTok = tokens.filter(t => MONTHS[t]);
+    const years = tokens.filter(t => /^20\d\d$/.test(t));
+    if (monthTok.length !== 1 || years.length !== 1) return null;
+    const words = tokens.filter(t => !MONTHS[t] && !/^\d+$/.test(t) && !['au','a','du','de','le','q1','q2','quinzaine','er','e'].includes(t));
+    if (words.length) return null;
+    const mo = MONTHS[monthTok[0]], y = years[0], ym = `${y}-${pad(mo)}`, full = monthRange(ym);
+    const days = tokens.filter(t => /^\d{1,2}$/.test(t)).map(Number).filter(d => d >= 1 && d <= 31);
+    if (!days.length) return full;
+    if (days.length !== 2 || days[0] > days[1]) return null;
+    const last = +full.end.slice(8);
+    return {start:`${ym}-${pad(days[0])}`, end:`${ym}-${pad(Math.min(days[1], last))}`};
+  }
+  function findPeriodHeader(grid) {
+    let best = null;
+    for (let r = 0; r < Math.min(grid.length, 15); r++) {
+      const cells = (grid[r] || []).map(c => cellText(c).trim());
+      const cols = cells.map((t, i) => ({i, t, p: parsePeriodHeader(t)})).filter(x => x.p);
+      const others = cells.filter((t, i) => t && !cols.some(c => c.i === i));
+      if (cols.length && others.length && (!best || cols.length > best.cols.length)) best = {r, cols};
+    }
+    return best;
+  }
+  function multiFromGrid(grid, ph, nameIdx, mapping) {
+    const issues = [], by = new Map();
+    const periods = ph.cols.map(c => ({col:c.i, label:c.t, start:c.p.start, end:c.p.end}));
+    for (let r = ph.r + 1; r < grid.length; r++) {
+      const cells = grid[r] || [];
+      const handle = cellText(cells[nameIdx]).trim();
+      if (!handle || TOTAL_RE.test(handle)) continue;
+      const values = periods.map(p => { const v = parseCell(cells[p.col]); if (v.empty) return null; if (v.invalid || v.value < 0) { issues.push(`${handle} · ${p.label} : valeur « ${cellText(cells[p.col])} » ignorée.`); return null; } return v.value; });
+      if (values.every(v => v == null)) { issues.push(`${handle} : aucune valeur, ligne ignorée.`); continue; }
+      const k = normHeader(handle);
+      if (by.has(k)) issues.push(`${handle} apparaît plusieurs fois : la dernière ligne est utilisée.`);
+      by.set(k, {handle, values, ...canonical(handle, mapping)});
+    }
+    const order = periods.map((p, j) => j).sort((a, b) => periods[a].start.localeCompare(periods[b].start));
+    return {multi:true, periods: order.map(j => periods[j]), rows: [...by.values()].map(x => ({...x, values: order.map(j => x.values[j])})), issues};
+  }
+
   // Grille (CSV/XLSX/tableau collé) → lignes agrégées par modèle. Plusieurs lignes d'un même modèle (ex. une par jour) sont additionnées.
   function rowsFromGrid(grid, mapping) {
+    const ph = findPeriodHeader(grid);
+    if (ph) {
+      const hdr = grid[ph.r].map(c => cellText(c).trim());
+      const d = RCA.detectColumns(FIELDS_P, hdr, null);
+      if (d.asv.idx < 0 && !(d.revenue.idx >= 0 && d.fans.idx >= 0)) {
+        const nameIdx = d.name.idx >= 0 && !ph.cols.some(c => c.i === d.name.idx) ? d.name.idx : hdr.findIndex((t, i) => t && !ph.cols.some(c => c.i === i));
+        if (nameIdx >= 0) return multiFromGrid(grid, ph, nameIdx, mapping);
+      }
+    }
     const hr = RCA.findHeaderRow(FIELDS_P, grid, null);
     const headers = grid[hr].map(c => cellText(c).trim());
     const det = RCA.detectColumns(FIELDS_P, headers, null);
@@ -999,10 +1083,32 @@ RCA.ASV = (() => {
     });
     return {rows, issues, section: section === 'of' || section === 'mym' ? section : null, start: j.startDate || null, end: j.endDate || null, periodType: j.periodType || null};
   }
+  // Texte collé sans tabulation (espaces à la place) : « Lila OF   45,19 $ » ou « Lila OF 25 19,18 $ »
+  function spaceGrid(t) {
+    const lines = t.split(/\r?\n/).map(l => l.replace(/[\u00a0\u202f]/g, ' ').trim()).filter(Boolean);
+    const RE = /^(.*?\D)\s+(\d[\d.,]*(?:\s+\d[\d.,]*)?)\s*(?:[$€]|usd|eur)?$/i;
+    const parsed = lines.map(l => l.match(RE));
+    const body = parsed[0] ? parsed : parsed.slice(1), bodyLines = parsed[0] ? lines : lines.slice(1);
+    const ok = body.filter(Boolean).length;
+    if (!ok || ok < body.length * 0.6) return null;
+    const rows = [], widths = new Set();
+    body.forEach((m, i) => {
+      if (!m) { rows.push([bodyLines[i]]); return; }
+      const nums = m[2].trim().split(/\s+/);
+      widths.add(nums.length);
+      rows.push([m[1].trim(), ...nums]);
+    });
+    const w = Math.max(...widths);
+    return [w === 2 ? ['Modèle', 'Abonnés', 'ASV'] : ['Modèle', 'ASV'], ...rows.map(r => r.length === 2 && w === 2 ? [r[0], '', r[1]] : r)];
+  }
   function parseInput(text, mapping) {
     const t = text.trim();
     if (!t) return {error:'La zone est vide.'};
     if (t.startsWith('{')) return rowsFromJSON(t, mapping);
+    if (!/[\t;]/.test(t)) {
+      const g = spaceGrid(t);
+      if (g) return rowsFromGrid(g, mapping);
+    }
     return rowsFromGrid(parseCSV(t), mapping);
   }
 
@@ -1049,6 +1155,19 @@ RCA.ASV = (() => {
       return {pass: !r.error && r.rows.length === 2 && r.rows[0].name === 'Lila' && r.rows[0].asv === 45.19 && r.rows[1].asv === 18.21 && r.issues.some(i => i.startsWith('AVA OF')),
         detail: r.error || `${r.rows.map(x => `${x.name} ${x.asv}`).join(' ; ')} · ${r.issues.length} avertissements`};
     });
+    t('ASV · tableau « une colonne par période » (juillet, août, 1-15 sept.)', () => {
+      const grid = [['Suivi ASV — MYM (€)'], ['Source : rapports PDF — juillet, août, 1-15 septembre 2026'], ['Modèle','Juillet 2026','Août 2026','Septembre 2026 (1-15)'],
+        ['Eden MYM', 3.43, 3.64, 9.48], ['Victoria MYM', null, 2.54, 3.21], ['Margaux MYM', 2.49, null, null]];
+      const r = rowsFromGrid(grid, DEFAULT_MAPPING);
+      const ok = r.multi && r.periods.length === 3 && r.periods[0].start === '2026-07-01' && r.periods[1].end === '2026-08-31' && r.periods[2].start === '2026-09-01' && r.periods[2].end === '2026-09-15'
+        && r.rows.length === 3 && r.rows[0].name === 'Eden' && r.rows[0].values[2] === 9.48 && r.rows[1].values[0] === null;
+      return {pass: !!ok, detail: r.error || `${r.periods ? r.periods.map(p => `${p.start}→${p.end}`).join(' ; ') : 'pas multi'} · ${r.rows ? r.rows.length : 0} modèles`};
+    });
+    t('ASV · copier-coller séparé par des espaces', () => {
+      const r = parseInput('Mae OF        5.00\nMargaux OF      4.94\nLila OF 25 19,18 $', DEFAULT_MAPPING);
+      return {pass: !r.error && r.rows.length === 3 && r.rows[0].asv === 5 && r.rows[1].name === 'Margaux' && r.rows[2].fans === 25 && r.rows[2].asv === 19.18,
+        detail: r.error || r.rows.map(x => `${x.name} ${x.asv}${x.fans != null ? ` (${x.fans})` : ''}`).join(' ; ')};
+    });
     t('ASV · import avec l’ASV direct (Modèle + Abonnés + ASV)', () => {
       const r = parseInput('Modèle;Abonnés;ASV\nLila OF;25;19,18 $\nEden MYM;672;9,48 €\nTia;;1,45', DEFAULT_MAPPING);
       const st = {entries: []};
@@ -1061,7 +1180,7 @@ RCA.ASV = (() => {
   }
 
   return {CURRENCY, DEFAULTS, DEFAULT_MAPPING, clone, asv, targetFor, delta, rangeFor, previousRange, monthRange, addDays, aggregate, months, applyImport,
-    canonical, parseInput, rowsFromGrid, stripSuffix, entryASV, entryRevenue, selfTests};
+    canonical, parseInput, rowsFromGrid, parsePeriodHeader, stripSuffix, entryASV, entryRevenue, selfTests};
 })();
 </script>
 
@@ -1069,6 +1188,8 @@ RCA.ASV = (() => {
 <script>
 (() => {
 const {GRADE_ORDER, PLATFORMS} = RCA;
+// Base partagée (Supabase) : adresse du projet et clé publique. Vides = données enregistrées dans ce navigateur uniquement.
+const SHARED_CONFIG = {url: 'https://cflxwuiekkoegubjbiow.supabase.co', anonKey: 'sb_publishable_mjz-Yox2lkSHjAzSpUQBEA_sqZCMEJf'};
 const PIDS = ['of', 'mym'];
 const LS = {settings:'rca.settings.v2', legacySettings:'rca.settings.v1', periods:'rca.periods.v1', ui:'rca.ui.v2'};
 const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
@@ -1086,8 +1207,8 @@ const importDraft = {of:null, mym:null};
 const settingsDraft = {of:null, mym:null};
 let charts = [];
 
-const saveSettings = () => lsSet(LS.settings, allSettings);
-const savePeriods = () => lsSet(LS.periods, store.periods);
+const saveSettings = () => { lsSet(LS.settings, allSettings); Sync.changed('settings'); };
+const savePeriods = () => { lsSet(LS.periods, store.periods); Sync.changed('periods'); };
 const saveUI = () => lsSet(LS.ui, {period: ui.period});
 const platformPeriods = pid => store.periods.filter(p => p.platform === pid);
 const sortedPeriods = pid => platformPeriods(pid).sort((a,b) => (b.start || '').localeCompare(a.start || '') || b.createdAt - a.createdAt);
@@ -1181,6 +1302,7 @@ function route() {
   const m = h.match(/^(of|mym)\/(.*)$/);
   const pid = m ? m[1] : 'of', rest = m ? m[2] : h;
   if (rest.startsWith('chatter/')) return {pid, page:'chatters', chatter:rest.slice(8)};
+  if (rest === 'partage') return {pid, page:'partage'};
   if (rest === 'asv' || rest.startsWith('asv/')) return {pid, page:'asv', sub: rest.split('/')[1] || 'dashboard'};
   return {pid, page: PAGE_LABEL[rest] ? rest : 'dashboard'};
 }
@@ -1234,6 +1356,9 @@ function render() {
   const main = document.getElementById('main');
   main.dataset.platform = P.id;
   if (rt.page !== 'asv') clearNeon(main);
+  Sync.drawStatus();
+  if (rt.page === 'partage') { renderPartage(main); return; }
+  if (Sync.needsLogin()) { renderLogin(main); return; }
   if (rt.page === 'asv') renderASV(main, P, rt.sub);
   else if (rt.page === 'dashboard') renderDashboard(main, P);
   else if (rt.page === 'chatters') rt.chatter != null ? renderDetail(main, P, rt.chatter) : renderChatters(main, P);
@@ -1856,7 +1981,7 @@ function mergeAsvSettings(x) {
   return d;
 }
 const asvState = (() => { const s = lsGet(LS_ASV, null) || {models:[], entries:[]}; s.models ||= []; s.entries ||= []; s.settings = mergeAsvSettings(s.settings); return s; })();
-const saveAsv = () => lsSet(LS_ASV, asvState);
+const saveAsv = () => { lsSet(LS_ASV, asvState); Sync.changed('asv'); };
 const asvUI = {period:{}, draft:{of:null, mym:null}, allLines:{of:false, mym:false}, compare:{of:false, mym:false}};
 const aid = () => 'm' + Math.random().toString(36).slice(2, 10);
 const modelsOf = (pid, withArchived) => asvState.models.filter(m => m.platform === pid && (withArchived || !m.archived)).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
@@ -1994,7 +2119,10 @@ function bindPeriod(root, idp, get, set, after) {
 function periodRows(pid, r) {
   const prev = ASVE.previousRange(r.start, r.end), E = entriesOf(pid);
   return modelsOf(pid).map(m => {
-    const a = ASVE.aggregate(E, m.id, r.start, r.end), b = ASVE.aggregate(E, m.id, prev.start, prev.end);
+    const a = ASVE.aggregate(E, m.id, r.start, r.end);
+    let b = ASVE.aggregate(E, m.id, prev.start, prev.end);
+    // Quinzaine précédente absente (ex. seul le mois d'août est connu) : on compare au mois précédent entier
+    if (!b && prev.start.slice(0, 7) === prev.end.slice(0, 7)) { const pm = ASVE.monthRange(prev.start.slice(0, 7)); if (pm.start !== prev.start || pm.end !== prev.end) b = ASVE.aggregate(E, m.id, pm.start, pm.end); }
     if (!a) return null;
     return {m, pid, fans:a.fans, revenue:a.revenue, asv:a.asv, approx:a.approx, prev:b ? b.asv : null, delta:ASVE.delta(a.asv, b ? b.asv : null)};
   }).filter(Boolean).sort((x, y) => (y.asv ?? -1) - (x.asv ?? -1));
@@ -2012,7 +2140,8 @@ function neonShell(P, sub, body, withPeriod) {
       <div class="nh-period ${global ? 'gold' : ''}">${r ? esc(periodUpper(r)) : ''}</div></header>
     <nav class="ntabs" aria-label="Sections ASV">${ASV_TABS.map(([k, l]) => `<a href="#${P.id}/asv/${k}" class="${k === sub ? 'on' : ''}" ${k === sub ? 'aria-current="page"' : ''}>${l}</a>`).join('')}</nav>
     ${hero}
-    ${withPeriod ? `<div class="nc nperiod">${periodControls(P.id, 'main', periodOf(P.id))}${r ? `<span class="muted" style="margin-left:auto;font-size:12.5px">Comparée à : ${esc(fmtRange(ASVE.previousRange(r.start, r.end).start, ASVE.previousRange(r.start, r.end).end))}</span>` : '<span class="sc-lo">Plage de dates invalide.</span>'}</div>` : ''}
+    ${withPeriod ? `<div class="nc nperiod">${periodControls(P.id, 'main', periodOf(P.id))}${r ? (() => { const pv = ASVE.previousRange(r.start, r.end), pm = ASVE.monthRange(pv.start.slice(0, 7)); const half = pv.start.slice(0, 7) === pv.end.slice(0, 7) && (pm.start !== pv.start || pm.end !== pv.end);
+      return `<span class="muted" style="margin-left:auto;font-size:12.5px">Comparée à : ${esc(fmtRange(pv.start, pv.end))}${half ? ` (à défaut : ${esc(monthLabel(pv.start.slice(0, 7)))} entier)` : ''}</span>`; })() : '<span class="sc-lo">Plage de dates invalide.</span>'}</div>` : ''}
     <div class="nstack">${body}</div>
     <footer class="nfoot">Suivi ASV — rapport généré automatiquement</footer>`;
 }
@@ -2048,8 +2177,9 @@ function asvDashboard(P, r) {
   const weighted = tf > 0 && rows.every(x => x.fans != null && x.asv != null) ? rows.reduce((a, x) => a + x.asv * x.fans, 0) / tf : null;
   const avg = rows.filter(x => x.asv != null).reduce((a, x, _, arr) => a + x.asv / arr.length, 0);
   const bestSub = best ? [best.revenue != null ? `${fa(P.id, best.revenue, 0)} de CA net` : null, best.fans != null ? `${fint(best.fans)} nouveaux fans` : null].filter(Boolean).join(' · ') : '';
-  const table = `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th class="num">#</th><th>Modèle</th><th class="num">Nouveaux fans</th><th class="num">CA net</th><th class="num">ASV</th><th>Objectif</th><th>Évolution</th></tr></thead><tbody>
-    ${rows.map((x, i) => `<tr><td class="num ${i === 0 ? 'gold' : ''}">${String(i + 1).padStart(2, '0')}</td><td><strong class="${i === 0 ? 'gold' : ''}">${esc(x.m.name)} ${PCODE[P.id]}</strong></td><td class="num">${fint(x.fans)}</td><td class="num">${x.revenue == null ? '<span class="muted">—</span>' : fa(P.id, x.revenue)}</td><td class="num"><strong>${x.asv == null ? '<span class="muted">0 abonné</span>' : fa(P.id, x.asv)}</strong>${x.approx ? ' <span class="muted" title="Moyenne simple de plusieurs périodes sans abonnés">≈</span>' : ''}</td><td>${goalPill(P.id, ASVE.targetFor(x.asv, asvState.settings[P.id].paliers))}</td><td>${deltaBadge(x.delta)}</td></tr>`).join('')}
+  const sF = rows.some(x => x.fans != null), sR = rows.some(x => x.revenue != null);
+  const table = `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th class="num">#</th><th>Modèle</th>${sF ? '<th class="num">Nouveaux fans</th>' : ''}${sR ? '<th class="num">CA net</th>' : ''}<th class="num">ASV</th><th>Objectif</th><th>Évolution</th></tr></thead><tbody>
+    ${rows.map((x, i) => `<tr><td class="num ${i === 0 ? 'gold' : ''}">${String(i + 1).padStart(2, '0')}</td><td><strong class="${i === 0 ? 'gold' : ''}">${esc(x.m.name)} ${PCODE[P.id]}</strong></td>${sF ? `<td class="num">${fint(x.fans)}</td>` : ''}${sR ? `<td class="num">${x.revenue == null ? '<span class="muted">—</span>' : fa(P.id, x.revenue)}</td>` : ''}<td class="num"><strong>${x.asv == null ? '<span class="muted">0 abonné</span>' : fa(P.id, x.asv)}</strong>${x.approx ? ' <span class="muted" title="Moyenne simple de plusieurs périodes sans abonnés">≈</span>' : ''}</td><td>${goalPill(P.id, ASVE.targetFor(x.asv, asvState.settings[P.id].paliers))}</td><td>${deltaBadge(x.delta)}</td></tr>`).join('')}
   </tbody></table></div>`;
   const cross = ms.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Modèle</th>${ms.map(ym => `<th class="num">${esc(monthHead(E, ym))}</th>`).join('')}</tr></thead><tbody>
     ${(() => {
@@ -2193,32 +2323,90 @@ function bindAsvModeles(main, P) {
 }
 
 /* ---------- Saisie & import ---------- */
+/* ---------- Import ASV en 3 étapes : période → données → vérification ---------- */
+function nextPeriod(pid) {
+  const E = entriesOf(pid);
+  const d = new Date(), ymNow = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  if (!E.length) return {p:{type:'month', a:ymNow, b:''}, note:'Par défaut : le mois en cours. Changez-la si besoin.'};
+  const last = [...E].sort((x, y) => y.end.localeCompare(x.end) || x.start.localeCompare(y.start))[0];
+  const ym = last.start.slice(0, 7), full = ASVE.monthRange(ym);
+  const [y, m] = ym.split('-').map(Number), nextYm = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+  const note = `Suggestion : la période qui suit votre dernier import (${fmtRange(last.start, last.end)}). Changez-la si besoin.`;
+  if (last.start === full.start && last.end === full.end) return {p:{type:'month', a:nextYm, b:''}, note};
+  if (last.start === `${ym}-01` && last.end === `${ym}-15`) return {p:{type:'half', a:ym, b:'2'}, note};
+  if (last.start === `${ym}-16` && last.end === full.end) return {p:{type:'half', a:nextYm, b:'1'}, note};
+  const len = Math.round((new Date(last.end) - new Date(last.start)) / 86400000) + 1;
+  return {p:{type:'custom', a:ASVE.addDays(last.end, 1), b:ASVE.addDays(last.end, len)}, note};
+}
+function impState(P) {
+  asvUI.imp ||= {};
+  if (!asvUI.imp[P.id]) { const s = nextPeriod(P.id); asvUI.imp[P.id] = {p:s.p, note:s.note, text:'', source:'', res:null, rows:[], remember:true}; }
+  return asvUI.imp[P.id];
+}
+function impRange(st) { const r = ASVE.rangeFor(st.p.type, st.p.a, st.p.b); return r.start && r.end && r.end >= r.start ? r : null; }
+function periodFromData(start, end) {
+  const ym = start.slice(0, 7), full = ASVE.monthRange(ym);
+  if (start === full.start && end === full.end) return {type:'month', a:ym, b:''};
+  if (start === `${ym}-01` && end === `${ym}-15`) return {type:'half', a:ym, b:'1'};
+  if (start === `${ym}-16` && end === full.end) return {type:'half', a:ym, b:'2'};
+  return {type:'custom', a:start, b:end};
+}
+// Applique un résultat de lecture à l'état de l'import. Renvoie true si la période a été modifiée (dates trouvées dans les données).
+function setImportResult(P, res, source) {
+  const st = impState(P);
+  const wasMulti = !!st.multi;
+  st.source = source; st.res = res; st.rows = []; st.multi = null;
+  if (res.error) return wasMulti;
+  if (res.section && res.section !== P.id) { st.res = {error:`Ces données concernent ${PLATFORMS[res.section].name} : importez-les depuis Analyse ASV ${PLATFORMS[res.section].name}.`}; return false; }
+  if (!res.rows.length) { st.res = {error:'Aucune ligne exploitable : vérifiez qu’il y a bien un nom de modèle et une valeur d’ASV par ligne.'}; return wasMulti; }
+  const other = P.id === 'of' ? /\sMYM$/i : /\sOF$/i;
+  const wrong = res.rows.filter(x => other.test(x.handle.trim()));
+  res.issues ||= [];
+  if (wrong.length) res.issues.push(`${plural(wrong.length, 'ligne se termine', 'lignes se terminent')} par « ${P.id === 'of' ? 'MYM' : 'OF'} » alors que vous êtes dans ${P.name} : vérifiez la plateforme.`);
+  if (res.multi) {
+    st.multi = res.periods;
+    st.rows = res.rows.map(x => ({...x, origName:x.name, include:true}));
+    return true;
+  }
+  st.rows = res.rows.map(x => ({...x, origName:x.name, include: x.asv != null}));
+  const dates = (source.match(/\d{4}-\d{2}-\d{2}/g) || []);
+  const start = res.start || dates[0] || '', end = res.end || dates[1] || dates[0] || '';
+  if (start && end && end >= start) { st.p = periodFromData(start, end); st.note = `Période lue dans ${res.start ? 'les données' : 'le nom du fichier'}. Changez-la si besoin.`; return true; }
+  return wasMulti;
+}
+// « CARLA TRANS » → « Carla trans » quand un nouveau modèle est créé à partir d'un nom tout en majuscules
+const niceName = n => /[A-ZÀ-Ý]/.test(n) && n === n.toUpperCase() && n.length > 2 ? n.charAt(0) + n.slice(1).toLowerCase() : n;
+function modelFor(P, name) {
+  let m = findModel(P.id, name), created = false;
+  if (!m) { m = {id: aid(), name: niceName(name), platform: P.id, archived:false}; asvState.models.push(m); created = true; }
+  if (m.archived) m.archived = false;
+  return {m, created};
+}
 function asvSaisie(P) {
-  const d = asvUI.draft[P.id];
+  const st = impState(P), r = impRange(st);
   const ms = modelsOf(P.id, true);
   const man = asvUI.manual?.[P.id] || (asvUI.manual = {...asvUI.manual, [P.id]: {p: periodOf(P.id), model:'', fans:'', rev:'', asv:''}})[P.id];
-  let html = `<section class="nc"><h2>Importer un export ${P.name}</h2><p class="muted" style="margin-top:0">Le plus simple : un tableau avec une colonne <strong>Modèle</strong> et une colonne <strong>ASV</strong>, plus si possible les <strong>nouveaux abonnés</strong> (ils servent à pondérer les moyennes). Les exports ${P.id === 'of' ? 'Infloww' : 'MyPulse'} avec CA net + nouveaux abonnés et le JSON du tracker marchent aussi : l'ASV est alors recalculé.</p>
-    <label class="drop" id="asv-drop" tabindex="0" style="background:rgba(10,7,9,.55);border-color:rgba(var(--core-rgb),.5)"><input type="file" id="asv-file" accept=".csv,.xlsx,.xls,.tsv,.txt,.json" hidden><strong>Déposez un fichier ici ou choisissez-le</strong><span class="muted">.xlsx, .csv ou .json</span></label>
-    <label class="f" style="margin-top:12px">Ou collez un tableau (copié depuis Excel ou le dashboard) ou un JSON<textarea id="asv-paste" rows="4" placeholder="Lila OF&#9;45,19 $&#10;Flavie OF&#9;13,29 $&#10;(les en-têtes « Modèle », « Abonnés », « ASV » sont facultatifs)"></textarea></label>
-    <button class="btn" id="asv-parse" type="button" style="margin-top:10px">Analyser le texte collé</button></section>`;
-  if (d) {
-    const r = ASVE.rangeFor(d.p.type, d.p.a, d.p.b);
-    const valid = r.start && r.end && r.end >= r.start;
-    const incl = d.rows.filter(x => x.include);
-    html += `<section class="nc"><h2>Vérification avant import · ${esc(d.source)}</h2>
-      ${d.issues.length ? `<div class="alert warn" style="margin-bottom:10px">${d.issues.map(esc).join('<br>')}</div>` : ''}
-      <div class="nperiod" style="margin-bottom:12px">${periodControls(P.id, 'imp', d.p)}${valid ? '' : '<span class="sc-lo">Choisissez une période valide.</span>'}</div>
-      <div class="tbl-wrap" style="max-height:440px"><table><thead><tr><th>Importer</th><th>Nom dans l'export</th><th>Nom dans l'agence</th><th>Statut</th><th class="num">Nouveaux abonnés</th><th class="num">CA net</th><th class="num">ASV retenu</th><th class="num">ASV du fichier</th></tr></thead><tbody>
-      ${d.rows.map((x, i) => { const a = x.asv; const ex = findModel(P.id, x.name); const recalc = x.revenue != null && x.fans != null; const gap = recalc && x.given != null && a != null && Math.abs(x.given - a) > 0.15;
-        return `<tr><td><input type="checkbox" data-ainc="${i}" ${x.include ? 'checked' : ''}></td><td class="muted">${esc(x.handle)}</td><td><input type="text" data-aname="${i}" value="${esc(x.name)}" style="min-width:150px"></td>
-        <td>${ex ? (ex.archived ? '<span class="dlt stable">Archivée</span>' : '<span class="dlt up">Existante</span>') : '<span class="dlt stable" style="color:var(--core)">Nouvelle</span>'}</td>
-        <td class="num">${fint(x.fans)}</td><td class="num">${x.revenue == null ? '<span class="muted">—</span>' : fa(P.id, x.revenue)}</td><td class="num"><strong>${a == null ? '<span class="sc-lo">0 abonné</span>' : fa(P.id, a)}</strong>${recalc ? ' <span class="muted" style="font-size:11px">recalculé</span>' : ''}</td>
-        <td class="num">${x.given == null ? '<span class="muted">—</span>' : `${fa(P.id, x.given)}${gap ? ` <span class="dlt down" title="L'ASV du fichier diffère de plus de 0,15 de l'ASV recalculé à partir du CA et des abonnés. L'ASV recalculé est utilisé.">écart ${fa(P.id, Math.abs(x.given - a))}</span>` : ''}`}</td></tr>`; }).join('')}
-      </tbody></table></div>
-      <label class="check" style="margin-top:10px;color:rgba(255,255,255,.75)"><input type="checkbox" id="asv-remember" ${d.remember ? 'checked' : ''}> Mémoriser les noms modifiés comme correspondances pour les prochains imports</label>
-      <p class="muted" style="font-size:12.5px">Les entrées déjà enregistrées pour ces modèles et comprises dans cette période sont remplacées, pour ne jamais compter deux fois le même CA.</p>
-      <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn ghost" id="asv-cancel" type="button">Abandonner</button><button class="btn primary" id="asv-confirm" type="button" ${valid && incl.length ? '' : 'disabled'}>Importer ${plural(incl.length, 'modèle', 'modèles')}</button></div></section>`;
-  }
+  const existing = r ? new Set(entriesOf(P.id).filter(e => e.start >= r.start && e.end <= r.end).map(e => e.modelId)).size : 0;
+  let html = `<section class="nc imp" id="asv-imp"><h2 style="font-size:17px">Importer des ASV ${P.name}</h2>
+    <div class="step"><div class="stepn">1</div><div class="stepb">${st.multi ? `<b>Périodes lues dans les données</b>
+      <div class="plist">${st.multi.map(pp => { const n = new Set(entriesOf(P.id).filter(e => e.start >= pp.start && e.end <= pp.end).map(e => e.modelId)).size;
+        return `<div class="pitem"><span class="bigp" style="margin:0;font-size:19px">${esc(periodUpper(pp))}</span><span class="muted small">colonne « ${esc(pp.label)} »${n ? ` · déjà ${plural(n, 'modèle', 'modèles')} sur cette période, elles seront remplacées si présentes dans le fichier` : ''}</span></div>`; }).join('')}</div>
+      <p class="muted small" style="margin:6px 0 0">Chaque colonne du fichier est importée sur sa propre période. Pour importer une seule période, collez une seule colonne.</p>` : `<b>Pour quelle période ?</b>
+      <div class="nperiod" style="margin-top:8px">${periodControls(P.id, 'imp', st.p)}</div>
+      <div class="bigp">${r ? esc(periodUpper(r)) : '<span class="sc-lo">Période invalide</span>'}</div>
+      <p class="muted small" style="margin:4px 0 0">${esc(st.note || '')}</p>
+      ${existing ? `<div class="alert warn" style="margin-top:10px">Cette période contient déjà des ASV pour ${plural(existing, 'modèle', 'modèles')}. Les modèles que vous importez seront remplacées ; les autres ne changent pas.</div>` : ''}`}
+    </div></div>
+    <div class="step"><div class="stepn">2</div><div class="stepb"><b>Collez vos données ou choisissez un fichier</b>
+      <p class="muted small" style="margin:4px 0 8px">Une modèle par ligne : le nom, puis l'ASV (par ex. « Lila OF   45,19 $ »). Une colonne d'abonnés au milieu est acceptée, les en-têtes sont facultatifs. Un tableau avec une colonne par période (« Juillet 2026 », « Août 2026 », « Septembre 2026 (1-15) »…) importe toutes les périodes d'un coup. La lecture est automatique.</p>
+      <textarea id="asv-paste" rows="7" placeholder="Lila OF&#9;45,19 $&#10;Flavie OF&#9;13,29 $&#10;Thais OF&#9;18,21 $">${esc(st.text)}</textarea>
+      <div class="imp-actions"><label class="btn" for="asv-file">${icon('import')}Choisir un fichier (.xlsx, .csv, .json)</label><input type="file" id="asv-file" accept=".csv,.xlsx,.xls,.tsv,.txt,.json" hidden>
+        <span class="muted small">ou glissez-le sur cette carte</span>${st.text || st.res ? '<button class="btn ghost" id="asv-clear" type="button" style="margin-left:auto">Tout effacer</button>' : ''}</div>
+      <div id="asv-status" style="margin-top:10px"></div>
+    </div></div>
+    <div class="step"><div class="stepn">3</div><div class="stepb"><b>Vérifiez et importez</b><div id="asv-preview" style="margin-top:8px"></div></div></div>
+  </section>`;
+
   const mr = ASVE.rangeFor(man.p.type, man.p.a, man.p.b);
   html += `<section class="nc"><h2>Saisie manuelle</h2><p class="muted" style="margin-top:0">Renseignez l'ASV, ou le CA net et les nouveaux abonnés pour qu'il soit recalculé. Une entrée existante (même modèle, même période) est mise à jour.</p>
     <div class="nperiod">${ms.length ? `<label class="f">Modèle<select id="man-model">${modelsOf(P.id).map(m => `<option value="${m.id}" ${m.id === man.model ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label>` : '<span class="muted">Ajoutez d\'abord un modèle ci-dessous.</span>'}
@@ -2240,31 +2428,58 @@ function asvSaisie(P) {
 }
 async function asvReadFile(P, file) {
   const ext = (file.name.split('.').pop() || '').toLowerCase();
+  let res;
   try {
-    let res;
     if (ext === 'xlsx' || ext === 'xls') {
-      if (!window.XLSX) { toast(`Le lecteur XLSX n'a pas pu se charger. Exportez en CSV.`, true); return; }
-      res = ASVE.rowsFromGrid(gridFromWorkbook(XLSX.read(await file.arrayBuffer(), {type:'array', cellNF:true})), asvState.settings.mapping);
+      if (!window.XLSX) res = {error:`Le lecteur XLSX n'a pas pu se charger (connexion internet ?). Exportez le fichier en CSV, ou copiez-collez ses colonnes.`};
+      else res = ASVE.rowsFromGrid(gridFromWorkbook(XLSX.read(await file.arrayBuffer(), {type:'array', cellNF:true})), asvState.settings.mapping);
     } else res = ASVE.parseInput(await file.text(), asvState.settings.mapping);
-    asvDraftFrom(P, res, file.name);
-  } catch (e) { toast(`Impossible de lire « ${file.name} » : ${e.message}`, true); }
+  } catch (e) { res = {error:`Impossible de lire « ${file.name} » : ${e.message}`}; }
+  impState(P).text = '';
+  setImportResult(P, res, file.name);
+  const y = window.scrollY; render(); window.scrollTo(0, y);
 }
-function asvDraftFrom(P, res, source) {
-  if (res.error) { toast(res.error, true); return; }
-  if (res.section && res.section !== P.id) { toast(`Ce JSON concerne ${PLATFORMS[res.section].name} : importez-le depuis Analyse ASV ${PLATFORMS[res.section].name}.`, true); return; }
-  if (!res.rows.length) { toast('Aucune ligne exploitable trouvée.', true); return; }
-  const other = P.id === 'of' ? /\sMYM$/i : /\sOF$/i;
-  const wrong = res.rows.filter(x => other.test(x.handle.trim()));
-  if (wrong.length) (res.issues ||= []).push(`${plural(wrong.length, 'ligne se termine', 'lignes se terminent')} par « ${P.id === 'of' ? 'MYM' : 'OF'} » alors que vous êtes dans ${P.name} : vérifiez que c'est la bonne plateforme.`);
-  const dates = (source.match(/\d{4}-\d{2}-\d{2}/g) || []);
-  const start = res.start || dates[0] || '', end = res.end || dates[1] || dates[0] || '';
-  let p = start && end ? {type:'custom', a:start, b:end} : periodOf(P.id);
-  if (start && end) { const ym = start.slice(0, 7), full = ASVE.monthRange(ym);
-    if (start === full.start && end === full.end) p = {type:'month', a:ym, b:''};
-    else if (start === `${ym}-01` && end === `${ym}-15`) p = {type:'half', a:ym, b:'1'};
-    else if (start === `${ym}-16` && end === full.end) p = {type:'half', a:ym, b:'2'}; }
-  asvUI.draft[P.id] = {source, issues: res.issues || [], p, remember:true, rows: res.rows.map(x => ({...x, origName:x.name, include: x.asv != null}))};
-  render();
+function drawImport(P) {
+  const st = impState(P), r = impRange(st);
+  const status = document.getElementById('asv-status'), prev = document.getElementById('asv-preview');
+  if (!status || !prev) return;
+  if (!st.res) { status.innerHTML = ''; prev.innerHTML = '<p class="muted small" style="margin:0">Le détail apparaîtra ici dès que vous aurez collé vos données ou choisi un fichier.</p>'; return; }
+  if (st.res.error) { status.innerHTML = `<div class="alert err">${esc(st.res.error)}</div>`; prev.innerHTML = '<p class="muted small" style="margin:0">Rien à importer pour l’instant.</p>'; return; }
+  if (st.multi) return drawImportMulti(P, st, status, prev);
+  const incl = st.rows.filter(x => x.include);
+  const showFans = st.rows.some(x => x.fans != null), showRev = st.rows.some(x => x.revenue != null);
+  status.innerHTML = `<div class="okline">✓ ${plural(st.rows.length, 'modèle reconnue', 'modèles reconnues')}${st.source && st.source !== 'texte collé' ? ` dans « ${esc(st.source)} »` : ''}</div>
+    ${st.res.issues && st.res.issues.length ? `<div class="alert warn" style="margin-top:8px">${st.res.issues.map(esc).join('<br>')}</div>` : ''}`;
+  prev.innerHTML = `<div class="tbl-wrap" style="max-height:420px"><table><thead><tr><th>Importer</th><th>Nom dans les données</th><th>Nom dans l'agence</th><th>Statut</th>${showFans ? '<th class="num">Nouveaux abonnés</th>' : ''}${showRev ? '<th class="num">CA net</th>' : ''}<th class="num">ASV</th></tr></thead><tbody>
+    ${st.rows.map((x, i) => { const ex = findModel(P.id, x.name); const recalc = x.revenue != null && x.fans != null; const gap = recalc && x.given != null && x.asv != null && Math.abs(x.given - x.asv) > 0.15;
+      return `<tr><td><input type="checkbox" data-ainc="${i}" ${x.include ? 'checked' : ''} ${x.asv == null ? 'disabled' : ''}></td><td class="muted">${esc(x.handle)}</td><td><input type="text" data-aname="${i}" value="${esc(x.name)}" style="min-width:150px"></td>
+      <td>${ex ? (ex.archived ? '<span class="dlt stable">Archivée</span>' : '<span class="dlt up">Existante</span>') : '<span class="dlt stable" style="color:var(--core)">Nouvelle</span>'}</td>
+      ${showFans ? `<td class="num">${fint(x.fans)}</td>` : ''}${showRev ? `<td class="num">${x.revenue == null ? '<span class="muted">—</span>' : fa(P.id, x.revenue)}</td>` : ''}
+      <td class="num"><strong>${x.asv == null ? '<span class="sc-lo">0 abonné</span>' : fa(P.id, x.asv)}</strong>${recalc ? ' <span class="muted" style="font-size:11px">recalculé</span>' : ''}${gap ? ` <span class="dlt down" title="L'ASV du fichier (${fa(P.id, x.given)}) diffère de l'ASV recalculé. Le recalcul est utilisé.">écart</span>` : ''}</td></tr>`; }).join('')}
+    </tbody></table></div>
+    <label class="check" style="margin-top:10px"><input type="checkbox" id="asv-remember" ${st.remember ? 'checked' : ''}> Mémoriser les noms modifiés pour les prochains imports</label>
+    <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap">
+      ${r ? '' : '<span class="sc-lo">Choisissez une période valide à l’étape 1.</span>'}
+      <button class="btn primary big" id="asv-confirm" type="button" ${r && incl.length ? '' : 'disabled'}>Importer ${plural(incl.length, 'modèle', 'modèles')}${r ? ` sur ${esc(periodUpper(r))}` : ''}</button></div>`;
+  prev.querySelectorAll('[data-ainc]').forEach(cb => cb.addEventListener('change', () => { st.rows[+cb.dataset.ainc].include = cb.checked; drawImport(P); }));
+  prev.querySelectorAll('[data-aname]').forEach(inp => inp.addEventListener('change', () => { st.rows[+inp.dataset.aname].name = inp.value.trim() || st.rows[+inp.dataset.aname].handle; drawImport(P); }));
+  document.getElementById('asv-remember').addEventListener('change', e => { st.remember = e.target.checked; });
+  document.getElementById('asv-confirm').addEventListener('click', () => {
+    const r2 = impRange(st); if (!r2) return;
+    let created = 0, updated = 0, newModels = 0;
+    for (const x of st.rows.filter(x => x.include && x.asv != null)) {
+      const {m, created: isNew} = modelFor(P, x.name);
+      if (isNew) newModels++;
+      const res = ASVE.applyImport(asvState, m.id, r2.start, r2.end, x, st.source || 'texte collé');
+      res.updated ? updated++ : created++;
+      if (st.remember && x.name !== x.origName) asvState.settings.mapping[ASVE.stripSuffix(x.handle)] = x.name;
+    }
+    saveAsv();
+    asvUI.period[P.id] = {...st.p};
+    asvUI.imp[P.id] = null;
+    toast(`${periodUpper(r2)} : ${plural(created + updated, 'modèle importée', 'modèles importées')}${updated ? ` (dont ${updated} remplacée${updated > 1 ? 's' : ''})` : ''}${newModels ? `, ${plural(newModels, 'nouvelle modèle', 'nouvelles modèles')}` : ''}.`);
+    go(`${P.id}/asv/dashboard`);
+  });
 }
 async function promptModal(title, label, value) {
   return new Promise(res => {
@@ -2277,39 +2492,61 @@ async function promptModal(title, label, value) {
     document.body.appendChild(bg); input.focus(); input.select();
   });
 }
+function drawImportMulti(P, st, status, prev) {
+  const per = st.multi;
+  const incl = st.rows.filter(x => x.include);
+  const nVals = incl.reduce((a, x) => a + x.values.filter(v => v != null).length, 0);
+  status.innerHTML = `<div class="okline">✓ ${plural(st.rows.length, 'modèle reconnue', 'modèles reconnues')} sur ${plural(per.length, 'période', 'périodes')}${st.source && st.source !== 'texte collé' ? ` dans « ${esc(st.source)} »` : ''}</div>
+    ${st.res.issues && st.res.issues.length ? `<div class="alert warn" style="margin-top:8px">${st.res.issues.map(esc).join('<br>')}</div>` : ''}`;
+  prev.innerHTML = `<div class="tbl-wrap" style="max-height:460px"><table><thead><tr><th>Importer</th><th>Nom dans les données</th><th>Nom dans l'agence</th><th>Statut</th>${per.map(pp => `<th class="num">${esc(periodUpper(pp))}</th>`).join('')}</tr></thead><tbody>
+    ${st.rows.map((x, i) => { const ex = findModel(P.id, x.name);
+      return `<tr><td><input type="checkbox" data-ainc="${i}" ${x.include ? 'checked' : ''}></td><td class="muted">${esc(x.handle)}</td><td><input type="text" data-aname="${i}" value="${esc(x.name)}" style="min-width:140px"></td>
+      <td>${ex ? (ex.archived ? '<span class="dlt stable">Archivée</span>' : '<span class="dlt up">Existante</span>') : '<span class="dlt stable" style="color:var(--core)">Nouvelle</span>'}</td>
+      ${x.values.map(v => `<td class="num">${v == null ? '<span class="muted">—</span>' : `<strong>${fa(P.id, v)}</strong>`}</td>`).join('')}</tr>`; }).join('')}
+    </tbody></table></div>
+    <p class="muted small" style="margin:8px 0 0">Une case vide (—) ne modifie rien sur cette période.</p>
+    <label class="check" style="margin-top:8px"><input type="checkbox" id="asv-remember" ${st.remember ? 'checked' : ''}> Mémoriser les noms modifiés pour les prochains imports</label>
+    <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap">
+      <button class="btn primary big" id="asv-confirm" type="button" ${nVals ? '' : 'disabled'}>Importer ${plural(nVals, 'valeur', 'valeurs')} sur ${plural(per.length, 'période', 'périodes')}</button></div>`;
+  prev.querySelectorAll('[data-ainc]').forEach(cb => cb.addEventListener('change', () => { st.rows[+cb.dataset.ainc].include = cb.checked; drawImport(P); }));
+  prev.querySelectorAll('[data-aname]').forEach(inp => inp.addEventListener('change', () => { st.rows[+inp.dataset.aname].name = inp.value.trim() || st.rows[+inp.dataset.aname].handle; drawImport(P); }));
+  document.getElementById('asv-remember').addEventListener('change', e => { st.remember = e.target.checked; });
+  document.getElementById('asv-confirm').addEventListener('click', () => {
+    let vals = 0, newModels = 0;
+    for (const x of st.rows.filter(x => x.include)) {
+      const {m, created} = modelFor(P, x.name);
+      if (created) newModels++;
+      per.forEach((pp, j) => { const v = x.values[j]; if (v == null) return; ASVE.applyImport(asvState, m.id, pp.start, pp.end, {asv:v}, st.source || 'texte collé'); vals++; });
+      if (st.remember && x.name !== x.origName) asvState.settings.mapping[ASVE.stripSuffix(x.handle)] = x.name;
+    }
+    saveAsv();
+    const last = per[per.length - 1];
+    asvUI.period[P.id] = periodFromData(last.start, last.end);
+    asvUI.imp[P.id] = null;
+    toast(`${plural(vals, 'valeur importée', 'valeurs importées')} sur ${per.map(pp => periodUpper(pp)).join(', ')}${newModels ? ` · ${plural(newModels, 'nouvelle modèle', 'nouvelles modèles')}` : ''}.`);
+    go(`${P.id}/asv/dashboard`);
+  });
+}
 function bindAsvSaisie(main, P) {
   const keep = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
-  const drop = document.getElementById('asv-drop'), file = document.getElementById('asv-file');
+  const st = impState(P);
+  const card = document.getElementById('asv-imp'), file = document.getElementById('asv-file'), ta = document.getElementById('asv-paste');
   file.addEventListener('change', () => file.files[0] && asvReadFile(P, file.files[0]));
-  drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
-  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
-  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
-  drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) asvReadFile(P, f); });
-  document.getElementById('asv-parse').addEventListener('click', () => asvDraftFrom(P, ASVE.parseInput(document.getElementById('asv-paste').value, asvState.settings.mapping), 'texte collé'));
-  const d = asvUI.draft[P.id];
-  if (d) {
-    bindPeriod(main, 'imp', () => d.p, v => { d.p = v; }, keep);
-    main.querySelectorAll('[data-ainc]').forEach(cb => cb.addEventListener('change', () => { d.rows[+cb.dataset.ainc].include = cb.checked; keep(); }));
-    main.querySelectorAll('[data-aname]').forEach(inp => inp.addEventListener('change', () => { d.rows[+inp.dataset.aname].name = inp.value.trim() || d.rows[+inp.dataset.aname].handle; keep(); }));
-    document.getElementById('asv-remember').addEventListener('change', e => { d.remember = e.target.checked; });
-    document.getElementById('asv-cancel').addEventListener('click', () => { asvUI.draft[P.id] = null; render(); });
-    document.getElementById('asv-confirm').addEventListener('click', () => {
-      const r = ASVE.rangeFor(d.p.type, d.p.a, d.p.b);
-      let created = 0, updated = 0, newModels = 0;
-      for (const x of d.rows.filter(x => x.include)) {
-        let m = findModel(P.id, x.name);
-        if (!m) { m = {id: aid(), name: x.name, platform: P.id, archived:false}; asvState.models.push(m); newModels++; }
-        const res = ASVE.applyImport(asvState, m.id, r.start, r.end, x, d.source);
-        res.updated ? updated++ : created++;
-        if (d.remember && x.name !== x.origName) asvState.settings.mapping[ASVE.stripSuffix(x.handle)] = x.name;
-      }
-      saveAsv();
-      asvUI.draft[P.id] = null;
-      asvUI.period[P.id] = {...d.p};
-      toast(`Import ${P.name} ${r.start} → ${r.end} : ${created} créée(s), ${updated} mise(s) à jour${newModels ? `, ${plural(newModels, 'nouveau modèle', 'nouveaux modèles')}` : ''}.`);
-      go(`${P.id}/asv/dashboard`);
-    });
-  }
+  ['dragenter','dragover'].forEach(ev => card.addEventListener(ev, e => { if ([...(e.dataTransfer?.types || [])].includes('Files')) { e.preventDefault(); card.classList.add('over'); } }));
+  ['dragleave','drop'].forEach(ev => card.addEventListener(ev, e => { if (ev === 'dragleave' && card.contains(e.relatedTarget)) return; card.classList.remove('over'); }));
+  card.addEventListener('drop', e => { const f = e.dataTransfer?.files?.[0]; if (f) { e.preventDefault(); asvReadFile(P, f); } });
+  bindPeriod(main, 'imp', () => st.p, v => { st.p = v; st.note = 'Période choisie.'; }, keep);
+  let timer;
+  const parseNow = () => {
+    st.text = ta.value;
+    if (!ta.value.trim()) { st.res = null; st.rows = []; drawImport(P); return; }
+    const periodChanged = setImportResult(P, ASVE.parseInput(ta.value, asvState.settings.mapping), 'texte collé');
+    if (periodChanged) keep(); else drawImport(P);
+  };
+  ta.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(parseNow, 250); });
+  ta.addEventListener('paste', () => { clearTimeout(timer); setTimeout(parseNow, 0); });
+  document.getElementById('asv-clear')?.addEventListener('click', () => { st.text = ''; st.res = null; st.rows = []; st.source = ''; keep(); });
+  drawImport(P);
   const man = asvUI.manual[P.id];
   bindPeriod(main, 'man', () => man.p, v => { man.p = v; }, keep);
   document.getElementById('man-model')?.addEventListener('change', e => { man.model = e.target.value; });
@@ -2398,6 +2635,252 @@ function bindAsvReglages(main, P) {
   });
 }
 
+/* =====================================================================
+   PARTAGE DES DONNÉES (Supabase) — tout le monde voit et importe les mêmes données
+   Trois blocs sont partagés : « periods » (chatters OF + MYM), « settings » (paramètres de notation), « asv ».
+   ===================================================================== */
+const Sync = (() => {
+  const KEYS = ['periods', 'settings', 'asv'];
+  const LS_CFG = 'rca.sync.cfg', LS_SES = 'rca.sync.session', LS_META = 'rca.sync.meta';
+  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: [], settings: null}};
+  const clone = o => JSON.parse(JSON.stringify(o ?? null));
+  const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+  let session = lsGet(LS_SES, null);
+  const meta = Object.assign({version: {}, base: {}}, lsGet(LS_META, {}));
+  const dirty = new Set();
+  let busy = false, flushTimer = null, pollTimer = null, status = 'idle', lastSync = null, lastError = '', firstDone = false;
+
+  const cfg = () => {
+    const c = SHARED_CONFIG.url && SHARED_CONFIG.anonKey ? SHARED_CONFIG : lsGet(LS_CFG, null);
+    return c && c.url && c.anonKey ? {url: c.url.replace(/\/+$/, ''), anonKey: c.anonKey.trim(), embedded: !!(SHARED_CONFIG.url && SHARED_CONFIG.anonKey)} : null;
+  };
+  const configured = () => !!cfg();
+  const connected = () => configured() && !!session;
+  const saveMeta = () => lsSet(LS_META, meta);
+
+  /* ---------- Lecture / écriture de l'état local ---------- */
+  function getData(key) {
+    if (key === 'periods') return clone(store.periods);
+    if (key === 'settings') return clone({of: allSettings.of, mym: allSettings.mym});
+    return clone({models: asvState.models, entries: asvState.entries, settings: asvState.settings});
+  }
+  function setData(key, data) {
+    if (key === 'periods') {
+      const arr = Array.isArray(data) ? data : [];
+      store.periods.splice(0, store.periods.length, ...arr.map(p => ({...p, platform: p.platform || 'of'})));
+      store.invalidate(); lsSet(LS.periods, store.periods);
+    } else if (key === 'settings') {
+      for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
+      lsSet(LS.settings, allSettings);
+    } else {
+      asvState.models = Array.isArray(data?.models) ? data.models : [];
+      asvState.entries = Array.isArray(data?.entries) ? data.entries : [];
+      asvState.settings = mergeAsvSettings(data?.settings || null);
+      lsSet(LS_ASV, asvState);
+    }
+  }
+  const hasLocal = key => key === 'periods' ? store.periods.length > 0 : key === 'asv' ? asvState.models.length > 0 || asvState.entries.length > 0 : true;
+  const remoteEmpty = (key, d) => key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : !d || !d.of;
+
+  /* ---------- Fusion à trois (base commune, local, distant) ---------- */
+  function mergeById(b = [], l = [], r = []) {
+    const B = new Map(b.map(x => [x.id, x])), L = new Map(l.map(x => [x.id, x])), R = new Map(r.map(x => [x.id, x]));
+    const out = [];
+    for (const id of new Set([...r.map(x => x.id), ...l.map(x => x.id)])) {
+      const bb = B.get(id), ll = L.get(id), rr = R.get(id);
+      if (ll && rr) out.push(!same(ll, bb) ? ll : rr);
+      else if (ll) { if (!bb || !same(ll, bb)) out.push(ll); }        // ajouté ici, ou modifié ici alors que supprimé ailleurs
+      else if (rr) { if (!bb || !same(rr, bb)) out.push(rr); }        // ajouté ailleurs, ou modifié ailleurs alors que supprimé ici
+    }
+    return out;
+  }
+  const pick = (b, l, r) => !same(l, b) ? l : r;
+  function merge(key, b, l, r, preferRemote) {
+    b = b ?? clone(EMPTY[key]);
+    if (key === 'periods') return mergeById(b, l, r);
+    if (key === 'settings') return preferRemote ? r : {of: pick(b.of, l.of, r.of), mym: pick(b.mym, l.mym, r.mym)};
+    return {models: mergeById(b.models, l.models, r?.models), entries: mergeById(b.entries, l.entries, r?.entries), settings: preferRemote && r?.settings ? r.settings : pick(b.settings, l.settings, r?.settings)};
+  }
+
+  /* ---------- Accès à l'API ---------- */
+  async function api(path, opts = {}, retry = true) {
+    const c = cfg();
+    const headers = {apikey: c.anonKey, 'Content-Type': 'application/json', ...(opts.headers || {})};
+    if (session && !path.startsWith('/auth/')) headers.Authorization = `Bearer ${session.access_token}`;
+    let res;
+    try { res = await fetch(c.url + path, {...opts, headers}); }
+    catch (e) { throw Object.assign(new Error('Pas de connexion à la base partagée (internet ?).'), {offline: true}); }
+    if (res.status === 401 && retry && session && !path.startsWith('/auth/')) { await refresh(); return api(path, opts, false); }
+    const text = await res.text();
+    const body = text ? (() => { try { return JSON.parse(text); } catch { return text; } })() : null;
+    if (!res.ok) throw Object.assign(new Error((body && (body.error_description || body.msg || body.message || body.error)) || `Erreur ${res.status}`), {status: res.status});
+    return body;
+  }
+  function keepSession(b) {
+    session = {access_token: b.access_token, refresh_token: b.refresh_token, expires_at: Date.now() + (b.expires_in || 3600) * 1000, email: b.user?.email || session?.email || ''};
+    lsSet(LS_SES, session);
+  }
+  async function refresh() {
+    try { keepSession(await api('/auth/v1/token?grant_type=refresh_token', {method: 'POST', body: JSON.stringify({refresh_token: session.refresh_token})}, false)); }
+    catch (e) { if (!e.offline) { session = null; lsSet(LS_SES, null); render(); } throw e; }
+  }
+  async function login(email, password) {
+    const b = await api('/auth/v1/token?grant_type=password', {method: 'POST', body: JSON.stringify({email, password})}, false);
+    keepSession(b);
+    meta.version = {}; meta.base = {}; saveMeta();
+    firstDone = false;
+    await pull(true);
+    start();
+  }
+  function logout() {
+    session = null; lsSet(LS_SES, null); stop(); render();
+  }
+
+  /* ---------- Synchronisation ---------- */
+  async function pull(first = false) {
+    if (!connected() || busy) return false;
+    busy = true; setStatus('sync');
+    let changedBy = null, changed = false;
+    try {
+      if (session.expires_at - Date.now() < 60000) await refresh();
+      const rows = await api('/rest/v1/app_state?select=key,data,version,updated_by');
+      for (const key of KEYS) {
+        const row = (rows || []).find(x => x.key === key);
+        if (!row) throw new Error(`La table app_state ne contient pas la ligne « ${key} » : relancez le script SQL.`);
+        const known = meta.version[key];
+        if (first && known === undefined) {
+          if (row.version === 0 || remoteEmpty(key, row.data)) { if (hasLocal(key)) dirty.add(key); meta.version[key] = row.version; meta.base[key] = clone(row.data); continue; }
+          if (hasLocal(key) && key !== 'settings') {
+            const merged = merge(key, EMPTY[key], getData(key), row.data, true);
+            setData(key, merged); if (!same(merged, row.data)) dirty.add(key);
+          } else setData(key, row.data);
+          meta.version[key] = row.version; meta.base[key] = clone(row.data); changed = true;
+          continue;
+        }
+        if (row.version > (known ?? -1)) {
+          if (dirty.has(key)) setData(key, merge(key, meta.base[key], getData(key), row.data, false));
+          else setData(key, row.data);
+          meta.version[key] = row.version; meta.base[key] = clone(row.data);
+          changed = true; if (row.updated_by && row.updated_by !== session.email) changedBy = row.updated_by;
+        }
+      }
+      saveMeta(); lastSync = Date.now(); lastError = ''; firstDone = true;
+      setStatus(dirty.size ? 'pending' : 'ok');
+    } catch (e) { lastError = e.message; setStatus(e.offline ? 'offline' : 'error'); }
+    finally { busy = false; }
+    if (changed) { render(); if (changedBy && !first) toast(`Données mises à jour par ${changedBy}.`); }
+    if (dirty.size) scheduleFlush(50);
+    return changed;
+  }
+  async function pushKey(key, attempt = 0) {
+    const local = getData(key), v = meta.version[key] ?? 0;
+    const rows = await api(`/rest/v1/app_state?key=eq.${key}&version=eq.${v}`, {method: 'PATCH', headers: {Prefer: 'return=representation'},
+      body: JSON.stringify({data: local, version: v + 1, updated_at: new Date().toISOString(), updated_by: session.email || null})});
+    if (Array.isArray(rows) && rows.length) {
+      meta.version[key] = v + 1; meta.base[key] = local; saveMeta();
+      if (same(getData(key), local)) dirty.delete(key);
+      return;
+    }
+    // Quelqu'un a enregistré entre-temps : on récupère sa version, on fusionne, on réessaie.
+    if (attempt >= 4) throw new Error('Trop de modifications simultanées, réessayez dans un instant.');
+    busy = false; await pull(); busy = true;
+    return pushKey(key, attempt + 1);
+  }
+  async function flush() {
+    if (!connected() || !dirty.size) return;
+    if (busy) { scheduleFlush(400); return; }
+    busy = true; setStatus('saving');
+    try { for (const key of [...dirty]) await pushKey(key); lastSync = Date.now(); lastError = ''; setStatus(dirty.size ? 'pending' : 'ok'); }
+    catch (e) { lastError = e.message; setStatus(e.offline ? 'offline' : 'error'); scheduleFlush(15000); }
+    finally { busy = false; }
+  }
+  function scheduleFlush(ms = 300) { clearTimeout(flushTimer); flushTimer = setTimeout(flush, ms); }
+  function changed(key) { if (!connected()) return; dirty.add(key); setStatus('pending'); scheduleFlush(); }
+  async function poll() {
+    if (!connected() || busy || document.visibilityState === 'hidden') return;
+    try {
+      const rows = await api('/rest/v1/app_state?select=key,version');
+      if ((rows || []).some(r => r.version > (meta.version[r.key] ?? -1))) await pull();
+      else if (status === 'offline' || status === 'error') { lastError = ''; setStatus(dirty.size ? 'pending' : 'ok'); if (dirty.size) scheduleFlush(50); }
+      else { lastSync = Date.now(); drawStatus(); }
+    } catch (e) { lastError = e.message; setStatus(e.offline ? 'offline' : 'error'); }
+  }
+  function start() { stop(); pollTimer = setInterval(poll, 15000); }
+  function stop() { clearInterval(pollTimer); pollTimer = null; }
+  window.addEventListener('focus', () => poll());
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') poll(); });
+  window.addEventListener('beforeunload', e => { if (connected() && dirty.size) { e.preventDefault(); e.returnValue = ''; } });
+
+  /* ---------- Affichage de l'état ---------- */
+  function setStatus(s) { status = s; drawStatus(); }
+  function drawStatus() {
+    const el = document.getElementById('sync-status');
+    if (!el) return;
+    if (!configured()) { el.innerHTML = `<a href="#of/partage" class="sync-link"><span class="dot"></span>Données sur cet appareil uniquement</a>`; el.className = 'sync local'; return; }
+    if (!session) { el.innerHTML = `<a href="#of/partage" class="sync-link"><span class="dot"></span>Non connecté</a>`; el.className = 'sync off'; return; }
+    const ago = lastSync ? Math.max(0, Math.round((Date.now() - lastSync) / 1000)) : null;
+    const label = {sync: 'Synchronisation…', saving: 'Enregistrement…', pending: 'Modifications en attente…', offline: 'Hors ligne · modifications gardées', error: 'Erreur de synchronisation', ok: `Partagé · à jour${ago != null && ago > 20 ? ` (il y a ${ago < 90 ? ago + ' s' : Math.round(ago / 60) + ' min'})` : ''}`, idle: 'Connexion…'}[status];
+    el.className = 'sync ' + (status === 'ok' ? 'ok' : status === 'error' || status === 'offline' ? 'bad' : 'wait');
+    el.innerHTML = `<a href="#of/partage" class="sync-link" title="${esc(lastError)}"><span class="dot"></span>${esc(label)}</a><span class="sync-who">${esc(session.email || '')}</span>`;
+  }
+  setInterval(drawStatus, 30000);
+
+  function init() {
+    drawStatus();
+    if (connected()) { pull(true); start(); }
+  }
+  return {configured, connected, cfg, login, logout, pull, changed, init, drawStatus, status: () => status, lastError: () => lastError,
+    saveLocalCfg(url, key) { lsSet(LS_CFG, url ? {url, anonKey: key} : null); session = null; lsSet(LS_SES, null); meta.version = {}; meta.base = {}; saveMeta(); drawStatus(); },
+    needsLogin: () => configured() && !session, email: () => session?.email || '', _merge: merge};
+})();
+
+/* ---------- Écrans : connexion et page « Partage des données » ---------- */
+function renderLogin(main) {
+  main.innerHTML = `<div class="login-wrap"><div class="panel login">
+    <h2 style="font-size:20px;margin-bottom:4px">Connexion à l'espace partagé</h2>
+    <p class="hint">Connectez-vous avec l'e-mail et le mot de passe fournis par l'agence pour voir et importer les données de toute l'équipe.</p>
+    <label class="f">E-mail<input type="email" id="lg-email" autocomplete="username" value="${esc(lsGet('rca.sync.lastEmail', ''))}"></label>
+    <label class="f">Mot de passe<input type="password" id="lg-pw" autocomplete="current-password"></label>
+    <div id="lg-err" class="sc-lo" style="min-height:20px;font-size:13px"></div>
+    <button class="btn primary" id="lg-go" type="button" style="width:100%;justify-content:center">Se connecter</button>
+  </div></div>`;
+  const go = async () => {
+    const email = document.getElementById('lg-email').value.trim(), pw = document.getElementById('lg-pw').value;
+    const err = document.getElementById('lg-err'), btn = document.getElementById('lg-go');
+    if (!email || !pw) { err.textContent = 'Renseignez votre e-mail et votre mot de passe.'; return; }
+    btn.disabled = true; btn.textContent = 'Connexion…'; err.textContent = '';
+    try { lsSet('rca.sync.lastEmail', email); await Sync.login(email, pw); toast('Connecté : les données de l’équipe sont chargées.'); render(); }
+    catch (e) { err.textContent = /invalid/i.test(e.message) ? 'E-mail ou mot de passe incorrect.' : e.message; btn.disabled = false; btn.textContent = 'Se connecter'; }
+  };
+  document.getElementById('lg-go').addEventListener('click', go);
+  document.getElementById('lg-pw').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  (document.getElementById('lg-email').value ? document.getElementById('lg-pw') : document.getElementById('lg-email')).focus();
+}
+function renderPartage(main) {
+  const c = Sync.cfg();
+  main.innerHTML = `<div class="top"><h1>Partage des données</h1></div><div class="stack">
+    <section class="panel"><h2>État</h2>
+      ${!c ? `<p>Les données sont enregistrées <strong>uniquement dans ce navigateur</strong>. Pour que toute l'équipe voie et importe les mêmes données, reliez le site à une base Supabase (ci-dessous).</p>`
+        : !Sync.connected() ? `<p>Le site est relié à la base partagée, mais vous n'êtes pas connecté.</p><a class="btn primary" href="#of/dashboard">Se connecter</a>`
+        : `<p>Connecté en tant que <strong>${esc(Sync.email())}</strong>. Chaque import, suppression ou changement de paramètres est enregistré pour toute l'équipe, et les modifications des autres apparaissent ici en moins de 15 secondes.</p>
+           <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="sy-now" type="button">Synchroniser maintenant</button><button class="btn danger" id="sy-out" type="button">Se déconnecter</button></div>
+           ${Sync.lastError() ? `<div class="alert err" style="margin-top:12px">${esc(Sync.lastError())}</div>` : ''}`}
+    </section>
+    ${c && c.embedded ? '' : `<section class="panel"><h2>Relier à Supabase</h2><p class="hint">Collez l'adresse du projet et la clé publique (Project Settings → API). Ce réglage ne vaut que pour ce navigateur : pour vos superviseurs, envoyez ces deux valeurs à Claude, qui les intégrera au fichier index.html.</p>
+      <div class="set-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))"><label>Project URL<input type="text" id="sy-url" placeholder="https://xxxx.supabase.co" value="${esc(c?.url || '')}"></label>
+      <label>Clé publique (anon / publishable)<input type="text" id="sy-key" placeholder="eyJ… ou sb_publishable_…" value="${esc(c?.anonKey || '')}"></label></div>
+      <div style="display:flex;gap:10px;margin-top:12px"><button class="btn primary" id="sy-save" type="button">Enregistrer et se connecter</button>${c ? '<button class="btn ghost" id="sy-clear" type="button">Revenir au mode local</button>' : ''}</div></section>`}
+  </div>`;
+  document.getElementById('sy-now')?.addEventListener('click', async () => { await Sync.pull(); toast('Synchronisation terminée.'); render(); });
+  document.getElementById('sy-out')?.addEventListener('click', () => Sync.logout());
+  document.getElementById('sy-save')?.addEventListener('click', () => {
+    const url = document.getElementById('sy-url').value.trim(), key = document.getElementById('sy-key').value.trim();
+    if (!/^https:\/\/.+/.test(url) || key.length < 20) { toast('Vérifiez l’adresse (https://…supabase.co) et la clé.', true); return; }
+    Sync.saveLocalCfg(url, key); go('of/dashboard');
+  });
+  document.getElementById('sy-clear')?.addEventListener('click', () => { Sync.saveLocalCfg(null); toast('Retour au mode local.'); render(); });
+}
+
 /* ---------- Auto-test ---------- */
 function selfTest() {
   const tests = RCA.runSelfTests(store.periods).concat(RCA.ASV.selfTests());
@@ -2415,6 +2898,7 @@ if (!/^(of|mym)\//.test(routeHash)) {
   const r = route();
   routeHash = `${r.pid}/${r.chatter != null ? 'chatter/' + encodeURIComponent(r.chatter) : r.page === 'asv' ? 'asv/' + r.sub : r.page}`;
 }
+Sync.init();
 try { render(); } catch (e) {
   console.error(e);
   document.getElementById('main').innerHTML = `<div class="panel empty"><h2>Une erreur a empêché l'affichage</h2><p class="hint">${esc(e.message)}</p></div>`;
