@@ -375,6 +375,20 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .nav-sub a svg{width:15px;height:15px}
 .nav-top{font-weight:600}
 @media (max-width:980px){.nav-sub{flex-direction:row;margin:0;padding-left:4px;border-left:0}.nav-sec span,.nav-sec .chev{display:none}.nav-sec{width:auto}}
+.glegend{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:14px}
+.gl{display:flex;gap:10px;align-items:flex-start;padding:4px 6px}
+.gl .badge{flex:none;width:28px;height:28px;font-size:16px}
+.gl-t{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.gl-t strong{font-size:13.5px}
+.gl-r{font-size:11.5px;color:var(--faint);white-space:nowrap}
+.gl-d{font-size:12px;color:var(--muted);line-height:1.35;margin-top:2px}
+.gl-note{grid-column:1/-1;margin:2px 6px 0;font-size:12px;color:var(--faint)}
+.dist .glbl{font-size:11px;color:var(--muted);margin-top:2px}
+.viewpick{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.viewpick select,.viewpick input{min-height:34px}
+.small-btn{padding:4px 10px;min-height:34px;font-size:16px}
+@media (max-width:1180px){.glegend{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.glegend{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -411,15 +425,15 @@ const RCA = (() => {
       kpis: [
         {key:'revenue', label:'CA total', kind:'money', scoring:'target',
           aliases:['revenue','total revenue','total ca','ca','gross revenue','sales revenue','sales','total sales','total earnings','net revenue','ca total',"chiffre d'affaires",'chiffre d affaires total','revenu total','revenus']},
-        {key:'unlock', label:'Unlock Ratio', kind:'pct', pctRule:'unlock', scoring:'bands',
+        {key:'unlock', label:'Unlock Ratio', kind:'pct', pctRule:'unlock', scoring:'bands', agg:'wavg', by:'revenue',
           aliases:['unlock ratio','unlock %','unlock rate','unlock','unlocked ratio','unlock ratio %','taux d unlock','taux de deblocage','ratio unlock']},
         {key:'ppv', label:'Ventes PPV / brutes', kind:'money', scoring:'target',
           aliases:['ppv','ppv sales','gross sales','sales','gross ppv','gross sales / ppv sales','ppv revenue','gross ppv sales','ppv gross sales','ventes ppv','ventes brutes','ventes ppv brutes']},
         {key:'tips', label:'Tips', kind:'money', scoring:'target',
           aliases:['tips','tip','total tips','tips revenue','pourboires','total pourboires']},
-        {key:'golden', label:'Golden Ratio', kind:'pct', pctRule:'golden', scoring:'bands',
+        {key:'golden', label:'Golden Ratio', kind:'pct', pctRule:'golden', scoring:'bands', agg:'wavg', by:'revenue',
           aliases:['golden ratio','golden %','golden rate','golden','ratio golden']},
-        {key:'fan', label:'Dépense moyenne par fan', kind:'money', dec:2, scoring:'bands',
+        {key:'fan', label:'Dépense moyenne par fan', kind:'money', dec:2, scoring:'bands', agg:'wavg', by:'revenue',
           aliases:['average fan spend','avg fan spend','average spend','avg spend','fan spend','avg earnings per fan who spent money','average earnings per fan who spent money','earnings per fan who spent money','avg earnings per paying fan','average earnings per paying fan','depense moyenne par fan','depense moyenne','depense par fan','panier moyen']}
       ],
       dashStats: [['sum','revenue',`CA de l'équipe`],['avg','unlock','Unlock Ratio moyen'],['sum','ppv','Ventes PPV'],['sum','tips','Tips']],
@@ -441,10 +455,10 @@ const RCA = (() => {
       kpis: [
         {key:'total', label:'CA total', kind:'money', dec:2, scoring:'target',
           aliases:['ca total','total','chiffre d affaires','chiffre d affaires total','revenue','total revenue','revenu total']},
-        {key:'conv', label:'Taux de conversion (unlock)', kind:'pct', pctRule:'unlock', scoring:'bands',
+        {key:'conv', label:'Taux de conversion (unlock)', kind:'pct', pctRule:'unlock', scoring:'bands', agg:'ratio', num:'sold', den:'proposed', by:'proposed',
           derive:{from:['sold','proposed'], fn:(sold, prop) => prop > 0 ? sold / prop * 100 : null},
           aliases:['taux conv','taux conv %','taux de conversion','conversion','conversion rate','conv','taux conversion','unlock ratio','unlock']},
-        {key:'react', label:'Réactivité', kind:'seconds', scoring:'bands', lowerIsBetter:true, missingZero:true,
+        {key:'react', label:'Réactivité', kind:'seconds', scoring:'bands', lowerIsBetter:true, missingZero:true, agg:'wavg', by:'proposed',
           aliases:['reactivite','reactivity','temps de reponse','temps de reponse moyen','response time','avg response time','delai de reponse']},
         {key:'ppv', label:'CA PPV', kind:'money', dec:2, scoring:'info', optional:true,
           aliases:['ca ppv','ppv','ventes ppv','revenu ppv','ppv revenue']},
@@ -551,9 +565,14 @@ const RCA = (() => {
     return {name: row.name, row, scores, contrib, final, scoreGrade, grade, capped, cap, critical, warnings, status};
   }
 
+  // Les objectifs sont hebdomadaires (7 jours) : ils sont ajustés à la durée réelle de la période.
+  const utcDay = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+  function periodDays(p) { return p && p.start && p.end ? Math.max(1, Math.round((utcDay(p.end) - utcDay(p.start)) / 86400000) + 1) : 7; }
   function computePeriod(period, s) {
     const P = PLATFORMS[period.platform || 'of'];
-    const results = period.rows.map(r => scoreChatter(r, P, s));
+    const days = periodDays(period), factor = days / 7;
+    const sc = factor === 1 ? s : {...s, targets: Object.fromEntries(Object.entries(s.targets).map(([k, v]) => [k, v * factor]))};
+    const results = period.rows.map(r => scoreChatter(r, P, sc));
     results.sort((a,b) => b.final - a.final || a.name.localeCompare(b.name, 'fr'));
     let lastScore = null, lastRank = 0;
     results.forEach((r, i) => {
@@ -570,12 +589,41 @@ const RCA = (() => {
     for (const k of P.scored) avgScores[k.key] = n ? results.reduce((a, r) => a + r.scores[k.key], 0) / n : 0;
     const grades = {S:0, A:0, B:0, C:0, D:0};
     results.forEach(r => grades[r.grade]++);
-    return {period, platform: P, results, stats: {
+    return {period, platform: P, results, targets: sc.targets, days, factor, stats: {
       count: n, grades, sum, avg, avgScores,
       avgScore: r1(n ? results.reduce((a, r) => a + r.final, 0) / n : 0),
       critical: results.filter(r => r.critical).length,
       capped: results.filter(r => r.capped).length
     }};
+  }
+
+  // Regroupe plusieurs imports d'une même plateforme en une période (semaine, mois, plage) :
+  // montants et volumes additionnés, taux recalculés (vendu ÷ proposé) ou moyennés en pondérant (CA ou volume proposé).
+  function combinePeriods(pid, list, meta) {
+    const P = PLATFORMS[pid];
+    const by = new Map();
+    for (const p of list) for (const r of p.rows) { const k = r.name.trim().toLowerCase(); if (!by.has(k)) by.set(k, {name: r.name, parts: []}); by.get(k).parts.push(r); }
+    const wavg = (vals, key, w) => {
+      const ok = w && vals.every(x => x[w] != null) && vals.reduce((a, x) => a + x[w], 0) > 0;
+      const tw = ok ? vals.reduce((a, x) => a + x[w], 0) : vals.length;
+      return vals.reduce((a, x) => a + x[key] * (ok ? x[w] : 1), 0) / tw;
+    };
+    const rows = [...by.values()].map(({name, parts}) => {
+      const row = {name};
+      for (const k of P.kpis) {
+        const vals = parts.filter(x => x[k.key] != null);
+        if (!vals.length) { row[k.key] = null; continue; }
+        const agg = k.agg || 'sum';
+        let v;
+        if (agg === 'sum') v = vals.reduce((a, x) => a + x[k.key], 0);
+        else if (agg === 'ratio' && parts.every(x => x[k.num] != null && x[k.den] != null) && parts.reduce((a, x) => a + x[k.den], 0) > 0)
+          v = Math.min(100, parts.reduce((a, x) => a + x[k.num], 0) / parts.reduce((a, x) => a + x[k.den], 0) * 100);
+        else v = wavg(vals, k.key, k.by);
+        row[k.key] = r6(v);
+      }
+      return row;
+    });
+    return {platform: pid, rows, virtual: true, sources: list.map(p => p.id), fileName: `${list.length} imports`, excluded: list.reduce((a, p) => a + (p.excluded || 0), 0), createdAt: 0, ...meta};
   }
 
   // Le store met en cache les résultats par période et vide le cache quand les paramètres changent :
@@ -593,6 +641,13 @@ const RCA = (() => {
           cache.set(id, p ? computePeriod(p, settingsByPlatform[p.platform || 'of']) : null);
         }
         return cache.get(id);
+      },
+      resultsFor(p) {
+        if (!p) return null;
+        if (!p.virtual) return this.results(p.id);
+        const key = 'v|' + p.id + '|' + p.sources.join(',');
+        if (!cache.has(key)) cache.set(key, computePeriod(p, settingsByPlatform[p.platform || 'of']));
+        return cache.get(key);
       }
     };
   }
@@ -861,7 +916,7 @@ const RCA = (() => {
       store.periods.forEach((p, pi) => {
         store.results(p.id).results.forEach(r => {
           checked++;
-          const exp = propScore(r.row.revenue, ns.targets.revenue);
+          const exp = propScore(r.row.revenue, ns.targets.revenue * periodDays(p) / 7);
           const expFinal = r1(OF.scored.reduce((a, k) => a + r.scores[k.key] * ns.weights[k.key] / 100, 0));
           if (r.scores.revenue !== exp || r.final !== expFinal) ok = false;
           const old = before[pi].results.find(o => o.name === r.name);
@@ -869,6 +924,16 @@ const RCA = (() => {
         });
       });
       return {pass: ok && changed > 0, detail:`${source} : ${checked} résultats revérifiés, ${changed} modifiés après doublement de l'objectif`};
+    });
+    t('Objectif hebdomadaire ajusté à la durée + regroupement de deux semaines', () => {
+      const w1 = {id:'w1', platform:'mym', start:'2026-09-07', end:'2026-09-13', rows:[{name:'A', total:1000, conv:20, react:100, proposed:100, sold:20, ppv:800, tips:200}]};
+      const w2 = {id:'w2', platform:'mym', start:'2026-09-14', end:'2026-09-20', rows:[{name:'a', total:500, conv:40, react:200, proposed:50, sold:20, ppv:400, tips:100}]};
+      const ss = clone(sm); ss.targets.total = 1000;
+      const c = combinePeriods('mym', [w1, w2], {id:'v', start:'2026-09-07', end:'2026-09-20', name:'2 semaines'});
+      const r1w = computePeriod(w1, ss).results[0], rc = computePeriod(c, ss).results[0];
+      const row = c.rows[0];
+      const ok = r1w.scores.total === 100 && row.total === 1500 && Math.abs(row.conv - 26.6667) < 0.01 && Math.abs(row.react - 133.3333) < 0.01 && rc.scores.total === 75 && c.rows.length === 1;
+      return {pass: ok, detail: `1 semaine : ${r1w.scores.total}/100 · 2 semaines : CA ${row.total} €, objectif ${computePeriod(c, ss).targets.total} € → ${rc.scores.total}/100, conversion ${fr(row.conv, 1)} %, réactivité ${fr(row.react, 0)} s`};
     });
     t('MYM · tableau « Résumé chatter » copié-collé (nom puis valeurs)', () => {
       const txt = 'Vonjy Mym\n140s\t1173\t248\t21.1%\t4 966,31 EUR\t684,48 EUR\t5 650,79 EUR\nAntonio\n215s\t607\t132\t21.7%\t3 207,48 EUR\t1 403,58 EUR\t4 611,06 EUR';
@@ -900,7 +965,7 @@ const RCA = (() => {
   }
 
   return {GRADE_ORDER, PLATFORMS, clone, r1, defaultSettings, mergeSettings, migrateLegacyOF,
-    bandScore, propScore, gradeFor, scoreChatter, computePeriod, createStore,
+    bandScore, propScore, gradeFor, scoreChatter, computePeriod, createStore, combinePeriods, periodDays,
     normHeader, cellText, parseCell, parseDuration, toPercent, parseCSV, pasteToGrid, aliasList, detectColumns, findHeaderRow, missingFields, buildRows, summarize, runSelfTests};
 })();
 if (typeof module !== 'undefined') module.exports = RCA;
@@ -1272,7 +1337,8 @@ let charts = [];
 
 const saveSettings = () => { lsSet(LS.settings, allSettings); Sync.changed('settings'); };
 const savePeriods = () => { lsSet(LS.periods, store.periods); Sync.changed('periods'); };
-const saveUI = () => lsSet(LS.ui, {period: ui.period, navOpen: ui.navOpen});
+const saveUI = () => lsSet(LS.ui, {period: ui.period, navOpen: ui.navOpen, view: ui.view});
+ui.view ||= {};
 const platformPeriods = pid => store.periods.filter(p => p.platform === pid);
 const sortedPeriods = pid => platformPeriods(pid).sort((a,b) => (b.start || '').localeCompare(a.start || '') || b.createdAt - a.createdAt);
 const chronoPeriods = pid => platformPeriods(pid).sort((a,b) => (a.start || '').localeCompare(b.start || '') || a.createdAt - b.createdAt);
@@ -1282,6 +1348,50 @@ function currentPeriod(pid) {
   let p = list.find(x => x.id === ui.period[pid]);
   if (!p) { p = list[0]; ui.period[pid] = p.id; saveUI(); }
   return p;
+}
+/* ---------- Vue par période : semaine (lundi → dimanche), mois, plage, ou import précis ---------- */
+const pad2 = n => String(n).padStart(2, '0');
+const isoOf = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const addDaysIso = (s, n) => { const d = parseDate(s); d.setDate(d.getDate() + n); return isoOf(d); };
+const mondayOf = s => { const d = parseDate(s); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoOf(d); };
+function isoWeek(s) { const d = parseDate(s); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7); const y = new Date(d.getFullYear(), 0, 4); return 1 + Math.round(((d - y) / 86400000 - 3 + (y.getDay() + 6) % 7) / 7); }
+const monthOf = ym => { const [y, m] = ym.split('-').map(Number); return {start:`${ym}-01`, end:`${ym}-${pad2(new Date(y, m, 0).getDate())}`}; };
+const monthName = ym => { const [y, m] = ym.split('-').map(Number); const s = new Date(y, m - 1, 1).toLocaleDateString('fr-FR', {month:'long', year:'numeric'}); return s.charAt(0).toUpperCase() + s.slice(1); };
+const weekLabel = mon => `Semaine ${isoWeek(mon)} · ${fmtRange(mon, addDaysIso(mon, 6))}`;
+function weeksWithData(pid) { return [...new Set(platformPeriods(pid).filter(p => p.start && p.end && p.end <= addDaysIso(mondayOf(p.start), 6)).map(p => mondayOf(p.start)))].sort().reverse(); }
+function monthsWithData(pid) { return [...new Set(platformPeriods(pid).filter(p => p.start && p.end && p.start.slice(0, 7) === p.end.slice(0, 7)).map(p => p.start.slice(0, 7)))].sort().reverse(); }
+function defaultView(pid) {
+  const w = weeksWithData(pid);
+  if (w.length) return {type:'week', a:w[0]};
+  const p = sortedPeriods(pid)[0];
+  return p ? {type:'import', id:p.id} : {type:'week', a:mondayOf(isoOf(new Date()))};
+}
+function viewRange(v) {
+  if (v.type === 'week') return {start:v.a, end:addDaysIso(v.a, 6)};
+  if (v.type === 'month') return monthOf(v.a);
+  if (v.type === 'custom') return v.a && v.b && v.b >= v.a ? {start:v.a, end:v.b} : null;
+  return null;
+}
+function viewLabel(v, r) { return v.type === 'week' ? weekLabel(v.a) : v.type === 'month' ? monthName(v.a) : r ? fmtRange(r.start, r.end) : ''; }
+// Renvoie {v, period, label, count} ; period est null si aucun import n'est entièrement compris dans la période choisie.
+function currentView(pid) {
+  if (!platformPeriods(pid).length) return null;
+  let v = ui.view[pid];
+  if (!v || (v.type === 'import' && !platformPeriods(pid).some(p => p.id === v.id))) { v = ui.view[pid] = defaultView(pid); saveUI(); }
+  if (v.type === 'import') { const p = platformPeriods(pid).find(x => x.id === v.id); return {v, period:p, label:p.name, count:1}; }
+  const r = viewRange(v);
+  if (!r) return {v, period:null, label:'Plage de dates invalide', count:0};
+  const inside = chronoPeriods(pid).filter(p => p.start && p.end && p.start >= r.start && p.end <= r.end);
+  const label = viewLabel(v, r);
+  if (!inside.length) return {v, period:null, label, count:0, range:r};
+  const period = inside.length === 1 && inside[0].start === r.start && inside[0].end === r.end ? inside[0]
+    : RCA.combinePeriods(pid, inside, {id:`${v.type}:${r.start}:${r.end}`, name:label, start:r.start, end:r.end});
+  return {v, period, label, count:inside.length, range:r};
+}
+function noDataPanel(P, view) {
+  const w = weeksWithData(P.id).slice(0, 4);
+  return `<div class="panel empty"><h2 style="font-size:18px;margin-bottom:6px">Aucun import sur « ${esc(view.label)} »</h2>
+    <p class="hint" style="margin:0 auto 12px;max-width:520px">Seuls les imports entièrement compris dans la période choisie sont pris en compte. ${w.length ? 'Semaines disponibles : ' + w.map(m => `<a href="#" data-goweek="${m}">${esc(weekLabel(m))}</a>`).join(' · ') + '.' : `Choisissez « Import précis » pour retrouver vos imports existants, ou importez des données semaine par semaine.`}</p></div>`;
 }
 
 /* ---------- Formatage (fr-FR) ---------- */
@@ -1423,14 +1533,34 @@ document.getElementById('nav').addEventListener('click', e => {
 function topbar(P, title, withPicker) {
   let right = '';
   if (withPicker && platformPeriods(P.id).length) {
-    const cur = currentPeriod(P.id);
-    right = `<label class="picker">Période <select id="period-pick">${sortedPeriods(P.id).map(p => `<option value="${p.id}" ${p.id === cur.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>
-      <button class="btn" id="export-btn" type="button">${icon('download')}Exporter en CSV</button>`;
+    const view = currentView(P.id), v = view.v;
+    const weeks = weeksWithData(P.id), months = monthsWithData(P.id);
+    if (v.type === 'week' && !weeks.includes(v.a)) weeks.unshift(v.a);
+    if (v.type === 'month' && !months.includes(v.a)) months.unshift(v.a);
+    const pick = v.type === 'week' ? `<button class="btn ghost small-btn" id="wk-prev" type="button" title="Semaine précédente" aria-label="Semaine précédente">‹</button><select id="view-a">${weeks.sort().reverse().map(m => `<option value="${m}" ${m === v.a ? 'selected' : ''}>${esc(weekLabel(m))}</option>`).join('')}</select><button class="btn ghost small-btn" id="wk-next" type="button" title="Semaine suivante" aria-label="Semaine suivante">›</button>`
+      : v.type === 'month' ? `<select id="view-a">${months.sort().reverse().map(m => `<option value="${m}" ${m === v.a ? 'selected' : ''}>${esc(monthName(m))}</option>`).join('')}</select>`
+      : v.type === 'custom' ? `<input type="date" id="view-a" value="${esc(v.a || '')}" aria-label="Du"><input type="date" id="view-b" value="${esc(v.b || '')}" aria-label="Au">`
+      : `<select id="view-a">${sortedPeriods(P.id).map(p => `<option value="${p.id}" ${p.id === v.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>`;
+    right = `<div class="picker viewpick"><select id="view-type" aria-label="Type de période">${[['week','Semaine'],['month','Mois'],['custom','Plage perso.'],['import','Import précis']].map(([k, l]) => `<option value="${k}" ${k === v.type ? 'selected' : ''}>${l}</option>`).join('')}</select>${pick}</div>
+      ${view.period ? `<button class="btn" id="export-btn" type="button">${icon('download')}Exporter en CSV</button>` : ''}`;
   }
   return `<div class="top"><h1>${pbadge(P, true)}<span>${esc(title)} <span class="plat">${P.name}</span></span></h1>${right}</div>`;
 }
 function bindTopbar(P) {
-  document.getElementById('period-pick')?.addEventListener('change', e => { ui.period[P.id] = e.target.value; saveUI(); render(); });
+  const setV = v => { ui.view[P.id] = v; saveUI(); render(); };
+  const cur = () => ui.view[P.id] || defaultView(P.id);
+  document.getElementById('view-type')?.addEventListener('change', e => {
+    const t = e.target.value, view = currentView(P.id), r = view.range || (view.period && {start:view.period.start, end:view.period.end}) || {start:isoOf(new Date()), end:isoOf(new Date())};
+    if (t === 'week') setV({type:'week', a:mondayOf(r.start)});
+    else if (t === 'month') setV({type:'month', a:(r.start || '').slice(0, 7)});
+    else if (t === 'custom') setV({type:'custom', a:r.start, b:r.end});
+    else setV({type:'import', id:(view.period && !view.period.virtual ? view.period.id : sortedPeriods(P.id)[0].id)});
+  });
+  document.getElementById('view-a')?.addEventListener('change', e => { const v = cur(); setV(v.type === 'import' ? {type:'import', id:e.target.value} : {...v, a:e.target.value}); });
+  document.getElementById('view-b')?.addEventListener('change', e => setV({...cur(), b:e.target.value}));
+  document.getElementById('wk-prev')?.addEventListener('click', () => setV({type:'week', a:addDaysIso(cur().a, -7)}));
+  document.getElementById('wk-next')?.addEventListener('click', () => setV({type:'week', a:addDaysIso(cur().a, 7)}));
+  document.querySelectorAll('[data-goweek]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); setV({type:'week', a:a.dataset.goweek}); }));
   document.getElementById('export-btn')?.addEventListener('click', () => exportCSV(P));
 }
 function destroyCharts() { charts.forEach(c => { try { c.destroy(); } catch {} }); charts = []; }
@@ -1521,11 +1651,30 @@ function bindRanking(P, id, res) {
   return draw;
 }
 
+/* ---------- Signification des grades ---------- */
+const GRADE_INFO = {
+  S: ['Élite', 'Chatter de référence : atteint ou dépasse les objectifs sur presque tous les KPI. À valoriser et à prendre en exemple.'],
+  A: ['Très bon', 'Solide et régulier, quelques détails à peaufiner.'],
+  B: ['Correct', 'Dans les attentes, avec 1 ou 2 KPI à travailler.'],
+  C: ['À améliorer', 'Plusieurs KPI sous l’objectif : suivi rapproché du team leader.'],
+  D: ['Insuffisant', 'En difficulté : coaching prioritaire.']
+};
+function gradeRange(g, gr) {
+  const top = {S:100, A:gr.S, B:gr.A, C:gr.B, D:gr.C}[g], low = gr[g];
+  return g === 'S' ? `${nf(low, 0, 1)} à 100` : g === 'D' ? `moins de ${nf(top, 0, 1)}` : `${nf(low, 0, 1)} à ${nf(top - 0.1, 0, 1)}`;
+}
+function gradeLegend(P, s) {
+  return `<section class="glegend" aria-label="Signification des grades">${GRADE_ORDER.map(g => `<div class="gl ${g}"><span class="badge ${g} g${g}">${g}</span><div><div class="gl-t"><strong>${GRADE_INFO[g][0]}</strong><span class="gl-r">${gradeRange(g, s.grades)}</span></div><div class="gl-d">${GRADE_INFO[g][1]}</div></div></div>`).join('')}
+    ${s.caps.enabled ? `<p class="gl-note">Un ${esc(capLabel(P))} sous ${pct(s.caps.warnBelow)} plafonne le grade à ${s.caps.warnCap} (sous ${pct(s.caps.criticalBelow)} : ${s.caps.criticalCap}), quel que soit le score.</p>` : ''}</section>`;
+}
+
 /* ---------- Tableau de bord ---------- */
 function renderDashboard(main, P) {
-  const p = currentPeriod(P.id);
-  if (!p) { main.innerHTML = emptyState(P, 'Tableau de bord'); return; }
-  const s = allSettings[P.id], res = store.results(p.id), st = res.stats;
+  const view = currentView(P.id);
+  if (!view) { main.innerHTML = emptyState(P, 'Tableau de bord'); return; }
+  if (!view.period) { main.innerHTML = topbar(P, 'Tableau de bord', true) + noDataPanel(P, view); return; }
+  const p = view.period;
+  const s = allSettings[P.id], res = store.resultsFor(p), st = res.stats;
   const statCell = ([agg, key, label]) => {
     const k = P.kpi[key];
     if (agg === 'sum') return `<div class="stat"><div class="k">${esc(label)}</div><div class="v">${fmtK(P, k, st.sum[key], 0)}</div><div class="d">${fmtK(P, k, st.avg[key], 0)} par chatter</div></div>`;
@@ -1533,12 +1682,13 @@ function renderDashboard(main, P) {
     return `<div class="stat"><div class="k">${esc(label)}</div><div class="v">${fmtK(P, k, st.avg[key])}</div><div class="d">${capNote}</div></div>`;
   };
   main.innerHTML = topbar(P, 'Tableau de bord', true) + `<div class="stack">
+    ${gradeLegend(P, s)}
     <section class="hero">
       <div>
-        <div class="period">${esc(fmtRange(p.start, p.end))}</div>
-        <div class="meta">${plural(st.count, 'chatter noté', 'chatters notés')} à partir de ${esc(p.fileName || `l'import`)}${p.excluded ? `, ${plural(p.excluded, 'ligne exclue', 'lignes exclues')} à l'import` : ''}${st.critical ? ` · <span style="color:var(--red)">${st.critical} avec un ${esc(capLabel(P))} critique</span>` : ''}</div>
+        <div class="period">${esc(view.label)}</div>
+        <div class="meta">${view.v.type !== 'import' && view.v.type !== 'custom' ? esc(fmtRange(p.start, p.end)) + ' · ' : ''}${plural(st.count, 'chatter noté', 'chatters notés')} à partir de ${esc(p.fileName || `l'import`)}${res.days !== 7 ? ` · objectifs de CA ajustés à ${plural(res.days, 'jour', 'jours')}` : ''}${p.excluded ? `, ${plural(p.excluded, 'ligne exclue', 'lignes exclues')} à l'import` : ''}${st.critical ? ` · <span style="color:var(--red)">${st.critical} avec un ${esc(capLabel(P))} critique</span>` : ''}</div>
       </div>
-      <div class="dist" aria-label="Chatters par grade">${GRADE_ORDER.map(g => `<button type="button" class="g ${g}" data-grade="${g}" title="Afficher uniquement le grade ${g}"><div class="letter g${g}">${g}</div><div class="n">${st.grades[g]}</div></button>`).join('')}</div>
+      <div class="dist" aria-label="Chatters par grade">${GRADE_ORDER.map(g => `<button type="button" class="g ${g}" data-grade="${g}" title="Afficher uniquement le grade ${g}"><div class="letter g${g}">${g}</div><div class="glbl">${GRADE_INFO[g][0]}</div><div class="n">${st.grades[g]}</div></button>`).join('')}</div>
     </section>
     <section class="stats">
       <div class="stat"><div class="k">Chatters</div><div class="v">${st.count}</div><div class="d">${plural(st.capped, 'grade plafonné', 'grades plafonnés')}</div></div>
@@ -1556,10 +1706,12 @@ function renderDashboard(main, P) {
 
 /* ---------- Chatters ---------- */
 function renderChatters(main, P) {
-  const p = currentPeriod(P.id);
-  if (!p) { main.innerHTML = emptyState(P, 'Chatters'); return; }
-  main.innerHTML = topbar(P, 'Chatters', true) + `<section class="panel"><h2>${esc(p.name)}</h2><p class="hint">Triez par n'importe quelle colonne, cherchez par nom ou filtrez par grade et par score. Cliquez sur un chatter pour le détail de ses KPI.</p>${rankingHTML(P, 'ch')}</section>`;
-  bindRanking(P, 'ch', store.results(p.id));
+  const view = currentView(P.id);
+  if (!view) { main.innerHTML = emptyState(P, 'Chatters'); return; }
+  if (!view.period) { main.innerHTML = topbar(P, 'Chatters', true) + noDataPanel(P, view); return; }
+  const p = view.period;
+  main.innerHTML = topbar(P, 'Chatters', true) + `<section class="panel"><h2>${esc(view.label)}</h2><p class="hint">Triez par n'importe quelle colonne, cherchez par nom ou filtrez par grade et par score. Cliquez sur un chatter pour le détail de ses KPI.</p>${rankingHTML(P, 'ch')}</section>`;
+  bindRanking(P, 'ch', store.resultsFor(p));
 }
 
 // Palier suivant dans le « bon » sens : vers le haut pour la plupart des KPI, vers le bas pour la réactivité.
@@ -1581,7 +1733,7 @@ function observations(P, r, res) {
   for (const k of P.scored) {
     const v = r.row[k.key], sc = r.scores[k.key];
     if (k.scoring === 'target') {
-      const t = s.targets[k.key], share = t ? v / t * 100 : 0;
+      const t = res.targets[k.key], share = t ? v / t * 100 : 0;
       if (v >= t) o.push(['good', `${k.label} : objectif atteint (${fmtK(P, k, v)} pour un objectif de ${fmtK(P, k, t)}).`]);
       else o.push([share < 50 ? 'crit' : 'warn', `${k.label} sous l'objectif : ${fmtK(P, k, v)} sur ${fmtK(P, k, t)} (${num(share, 0)} %), il manque ${fmtK(P, k, t - v)}.`]);
     } else {
@@ -1601,10 +1753,12 @@ function observations(P, r, res) {
   return o;
 }
 function renderDetail(main, P, name) {
-  const p = currentPeriod(P.id);
-  if (!p) { main.innerHTML = emptyState(P, 'Chatter'); return; }
-  const res = store.results(p.id);
-  const r = res.results.find(x => x.name === name);
+  const view = currentView(P.id);
+  if (!view) { main.innerHTML = emptyState(P, 'Chatter'); return; }
+  if (!view.period) { main.innerHTML = topbar(P, 'Chatter', true) + noDataPanel(P, view); return; }
+  const p = view.period;
+  const res = store.resultsFor(p);
+  const r = res.results.find(x => x.name === name) || res.results.find(x => x.name.toLowerCase() === String(name).toLowerCase());
   if (!r) {
     main.innerHTML = topbar(P, 'Chatter', true) + `<a class="back" href="#${P.id}/chatters" style="display:inline-block;text-decoration:none">‹ Tous les chatters</a><div class="panel empty">${esc(name)} n'a pas de données sur ${esc(p.name)}. Choisissez une autre période ci-dessus ou ouvrez l'<a href="#${P.id}/history">Historique</a>.</div>`;
     return;
@@ -1675,8 +1829,8 @@ function barChart(canvasId, labels, data, colors, yopt = {}) {
 
 /* ---------- Analyse d'équipe ---------- */
 // Cible : l'objectif configuré, ou le seuil qui donne le maximum de points pour les KPI à paliers.
-function kpiTarget(P, k, s) {
-  if (k.scoring === 'target') return {v: s.targets[k.key], note:'objectif configuré', meets: v => v >= s.targets[k.key] - 1e-9, sign:''};
+function kpiTarget(P, k, s, targets) {
+  if (k.scoring === 'target') return {v: targets[k.key], note:'objectif', meets: v => v >= targets[k.key] - 1e-9, sign:''};
   const sorted = [...s.bands[k.key]].sort((a,b) => a[0] - b[0]);
   const maxPts = Math.max(...sorted.map(b => b[1]));
   if (k.lowerIsBetter) {
@@ -1688,11 +1842,13 @@ function kpiTarget(P, k, s) {
   return {v: top[0], note:'seuil du score maximum', meets: v => v >= top[0] - 1e-9, sign:''};
 }
 function renderAnalytics(main, P) {
-  const p = currentPeriod(P.id);
-  if (!p) { main.innerHTML = emptyState(P, `Analyse d'équipe`); return; }
-  const s = allSettings[P.id], res = store.results(p.id), st = res.stats;
+  const view = currentView(P.id);
+  if (!view) { main.innerHTML = emptyState(P, `Analyse d'équipe`); return; }
+  if (!view.period) { main.innerHTML = topbar(P, `Analyse d'équipe`, true) + noDataPanel(P, view); return; }
+  const p = view.period;
+  const s = allSettings[P.id], res = store.resultsFor(p), st = res.stats;
   const rows = P.scored.map(k => {
-    const t = kpiTarget(P, k, s);
+    const t = kpiTarget(P, k, s, res.targets);
     const meeting = res.results.filter(r => r.row[k.key] != null && t.meets(r.row[k.key])).length;
     return {k, t, avg: st.avg[k.key], avgScore: st.avgScores[k.key], meeting, below: st.avg[k.key] == null || !t.meets(st.avg[k.key])};
   });
@@ -1883,7 +2039,7 @@ function bindImport(P) {
   };
   pasteBox.addEventListener('paste', () => { clearTimeout(pasteTimer); pasteTimer = setTimeout(readPaste, 0); });
   pasteBox.addEventListener('input', () => { clearTimeout(pasteTimer); pasteTimer = setTimeout(readPaste, 600); });
-  document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { ui.period[P.id] = b.dataset.open; saveUI(); go(`${P.id}/dashboard`); }));
+  document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { ui.view[P.id] = {type:'import', id:b.dataset.open}; saveUI(); go(`${P.id}/dashboard`); }));
   document.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
     const p = store.periods.find(x => x.id === b.dataset.del);
     if (!(await modal('Supprimer la période', `<p>Supprimer la période ${P.name} <strong>${esc(p.name)}</strong> et ses ${plural(p.rows.length, 'chatter noté', 'chatters notés')} ? Cette action est définitive.</p>`, 'Supprimer la période'))) return;
@@ -1926,7 +2082,9 @@ function confirmImport(P) {
   const period = {id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), platform: P.id, name: (d.label || '').trim() || fmtRange(d.start, d.end), start: d.start, end: d.end,
     fileName: d.fileName, createdAt: Date.now(), excluded: d.rows.length - rows.length, rows};
   store.periods.push(period); store.invalidate(); savePeriods();
-  ui.period[P.id] = period.id; saveUI();
+  ui.period[P.id] = period.id;
+  ui.view[P.id] = period.end <= addDaysIso(mondayOf(period.start), 6) ? {type:'week', a:mondayOf(period.start)} : {type:'import', id:period.id};
+  saveUI();
   importDraft[P.id] = null;
   toast(`${plural(rows.length, 'chatter importé', 'chatters importés')} dans ${P.name} · ${period.name}.`);
   go(`${P.id}/dashboard`);
@@ -1938,8 +2096,9 @@ function csvCell(v) {
   return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 async function exportCSV(P) {
-  const p = currentPeriod(P.id); if (!p) return;
-  const res = store.results(p.id);
+  const view = currentView(P.id); if (!view || !view.period) return;
+  const p = view.period;
+  const res = store.resultsFor(p);
   const unit = k => k.kind === 'pct' ? ' (%)' : k.kind === 'seconds' ? ' (s)' : k.kind === 'money' ? ` (${P.currency})` : '';
   const head = ['Chatter','Plateforme','Période', ...P.kpis.flatMap(k => k.scoring === 'info' ? [k.label + unit(k)] : [k.label + unit(k), 'Score ' + k.label]), 'Score final','Grade','Alertes'];
   const lines = [head.map(csvCell).join(';')].concat(res.results.map(r => [r.name, P.name, p.name,
@@ -2004,8 +2163,8 @@ function renderSettings(main, P) {
       <div class="set-grid">${P.scored.map(k => `<label>${k.label} (%)<input type="number" step="any" min="0" max="100" data-path="weights.${k.key}" value="${s.weights[k.key]}"></label>`).join('')}</div>
       <div class="sumline ${Math.abs(wsum - 100) > 1e-6 ? 'bad' : 'good'}" id="wsum">${sumText(wsum)}</div>
     </section>
-    <section class="panel"><h2>Objectifs</h2><p class="hint">Ces KPI sont notés proportionnellement : atteindre l'objectif donne 100 points, 90 % de l'objectif donne 90 points, etc. L'objectif vaut pour une période importée : si vous importez par quinzaine, c'est un objectif par quinzaine.</p>
-      <div class="set-grid">${targets.map(k => `<label>Objectif ${k.label} (${P.currency})<input type="number" step="any" min="0" data-path="targets.${k.key}" value="${s.targets[k.key]}"></label>`).join('')}</div>
+    <section class="panel"><h2>Objectifs</h2><p class="hint">Ces KPI sont notés proportionnellement : atteindre l'objectif donne 100 points, 90 % de l'objectif donne 90 points, etc. Les objectifs sont <strong>hebdomadaires</strong> (7 jours) : ils sont ajustés automatiquement à la durée de la période affichée (×2 sur 14 jours, environ ×4,3 sur un mois).</p>
+      <div class="set-grid">${targets.map(k => `<label>Objectif ${k.label} par semaine (${P.currency})<input type="number" step="any" min="0" data-path="targets.${k.key}" value="${s.targets[k.key]}"></label>`).join('')}</div>
     </section>
     <section class="panel"><h2>Paliers</h2><p class="hint">Une valeur obtient les points du palier le plus haut qu'elle atteint.</p>
       <div class="grid2">${banded.map(k => bandTable(P, k, s)).join('')}</div>
