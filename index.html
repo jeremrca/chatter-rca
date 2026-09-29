@@ -444,7 +444,7 @@ const RCA = (() => {
         {key:'conv', label:'Taux de conversion (unlock)', kind:'pct', pctRule:'unlock', scoring:'bands',
           derive:{from:['sold','proposed'], fn:(sold, prop) => prop > 0 ? sold / prop * 100 : null},
           aliases:['taux conv','taux conv %','taux de conversion','conversion','conversion rate','conv','taux conversion','unlock ratio','unlock']},
-        {key:'react', label:'Réactivité', kind:'seconds', scoring:'bands', lowerIsBetter:true,
+        {key:'react', label:'Réactivité', kind:'seconds', scoring:'bands', lowerIsBetter:true, missingZero:true,
           aliases:['reactivite','reactivity','temps de reponse','temps de reponse moyen','response time','avg response time','delai de reponse']},
         {key:'ppv', label:'CA PPV', kind:'money', dec:2, scoring:'info', optional:true,
           aliases:['ca ppv','ppv','ventes ppv','revenu ppv','ppv revenue']},
@@ -525,7 +525,7 @@ const RCA = (() => {
     const scores = {}, contrib = {};
     let total = 0;
     for (const k of P.scored) {
-      scores[k.key] = k.scoring === 'target' ? propScore(row[k.key], s.targets[k.key]) : bandScore(row[k.key], s.bands[k.key]);
+      scores[k.key] = row[k.key] == null ? 0 : k.scoring === 'target' ? propScore(row[k.key], s.targets[k.key]) : bandScore(row[k.key], s.bands[k.key]);
       contrib[k.key] = scores[k.key] * s.weights[k.key] / 100;
       total += contrib[k.key];
     }
@@ -747,7 +747,7 @@ const RCA = (() => {
     for (let r = headerRow + 1; r < grid.length; r++) {
       const cells = grid[r] || [];
       if (!cells.some(c => cellText(c).trim() !== '')) continue;
-      const issues = [];
+      const issues = [], notes = [];
       const name = mapping.name >= 0 ? cellText(cells[mapping.name]).trim().replace(/\s+/g, ' ') : '';
       if (!name) issues.push({sev:'error', msg:'Nom du chatter vide'});
       const values = {}, derived = {};
@@ -756,7 +756,11 @@ const RCA = (() => {
         values[k.key] = null;
         if (idx < 0) continue;
         const p = k.kind === 'seconds' ? parseDuration(cells[idx]) : parseCell(cells[idx]);
-        if (p.empty) { if (!k.optional) issues.push({sev:'error', msg:`Valeur manquante : ${k.label}`}); continue; }
+        if (p.empty) {
+          if (k.missingZero) notes.push(`${k.label} non mesurée (« ${p.text || 'vide'} ») : 0 point sur ce critère`);
+          else if (!k.optional) issues.push({sev:'error', msg:`Valeur manquante : ${k.label}`});
+          continue;
+        }
         if (p.invalid) { issues.push({sev:'error', msg:`Valeur non numérique pour ${k.label} (« ${p.text} »)`}); continue; }
         if (p.value < 0) { issues.push({sev:'error', msg:`Valeur négative pour ${k.label}`}); continue; }
         const v = k.kind === 'pct' ? toPercent(p, k.pctRule) : r6(p.value);
@@ -774,7 +778,11 @@ const RCA = (() => {
         } else if (!issues.some(i => i.sev === 'error')) issues.push({sev:'error', msg:`Valeur manquante : ${k.label}`});
       }
       if (name && TOTAL_RE.test(name)) issues.push({sev:'warn', msg:'Ressemble à une ligne de total'});
-      out.push({line: r + 1, name, values, derived, issues, include: false});
+      // Comptes qui ne sont pas des chatters actifs : exclus par défaut, à cocher si besoin
+      if (/acc[eè]s\s+r[eé]voqu[eé]/i.test(name)) issues.push({sev:'warn', msg:'Accès révoqué : exclu par défaut'});
+      else if (/@/.test(name)) issues.push({sev:'warn', msg:'Adresse e-mail, pas un chatter : exclue par défaut'});
+      else if (/superviseu?r|\bsup\b/i.test(name)) issues.push({sev:'warn', msg:'Superviseur : exclu par défaut'});
+      out.push({line: r + 1, name, values, derived, issues, notes, include: false});
     }
     const counts = {};
     out.forEach(o => { if (o.name) { const k = o.name.toLowerCase(); counts[k] = (counts[k] || 0) + 1; } });
@@ -1402,7 +1410,7 @@ function renderNav(rt) {
         if (s.link) { const on = rt.pid === pid && rt.page === s.link; return `<a href="#${pid}/${s.link}" class="nav-top ${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span></a>`; }
         const key = `${pid}-${s.id}`, open = !!ui.navOpen[key], inside = rt.pid === pid && s.pages.some(([k]) => k === rt.page);
         return `<button type="button" class="nav-sec ${inside ? 'has-on' : ''}" data-sec="${key}" aria-expanded="${open}" title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
-          <div class="nav-sub" ${open ? '' : 'hidden'}>${s.pages.map(([k, l]) => { const on = rt.pid === pid && rt.page === k; return `<a href="#${pid}/${k}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(l)} ${P.name}">${icon(k)}<span>${esc(l)}</span></a>`; }).join('')}</div>`;
+          <div class="nav-sub" ${open ? '' : 'hidden'}>${s.pages.filter(([k]) => k !== 'settings' || Sync.canManage()).map(([k, l]) => { const on = rt.pid === pid && rt.page === k; return `<a href="#${pid}/${k}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(l)} ${P.name}">${icon(k)}<span>${esc(l)}</span></a>`; }).join('')}</div>`;
       }).join('')}</div>`;
   }).join('');
 }
@@ -1443,7 +1451,7 @@ function render() {
   else if (rt.page === 'analytics') renderAnalytics(main, P);
   else if (rt.page === 'history') renderHistory(main, P);
   else if (rt.page === 'import') renderImport(main, P);
-  else if (rt.page === 'settings') renderSettings(main, P);
+  else if (rt.page === 'settings') Sync.canManage() ? renderSettings(main, P) : (main.innerHTML = topbar(P, 'Paramètres', false) + `<div class="panel empty"><h2 style="font-size:18px">Réservé aux administrateurs</h2><p class="hint" style="margin:6px auto 0;max-width:440px">Les paramètres de notation ne peuvent être modifiés que par les administrateurs de l'agence. Vous pouvez consulter les tableaux de bord et importer des données.</p></div>`);
   bindTopbar(P);
 }
 
@@ -1578,6 +1586,7 @@ function observations(P, r, res) {
       else o.push([share < 50 ? 'crit' : 'warn', `${k.label} sous l'objectif : ${fmtK(P, k, v)} sur ${fmtK(P, k, t)} (${num(share, 0)} %), il manque ${fmtK(P, k, t - v)}.`]);
     } else {
       if (r.critical && k.key === c.kpi) continue;
+      if (v == null) { o.push(['crit', `${k.label} non mesurée dans l'import : 0 point sur ce critère.`]); continue; }
       const imp = improvement(k, v, s.bands[k.key]);
       const lowest = Math.min(...s.bands[k.key].map(b => b[1]));
       if (sc >= 100) o.push(['good', `Excellent ${k.label} (${fmtK(P, k, v)}) : palier maximum atteint.`]);
@@ -1684,8 +1693,8 @@ function renderAnalytics(main, P) {
   const s = allSettings[P.id], res = store.results(p.id), st = res.stats;
   const rows = P.scored.map(k => {
     const t = kpiTarget(P, k, s);
-    const meeting = res.results.filter(r => t.meets(r.row[k.key])).length;
-    return {k, t, avg: st.avg[k.key], avgScore: st.avgScores[k.key], meeting, below: !t.meets(st.avg[k.key])};
+    const meeting = res.results.filter(r => r.row[k.key] != null && t.meets(r.row[k.key])).length;
+    return {k, t, avg: st.avg[k.key], avgScore: st.avgScores[k.key], meeting, below: st.avg[k.key] == null || !t.meets(st.avg[k.key])};
   });
   const below = rows.filter(r => r.below);
   main.innerHTML = topbar(P, `Analyse d'équipe`, true) + `<div class="stack">
@@ -1830,7 +1839,7 @@ function renderImport(main, P) {
       ${P.fields.map(f => { const t = tagFor(f); return `<div class="maprow"><strong>${f.label}${f.scoring === 'info' ? ' <span class="sub">(info)</span>' : ''}</strong>
         <select data-map="${f.key}"><option value="-1">${t === 'derived' ? 'Calculé (Vendu ÷ Proposé)' : 'Non associée'}</option>${d.headers.map((h, i) => `<option value="${i}" ${d.mapping[f.key] === i ? 'selected' : ''}>${esc(h || `(colonne ${i + 1})`)}</option>`).join('')}</select>
         <span class="tag ${t}">${TAG_LABEL[t]}</span></div>`; }).join('')}
-      <label class="check" style="margin-top:10px"><input type="checkbox" id="remember" ${d.remember ? 'checked' : ''}> Mémoriser les en-têtes choisis à la main comme alias pour les prochains imports ${P.name}</label>
+      ${Sync.canManage() ? `<label class="check" style="margin-top:10px"><input type="checkbox" id="remember" ${d.remember ? 'checked' : ''}> Mémoriser les en-têtes choisis à la main comme alias pour les prochains imports ${P.name}</label>` : ''}
     </section>
     <section class="panel"><h2>Validation</h2>
       <div class="summary"><span><b>${sum.total}</b>importé${sum.total > 1 ? 's' : ''}</span><span><b class="sc-hi">${sum.valid}</b>valide${sum.valid > 1 ? 's' : ''}</span><span><b class="${sum.review ? 'sc-mid' : ''}">${sum.review}</b>à vérifier</span><span><b>${sum.included}</b>seront notés</span></div>
@@ -1840,7 +1849,7 @@ function renderImport(main, P) {
         ${d.rows.map((r, i) => ({r, i})).filter(x => !d.onlyIssues || x.r.issues.length).map(({r, i}) => { const err = r.issues.some(x => x.sev === 'error'); return `<tr class="${err ? 'issue-error' : r.issues.length ? 'issue-warn' : ''}">
           <td><input type="checkbox" data-inc="${i}" ${r.include ? 'checked' : ''} ${err ? 'disabled' : ''} aria-label="Inclure ${esc(r.name)}"></td><td class="num">${r.line}</td><td>${esc(r.name) || '<span class="sub">vide</span>'}</td>
           ${P.kpis.map(k => `<td class="num">${r.values[k.key] == null ? '<span class="sub">—</span>' : fmtK(P, k, r.values[k.key]) + (r.derived[k.key] ? '<span class="sub">calc.</span>' : '')}</td>`).join('')}
-          <td class="issues">${r.issues.map(x => esc(x.msg)).join(' ; ')}</td></tr>`; }).join('') || `<tr><td colspan="${P.kpis.length + 4}" class="empty">Toutes les lignes sont valides.</td></tr>`}
+          <td class="issues">${r.issues.map(x => esc(x.msg)).join(' ; ')}${(r.notes || []).length ? `<span class="muted" style="display:block">${(r.notes || []).map(esc).join(' ; ')}</span>` : ''}</td></tr>`; }).join('') || `<tr><td colspan="${P.kpis.length + 4}" class="empty">Toutes les lignes sont valides.</td></tr>`}
       </tbody></table></div>
     </section>
     <div class="savebar"><span class="msg ${blocker ? 'sc-lo' : 'sc-hi'}">${blocker ? esc(blocker) : `Prêt : ${plural(incl.length, 'chatter sera noté', 'chatters seront notés')}.`}</span>
@@ -1888,7 +1897,7 @@ function bindImport(P) {
   document.getElementById('d-start').addEventListener('change', e => { d.start = e.target.value; keep(); });
   document.getElementById('d-end').addEventListener('change', e => { d.end = e.target.value; keep(); });
   document.getElementById('d-label').addEventListener('input', e => { d.label = e.target.value; });
-  document.getElementById('remember').addEventListener('change', e => { d.remember = e.target.checked; });
+  document.getElementById('remember')?.addEventListener('change', e => { d.remember = e.target.checked; });
   document.getElementById('only-issues').addEventListener('change', e => { d.onlyIssues = e.target.checked; keep(); });
   document.querySelectorAll('[data-map]').forEach(sel => sel.addEventListener('change', () => {
     const f = sel.dataset.map, idx = Number(sel.value);
@@ -1904,8 +1913,8 @@ function bindImport(P) {
 function confirmImport(P) {
   const d = importDraft[P.id];
   const rows = d.rows.filter(r => r.include && !r.issues.some(i => i.sev === 'error')).map(r => ({name: r.name, ...r.values}));
-  if (rows.some(r => P.scored.some(k => r[k.key] == null))) { toast('Certaines lignes sélectionnées ont des KPI manquants.', true); return; }
-  if (d.remember) {
+  if (rows.some(r => P.scored.some(k => r[k.key] == null && !k.missingZero))) { toast('Certaines lignes sélectionnées ont des KPI manquants.', true); return; }
+  if (d.remember && Sync.canManage()) {
     const s = RCA.clone(allSettings[P.id]); let added = 0;
     for (const [k, man] of Object.entries(d.manual)) {
       const idx = d.mapping[k]; if (!man || idx < 0) continue;
@@ -1989,6 +1998,7 @@ function renderSettings(main, P) {
   const capOptions = P.scored.filter(k => k.kind === 'pct');
   const capK = P.kpi[s.caps.kpi];
   main.innerHTML = topbar(P, 'Paramètres', false) + `<div class="stack">
+    ${Sync.connected() && Sync.rolesConfigured() ? `<div class="alert ok">Vous êtes administrateur. Pour choisir qui d'autre peut modifier les paramètres : <a href="#${P.id}/partage">Partage des données → Qui peut modifier les paramètres</a>.</div>` : ''}
     <div class="alert ok">Ces paramètres ne s'appliquent qu'à ${P.name}. ${P.id === 'of' ? 'Les réglages MYM se trouvent dans Paramètres MYM.' : 'Les réglages OnlyFans se trouvent dans Paramètres OnlyFans.'}</div>
     <section class="panel"><h2>Poids des KPI</h2><p class="hint">Le score final est la somme des scores de chaque KPI multipliés par leur poids.${P.kpis.some(k => k.scoring === 'info') ? ` ${listFr(P.kpis.filter(k => k.scoring === 'info').map(k => k.label))} sont affichés sans être notés.` : ''}</p>
       <div class="set-grid">${P.scored.map(k => `<label>${k.label} (%)<input type="number" step="any" min="0" max="100" data-path="weights.${k.key}" value="${s.weights[k.key]}"></label>`).join('')}</div>
@@ -2079,6 +2089,7 @@ function mergeAsvSettings(x) {
 }
 const asvState = (() => { const s = lsGet(LS_ASV, null) || {models:[], entries:[]}; s.models ||= []; s.entries ||= []; s.settings = mergeAsvSettings(s.settings); return s; })();
 const saveAsv = () => { lsSet(LS_ASV, asvState); Sync.changed('asv'); };
+const saveAsvCfg = () => { lsSet(LS_ASV, asvState); Sync.changed('asvcfg'); };
 const asvUI = {period:{}, draft:{of:null, mym:null}, allLines:{of:false, mym:false}, compare:{of:false, mym:false}};
 const aid = () => 'm' + Math.random().toString(36).slice(2, 10);
 const modelsOf = (pid, withArchived) => asvState.models.filter(m => m.platform === pid && (withArchived || !m.archived)).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
@@ -2235,7 +2246,7 @@ function neonShell(P, sub, body, withPeriod) {
     : `<div class="neon-hero center">${pbadge(P, true)}<h1 class="neon-title">Analyse ASV <span>${P.name}</span></h1></div>`;
   return `<header class="nh"><div class="nh-brand"><b>REDES CONTENT AGENCY</b><span>${caption}</span></div>
       <div class="nh-period ${global ? 'gold' : ''}">${r ? esc(periodUpper(r)) : ''}</div></header>
-    <nav class="ntabs" aria-label="Sections ASV">${ASV_TABS.map(([k, l]) => `<a href="#${P.id}/asv/${k}" class="${k === sub ? 'on' : ''}" ${k === sub ? 'aria-current="page"' : ''}>${l}</a>`).join('')}</nav>
+    <nav class="ntabs" aria-label="Sections ASV">${ASV_TABS.filter(t => t[0] !== 'reglages' || Sync.canManage()).map(([k, l]) => `<a href="#${P.id}/asv/${k}" class="${k === sub ? 'on' : ''}" ${k === sub ? 'aria-current="page"' : ''}>${l}</a>`).join('')}</nav>
     ${hero}
     ${withPeriod ? `<div class="nc nperiod">${periodControls(P.id, 'main', periodOf(P.id))}${r ? (() => { const pv = ASVE.previousRange(r.start, r.end), pm = ASVE.monthRange(pv.start.slice(0, 7)); const half = pv.start.slice(0, 7) === pv.end.slice(0, 7) && (pm.start !== pv.start || pm.end !== pv.end);
       return `<span class="muted" style="margin-left:auto;font-size:12.5px">Comparée à : ${esc(fmtRange(pv.start, pv.end))}${half ? ` (à défaut : ${esc(monthLabel(pv.start.slice(0, 7)))} entier)` : ''}</span>`; })() : '<span class="sc-lo">Plage de dates invalide.</span>'}</div>` : ''}
@@ -2243,7 +2254,7 @@ function neonShell(P, sub, body, withPeriod) {
     <footer class="nfoot">Suivi ASV — rapport généré automatiquement</footer>`;
 }
 function renderASV(main, P, sub) {
-  if (!ASV_TABS.some(t => t[0] === sub)) sub = 'dashboard';
+  if (!ASV_TABS.some(t => t[0] === sub) || (sub === 'reglages' && !Sync.canManage())) sub = 'dashboard';
   applyNeon(main, sub === 'general' ? 'rank' : sub === 'priorites' ? 'priority' : P.id);
   const hasData = entriesOf(P.id).length > 0;
   const r = rangeOf(P.id);
@@ -2554,24 +2565,24 @@ function drawImport(P) {
       ${showFans ? `<td class="num">${fint(x.fans)}</td>` : ''}${showRev ? `<td class="num">${x.revenue == null ? '<span class="muted">—</span>' : fa(P.id, x.revenue)}</td>` : ''}
       <td class="num"><strong>${x.asv == null ? '<span class="sc-lo">0 abonné</span>' : fa(P.id, x.asv)}</strong>${recalc ? ' <span class="muted" style="font-size:11px">recalculé</span>' : ''}${gap ? ` <span class="dlt down" title="L'ASV du fichier (${fa(P.id, x.given)}) diffère de l'ASV recalculé. Le recalcul est utilisé.">écart</span>` : ''}</td></tr>`; }).join('')}
     </tbody></table></div>
-    <label class="check" style="margin-top:10px"><input type="checkbox" id="asv-remember" ${st.remember ? 'checked' : ''}> Mémoriser les noms modifiés pour les prochains imports</label>
+    ${Sync.canManage() ? `<label class="check" style="margin-top:10px"><input type="checkbox" id="asv-remember" ${st.remember ? 'checked' : ''}> Mémoriser les noms modifiés pour les prochains imports</label>` : ''}
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap">
       ${r ? '' : '<span class="sc-lo">Choisissez une période valide à l’étape 1.</span>'}
       <button class="btn primary big" id="asv-confirm" type="button" ${r && incl.length ? '' : 'disabled'}>Importer ${plural(incl.length, 'modèle', 'modèles')}${r ? ` sur ${esc(periodUpper(r))}` : ''}</button></div>`;
   prev.querySelectorAll('[data-ainc]').forEach(cb => cb.addEventListener('change', () => { st.rows[+cb.dataset.ainc].include = cb.checked; drawImport(P); }));
   prev.querySelectorAll('[data-aname]').forEach(inp => inp.addEventListener('change', () => { st.rows[+inp.dataset.aname].name = inp.value.trim() || st.rows[+inp.dataset.aname].handle; drawImport(P); }));
-  document.getElementById('asv-remember').addEventListener('change', e => { st.remember = e.target.checked; });
+  document.getElementById('asv-remember')?.addEventListener('change', e => { st.remember = e.target.checked; });
   document.getElementById('asv-confirm').addEventListener('click', () => {
     const r2 = impRange(st); if (!r2) return;
-    let created = 0, updated = 0, newModels = 0;
+    let created = 0, updated = 0, newModels = 0, mapChanged = false;
     for (const x of st.rows.filter(x => x.include && x.asv != null)) {
       const {m, created: isNew} = modelFor(P, x.name);
       if (isNew) newModels++;
       const res = ASVE.applyImport(asvState, m.id, r2.start, r2.end, x, st.source || 'texte collé');
       res.updated ? updated++ : created++;
-      if (st.remember && x.name !== x.origName) asvState.settings.mapping[ASVE.stripSuffix(x.handle)] = x.name;
+      if (st.remember && Sync.canManage() && x.name !== x.origName) { asvState.settings.mapping[ASVE.stripSuffix(x.handle)] = x.name; mapChanged = true; }
     }
-    saveAsv();
+    saveAsv(); if (mapChanged) saveAsvCfg();
     asvUI.period[P.id] = {...st.p};
     asvUI.imp[P.id] = null;
     toast(`${periodUpper(r2)} : ${plural(created + updated, 'modèle importée', 'modèles importées')}${updated ? ` (dont ${updated} remplacée${updated > 1 ? 's' : ''})` : ''}${newModels ? `, ${plural(newModels, 'nouvelle modèle', 'nouvelles modèles')}` : ''}.`);
@@ -2602,21 +2613,21 @@ function drawImportMulti(P, st, status, prev) {
       ${x.values.map(v => `<td class="num">${v == null ? '<span class="muted">—</span>' : `<strong>${fa(P.id, v)}</strong>`}</td>`).join('')}</tr>`; }).join('')}
     </tbody></table></div>
     <p class="muted small" style="margin:8px 0 0">Une case vide (—) ne modifie rien sur cette période.</p>
-    <label class="check" style="margin-top:8px"><input type="checkbox" id="asv-remember" ${st.remember ? 'checked' : ''}> Mémoriser les noms modifiés pour les prochains imports</label>
+    ${Sync.canManage() ? `<label class="check" style="margin-top:8px"><input type="checkbox" id="asv-remember" ${st.remember ? 'checked' : ''}> Mémoriser les noms modifiés pour les prochains imports</label>` : ''}
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap">
       <button class="btn primary big" id="asv-confirm" type="button" ${nVals ? '' : 'disabled'}>Importer ${plural(nVals, 'valeur', 'valeurs')} sur ${plural(per.length, 'période', 'périodes')}</button></div>`;
   prev.querySelectorAll('[data-ainc]').forEach(cb => cb.addEventListener('change', () => { st.rows[+cb.dataset.ainc].include = cb.checked; drawImport(P); }));
   prev.querySelectorAll('[data-aname]').forEach(inp => inp.addEventListener('change', () => { st.rows[+inp.dataset.aname].name = inp.value.trim() || st.rows[+inp.dataset.aname].handle; drawImport(P); }));
-  document.getElementById('asv-remember').addEventListener('change', e => { st.remember = e.target.checked; });
+  document.getElementById('asv-remember')?.addEventListener('change', e => { st.remember = e.target.checked; });
   document.getElementById('asv-confirm').addEventListener('click', () => {
-    let vals = 0, newModels = 0;
+    let vals = 0, newModels = 0, mapChanged = false;
     for (const x of st.rows.filter(x => x.include)) {
       const {m, created} = modelFor(P, x.name);
       if (created) newModels++;
       per.forEach((pp, j) => { const v = x.values[j]; if (v == null) return; ASVE.applyImport(asvState, m.id, pp.start, pp.end, {asv:v}, st.source || 'texte collé'); vals++; });
-      if (st.remember && x.name !== x.origName) asvState.settings.mapping[ASVE.stripSuffix(x.handle)] = x.name;
+      if (st.remember && Sync.canManage() && x.name !== x.origName) { asvState.settings.mapping[ASVE.stripSuffix(x.handle)] = x.name; mapChanged = true; }
     }
-    saveAsv();
+    saveAsv(); if (mapChanged) saveAsvCfg();
     const last = per[per.length - 1];
     asvUI.period[P.id] = periodFromData(last.start, last.end);
     asvUI.imp[P.id] = null;
@@ -2722,13 +2733,13 @@ function bindAsvReglages(main, P) {
     for (const line of document.getElementById('set-map').value.split('\n')) { const [h, ...n] = line.split('='); if (h && h.trim() && n.join('=').trim()) mapping[h.trim()] = n.join('=').trim(); }
     Object.assign(asvState.settings[P.id], {paliers: [...new Set(pal)].sort((a, b) => a - b), dropAlert: drop});
     asvState.settings.eurToUsd = rate; asvState.settings.mapping = mapping;
-    saveAsv(); toast(`Réglages ASV enregistrés.`); render();
+    saveAsvCfg(); toast(`Réglages ASV enregistrés.`); render();
   });
   document.getElementById('asv-set-reset').addEventListener('click', async () => {
     if (!(await modal('Rétablir les réglages ASV', `<p>Remettre les paliers ${P.name} à 5 / 8 / 10, l'alerte à 10 %, le taux à 1 et la table de correspondance d'origine ?</p>`, 'Rétablir'))) return;
     const d = ASVE.clone(ASVE.DEFAULTS);
     asvState.settings[P.id] = d[P.id]; asvState.settings.eurToUsd = d.eurToUsd; asvState.settings.mapping = d.mapping;
-    saveAsv(); toast('Réglages ASV par défaut rétablis.'); render();
+    saveAsvCfg(); toast('Réglages ASV par défaut rétablis.'); render();
   });
 }
 
@@ -2737,9 +2748,12 @@ function bindAsvReglages(main, P) {
    Trois blocs sont partagés : « periods » (chatters OF + MYM), « settings » (paramètres de notation), « asv ».
    ===================================================================== */
 const Sync = (() => {
-  const KEYS = ['periods', 'settings', 'asv'];
+  const KEYS = ['periods', 'settings', 'asv', 'asvcfg'];
+  // Paramètres de notation et réglages ASV : modifiables uniquement par les administrateurs (vérifié aussi côté Supabase)
+  const PROTECTED = new Set(['settings', 'asvcfg']);
+  let isAdmin = true, rolesConfigured = false, admins = [], noCfgRow = false;
   const LS_CFG = 'rca.sync.cfg', LS_SES = 'rca.sync.session', LS_META = 'rca.sync.meta';
-  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: [], settings: null}};
+  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: []}, asvcfg: {}};
   const clone = o => JSON.parse(JSON.stringify(o ?? null));
   const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
   let session = lsGet(LS_SES, null);
@@ -2759,7 +2773,8 @@ const Sync = (() => {
   function getData(key) {
     if (key === 'periods') return clone(store.periods);
     if (key === 'settings') return clone({of: allSettings.of, mym: allSettings.mym});
-    return clone({models: asvState.models, entries: asvState.entries, settings: asvState.settings});
+    if (key === 'asvcfg') return clone(asvState.settings);
+    return clone({models: asvState.models, entries: asvState.entries});
   }
   function setData(key, data) {
     if (key === 'periods') {
@@ -2769,15 +2784,16 @@ const Sync = (() => {
     } else if (key === 'settings') {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
+    } else if (key === 'asvcfg') {
+      if (data && Object.keys(data).length) { asvState.settings = mergeAsvSettings(data); lsSet(LS_ASV, asvState); }
     } else {
       asvState.models = Array.isArray(data?.models) ? data.models : [];
       asvState.entries = Array.isArray(data?.entries) ? data.entries : [];
-      asvState.settings = mergeAsvSettings(data?.settings || null);
       lsSet(LS_ASV, asvState);
     }
   }
   const hasLocal = key => key === 'periods' ? store.periods.length > 0 : key === 'asv' ? asvState.models.length > 0 || asvState.entries.length > 0 : true;
-  const remoteEmpty = (key, d) => key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : !d || !d.of;
+  const remoteEmpty = (key, d) => key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
 
   /* ---------- Fusion à trois (base commune, local, distant) ---------- */
   function mergeById(b = [], l = [], r = []) {
@@ -2796,7 +2812,8 @@ const Sync = (() => {
     b = b ?? clone(EMPTY[key]);
     if (key === 'periods') return mergeById(b, l, r);
     if (key === 'settings') return preferRemote ? r : {of: pick(b.of, l.of, r.of), mym: pick(b.mym, l.mym, r.mym)};
-    return {models: mergeById(b.models, l.models, r?.models), entries: mergeById(b.entries, l.entries, r?.entries), settings: preferRemote && r?.settings ? r.settings : pick(b.settings, l.settings, r?.settings)};
+    if (key === 'asvcfg') return preferRemote ? r : pick(b, l, r);
+    return {models: mergeById(b.models, l.models, r?.models), entries: mergeById(b.entries, l.entries, r?.entries)};
   }
 
   /* ---------- Accès à l'API ---------- */
@@ -2825,13 +2842,30 @@ const Sync = (() => {
     const b = await api('/auth/v1/token?grant_type=password', {method: 'POST', body: JSON.stringify({email, password})}, false);
     keepSession(b);
     meta.version = {}; meta.base = {}; saveMeta();
-    firstDone = false;
+    firstDone = false; isAdmin = false; rolesConfigured = false;
     await pull(true);
     start();
   }
   function logout() {
     session = null; lsSet(LS_SES, null); stop(); render();
   }
+
+  /* ---------- Rôles ---------- */
+  async function refreshRoles() {
+    const before = isAdmin;
+    try {
+      admins = (await api('/rest/v1/admins?select=email,added_at&order=added_at.asc')) || [];
+      rolesConfigured = true;
+      isAdmin = admins.some(a => String(a.email).toLowerCase() === String(session.email || '').toLowerCase());
+    } catch (e) {
+      if (e.offline) throw e;
+      rolesConfigured = false; admins = []; isAdmin = true;   // table des administrateurs pas encore créée : comportement d'avant
+    }
+    return before !== isAdmin;
+  }
+  const canManage = () => !connected() || isAdmin;
+  async function addAdmin(email) { await api('/rest/v1/admins', {method: 'POST', headers: {Prefer: 'return=representation'}, body: JSON.stringify({email: email.trim().toLowerCase()})}); await refreshRoles(); }
+  async function removeAdmin(email) { await api(`/rest/v1/admins?email=eq.${encodeURIComponent(email)}`, {method: 'DELETE'}); await refreshRoles(); }
 
   /* ---------- Synchronisation ---------- */
   async function pull(first = false) {
@@ -2840,13 +2874,27 @@ const Sync = (() => {
     let changedBy = null, changed = false;
     try {
       if (session.expires_at - Date.now() < 60000) await refresh();
+      if (await refreshRoles()) changed = true;
       const rows = await api('/rest/v1/app_state?select=key,data,version,updated_by');
+      let legacyAsvCfg = null; noCfgRow = false;
       for (const key of KEYS) {
         const row = (rows || []).find(x => x.key === key);
-        if (!row) throw new Error(`La table app_state ne contient pas la ligne « ${key} » : relancez le script SQL.`);
+        if (!row) {
+          if (key === 'asvcfg') {   // ligne pas encore créée (ancien script SQL) : on lit les réglages ASV de l'ancien format
+            noCfgRow = true;
+            if (legacyAsvCfg && !same(legacyAsvCfg, asvState.settings) && !dirty.has('asvcfg')) { setData('asvcfg', legacyAsvCfg); changed = true; }
+            continue;
+          }
+          throw new Error(`La table app_state ne contient pas la ligne « ${key} » : relancez le script SQL.`);
+        }
+        if (key === 'asv' && row.data && row.data.settings) legacyAsvCfg = row.data.settings;
         const known = meta.version[key];
+        if (key === 'asvcfg' && remoteEmpty(key, row.data) && legacyAsvCfg && known === undefined) {
+          setData('asvcfg', legacyAsvCfg); changed = true;   // reprise des réglages ASV enregistrés avec l'ancienne version
+          meta.version[key] = row.version; meta.base[key] = clone(row.data); if (isAdmin) dirty.add(key); continue;
+        }
         if (first && known === undefined) {
-          if (row.version === 0 || remoteEmpty(key, row.data)) { if (hasLocal(key)) dirty.add(key); meta.version[key] = row.version; meta.base[key] = clone(row.data); continue; }
+          if (row.version === 0 || remoteEmpty(key, row.data)) { if (hasLocal(key) && (!PROTECTED.has(key) || isAdmin)) dirty.add(key); meta.version[key] = row.version; meta.base[key] = clone(row.data); continue; }
           if (hasLocal(key) && key !== 'settings') {
             const merged = merge(key, EMPTY[key], getData(key), row.data, true);
             setData(key, merged); if (!same(merged, row.data)) dirty.add(key);
@@ -2870,6 +2918,7 @@ const Sync = (() => {
     return changed;
   }
   async function pushKey(key, attempt = 0) {
+    if ((PROTECTED.has(key) && !isAdmin) || (key === 'asvcfg' && noCfgRow)) { dirty.delete(key); return; }
     const local = getData(key), v = meta.version[key] ?? 0;
     const rows = await api(`/rest/v1/app_state?key=eq.${key}&version=eq.${v}`, {method: 'PATCH', headers: {Prefer: 'return=representation'},
       body: JSON.stringify({data: local, version: v + 1, updated_at: new Date().toISOString(), updated_by: session.email || null})});
@@ -2879,6 +2928,10 @@ const Sync = (() => {
       return;
     }
     // Quelqu'un a enregistré entre-temps : on récupère sa version, on fusionne, on réessaie.
+    if (PROTECTED.has(key) && attempt >= 1) {
+      await refreshRoles();
+      if (!isAdmin) { setData(key, meta.base[key]); dirty.delete(key); render(); throw new Error('Seuls les administrateurs peuvent modifier les paramètres.'); }
+    }
     if (attempt >= 4) throw new Error('Trop de modifications simultanées, réessayez dans un instant.');
     busy = false; await pull(); busy = true;
     return pushKey(key, attempt + 1);
@@ -2892,7 +2945,7 @@ const Sync = (() => {
     finally { busy = false; }
   }
   function scheduleFlush(ms = 300) { clearTimeout(flushTimer); flushTimer = setTimeout(flush, ms); }
-  function changed(key) { if (!connected()) return; dirty.add(key); setStatus('pending'); scheduleFlush(); }
+  function changed(key) { if (!connected() || (PROTECTED.has(key) && !isAdmin)) return; dirty.add(key); setStatus('pending'); scheduleFlush(); }
   async function poll() {
     if (!connected() || busy || document.visibilityState === 'hidden') return;
     try {
@@ -2918,7 +2971,7 @@ const Sync = (() => {
     const ago = lastSync ? Math.max(0, Math.round((Date.now() - lastSync) / 1000)) : null;
     const label = {sync: 'Synchronisation…', saving: 'Enregistrement…', pending: 'Modifications en attente…', offline: 'Hors ligne · modifications gardées', error: 'Erreur de synchronisation', ok: `Partagé · à jour${ago != null && ago > 20 ? ` (il y a ${ago < 90 ? ago + ' s' : Math.round(ago / 60) + ' min'})` : ''}`, idle: 'Connexion…'}[status];
     el.className = 'sync ' + (status === 'ok' ? 'ok' : status === 'error' || status === 'offline' ? 'bad' : 'wait');
-    el.innerHTML = `<a href="#of/partage" class="sync-link" title="${esc(lastError)}"><span class="dot"></span>${esc(label)}</a><span class="sync-who">${esc(session.email || '')}</span>`;
+    el.innerHTML = `<a href="#of/partage" class="sync-link" title="${esc(lastError)}"><span class="dot"></span>${esc(label)}</a><span class="sync-who">${esc(session.email || '')}${rolesConfigured ? ` · ${isAdmin ? 'Administrateur' : 'Équipe'}` : ''}</span>`;
   }
   setInterval(drawStatus, 30000);
 
@@ -2928,7 +2981,8 @@ const Sync = (() => {
   }
   return {configured, connected, cfg, login, logout, pull, changed, init, drawStatus, status: () => status, lastError: () => lastError,
     saveLocalCfg(url, key) { lsSet(LS_CFG, url ? {url, anonKey: key} : null); session = null; lsSet(LS_SES, null); meta.version = {}; meta.base = {}; saveMeta(); drawStatus(); },
-    needsLogin: () => configured() && !session, email: () => session?.email || '', _merge: merge};
+    needsLogin: () => configured() && !session, email: () => session?.email || '', _merge: merge,
+    canManage, isAdmin: () => isAdmin, rolesConfigured: () => rolesConfigured, admins: () => admins.slice(), addAdmin, removeAdmin, refreshRoles};
 })();
 
 /* ---------- Écrans : connexion et page « Partage des données » ---------- */
@@ -2963,12 +3017,34 @@ function renderPartage(main) {
            <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="sy-now" type="button">Synchroniser maintenant</button><button class="btn danger" id="sy-out" type="button">Se déconnecter</button></div>
            ${Sync.lastError() ? `<div class="alert err" style="margin-top:12px">${esc(Sync.lastError())}</div>` : ''}`}
     </section>
+    ${Sync.connected() ? `<section class="panel" id="roles"><h2>Qui peut modifier les paramètres</h2>
+      ${!Sync.rolesConfigured() ? `<p class="hint">Les droits ne sont pas encore activés : pour l'instant, toute personne connectée peut modifier les paramètres. Exécutez le script SQL « rôles » dans Supabase pour les activer.</p>`
+      : Sync.isAdmin() ? `<p class="hint">Les administrateurs voient et modifient tout, y compris les paramètres de notation et les réglages ASV. Les autres comptes voient les tableaux de bord et importent des données, sans accès aux paramètres.</p>
+        <div class="tbl-wrap" style="max-height:none;margin-bottom:12px"><table><thead><tr><th>Administrateur</th><th></th></tr></thead><tbody>
+        ${Sync.admins().map(a => { const me = a.email.toLowerCase() === Sync.email().toLowerCase(); const alone = Sync.admins().length === 1;
+          return `<tr><td>${esc(a.email)}${me ? ' <span class="sub">(vous)</span>' : ''}</td><td class="num">${me && alone ? '<span class="sub">dernier administrateur</span>' : `<button class="btn danger" type="button" data-unadmin="${esc(a.email)}">Retirer l'accès</button>`}</td></tr>`; }).join('')}
+        </tbody></table></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"><label style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted);flex:1;min-width:240px">E-mail du compte à promouvoir (il doit déjà exister dans Supabase)<input type="email" id="new-admin" placeholder="prenom@exemple.com"></label>
+        <button class="btn primary" id="add-admin" type="button">Donner l'accès aux paramètres</button></div>`
+      : `<p>Votre compte a un accès <strong>Équipe</strong> : vous voyez les tableaux de bord et vous pouvez importer, mais seuls les administrateurs modifient les paramètres.</p><p class="hint">Administrateurs : ${Sync.admins().map(a => esc(a.email)).join(', ') || '—'}</p>`}
+    </section>` : ''}
     ${c && c.embedded ? '' : `<section class="panel"><h2>Relier à Supabase</h2><p class="hint">Collez l'adresse du projet et la clé publique (Project Settings → API). Ce réglage ne vaut que pour ce navigateur : pour vos superviseurs, envoyez ces deux valeurs à Claude, qui les intégrera au fichier index.html.</p>
       <div class="set-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))"><label>Project URL<input type="text" id="sy-url" placeholder="https://xxxx.supabase.co" value="${esc(c?.url || '')}"></label>
       <label>Clé publique (anon / publishable)<input type="text" id="sy-key" placeholder="eyJ… ou sb_publishable_…" value="${esc(c?.anonKey || '')}"></label></div>
       <div style="display:flex;gap:10px;margin-top:12px"><button class="btn primary" id="sy-save" type="button">Enregistrer et se connecter</button>${c ? '<button class="btn ghost" id="sy-clear" type="button">Revenir au mode local</button>' : ''}</div></section>`}
   </div>`;
   document.getElementById('sy-now')?.addEventListener('click', async () => { await Sync.pull(); toast('Synchronisation terminée.'); render(); });
+  document.getElementById('add-admin')?.addEventListener('click', async () => {
+    const email = document.getElementById('new-admin').value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Saisissez une adresse e-mail valide.', true); return; }
+    try { await Sync.addAdmin(email); toast(`${email} peut maintenant modifier les paramètres.`); render(); }
+    catch (e) { toast(/duplicate|conflict|23505/i.test(e.message) ? 'Ce compte est déjà administrateur.' : `Impossible d'ajouter : ${e.message}`, true); }
+  });
+  document.querySelectorAll('[data-unadmin]').forEach(b => b.addEventListener('click', async () => {
+    const email = b.dataset.unadmin;
+    if (!(await modal(`Retirer l'accès aux paramètres`, `<p><strong>${esc(email)}</strong> pourra toujours voir les tableaux de bord et importer, mais plus modifier les paramètres.</p>`, 'Retirer'))) return;
+    try { await Sync.removeAdmin(email); toast(`Accès retiré à ${email}.`); render(); } catch (e) { toast(`Impossible de retirer : ${e.message}`, true); }
+  }));
   document.getElementById('sy-out')?.addEventListener('click', () => Sync.logout());
   document.getElementById('sy-save')?.addEventListener('click', () => {
     const url = document.getElementById('sy-url').value.trim(), key = document.getElementById('sy-key').value.trim();
