@@ -418,9 +418,17 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .pchip.rep s{color:#f87171;opacity:.85}
 .pchip .arr{color:var(--faint);margin:0 3px}
 .pe-list{display:flex;flex-direction:column;gap:8px}
-.pe-row{display:grid;grid-template-columns:minmax(90px,1fr) auto minmax(120px,1.2fr) auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line-soft);border-radius:var(--r-sm);background:var(--bg)}
+.pe-row{display:grid;grid-template-columns:minmax(90px,1fr) auto auto minmax(120px,1.2fr) auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line-soft);border-radius:var(--r-sm);background:var(--bg)}
 .un-days{display:flex;gap:10px;flex-wrap:wrap}
 @media (max-width:620px){.pe-row{grid-template-columns:1fr 1fr}.ptab{min-width:56px}}
+.pc.cut{color:#c084fc;font-weight:700}
+.offwrap{display:inline-flex;align-items:center;gap:4px}
+.offtag{font-size:9.5px;font-weight:800;color:#1c1203;background:#f59e0b;border-radius:4px;padding:0 4px;line-height:14px}
+.pc.offc{text-decoration:underline dotted #f59e0b}
+.ptopt{display:flex;gap:6px;margin-bottom:14px}
+.ptopt button{padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-weight:700;cursor:pointer}
+.ptopt button.on{color:var(--text);border-color:var(--ember);background:linear-gradient(90deg,rgba(224,51,106,.16),rgba(91,63,208,.12))}
+.offbar{padding:12px 16px}
 </style>
 </head>
 <body>
@@ -2943,7 +2951,7 @@ function bindAsvReglages(main, P) {
    Contenu (affectations, absences, notes) : modifiable par toute l'équipe → clé partagée « planning ».
    Structure (liste des modèles) : administrateurs uniquement → clé partagée « plancfg ».
    ===================================================================== */
-const PLAN_SEED = {"week":"2026-09-28","models":[{"id":"mym-naya","name":"Naya","group":"mym"},{"id":"mym-thais","name":"Thais","group":"mym"},{"id":"mym-carla","name":"Carla","group":"mym"},{"id":"mym-ava-paid-subs","name":"Ava Paid Subs","group":"mym"},{"id":"mym-marie","name":"Marie","group":"mym"},{"id":"mym-flavie","name":"Flavie","group":"mym"},{"id":"mym-chloe","name":"Chloe","group":"mym"},{"id":"mym-eden","name":"Eden","group":"mym"},{"id":"mym-carla-baby","name":"Carla Baby","group":"mym"},{"id":"other-ava-reveal","name":"Ava Reveal","group":"other"},{"id":"mym-angel","name":"Angel","group":"mym"},{"id":"mym-charlotte","name":"Charlotte","group":"mym"},{"id":"mym-tia","name":"Tia","group":"mym"},{"id":"mym-steffy","name":"Steffy","group":"mym"},{"id":"mym-victoria","name":"Victoria","group":"mym"},{"id":"mym-anaelle","name":"Anaelle","group":"mym"},{"id":"other-lila-telegram","name":"Lila Telegram","group":"other"},{"id":"of-naya","name":"Naya","group":"of"},{"id":"of-angel","name":"Angel","group":"of"},{"id":"of-carla-baby","name":"Carla Baby","group":"of"},{"id":"of-steffy","name":"Steffy","group":"of"},{"id":"of-ava","name":"Ava","group":"of"},{"id":"of-mae","name":"Mae","group":"of"},{"id":"of-thais","name":"Thaïs","group":"of"},{"id":"of-flavie","name":"Flavie","group":"of"},{"id":"of-carla-trans","name":"Carla Trans","group":"of"},{"id":"of-marie","name":"Marie","group":"of"},{"id":"of-eden","name":"Eden","group":"of"},{"id":"of-lila","name":"Lila","group":"of"}],"cells":{"0|0|mym-naya":[{"n":"Narindra"}],"0|0|mym-thais":[{"n":"Rouchdiath"}],"0|0|mym-carla":[{"n":"Narindra"}],"0|0|mym-ava-paid-subs":[{"n":"Laura"},{"n":"Ny Antsa"}],"0|0|mym-marie":[{"n":"Rouchdiath"}],"0|0|mym-flavie":[{"n":"Narcisse"}],"0|0|mym-chloe":[{"n":"Daniella"}],"0|0|mym-eden":[{"n":"Daniella"}],"0|0|mym-carla-baby":[{"n":"Fitia"}],"0|0|other-ava-reveal":[{"n":"Ny Antsa"}],"0|0|mym-angel":[{"n":"Ilo"}],"0|0|mym-charlotte":[{"n":"Rojotiana"}],"0|0|mym-tia":[{"n":"Ilo"}],"0|0|mym-steffy":[{"n":"Raphael"}],"0|0|mym-victoria":[{"n":"Raphael"}],"0|0|mym-anaelle":[{"n":"Rojotiana"}],"0|0|of-naya":[{"n":"Kael"}],"0|0|of-angel":[{"n":"Jordy"}],"0|0|of-carla-baby":[{"n":"Kael"}],"0|0|of-steffy":[{"n":"Carlotta","r":"Guillaume"}],"0|0|of-ava":[{"n":"Carlotta"}],"0|0|of-mae":[{"n":"Jordy"}],"0|0|of-thais":[{"n":"Jordy"}],"0|0|of-flavie":[{"n":"Stéphie"}],"0|0|of-carla-trans":[{"n":"Manael"}],"0|0|of-marie":[{"n":"Manael"}],"0|0|of-eden":[{"n":"Geovith"}],"0|0|of-lila":[{"n":"Geovith"}],"0|1|mym-naya":[{"n":"Nekena"}],"0|1|mym-thais":[{"n":"Narindra"}],"0|1|mym-carla":[{"n":"Rocharlot"}],"0|1|mym-ava-paid-subs":[{"n":"Manuela"},{"n":"Elvis"},{"n":"Brandon"}],"0|1|mym-marie":[{"n":"Léonidas"},{"n":"Mazid"}],"0|1|mym-flavie":[{"n":"Stéphie"},{"n":"Tyavina"},{"n":"Jefferson"},{"n":"Daniella"}],"0|1|mym-chloe":[{"n":"Antonio"}],"0|1|mym-eden":[{"n":"Tsiky"},{"n":"Natty"},{"n":"Andro Marc","a":1},{"n":"Jerry"}],"0|1|mym-carla-baby":[{"n":"Tsoa","a":1},{"n":"Lys"},{"n":"Tanjona"},{"n":"Riantsoa"}],"0|1|other-ava-reveal":[{"n":"Brandon"}],"0|1|mym-angel":[{"n":"Nel"}],"0|1|mym-charlotte":[{"n":"Marc"},{"n":"Fenitra"},{"n":"Ambinitsoa"},{"n":"Fitia"},{"n":"Ornélie"}],"0|1|mym-tia":[{"n":"Narindra"}],"0|1|mym-steffy":[{"n":"Alex"},{"n":"Iako"}],"0|1|mym-victoria":[{"n":"Nekena"}],"0|1|mym-anaelle":[{"n":"Alex"},{"n":"Iako"}],"0|1|of-naya":[{"n":"Nelia"}],"0|1|of-angel":[{"n":"Jorès"}],"0|1|of-carla-baby":[{"n":"Sandy","a":1},{"n":"Valisoa"}],"0|1|of-steffy":[{"n":"Ferlin"}],"0|1|of-ava":[{"n":"Yoann"}],"0|1|of-mae":[{"n":"Mitia"}],"0|1|of-thais":[{"n":"Mitia"}],"0|1|of-flavie":[{"n":"Norosoa"},{"n":"Prisca"}],"0|1|of-carla-trans":[{"n":"Jorès"}],"0|1|of-marie":[{"n":"Manoa"}],"0|1|of-eden":[{"n":"Ferlin"}],"0|1|of-lila":[{"n":"Nelia"}],"0|2|mym-naya":[{"n":"Mahery Christian"},{"n":"Sitraka"}],"0|2|mym-thais":[{"n":"Lalaina"}],"0|2|mym-carla":[{"n":"Iako"}],"0|2|mym-ava-paid-subs":[{"n":"Njiva"},{"n":"Kanto"},{"n":"Steph"}],"0|2|mym-marie":[{"n":"Simone"},{"n":"Nathan"},{"n":"Nelly"}],"0|2|mym-flavie":[{"n":"Nix"},{"n":"Ben'j"},{"n":"Ismael"},{"n":"Jerry"},{"n":"Jefferson"},{"n":"Gracia"}],"0|2|mym-chloe":[{"n":"Hoby","a":1},{"n":"Mahery"},{"n":"Rocharlot"}],"0|2|mym-eden":[{"n":"Natty"},{"n":"Tojo"},{"n":"Manohisoa"},{"n":"Tsiky"}],"0|2|mym-carla-baby":[{"n":"Antoine"},{"n":"Sylvia"},{"n":"Finoana"},{"n":"Antonio"},{"n":"Gary"},{"n":"Tanjona"}],"0|2|other-ava-reveal":[{"n":"Njiva"}],"0|2|mym-angel":[{"n":"Andry"}],"0|2|mym-charlotte":[{"n":"Hasina"},{"n":"Ulrich"},{"n":"Sergio"},{"n":"Esperandos","a":1},{"n":"Jean François","a":1},{"n":"Dialy"}],"0|2|mym-tia":[{"n":"Stephen"}],"0|2|mym-steffy":[{"n":"Nekena"}],"0|2|mym-victoria":[{"n":"Nekena"}],"0|2|mym-anaelle":[{"n":"Fenitra"}],"0|2|of-naya":[{"n":"Styve"}],"0|2|of-angel":[{"n":"Geraldo"}],"0|2|of-carla-baby":[{"n":"Mackendji"},{"n":"Yousseinah"},{"n":"Toky"}],"0|2|of-steffy":[{"n":"Guillaume"}],"0|2|of-ava":[{"n":"Manoa"}],"0|2|of-mae":[{"n":"Béa"}],"0|2|of-thais":[{"n":"Béa"}],"0|2|of-flavie":[{"n":"Cynthia"},{"n":"Tatian"},{"n":"Valisoa"}],"0|2|of-carla-trans":[{"n":"Jorès"}],"0|2|of-marie":[{"n":"Ferlin"}],"0|2|of-eden":[{"n":"Dera"}],"0|2|of-lila":[{"n":"Styve"}],"0|3|mym-naya":[{"n":"Trésor"}],"0|3|mym-thais":[{"n":"Gerard"}],"0|3|mym-carla":[{"n":"Samsou"}],"0|3|mym-ava-paid-subs":[{"n":"Niry"},{"n":"Steph"},{"n":"Sarobidy"}],"0|3|mym-marie":[{"n":"Sitraka"},{"n":"Prince"},{"n":"Jerry Fady"}],"0|3|mym-flavie":[{"n":"Rivaldo"},{"n":"Rafik"},{"n":"Mahatsangy"},{"n":"Gildas"},{"n":"Quelent","a":1}],"0|3|mym-chloe":[{"n":"Billy"}],"0|3|mym-eden":[{"n":"Benedicte"},{"n":"Rijih"},{"n":"Ny Anjara","a":1}],"0|3|mym-carla-baby":[{"n":"Carlotta"},{"n":"Fanomezantsoa"},{"n":"Riantsoa"},{"n":"Sylvia"},{"n":"Daniella Tona"}],"0|3|other-ava-reveal":[{"n":"Niry"}],"0|3|mym-angel":[{"n":"Thomas"}],"0|3|mym-charlotte":[{"n":"Daniel"},{"n":"Harry"},{"n":"Jean François"}],"0|3|mym-tia":[{"n":"Tito"}],"0|3|mym-steffy":[{"n":"Charbel"}],"0|3|mym-victoria":[{"n":"Tafita"}],"0|3|mym-anaelle":[{"n":"Yannis"}],"0|3|of-naya":[{"n":"Lahatra","r":"Manael","a":1}],"0|3|of-angel":[{"n":"Jaunecy","r":"Tendry"}],"0|3|of-carla-baby":[{"n":"Sandy","a":1},{"n":"Geovith"},{"n":"Prisca"},{"n":"Toky"}],"0|3|of-steffy":[{"n":"Guillaume"},{"n":"Tsanta"}],"0|3|of-ava":[{"n":"Tsanta"}],"0|3|of-mae":[{"n":"Arnaud"}],"0|3|of-thais":[{"n":"Arnaud"}],"0|3|of-flavie":[{"n":"Ellah"},{"n":"Mandresy"},{"n":"Phalerus"},{"n":"Andy"}],"0|3|of-carla-trans":[{"n":"Guillaume"}],"0|3|of-marie":[{"n":"Manael"}],"0|3|of-eden":[{"n":"Tendry"}],"0|3|of-lila":[{"n":"Tendry"}],"1|0|mym-naya":[{"n":"Narindra"}],"1|0|mym-thais":[{"n":"Hasintsoa"}],"1|0|mym-carla":[{"n":"Narindra"}],"1|0|mym-ava-paid-subs":[{"n":"Laura"},{"n":"Ny Antsa"}],"1|0|mym-marie":[{"n":"Rouchdiath"}],"1|0|mym-flavie":[{"n":"Narcisse"},{"n":"Benj"}],"1|0|mym-chloe":[{"n":"Daniella"}],"1|0|mym-eden":[{"n":"Amboara"},{"n":"Stéphie","a":1}],"1|0|mym-carla-baby":[{"n":"Fitia"},{"n":"Vonjy"}],"1|0|other-ava-reveal":[{"n":"Ny Antsa"}],"1|0|mym-angel":[{"n":"Ilo"}],"1|0|mym-charlotte":[{"n":"Hasintsoa"},{"n":"Rojotiana"}],"1|0|mym-tia":[{"n":"Ilo"}],"1|0|mym-steffy":[{"n":"Raphael"}],"1|0|mym-victoria":[{"n":"Rojotiana"}],"1|0|mym-anaelle":[{"n":"Raphael"}],"1|0|of-naya":[{"n":"Géovith"}],"1|0|of-angel":[{"n":"Hoby"}],"1|0|of-carla-baby":[{"n":"Kael"}],"1|0|of-steffy":[{"n":"Carlotta"}],"1|0|of-ava":[{"n":"Carlotta"}],"1|0|of-mae":[{"n":"Kael"}],"1|0|of-thais":[{"n":"Manael"}],"1|0|of-flavie":[{"n":"Manael"}],"1|0|of-carla-trans":[{"n":"Hoby"}],"1|0|of-marie":[{"n":"Haywardine"}],"1|0|of-eden":[{"n":"Géovith"}],"1|0|of-lila":[{"n":"Haywardine"}],"1|1|mym-naya":[{"n":"Thierry","r":"Natty / Andro marc","a":1}],"1|1|mym-thais":[{"n":"Princy"}],"1|1|mym-carla":[{"n":"Marc"}],"1|1|mym-ava-paid-subs":[{"n":"Manuela"},{"n":"Elvis"},{"n":"Brandon"}],"1|1|mym-marie":[{"n":"Léonidas","a":1},{"n":"Mazid"},{"n":"Fitia"}],"1|1|mym-flavie":[{"n":"Jefferson"},{"n":"Stéphie","a":1},{"n":"Hasintsoa"},{"n":"Jerry"}],"1|1|mym-chloe":[{"n":"Antonio"}],"1|1|mym-eden":[{"n":"Natty"},{"n":"Andro Marc"}],"1|1|mym-carla-baby":[{"n":"Lys"},{"n":"Fitia"},{"n":"Tyavina"},{"n":"Tanjona"}],"1|1|other-ava-reveal":[{"n":"Brandon"}],"1|1|mym-angel":[{"n":"Alex"}],"1|1|mym-charlotte":[{"n":"Fenitra"},{"n":"Ambinintsoa"},{"n":"Ornélie"}],"1|1|mym-tia":[{"n":"Alex"}],"1|1|mym-steffy":[{"n":"Nel","r":"Rocharlot","a":1}],"1|1|mym-victoria":[{"n":"Riantsoa","r":"Rocharlot","a":1}],"1|1|mym-anaelle":[{"n":"Iako"}],"1|1|of-naya":[{"n":"Nirina","r":"Sandy","a":1}],"1|1|of-angel":[{"n":"Nirina","r":"Yoann","a":1}],"1|1|of-carla-baby":[{"n":"Olivia"}],"1|1|of-steffy":[{"n":"Manoa"}],"1|1|of-ava":[{"n":"Yoann"}],"1|1|of-mae":[{"n":"Mitia"}],"1|1|of-thais":[{"n":"Mitia"}],"1|1|of-flavie":[{"n":"Norosoa"},{"n":"Prisca"}],"1|1|of-carla-trans":[{"n":"Nelia"}],"1|1|of-marie":[{"n":"Manoa"}],"1|1|of-eden":[{"n":"Sandy"}],"1|1|of-lila":[{"n":"Nelia"}],"1|2|mym-naya":[{"n":"Mahery Christian","a":1},{"n":"Andry"},{"n":"Stephen"}],"1|2|mym-thais":[{"n":"Iako"}],"1|2|mym-carla":[{"n":"Rocharlot"}],"1|2|mym-ava-paid-subs":[{"n":"Njiva"},{"n":"Kanto"},{"n":"Dialy"},{"n":"Nix"}],"1|2|mym-marie":[{"n":"Simone"},{"n":"Nathan"},{"n":"Lalaina"},{"n":"Nelly"},{"n":"ansène"}],"1|2|mym-flavie":[{"n":"Ben'j"},{"n":"Ismael"},{"n":"Gracia"},{"n":"Jerry"},{"n":"Daniella"}],"1|2|mym-chloe":[{"n":"Hoby"},{"n":"Mahery"}],"1|2|mym-eden":[{"n":"Manohisoa"},{"n":"Natty"},{"n":"Tojo"}],"1|2|mym-carla-baby":[{"n":"Antoine"},{"n":"Tanjona"},{"n":"Sylvia"},{"n":"Antonio"},{"n":"Gary"}],"1|2|other-ava-reveal":[{"n":"Njiva"}],"1|2|mym-angel":[{"n":"Andrea"}],"1|2|mym-charlotte":[{"n":"Hasina"},{"n":"Ulrich"},{"n":"Hafaliana"},{"n":"Jefferson"},{"n":"Jean François"}],"1|2|mym-tia":[{"n":"Alex"}],"1|2|mym-steffy":[{"n":"Mahery Christian","a":1},{"n":"Fenitra"}],"1|2|mym-victoria":[{"n":"Serge"}],"1|2|mym-anaelle":[{"n":"Sergio"}],"1|2|of-naya":[{"n":"Styve"}],"1|2|of-angel":[{"n":"Geraldo"}],"1|2|of-carla-baby":[{"n":"Mackendji"},{"n":"Toky"}],"1|2|of-steffy":[{"n":"Guillaume"}],"1|2|of-ava":[{"n":"Manoa"}],"1|2|of-mae":[{"n":"Béa"}],"1|2|of-thais":[{"n":"Béa"}],"1|2|of-flavie":[{"n":"Cynthia"},{"n":"Tatiana"},{"n":"Franckie"}],"1|2|of-carla-trans":[{"n":"Guillaume"}],"1|2|of-marie":[{"n":"Ferlin"}],"1|2|of-eden":[{"n":"Dera"}],"1|2|of-lila":[{"n":"Styve"}],"1|3|mym-naya":[{"n":"Trésor"}],"1|3|mym-thais":[{"n":"Gerard"}],"1|3|mym-carla":[{"n":"Samsou"}],"1|3|mym-ava-paid-subs":[{"n":"Niry"},{"n":"Sarobidy"},{"n":"Rivaldo"}],"1|3|mym-marie":[{"n":"Tito"},{"n":"Prince"},{"n":"Jerry Fady"},{"n":"Ny Anjara"}],"1|3|mym-flavie":[{"n":"Quelent"},{"n":"Mahatsangy"},{"n":"Rafik"},{"n":"Gildas"},{"n":"Fanomezantsoa"}],"1|3|mym-chloe":[{"n":"Billy"},{"n":"Jeth"}],"1|3|mym-eden":[{"n":"Darell","a":1},{"n":"Benedicte"},{"n":"Rijih"}],"1|3|mym-carla-baby":[{"n":"Carlotta"},{"n":"Vonjy"},{"n":"Finoana"},{"n":"Daniella Tona"},{"n":"Sylvia"}],"1|3|other-ava-reveal":[{"n":"Sarobidy"}],"1|3|mym-angel":[{"n":"Thomas"}],"1|3|mym-charlotte":[{"n":"Daniel"},{"n":"Ronalde"},{"n":"Harry"},{"n":"Jean François"}],"1|3|mym-tia":[{"n":"Noel"}],"1|3|mym-steffy":[{"n":"Charbel"}],"1|3|mym-victoria":[{"n":"Tafita"}],"1|3|mym-anaelle":[{"n":"Yannis"}],"1|3|of-naya":[{"n":"Jerome"}],"1|3|of-angel":[{"n":"Jerome"}],"1|3|of-carla-baby":[{"n":"Toky","a":1},{"n":"Prisca"},{"n":"Sandy"},{"n":"Geovith","a":1}],"1|3|of-steffy":[{"n":"Guillaume","a":1}],"1|3|of-ava":[{"n":"Tsanta"}],"1|3|of-mae":[{"n":"Mandresy"}],"1|3|of-thais":[{"n":"Mandresy"}],"1|3|of-flavie":[{"n":"Ellah"},{"n":"Andy"},{"n":"Phalerus"}],"1|3|of-carla-trans":[{"n":"Guillaume","a":1}],"1|3|of-marie":[{"n":"Manael"}],"1|3|of-eden":[{"n":"Tendry"}],"1|3|of-lila":[{"n":"Manael"}],"2|0|mym-naya":[{"n":"Narindra"}],"2|0|mym-thais":[{"n":"Narindra"}],"2|0|mym-carla":[{"n":"Narindra"}],"2|0|mym-ava-paid-subs":[{"n":"Ny Antsa"},{"n":"Laura","a":1}],"2|0|mym-marie":[{"n":"Rouchdiath","r":"Hasintsoa","a":1}],"2|0|mym-flavie":[{"n":"Narcisse","a":1}],"2|0|mym-chloe":[{"n":"Rojotiana"}],"2|0|mym-eden":[{"n":"Amboara"}],"2|0|mym-carla-baby":[{"n":"Fitia"},{"n":"Vonjy"}],"2|0|other-ava-reveal":[{"n":"Ny Antsa"}],"2|0|mym-angel":[{"n":"Ilo"}],"2|0|mym-charlotte":[{"n":"Hasintsoa"},{"n":"Benj"}],"2|0|mym-tia":[{"n":"Ilo"}],"2|0|mym-steffy":[{"n":"Raphael"}],"2|0|mym-victoria":[{"n":"Rouchdiath","r":"Vonjy","a":1}],"2|0|mym-anaelle":[{"n":"Raphael"}],"2|0|of-naya":[{"n":"Haywardine"}],"2|0|of-angel":[{"n":"Hoby"}],"2|0|of-carla-baby":[{"n":"kael"}],"2|0|of-steffy":[{"n":"Carlotta"}],"2|0|of-ava":[{"n":"Carlotta"}],"2|0|of-mae":[{"n":"Jordy"}],"2|0|of-thais":[{"n":"Jordy"}],"2|0|of-flavie":[{"n":"Manael"}],"2|0|of-carla-trans":[{"n":"Hoby"}],"2|0|of-marie":[{"n":"Haywardine"}],"2|0|of-eden":[{"n":"Carlotta"}],"2|0|of-lila":[{"n":"Manael"}],"2|1|mym-naya":[{"n":"Nekena"},{"n":"Rocharlot"}],"2|1|mym-thais":[{"n":"Princy"}],"2|1|mym-carla":[{"n":"Marc"}],"2|1|mym-ava-paid-subs":[{"n":"Manuela"},{"n":"Elvis"},{"n":"Brandon"}],"2|1|mym-marie":[{"n":"Léonidas"},{"n":"Alex"},{"n":"Mazid"}],"2|1|mym-flavie":[{"n":"Tsiky"},{"n":"Hasintsoa"},{"n":"Tyavina"}],"2|1|mym-chloe":[{"n":"Antonio"}],"2|1|mym-eden":[{"n":"Andro Marc"},{"n":"Jerry"}],"2|1|mym-carla-baby":[{"n":"Lys"},{"n":"Fitia"},{"n":"Tanjona"}],"2|1|other-ava-reveal":[{"n":"Brandon"}],"2|1|mym-angel":[{"n":"Princy"}],"2|1|mym-charlotte":[{"n":"Ambinitsoa"},{"n":"Ornélie"},{"n":"Riantsoa"}],"2|1|mym-tia":[{"n":"Narindra"}],"2|1|mym-steffy":[{"n":"Nel"}],"2|1|mym-victoria":[{"n":"Nekena"},{"n":"Rocharlot"}],"2|1|mym-anaelle":[{"n":"Iako","a":1},{"n":"Tsoa"}],"2|1|of-naya":[{"n":"Nelia"}],"2|1|of-angel":[{"n":"Jorès","r":"Manoa"}],"2|1|of-carla-baby":[{"n":"Olivia"}],"2|1|of-steffy":[{"n":"Yoann"}],"2|1|of-ava":[{"n":"Yoann"}],"2|1|of-mae":[{"n":"Mitia"}],"2|1|of-thais":[{"n":"Mitia"}],"2|1|of-flavie":[{"n":"Norosoa"},{"n":"Prisca"},{"n":"Valisoa"}],"2|1|of-carla-trans":[{"n":"Jorès","r":"Sandy"}],"2|1|of-marie":[{"n":"Manoa"}],"2|1|of-eden":[{"n":"Sandy"}],"2|1|of-lila":[{"n":"Nelia"}],"2|2|mym-naya":[{"n":"Mahery Christian"}],"2|2|mym-thais":[{"n":"Lalaina"}],"2|2|mym-carla":[{"n":"Iako","a":1},{"n":"Sitraka"}],"2|2|mym-ava-paid-subs":[{"n":"Njiva"},{"n":"Kanto"},{"n":"Steph"}],"2|2|mym-marie":[{"n":"Simone"},{"n":"Nathan"},{"n":"Ansène"},{"n":"Nelly"}],"2|2|mym-flavie":[{"n":"Ben'j"},{"n":"Ismael"},{"n":"Gracia"},{"n":"Tyavina"},{"n":"Sylvia"}],"2|2|mym-chloe":[{"n":"Mahery"},{"n":"Rocharlot"}],"2|2|mym-eden":[{"n":"Tojo"},{"n":"Nekena"},{"n":"Mandaniaina"}],"2|2|mym-carla-baby":[{"n":"Tanjona"},{"n":"Antonio"},{"n":"Gary"},{"n":"Antoine"},{"n":"Tsiky"},{"n":"Dialy"}],"2|2|other-ava-reveal":[{"n":"Kanto"}],"2|2|mym-angel":[{"n":"Andry"}],"2|2|mym-charlotte":[{"n":"Hasina"},{"n":"Ulrich"},{"n":"Sergio"},{"n":"Jean François"},{"n":"Hafaliana"}],"2|2|mym-tia":[{"n":"Alex"}],"2|2|mym-steffy":[{"n":"Stephen"}],"2|2|mym-victoria":[{"n":"Serge"}],"2|2|of-naya":[{"n":"Styve"}],"2|2|of-angel":[{"n":"Geraldo"}],"2|2|of-carla-baby":[{"n":"Mackendji"},{"n":"Toky"},{"n":"Yousseinah"}],"2|2|of-steffy":[{"n":"Jorès"}],"2|2|of-ava":[{"n":"Valisoa"}],"2|2|of-mae":[{"n":"Béa"}],"2|2|of-thais":[{"n":"Béa"}],"2|2|of-flavie":[{"n":"Cynthia"},{"n":"Tatiana"},{"n":"Franckie"}],"2|2|of-carla-trans":[{"n":"Jorès"}],"2|2|of-marie":[{"n":"Ferlin"}],"2|2|of-eden":[{"n":"Dera"}],"2|2|of-lila":[{"n":"Styve"}],"2|3|mym-naya":[{"n":"Trésor","a":1}],"2|3|mym-thais":[{"n":"Noel"}],"2|3|mym-carla":[{"n":"Samsou"}],"2|3|mym-ava-paid-subs":[{"n":"Steph"},{"n":"Rivaldo"},{"n":"Billy"}],"2|3|mym-marie":[{"n":"Prince"},{"n":"Jerry Fady"},{"n":"Ny Anjara"}],"2|3|mym-flavie":[{"n":"Quelent"},{"n":"Mahatsangy"},{"n":"Rafik"},{"n":"Gildas"},{"n":"Patty"}],"2|3|mym-chloe":[{"n":"Jeth"}],"2|3|mym-eden":[{"n":"Benedicte"},{"n":"Sitraka"},{"n":"Rijih"}],"2|3|mym-carla-baby":[{"n":"Daniella Tona"},{"n":"Vonjy"},{"n":"Riantsoa"},{"n":"Sylvia"},{"n":"Jean François"},{"n":"Finoana"}],"2|3|other-ava-reveal":[{"n":"Sarobidy"}],"2|3|mym-angel":[{"n":"Thomas"}],"2|3|mym-charlotte":[{"n":"Daniel"},{"n":"Ronalde"},{"n":"Harry"}],"2|3|mym-tia":[{"n":"Gerard"}],"2|3|mym-steffy":[{"n":"Charbel"}],"2|3|mym-victoria":[{"n":"Tafita"}],"2|3|mym-anaelle":[{"n":"Yannis"}],"2|3|of-naya":[{"n":"Jerome"}],"2|3|of-angel":[{"n":"Lahatra"}],"2|3|of-carla-baby":[{"n":"Prisca"},{"n":"Sandy"},{"n":"Toky"}],"2|3|of-steffy":[{"n":"Guillaume"}],"2|3|of-ava":[{"n":"Tsanta"}],"2|3|of-mae":[{"n":"Arnaud"}],"2|3|of-thais":[{"n":"Arnaud"}],"2|3|of-flavie":[{"n":"Ellah"},{"n":"Phalérus"},{"n":"Mandresy"}],"2|3|of-carla-trans":[{"n":"Guillaume"}],"2|3|of-marie":[{"n":"Géovith"}],"2|3|of-eden":[{"n":"Tendry"},{"n":"Manael"}],"2|3|of-lila":[{"n":"Lahatra"}],"3|0|mym-naya":[{"n":"Narindra"}],"3|0|mym-thais":[{"n":"Hasintsoa"}],"3|0|mym-carla":[{"n":"Narindra"}],"3|0|mym-ava-paid-subs":[{"n":"Ny Antsa"},{"n":"Laura"}],"3|0|mym-marie":[{"n":"Sarobidy"}],"3|0|mym-flavie":[{"n":"Narcisse"},{"n":"Stephie"}],"3|0|mym-chloe":[{"n":"Daniella"}],"3|0|mym-eden":[{"n":"Hasintsoa"}],"3|0|mym-carla-baby":[{"n":"Amboara"},{"n":"Vonjy"}],"3|0|other-ava-reveal":[{"n":"Laura"}],"3|0|mym-angel":[{"n":"Ilo"}],"3|0|mym-charlotte":[{"n":"Benj"}],"3|0|mym-tia":[{"n":"Ilo"}],"3|0|mym-steffy":[{"n":"Raphael"}],"3|0|mym-victoria":[{"n":"Rojotiana"}],"3|0|mym-anaelle":[{"n":"Raphael"}],"3|0|of-naya":[{"n":"Mitia"}],"3|0|of-angel":[{"n":"Hoby"}],"3|0|of-carla-baby":[{"n":"Géovith"}],"3|0|of-steffy":[{"n":"Mitia"}],"3|0|of-ava":[{"n":"Carlotta"}],"3|0|of-mae":[{"n":"Jordy"}],"3|0|of-thais":[{"n":"Jordy"}],"3|0|of-flavie":[{"n":"Manael"}],"3|0|of-carla-trans":[{"n":"Hoby"}],"3|0|of-marie":[{"n":"Haywardine"}],"3|0|of-eden":[{"n":"Carlotta"}],"3|0|of-lila":[{"n":"Haywardine"}],"3|1|mym-naya":[{"n":"Nekena"}],"3|1|mym-thais":[{"n":"Princy"}],"3|1|mym-carla":[{"n":"Marc"}],"3|1|mym-ava-paid-subs":[{"n":"Manuela"},{"n":"Elvis"},{"n":"Brandon"}],"3|1|mym-marie":[{"n":"Rocharlot"},{"n":"Léonidas"},{"n":"Tsiky"},{"n":"Lionel"}],"3|1|mym-flavie":[{"n":"Tyavina"},{"n":"Stéphie"},{"n":"Jefferson"},{"n":"Hasintsoa"}],"3|1|mym-chloe":[{"n":"Antonio"},{"n":"Rocharlot"}],"3|1|mym-eden":[{"n":"Natty"},{"n":"Jerry"}],"3|1|mym-carla-baby":[{"n":"Lys"},{"n":"Tanjona"},{"n":"Tsoa"},{"n":"Laura"}],"3|1|other-ava-reveal":[{"n":"Brandon"}],"3|1|mym-angel":[{"n":"Princy"}],"3|1|mym-charlotte":[{"n":"Ambinitsoa"},{"n":"Ornélie"},{"n":"Riantsoa"}],"3|1|mym-tia":[{"n":"Fenitra"}],"3|1|mym-steffy":[{"n":"Nel"}],"3|1|mym-victoria":[{"n":"Nekena"}],"3|1|of-naya":[{"n":"Nelia"}],"3|1|of-angel":[{"n":"Jorès"}],"3|1|of-carla-baby":[{"n":"Olivia"}],"3|1|of-steffy":[{"n":"Yoann"}],"3|1|of-ava":[{"n":"Yoann"}],"3|1|of-mae":[{"n":"Ally"}],"3|1|of-thais":[{"n":"Ally"}],"3|1|of-flavie":[{"n":"Norosoa"},{"n":"Prisca"},{"n":"Valisoa"}],"3|1|of-carla-trans":[{"n":"Jorès"}],"3|1|of-marie":[{"n":"Manoa"}],"3|1|of-eden":[{"n":"Sandy"}],"3|1|of-lila":[{"n":"Nelia"}],"3|2|mym-naya":[{"n":"Mahery Christian"}],"3|2|mym-thais":[{"n":"Lalaina","r":"Andrea"}],"3|2|mym-carla":[{"n":"Iako"}],"3|2|mym-ava-paid-subs":[{"n":"Njiva"},{"n":"Kanto"},{"n":"Steph"}],"3|2|mym-marie":[{"n":"Sitraka"},{"n":"Nelly"},{"n":"Simone"},{"n":"Marc"}],"3|2|mym-flavie":[{"n":"Ben'j"},{"n":"Ismael"},{"n":"Jerry"},{"n":"Gracia"},{"n":"Nix"}],"3|2|mym-chloe":[{"n":"Hoby"},{"n":"Rocharlot"}],"3|2|mym-eden":[{"n":"Natty"},{"n":"Stephen"},{"n":"Tojo"},{"n":"Nekena"}],"3|2|mym-carla-baby":[{"n":"Dialy"},{"n":"Antonio"},{"n":"Gary"},{"n":"Jefferson"},{"n":"Tsiky"},{"n":"Karl"}],"3|2|other-ava-reveal":[{"n":"Kanto"}],"3|2|mym-angel":[{"n":"Andry"}],"3|2|mym-charlotte":[{"n":"Hasina"},{"n":"Sergio"},{"n":"Mandaniaiana"},{"n":"Lalaina"}],"3|2|mym-tia":[{"n":"Hafaliana"},{"n":"Andrea"}],"3|2|mym-steffy":[{"n":"Mahery Christian"}],"3|2|mym-victoria":[{"n":"Serge"}],"3|2|mym-anaelle":[{"n":"Fenitra"},{"n":"Manohisoa"}],"3|2|of-naya":[{"n":"Styve"}],"3|2|of-angel":[{"n":"Jorès"}],"3|2|of-carla-baby":[{"n":"Toky"},{"n":"Tanjona"},{"n":"Olivia"}],"3|2|of-steffy":[{"n":"Guillaume"}],"3|2|of-ava":[{"n":"Manoa"},{"n":"Yousseinah"}],"3|2|of-mae":[{"n":"Ferlin"}],"3|2|of-thais":[{"n":"Ferlin"}],"3|2|of-flavie":[{"n":"Cynthia"},{"n":"Tatiana"},{"n":"Franckie"}],"3|2|of-carla-trans":[{"n":"Guillaume"}],"3|2|of-marie":[{"n":"Valisoa"}],"3|2|of-eden":[{"n":"Dera"}],"3|2|of-lila":[{"n":"Styve"}],"3|3|mym-naya":[{"n":"Noel"}],"3|3|mym-thais":[{"n":"Noel"}],"3|3|mym-carla":[{"n":"Samsou"}],"3|3|mym-ava-paid-subs":[{"n":"Niry"},{"n":"Steph"},{"n":"Billy"}],"3|3|mym-marie":[{"n":"Eurydice"},{"n":"Julianot"},{"n":"Jerry Fady"}],"3|3|mym-flavie":[{"n":"Quelent"},{"n":"Gildas"},{"n":"Rivaldo"},{"n":"Rafik"}],"3|3|mym-chloe":[{"n":"Mahery"},{"n":"Sarobidy"}],"3|3|mym-eden":[{"n":"Darell"},{"n":"Rijih"},{"n":"Sitraka"}],"3|3|mym-carla-baby":[{"n":"Carlotta"},{"n":"Vonjy"},{"n":"Fanomezantsoa"},{"n":"Riantsoa"},{"n":"Mahatsangy"}],"3|3|other-ava-reveal":[{"n":"Sarobidy"}],"3|3|mym-angel":[{"n":"Samsou"}],"3|3|mym-charlotte":[{"n":"Daniel"},{"n":"Tito"}],"3|3|mym-tia":[{"n":"Ronalde"}],"3|3|mym-steffy":[{"n":"Ronalde"}],"3|3|mym-victoria":[{"n":"Gérard"}],"3|3|mym-anaelle":[{"n":"Tafita"}],"3|3|of-naya":[{"n":"Jerome"}],"3|3|of-angel":[{"n":"Jannecy"}],"3|3|of-carla-baby":[{"n":"Tsanta"},{"n":"Prisca"},{"n":"Toky"},{"n":"Sandy"}],"3|3|of-steffy":[{"n":"Guillaume"}],"3|3|of-ava":[{"n":"Mandresy"}],"3|3|of-mae":[{"n":"Arnaud"}],"3|3|of-thais":[{"n":"Arnaud"}],"3|3|of-flavie":[{"n":"Ellah"},{"n":"Phalérus"},{"n":"Andy"}],"3|3|of-carla-trans":[{"n":"Guillaume"}],"3|3|of-marie":[{"n":"Manael"}],"3|3|of-eden":[{"n":"Tendry"}],"3|3|of-lila":[{"n":"Benedictus"}],"4|0|mym-naya":[{"n":"Narcisse"},{"n":"Narindra"}],"4|0|mym-thais":[{"n":"Hasintsoa","r":"Narindra"}],"4|0|mym-carla":[{"n":"Narindra"}],"4|0|mym-ava-paid-subs":[{"n":"Ny Antsa"},{"n":"Laura"}],"4|0|mym-marie":[{"n":"Rouchdiath"}],"4|0|mym-flavie":[{"n":"Stephie"},{"n":"Benj"}],"4|0|mym-chloe":[{"n":"Daniella"}],"4|0|mym-eden":[{"n":"Raphael"}],"4|0|mym-carla-baby":[{"n":"Fitia"},{"n":"Vonjy"},{"n":"Amboara"}],"4|0|other-ava-reveal":[{"n":"Laura"}],"4|0|mym-angel":[{"n":"Ilo","r":"Daniella"}],"4|0|mym-charlotte":[{"n":"Rojotiana"}],"4|0|mym-tia":[{"n":"Ilo"}],"4|0|mym-steffy":[{"n":"Joda","r":"Rojotiana"}],"4|0|mym-victoria":[{"n":"Hasintsoa","r":"Vonjy"}],"4|0|mym-anaelle":[{"n":"Hasintsoa","r":"Fitia"}],"4|0|of-naya":[{"n":"Tendry"}],"4|0|of-angel":[{"n":"Hoby"}],"4|0|of-carla-baby":[{"n":"Kael"}],"4|0|of-steffy":[{"n":"Carlotta"}],"4|0|of-ava":[{"n":"Carlotta"}],"4|0|of-mae":[{"n":"Jordy"}],"4|0|of-thais":[{"n":"Jordy"}],"4|0|of-flavie":[{"n":"Manael"}],"4|0|of-carla-trans":[{"n":"Hoby"}],"4|0|of-marie":[{"n":"Haywardine"}],"4|0|of-eden":[{"n":"Tendry"}],"4|0|of-lila":[{"n":"Haywardine"}],"4|1|mym-naya":[{"n":"Nekena"}],"4|1|mym-thais":[{"n":"Princy"}],"4|1|mym-carla":[{"n":"Marc"}],"4|1|mym-ava-paid-subs":[{"n":"Kanto"},{"n":"Elvis"},{"n":"Laura"}],"4|1|mym-marie":[{"n":"Léonidas"},{"n":"Alex"},{"n":"Mazid"}],"4|1|mym-flavie":[{"n":"Hasintsoa"},{"n":"Tsiky"},{"n":"Stephie"},{"n":"Jefferson"}],"4|1|mym-chloe":[{"n":"Rocharlot"},{"n":"Fitia"}],"4|1|mym-eden":[{"n":"Natty"},{"n":"Andro Marc"}],"4|1|mym-carla-baby":[{"n":"Tyavina"},{"n":"Brandon"},{"n":"Tsoa"},{"n":"Tanjona"}],"4|1|other-ava-reveal":[{"n":"Brandon"}],"4|1|mym-angel":[{"n":"Princy"}],"4|1|mym-charlotte":[{"n":"Ambinintsoa"},{"n":"Ornélie"}],"4|1|mym-tia":[{"n":"Narindra"}],"4|1|mym-steffy":[{"n":"Alex"}],"4|1|mym-victoria":[{"n":"Nekena"}],"4|1|mym-anaelle":[{"n":"Fenitra"}],"4|1|of-naya":[{"n":"Nelia"}],"4|1|of-angel":[{"n":"Nirina"}],"4|1|of-carla-baby":[{"n":"Olivia"}],"4|1|of-steffy":[{"n":"Nirina"}],"4|1|of-ava":[{"n":"yoann"}],"4|1|of-mae":[{"n":"Mitia"}],"4|1|of-thais":[{"n":"Mitia"}],"4|1|of-flavie":[{"n":"Valisoa"},{"n":"Prisca"},{"n":"Norosoa"}],"4|1|of-carla-trans":[{"n":"Nelia"}],"4|1|of-marie":[{"n":"Jorès"}],"4|1|of-eden":[{"n":"Ferlin"}],"4|1|of-lila":[{"n":"Jorès"}],"4|2|mym-naya":[{"n":"Mahery Christian"}],"4|2|mym-thais":[{"n":"Lalaina"}],"4|2|mym-carla":[{"n":"Sitraka"}],"4|2|mym-ava-paid-subs":[{"n":"Dialy"},{"n":"Njiva"},{"n":"Steph"}],"4|2|mym-marie":[{"n":"Nelly"},{"n":"Simone"},{"n":"Nathan"},{"n":"Marc"},{"n":"Manohisoa"}],"4|2|mym-flavie":[{"n":"Ben'j"},{"n":"Ismael"},{"n":"Nix"},{"n":"Tsiky"},{"n":"Gracia"},{"n":"Jefferson"}],"4|2|mym-chloe":[{"n":"Hoby"},{"n":"Rocharlot"}],"4|2|mym-eden":[{"n":"Tojo"},{"n":"Natty"},{"n":"Nekena"}],"4|2|mym-carla-baby":[{"n":"Sylvia"},{"n":"Finoana"},{"n":"Gary"},{"n":"Antoine"},{"n":"Olivia"},{"n":"Mandaniaiana"}],"4|2|other-ava-reveal":[{"n":"Njiva"}],"4|2|mym-angel":[{"n":"Andry"}],"4|2|mym-charlotte":[{"n":"Sergio"},{"n":"Ulrich"},{"n":"Stephen"},{"n":"Hafaliana"}],"4|2|mym-tia":[{"n":"Andrea"}],"4|2|mym-steffy":[{"n":"Mahery Christian"}],"4|2|mym-victoria":[{"n":"Serge"}],"4|2|mym-anaelle":[{"n":"Fenitra"}],"4|2|of-naya":[{"n":"Styve"}],"4|2|of-angel":[{"n":"Geraldo"}],"4|2|of-carla-baby":[{"n":"Tanjona"},{"n":"Mackendji"},{"n":"Yousseinah"}],"4|2|of-steffy":[{"n":"Guillaume"}],"4|2|of-ava":[{"n":"Manoa"}],"4|2|of-mae":[{"n":"Geraldo"}],"4|2|of-thais":[{"n":"Manoa"}],"4|2|of-flavie":[{"n":"Franckie"},{"n":"Cynthia"},{"n":"Ferlin"}],"4|2|of-carla-trans":[{"n":"Guillaume"}],"4|2|of-marie":[{"n":"Jorès"}],"4|2|of-eden":[{"n":"Valisoa"}],"4|2|of-lila":[{"n":"Styve"}],"4|3|mym-naya":[{"n":"Noel"}],"4|3|mym-thais":[{"n":"Noel"}],"4|3|mym-carla":[{"n":"Tito"}],"4|3|mym-ava-paid-subs":[{"n":"Vonjy"},{"n":"Niry"},{"n":"Steph"},{"n":"Sarobidy"}],"4|3|mym-marie":[{"n":"Julianot"},{"n":"Jerry Fady"},{"n":"Prince"},{"n":"NyAnjara"}],"4|3|mym-flavie":[{"n":"Rijih"},{"n":"Sylvia"},{"n":"Rafik"},{"n":"Gildas"}],"4|3|mym-chloe":[{"n":"Jean François"}],"4|3|mym-eden":[{"n":"Darell"},{"n":"Benedicte"},{"n":"Sitraka"}],"4|3|mym-carla-baby":[{"n":"Carlotta"},{"n":"Fanomezantsoa"},{"n":"Riantsoa"},{"n":"Daniella Tona"}],"4|3|other-ava-reveal":[{"n":"Niry"}],"4|3|mym-angel":[{"n":"Thomas"}],"4|3|mym-charlotte":[{"n":"Daniel"},{"n":"Ronalde"}],"4|3|mym-tia":[{"n":"Yannis"}],"4|3|mym-steffy":[{"n":"Charbel"}],"4|3|mym-victoria":[{"n":"Gérard"}],"4|3|mym-anaelle":[{"n":"Tafita"}],"4|3|of-naya":[{"n":"Jerome"}],"4|3|of-angel":[{"n":"Jerome"}],"4|3|of-carla-baby":[{"n":"Prisca"},{"n":"Sandy"},{"n":"Geovith"}],"4|3|of-steffy":[{"n":"Guillaume"}],"4|3|of-ava":[{"n":"Tsanta"}],"4|3|of-mae":[{"n":"Arnaud"}],"4|3|of-thais":[{"n":"Arnaud"}],"4|3|of-flavie":[{"n":"Phalérus"},{"n":"Andy"},{"n":"Manael"}],"4|3|of-carla-trans":[{"n":"Benedictus"}],"4|3|of-marie":[{"n":"Jaunecy"},{"n":"Manael"}],"4|3|of-eden":[{"n":"Lahatra"}],"4|3|of-lila":[{"n":"Guillaume"}],"5|0|mym-naya":[{"n":"Narindra"}],"5|0|mym-thais":[{"n":"Hasintsoa"}],"5|0|mym-carla":[{"n":"Narindra"}],"5|0|mym-ava-paid-subs":[{"n":"Ny Antsa"},{"n":"Amboara"}],"5|0|mym-marie":[{"n":"Rouchdiath"}],"5|0|mym-flavie":[{"n":"Narcisse"},{"n":"Benj"}],"5|0|mym-chloe":[{"n":"Daniella"}],"5|0|mym-eden":[{"n":"Raphael"}],"5|0|mym-carla-baby":[{"n":"Fitia"},{"n":"Vonjy"}],"5|0|other-ava-reveal":[{"n":"Ny Antsa"}],"5|0|mym-angel":[{"n":"Ilo"}],"5|0|mym-charlotte":[{"n":"Rojotiana"}],"5|0|mym-tia":[{"n":"Ilo"}],"5|0|mym-steffy":[{"n":"Raphael"}],"5|0|mym-victoria":[{"n":"Rojotiana"}],"5|0|mym-anaelle":[{"n":"Hasintsoa"}],"5|0|of-naya":[{"n":"Geovith"}],"5|0|of-angel":[{"n":"Manael"}],"5|0|of-carla-baby":[{"n":"Kael"}],"5|0|of-steffy":[{"n":"Carlotta"}],"5|0|of-ava":[{"n":"Carlotta"}],"5|0|of-mae":[{"n":"Jordy"}],"5|0|of-thais":[{"n":"Jordy"}],"5|0|of-flavie":[{"n":"Manael"}],"5|0|of-carla-trans":[{"n":"Manael"}],"5|0|of-marie":[{"n":"Haywardine"}],"5|0|of-eden":[{"n":"Geovith"}],"5|0|of-lila":[{"n":"Haywardine"}],"5|1|mym-naya":[{"n":"Nekena"}],"5|1|mym-thais":[{"n":"Princy"}],"5|1|mym-carla":[{"n":"Marc"}],"5|1|mym-ava-paid-subs":[{"n":"Manuela"},{"n":"kanto"},{"n":"elvis"}],"5|1|mym-marie":[{"n":"Léonidas"},{"n":"Alex"},{"n":"Mazid"}],"5|1|mym-flavie":[{"n":"Hasintsoa"},{"n":"Daniela"},{"n":"Stéphie"}],"5|1|mym-chloe":[{"n":"Antonio"}],"5|1|mym-eden":[{"n":"Natty"},{"n":"Andro Marc"}],"5|1|mym-carla-baby":[{"n":"Fitia"},{"n":"Jefferson"},{"n":"Lys"}],"5|1|other-ava-reveal":[{"n":"Kanto"}],"5|1|mym-angel":[{"n":"Princy"}],"5|1|mym-charlotte":[{"n":"Jerry"},{"n":"Ornelie"},{"n":"Rocharlot"},{"n":"Tsiky"}],"5|1|mym-tia":[{"n":"Thierry"}],"5|1|mym-steffy":[{"n":"Marc"}],"5|1|mym-victoria":[{"n":"Nekena"}],"5|1|mym-anaelle":[{"n":"Fenitra"}],"5|1|of-naya":[{"n":"Nelia"}],"5|1|of-angel":[{"n":"Nirina"}],"5|1|of-carla-baby":[{"n":"Olivia"}],"5|1|of-steffy":[{"n":"Nirina"}],"5|1|of-ava":[{"n":"Yoann"}],"5|1|of-mae":[{"n":"Mitia"}],"5|1|of-thais":[{"n":"Mitia"}],"5|1|of-flavie":[{"n":"Prisca"},{"n":"Norosoa"},{"n":"Valisoa"}],"5|1|of-carla-trans":[{"n":"Jorès"}],"5|1|of-marie":[{"n":"Manoa"}],"5|1|of-eden":[{"n":"Ferlin"}],"5|1|of-lila":[{"n":"Nelia"}],"5|2|mym-naya":[{"n":"Mahery Christian"}],"5|2|mym-thais":[{"n":"Sitraka"}],"5|2|mym-carla":[{"n":"Iako"}],"5|2|mym-ava-paid-subs":[{"n":"Njiva"},{"n":"Steph"},{"n":"Niry"},{"n":"Kanto"}],"5|2|mym-marie":[{"n":"Nelly"},{"n":"Simone"},{"n":"Nathan"},{"n":"Lalaina"}],"5|2|mym-flavie":[{"n":"Ben'J"},{"n":"Ismael"},{"n":"Nix"},{"n":"Mandaniaiana"},{"n":"Jerry"}],"5|2|mym-chloe":[{"n":"Hoby"},{"n":"Rocharlot"}],"5|2|mym-eden":[{"n":"Tojo"},{"n":"Natty"},{"n":"Nekena"}],"5|2|mym-carla-baby":[{"n":"Antonio"},{"n":"Finoana"},{"n":"Antoine"},{"n":"Jefferson"},{"n":"Tsiky"},{"n":"Dialy"}],"5|2|other-ava-reveal":[{"n":"Kanto"}],"5|2|mym-angel":[{"n":"Andry"}],"5|2|mym-charlotte":[{"n":"Hasina"},{"n":"Fenitra"},{"n":"Ulrich"},{"n":"Sergio"},{"n":"Stephen"},{"n":"Hafaliana"}],"5|2|mym-tia":[{"n":"Andrea"}],"5|2|mym-steffy":[{"n":"Mahery Christian"}],"5|2|mym-victoria":[{"n":"Serge"}],"5|2|mym-anaelle":[{"n":"Marc"},{"n":"Manohisoa"}],"5|2|of-naya":[{"n":"Geraldo"}],"5|2|of-angel":[{"n":"Geraldo"}],"5|2|of-carla-baby":[{"n":"Mackendji"},{"n":"Toky"}],"5|2|of-steffy":[{"n":"Jorès"}],"5|2|of-ava":[{"n":"Valisoa"}],"5|2|of-mae":[{"n":"Lahatra"}],"5|2|of-thais":[{"n":"Lahatra"}],"5|2|of-flavie":[{"n":"Tatiana"},{"n":"Yousseinah"},{"n":"Franckie"}],"5|2|of-carla-trans":[{"n":"Guillaume"}],"5|2|of-marie":[{"n":"Ferlin"}],"5|2|of-eden":[{"n":"Dera"}],"5|2|of-lila":[{"n":"Guillaume"}],"5|3|mym-naya":[{"n":"Noel"}],"5|3|mym-thais":[{"n":"Noel"}],"5|3|mym-carla":[{"n":"Samsou"}],"5|3|mym-ava-paid-subs":[{"n":"Niry"},{"n":"Steph"},{"n":"Billy"}],"5|3|mym-marie":[{"n":"Jerry Fady"},{"n":"Prince"},{"n":"Ny Anjara"}],"5|3|mym-flavie":[{"n":"Sarobidy"},{"n":"Quelent"},{"n":"Rafik"},{"n":"Gildas"},{"n":"Sylvia"}],"5|3|mym-chloe":[{"n":"Mahery"}],"5|3|mym-eden":[{"n":"Darell"},{"n":"Benedicte"},{"n":"Rijih"}],"5|3|mym-carla-baby":[{"n":"Riantsoa"},{"n":"Vonjy"},{"n":"Fanomezantsoa"},{"n":"Daniella Tona"},{"n":"Mahatsangy"}],"5|3|other-ava-reveal":[{"n":"Niry"}],"5|3|mym-angel":[{"n":"Thomas"}],"5|3|mym-charlotte":[{"n":"Daniel"},{"n":"Tito"},{"n":"Ronalde"},{"n":"Rivaldo"},{"n":"Jean François"}],"5|3|mym-tia":[{"n":"Yannis"}],"5|3|mym-steffy":[{"n":"Sitraka"}],"5|3|mym-victoria":[{"n":"Gérard"}],"5|3|mym-anaelle":[{"n":"Tafita"}],"5|3|of-naya":[{"n":"Jerome"}],"5|3|of-angel":[{"n":"Guillaume"}],"5|3|of-carla-baby":[{"n":"Prisca"},{"n":"Toky"},{"n":"Géovith"}],"5|3|of-steffy":[{"n":"Guillaume"}],"5|3|of-ava":[{"n":"Sandy"},{"n":"Mandresy"}],"5|3|of-mae":[{"n":"Arnaud"}],"5|3|of-thais":[{"n":"Arnaud"}],"5|3|of-flavie":[{"n":"Ellah"},{"n":"Andy","r":"Mandresy"}],"5|3|of-carla-trans":[{"n":"Benedictus"}],"5|3|of-marie":[{"n":"Jaunecy"},{"n":"Manael"}],"5|3|of-eden":[{"n":"Tendry"}],"5|3|of-lila":[{"n":"Jerome"}],"6|0|mym-naya":[{"n":"Joda"}],"6|0|mym-thais":[{"n":"Joda"}],"6|0|mym-carla":[{"n":"Hasintsoa"}],"6|0|mym-ava-paid-subs":[{"n":"Laura"}],"6|0|mym-marie":[{"n":"Rouchdiath"}],"6|0|mym-flavie":[{"n":"Narcisse"},{"n":"Benj"}],"6|0|mym-chloe":[{"n":"Daniella"}],"6|0|mym-eden":[{"n":"Raphael"}],"6|0|mym-carla-baby":[{"n":"Fitia"},{"n":"Vonjy"}],"6|0|other-ava-reveal":[{"n":"Laura"}],"6|0|mym-angel":[{"n":"Ilo"}],"6|0|mym-charlotte":[{"n":"Amboara"},{"n":"Sarobidy"}],"6|0|mym-tia":[{"n":"Ilo"}],"6|0|mym-steffy":[{"n":"Raphael"}],"6|0|mym-victoria":[{"n":"Rouchdiath"}],"6|0|mym-anaelle":[{"n":"Hasintsoa"}],"6|0|of-naya":[{"n":"Haywardine"}],"6|0|of-angel":[{"n":"Manael"}],"6|0|of-carla-baby":[{"n":"Kael"}],"6|0|of-steffy":[{"n":"Kael"}],"6|0|of-ava":[{"n":"Tendry"}],"6|0|of-mae":[{"n":"Jordy"}],"6|0|of-thais":[{"n":"Jordy"}],"6|0|of-flavie":[{"n":"Manael"}],"6|0|of-carla-trans":[{"n":"Manael"}],"6|0|of-marie":[{"n":"Haywardine"}],"6|0|of-eden":[{"n":"Tendry"}],"6|0|of-lila":[{"n":"Haywardine"}],"6|1|mym-naya":[{"n":"Nekena"}],"6|1|mym-thais":[{"n":"Princy"}],"6|1|mym-carla":[{"n":"Marc"}],"6|1|mym-ava-paid-subs":[{"n":"Tsiky"},{"n":"Manuela"},{"n":"kanto"}],"6|1|mym-marie":[{"n":"Léonidas"},{"n":"Alex"},{"n":"Mazid"}],"6|1|mym-flavie":[{"n":"Stéphie"},{"n":"Tyavina"},{"n":"Fitia"},{"n":"Hasintsoa"}],"6|1|mym-chloe":[{"n":"Tsoa"}],"6|1|mym-eden":[{"n":"Natty"},{"n":"Andro Marc"},{"n":"Daniela"}],"6|1|mym-carla-baby":[{"n":"Lys"},{"n":"Bandron"},{"n":"Antonio"},{"n":"Tanjona"}],"6|1|other-ava-reveal":[{"n":"Kanto"}],"6|1|mym-angel":[{"n":"Princy"}],"6|1|mym-charlotte":[{"n":"Ambinintsoa"},{"n":"Rocharlot"},{"n":"Jerry"},{"n":"Ornélie"}],"6|1|mym-tia":[{"n":"Thierry"}],"6|1|mym-steffy":[{"n":"Marc"}],"6|1|mym-victoria":[{"n":"Nekena"}],"6|1|mym-anaelle":[{"n":"Fenitra"}],"6|1|of-naya":[{"n":"Nelia"}],"6|1|of-angel":[{"n":"Jorès"}],"6|1|of-carla-baby":[{"n":"Olivia"}],"6|1|of-steffy":[{"n":"Jorès"}],"6|1|of-ava":[{"n":"Yoann"},{"n":"Manoa"}],"6|1|of-mae":[{"n":"Nirina"}],"6|1|of-thais":[{"n":"Nirina"}],"6|1|of-flavie":[{"n":"Norosoa"},{"n":"Valisoa"}],"6|1|of-carla-trans":[{"n":"Valisoa"}],"6|1|of-marie":[{"n":"Ferlin"}],"6|1|of-eden":[{"n":"Valisoa"}],"6|1|of-lila":[{"n":"Manoa"}],"6|2|mym-naya":[{"n":"Mahery Christian"}],"6|2|mym-thais":[{"n":"Sitraka"}],"6|2|mym-carla":[{"n":"Iako"}],"6|2|mym-ava-paid-subs":[{"n":"Kanto"},{"n":"Steph"},{"n":"Nix"}],"6|2|mym-marie":[{"n":"Nelly"},{"n":"Simone"},{"n":"Nathan"},{"n":"Lalaina"}],"6|2|mym-flavie":[{"n":"Ben'J"},{"n":"Ismael"},{"n":"Sylvia"},{"n":"Gracia"},{"n":"Mandaniaina"}],"6|2|mym-chloe":[{"n":"Andrea"}],"6|2|mym-eden":[{"n":"Natty"},{"n":"Tojo"},{"n":"Rocharlot"}],"6|2|mym-carla-baby":[{"n":"Antoine"},{"n":"Finoana"},{"n":"Antonio"},{"n":"Gary"},{"n":"Jefferson"},{"n":"Tsiky"}],"6|2|other-ava-reveal":[{"n":"Kanto"}],"6|2|mym-angel":[{"n":"Mahery Christian"}],"6|2|mym-charlotte":[{"n":"Hasina"},{"n":"Stephen"},{"n":"Ulrich"},{"n":"Sergio"},{"n":"Fenitra"},{"n":"Hafaliana"}],"6|2|mym-tia":[{"n":"Nekena"}],"6|2|mym-steffy":[{"n":"Mahery Christian"}],"6|2|mym-victoria":[{"n":"Serge"}],"6|2|mym-anaelle":[{"n":"Manohisoa"}],"6|2|of-naya":[{"n":"Styve"}],"6|2|of-angel":[{"n":"Geraldo"}],"6|2|of-carla-baby":[{"n":"Mackendji"},{"n":"Yousseinah"},{"n":"Tanjona"}],"6|2|of-steffy":[{"n":"Geraldo"}],"6|2|of-ava":[{"n":"Valisoa"}],"6|2|of-mae":[{"n":"Lahatra"}],"6|2|of-thais":[{"n":"Lahatra"}],"6|2|of-flavie":[{"n":"Cynthia"},{"n":"Tatiana"},{"n":"Franckie"}],"6|2|of-carla-trans":[{"n":"Jorès"}],"6|2|of-marie":[{"n":"Manoa"}],"6|2|of-eden":[{"n":"Dera"}],"6|2|of-lila":[{"n":"Styve"}],"6|3|mym-naya":[{"n":"Noel"}],"6|3|mym-thais":[{"n":"Noel"}],"6|3|mym-carla":[{"n":"Samsou"}],"6|3|mym-ava-paid-subs":[{"n":"Niry"},{"n":"Steph"},{"n":"Billy"}],"6|3|mym-marie":[{"n":"Jerry Fady"},{"n":"Prince"},{"n":"Ny Anjara"}],"6|3|mym-flavie":[{"n":"Quelent"},{"n":"Mahatsangy"},{"n":"Sylvia"},{"n":"Rafik"},{"n":"Gildas"}],"6|3|mym-chloe":[{"n":"Mahery"}],"6|3|mym-eden":[{"n":"Darell"},{"n":"Benedicte"},{"n":"Rijih"}],"6|3|mym-carla-baby":[{"n":"Riantsoas"},{"n":"Vonjy"},{"n":"Carlotta"},{"n":"Fanomezantsoa"},{"n":"Daniella Tona"}],"6|3|other-ava-reveal":[{"n":"Niry"}],"6|3|mym-angel":[{"n":"Thomas"}],"6|3|mym-charlotte":[{"n":"Daniel"},{"n":"Tito"},{"n":"Ronalde"},{"n":"Rivaldo"},{"n":"Jean François"}],"6|3|mym-tia":[{"n":"Yannis"}],"6|3|mym-steffy":[{"n":"Charbel"}],"6|3|mym-victoria":[{"n":"Gerard"}],"6|3|mym-anaelle":[{"n":"Sitraka"}],"6|3|of-naya":[{"n":"Jerome"}],"6|3|of-angel":[{"n":"Manael"}],"6|3|of-carla-baby":[{"n":"Tsanta"},{"n":"Toky"},{"n":"Géovith"}],"6|3|of-steffy":[{"n":"Benedictus"}],"6|3|of-ava":[{"n":"Mandresy"}],"6|3|of-mae":[{"n":"Arnaud"}],"6|3|of-thais":[{"n":"Arnaud"}],"6|3|of-flavie":[{"n":"Ellah"},{"n":"Phalérus"},{"n":"Andy"}],"6|3|of-carla-trans":[{"n":"Benedictus"}],"6|3|of-marie":[{"n":"Jaunecy"}],"6|3|of-eden":[{"n":"Tendry"}],"6|3|of-lila":[{"n":"Jaunecy"}]},"notes":{"0":"Flavie Mym : quelent pb co\nChloe MYM : Hoby ne sera pas present masi mercredi oui\nEden Mym : Ny Anjara abs injustifiée\nAngel Mym : ilo(retard)\nNaya OF : Lahatra encore malade il a dit","1":"Victoria Mym : Riantsoa OFF\nNaya OF : Nirina abs sans infos","2":"Ava Paid Subs : Laura(Absente) Cf canal Privé\nMarie Mym : Rouchdiath(Coupure)\nFlavie Mym : Narcisse(retard)\nAngel OF : Jores souci de connexion","3":"Victoria Mym : inactivité"},"newChatters":["Ally","Ilo","Jeth","Lionel","Patty","Trésor"]};
+const PLAN_SEED = {"week":"2026-09-28","models":[{"id":"mym-naya","name":"Naya","group":"mym"},{"id":"mym-thais","name":"Thais","group":"mym"},{"id":"mym-carla","name":"Carla","group":"mym"},{"id":"mym-ava-paid-subs","name":"Ava Paid Subs","group":"mym"},{"id":"mym-marie","name":"Marie","group":"mym"},{"id":"mym-flavie","name":"Flavie","group":"mym"},{"id":"mym-chloe","name":"Chloe","group":"mym"},{"id":"mym-eden","name":"Eden","group":"mym"},{"id":"mym-carla-baby","name":"Carla Baby","group":"mym"},{"id":"other-ava-reveal","name":"Ava Reveal","group":"other"},{"id":"mym-angel","name":"Angel","group":"mym"},{"id":"mym-charlotte","name":"Charlotte","group":"mym"},{"id":"mym-tia","name":"Tia","group":"mym"},{"id":"mym-steffy","name":"Steffy","group":"mym"},{"id":"mym-victoria","name":"Victoria","group":"mym"},{"id":"mym-anaelle","name":"Anaelle","group":"mym"},{"id":"other-lila-telegram","name":"Lila Telegram","group":"other"},{"id":"of-naya","name":"Naya","group":"of"},{"id":"of-angel","name":"Angel","group":"of"},{"id":"of-carla-baby","name":"Carla Baby","group":"of"},{"id":"of-steffy","name":"Steffy","group":"of"},{"id":"of-ava","name":"Ava","group":"of"},{"id":"of-mae","name":"Mae","group":"of"},{"id":"of-thais","name":"Thaïs","group":"of"},{"id":"of-flavie","name":"Flavie","group":"of"},{"id":"of-carla-trans","name":"Carla Trans","group":"of"},{"id":"of-marie","name":"Marie","group":"of"},{"id":"of-eden","name":"Eden","group":"of"},{"id":"of-lila","name":"Lila","group":"of"}]};
 const PLAN_GROUPS = [
   {id:'mym', label:'MYM', color:'#22c55e', ink:'#062b14'},
   {id:'other', label:'Reveal / Telegram', color:'#a855f7', ink:'#ffffff'},
@@ -2960,7 +2968,32 @@ let planCfgSaved = lsGet(LS_PLANCFG, null);
 const planCfg = () => planCfgSaved && Array.isArray(planCfgSaved.models) && planCfgSaved.models.length ? planCfgSaved : DEFAULT_PLANCFG;
 const savePlan = () => { lsSet(LS_PLAN, planState); Sync.changed('planning'); };
 const savePlanCfg = () => { lsSet(LS_PLANCFG, planCfgSaved); Sync.changed('plancfg'); };
-const planUI = {week:null, day:null, q:''};
+const planUI = {week:null, day:null, q:'', tab:'week'};
+/* ---------- Jours OFF (un ou plusieurs jours fixes par chatter) ---------- */
+const DAY_WORDS = {lundi:0, lun:0, mardi:1, mar:1, mercredi:2, mer:2, jeudi:3, jeu:3, vendredi:4, ven:4, samedi:5, sam:5, dimanche:6, dim:6};
+const offKey = n => normName(n).replace(/\s+(mym|of)$/, '');
+const dayOff = () => (planState.dayoff ||= {});
+function offOn(name, d) { if (!planState.dayoff) return false; return String(name).split('/').some(x => { const o = planState.dayoff[offKey(x.trim())]; return o && (o.days || []).includes(+d); }); }
+function parseDays(txt) {
+  const t = normName(txt);
+  if (!t || /pas de off|aucun|^non$|^-$/.test(t)) return [];
+  return [...new Set(t.split(/[^a-z]+/).map(w => DAY_WORDS[w]).filter(x => x != null))].sort();
+}
+// Liste collée depuis Excel : « Chatter | Jour OFF | Note » (tabulations, points-virgules ou espaces)
+function parseOffList(text) {
+  const out = [], skipped = [];
+  for (const raw of String(text).replace(/\r/g, '').split('\n')) {
+    const line = raw.trim(); if (!line) continue;
+    let cols = line.includes('\t') ? raw.split('\t') : line.includes(';') ? line.split(';') : null;
+    if (!cols) { const m = line.match(/^(.+?)\s+((?:pas de off)|(?:(?:lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\b[\s,\/et]*)+)(.*)$/i); cols = m ? [m[1], m[2], m[3]] : [line]; }
+    cols = cols.map(c => c.trim());
+    const name = cols[0]; if (!name) continue;
+    if (/^(name|nom|chatter|chatteur)s?$/i.test(name)) continue;   // ligne d'en-têtes
+    const daysTxt = cols[1] || '', note = (cols[2] || '').trim();
+    out.push({name, days: parseDays(daysTxt), none: /pas de off/i.test(daysTxt), unknown: !!daysTxt.trim() && !parseDays(daysTxt).length && !/pas de off/i.test(daysTxt), note});
+  }
+  return out;
+}
 const normName = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 const cellKey = (d, s, mid) => `${d}|${s}|${mid}`;
 const groupIdx = g => PLAN_GROUPS.findIndex(x => x.id === g);
@@ -3048,7 +3081,8 @@ function chipHTML(e, wk, d, s, hl) {
   const nm = n => { const i = nk(n); return i ? `<span class="pc new" title="Nouveau : shift ${i}/${NEW_SHIFTS}">${esc(n)}</span>` : `<span class="pc">${esc(n)}</span>`; };
   if (e.r) return `<span class="pchip rep" title="${esc(e.n)} remplacé(e) par ${esc(e.r)}"><s>${esc(e.n)}</s><span class="arr">→</span>${e.r.split('/').map(x => nm(x.trim())).join(' / ')}</span>`;
   if (e.a) return `<span class="pchip"><span class="pc abs" title="Absent(e)">${esc(e.n)}</span></span>`;
-  return `<span class="pchip">${nm(e.n)}</span>`;
+  if (e.c) return `<span class="pchip"><span class="pc cut ${offOn(e.n, d) ? 'offc' : ''}" title="Coupure de courant">${esc(e.n)}</span></span>`;
+  return `<span class="pchip">${offOn(e.n, d) ? `<span class="offwrap" title="${esc(e.n)} est planifié(e) sur son jour OFF">${nm(e.n)}<b class="offtag">OFF</b></span>` : nm(e.n)}</span>`;
 }
 function renderPlanning(main) {
   const wk = planWeekKey(), W = weekOf(wk), d = planDay(wk);
@@ -3057,22 +3091,23 @@ function renderPlanning(main) {
   const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
   const hl = newHighlights();
   const q = normName(planUI.q);
-  const head = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1>
+  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab !== 'off' ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button></div>`;
+  if (planUI.tab === 'off') { main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1></div>` + tabs + offViewHTML(); bindPlanTabs(main); bindOffView(); return; }
+  const head = tabs + `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1>
     <div class="picker viewpick"><button class="btn ghost small-btn" id="pw-prev" type="button" aria-label="Semaine précédente">‹</button>
       <select id="pw-sel">${allWeeks.map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}${planState.weeks[k] ? '' : ' (vide)'}</option>`).join('')}</select>
       <button class="btn ghost small-btn" id="pw-next" type="button" aria-label="Semaine suivante">›</button></div></div>`;
   if (!W) {
-    const canSeed = wk === PLAN_SEED.week;
     main.innerHTML = head + `<div class="panel empty"><h2 style="font-size:18px;margin-bottom:6px">${esc(planWeekLabel(wk))} n'existe pas encore</h2>
-      <p class="hint" style="margin:0 auto 14px;max-width:520px">${prevExisting ? `Créez-la à partir de ${esc(planWeekLabel(prevExisting))} : les chatters sont repris, les absences, remplacements et notes repartent à zéro.` : 'Créez une semaine vide, ou chargez la semaine du 28 septembre depuis votre fichier Excel.'}</p>
+      <p class="hint" style="margin:0 auto 14px;max-width:520px">${prevExisting ? `Créez-la à partir de ${esc(planWeekLabel(prevExisting))} : les chatters sont repris, les absences, remplacements et notes repartent à zéro.` : 'Créez une semaine vide, ou importez-la depuis votre fichier Excel de planning.'}</p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         ${prevExisting ? `<button class="btn primary" id="pw-copy" type="button">Créer à partir de la semaine précédente</button>` : ''}
         <button class="btn" id="pw-empty" type="button">Créer une semaine vide</button>
-        ${canSeed ? `<button class="btn" id="pw-seed" type="button">Charger la semaine du 28 sept. (Excel)</button>` : ''}</div></div>`;
+        <button class="btn" id="pw-xls" type="button">Importer depuis un Excel</button></div></div>`;
     bindPlanningHead(main, wk);
     document.getElementById('pw-copy')?.addEventListener('click', () => { createWeek(wk, prevExisting); toast(`${planWeekLabel(wk)} créée à partir de ${planWeekLabel(prevExisting)}.`); render(); });
     document.getElementById('pw-empty')?.addEventListener('click', () => { createWeek(wk, null); render(); });
-    document.getElementById('pw-seed')?.addEventListener('click', loadSeedWeek);
+    document.getElementById('pw-xls')?.addEventListener('click', () => importExcelModal(wk));
     return;
   }
   const nextWk = addDaysIso(wk, 7);
@@ -3094,11 +3129,18 @@ function renderPlanning(main) {
         <button class="btn" id="p-unav" type="button">Indisponibilité</button>
         <button class="btn" id="p-addm" type="button">+ Ajouter une modèle</button>
         ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>`}
-        ${wk === PLAN_SEED.week ? `<button class="btn ghost" id="p-seed" type="button">${Object.keys(W.cells || {}).length ? 'Recharger depuis l’Excel' : 'Charger depuis l’Excel'}</button>` : ''}
+        <button class="btn ghost" id="p-xls" type="button">Importer un Excel</button>
       </div>
-      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
+      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
     </section>
-    ${q ? `<section class="panel"><h2>Planning de « ${esc(planUI.q)} » · ${esc(planWeekLabel(wk))}</h2>${found.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Jour</th><th>Shift</th><th>Modèle</th><th>Statut</th></tr></thead><tbody>${found.map(x => `<tr><td>${PLAN_DAYS_LONG[x.dd]} ${parseDate(addDaysIso(wk, x.dd)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</td><td>${PLAN_SHIFTS[x.s]}</td><td>${esc(modelLabel(x.m))}</td><td>${x.e.r ? `remplacé(e) par ${esc(x.e.r)}` : x.e.a ? '<span class="sc-lo">absent</span>' : 'prévu'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Aucun shift trouvé cette semaine.</p>'}</section>` : ''}
+    ${q ? `<section class="panel"><h2>Planning de « ${esc(planUI.q)} » · ${esc(planWeekLabel(wk))}</h2>${found.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Jour</th><th>Shift</th><th>Modèle</th><th>Statut</th></tr></thead><tbody>${found.map(x => `<tr><td>${PLAN_DAYS_LONG[x.dd]} ${parseDate(addDaysIso(wk, x.dd)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</td><td>${PLAN_SHIFTS[x.s]}</td><td>${esc(modelLabel(x.m))}</td><td>${x.e.r ? `remplacé(e) par ${esc(x.e.r)}` : x.e.a ? '<span class="sc-lo">absent</span>' : x.e.c ? '<span class="pc cut">coupure de courant</span>' : 'prévu'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Aucun shift trouvé cette semaine.</p>'}</section>` : ''}
+    ${(() => {
+      const offs = Object.values(planState.dayoff || {}).filter(o => (o.days || []).includes(d)).map(o => o.name).sort((a, b) => a.localeCompare(b, 'fr'));
+      const clash = [];
+      for (let s = 0; s < PLAN_SHIFTS.length; s++) for (const m of dayModels) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) { const w = workerOf(e); if (w && offOn(w, d)) clash.push(`${w} (${modelLabel(m)} ${PLAN_SHIFTS[s]})`); }
+      if (!offs.length && !clash.length) return '';
+      return `<section class="panel offbar">${clash.length ? `<div class="alert warn" style="margin-bottom:${offs.length ? '10px' : '0'}"><strong>${plural(clash.length, 'créneau', 'créneaux')} sur un jour OFF :</strong> ${clash.map(esc).join(' · ')}</div>` : ''}${offs.length ? `<div class="muted" style="font-size:13px"><strong style="color:var(--text)">OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} (${offs.length}) :</strong> ${offs.map(esc).join(', ')}</div>` : ''}</section>`;
+    })()}
     <section class="panel" style="padding:12px">
       <div class="tbl-wrap pgrid-wrap" style="max-height:none"><table class="pgrid"><thead>
         <tr><th class="sh"></th>${groupsShown.map(x => `<th colspan="${x.ms.length}" class="pg" style="background:${x.g.color};color:${x.g.ink}">${esc(x.g.label)}</th>`).join('')}</tr>
@@ -3127,20 +3169,276 @@ function renderPlanning(main) {
   });
   document.getElementById('p-gonext')?.addEventListener('click', () => { planUI.week = nextWk; planUI.day = 0; render(); });
   document.getElementById('p-unav').addEventListener('click', () => unavailability(wk));
-  document.getElementById('p-seed')?.addEventListener('click', loadSeedWeek);
+  document.getElementById('p-xls')?.addEventListener('click', () => importExcelModal(wk));
   bindPlanModels(wk, d);
   document.getElementById('p-addm').addEventListener('click', () => addModelModal(dayDate));
 }
-// Charge la semaine du 28/09 convertie depuis le fichier Excel (remplace son contenu après confirmation)
-async function loadSeedWeek() {
-  const W = planState.weeks[PLAN_SEED.week];
-  const filled = W && Object.keys(W.cells || {}).length;
-  if (filled && !(await modal('Recharger depuis l’Excel', `<p>La ${esc(planWeekLabel(PLAN_SEED.week))} contient déjà ${plural(Object.keys(W.cells).length, 'case remplie', 'cases remplies')}. La remplacer par le contenu du fichier Excel ? Les modifications faites depuis seront perdues.</p>`, 'Remplacer'))) return;
-  planState.weeks[PLAN_SEED.week] = {cells: JSON.parse(JSON.stringify(PLAN_SEED.cells)), notes: {...PLAN_SEED.notes}, createdAt: Date.now(), from: 'excel'};
-  for (const n of PLAN_SEED.newChatters) planState.chatters[normName(n)] = {...(planState.chatters[normName(n)] || {}), name: n, isNew: true};
-  savePlan(); planUI.week = PLAN_SEED.week; planUI.day = 0; toast(`${planWeekLabel(PLAN_SEED.week)} chargée depuis l’Excel.`); render();
+/* ---------- Import d'un planning Excel (format de l'agence : un onglet par semaine) ---------- */
+// Lit les valeurs, les couleurs de police (cellule entière ou mot par mot) et les couleurs de fond des en-têtes.
+const xmlText = (X, z, path) => { const f = X.CFB.find(z, path) || X.CFB.find(z, '/' + path) || X.CFB.find(z, 'Root Entry/' + path); if (!f || !f.content) return ''; return new TextDecoder('utf-8').decode(f.content instanceof Uint8Array ? f.content : new Uint8Array(f.content)); };
+const unxml = s => String(s).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
+const rgb6 = c => c ? String(c).slice(-6).toUpperCase() : null;
+function planXlsxSheets(X, buf) {
+  const wb = X.read(buf, {type: 'array', cellStyles: true, bookSheets: true});
+  const meta = (wb.Workbook && wb.Workbook.Sheets) || [];
+  return wb.SheetNames.map((n, i) => ({name: n, hidden: !!(meta[i] && meta[i].Hidden)}));
+}
+function planXlsxParse(X, buf, sheetName) {
+  const wb = X.read(buf, {type: 'array', cellStyles: true, sheets: [sheetName]});
+  const ws = wb.Sheets[sheetName];
+  if (!ws || !ws['!ref']) return {error: `L'onglet « ${sheetName} » est vide.`};
+  // Couleur de police de chaque cellule (styles.xml + feuille), car la bibliothèque ne la fournit pas directement
+  const fontColorOf = {};
+  try {
+    const z = X.CFB.read(new Uint8Array(buf), {type: 'array'});
+    const styles = xmlText(X, z, 'xl/styles.xml');
+    const fontsXml = (styles.match(/<fonts[^>]*>([\s\S]*?)<\/fonts>/) || [, ''])[1];
+    const fonts = [...fontsXml.matchAll(/<font\b[^>]*\/>|<font\b[^>]*>([\s\S]*?)<\/font>/g)].map(m => { const c = (m[1] || '').match(/<color[^>]*rgb="([0-9A-Fa-f]{6,8})"/); return c ? rgb6(c[1]) : null; });
+    const xfsXml = (styles.match(/<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/) || [, ''])[1];
+    const xfs = [...xfsXml.matchAll(/<xf\b([^>]*?)\/?>/g)].map(m => { const f = m[1].match(/fontId="(\d+)"/); return f ? +f[1] : 0; });
+    const wbXml = xmlText(X, z, 'xl/workbook.xml'), rels = xmlText(X, z, 'xl/_rels/workbook.xml.rels');
+    const sh = [...wbXml.matchAll(/<sheet\b([^>]*?)\/>/g)].map(m => ({name: unxml((m[1].match(/name="([^"]*)"/) || [])[1] || ''), rid: (m[1].match(/r:id="([^"]*)"/) || [])[1]})).find(s => s.name === sheetName);
+    const target = sh && (rels.match(new RegExp(`<Relationship[^>]*Id="${sh.rid}"[^>]*Target="([^"]*)"`)) || rels.match(new RegExp(`<Relationship[^>]*Target="([^"]*)"[^>]*Id="${sh.rid}"`)) || [])[1];
+    if (target) {
+      const sheetXml = xmlText(X, z, 'xl/' + target.replace(/^\/?xl\//, '').replace(/^\//, ''));
+      for (const m of sheetXml.matchAll(/<c r="([A-Z]+\d+)"([^>]*)>/g)) { const s = m[2].match(/\ss="(\d+)"/); if (s) { const col = fonts[xfs[+s[1]]]; if (col) fontColorOf[m[1]] = col; } }
+    }
+  } catch (e) { /* sans couleurs : les noms sont quand même importés */ }
+  const range = X.utils.decode_range(ws['!ref']);
+  const cell = (r, c) => ws[X.utils.encode_cell({r, c})];
+  const txt = (r, c) => { const v = cell(r, c); return v ? String(v.w ?? v.v ?? '').trim() : ''; };
+  const fillOf = (r, c) => { const v = cell(r, c); return v && v.s && v.s.fgColor && v.s.fgColor.rgb ? rgb6(v.s.fgColor.rgb) : null; };
+  // Texte + couleur de chaque caractère (mots colorés dans une même case, ou case entière colorée)
+  const runsOf = (r, c) => {
+    const v = cell(r, c); if (!v) return {text: '', colors: []};
+    const base = fontColorOf[X.utils.encode_cell({r, c})] || null;
+    if (v.r && /<r>/.test(v.r)) {
+      let text = '', colors = [];
+      for (const m of v.r.matchAll(/<r>([\s\S]*?)<\/r>/g)) {
+        const col = (m[1].match(/<color[^>]*rgb="([0-9A-Fa-f]{6,8})"/) || [])[1];
+        const t = unxml((m[1].match(/<t[^>]*>([\s\S]*?)<\/t>/) || [, ''])[1]);
+        text += t; colors.push(...Array(t.length).fill(col ? rgb6(col) : base));
+      }
+      return {text, colors};
+    }
+    const t = String(v.w ?? v.v ?? ''); return {text: t, colors: Array(t.length).fill(base)};
+  };
+  const DAY_RE = /^(lun|mar|mer|jeu|ven|sam|dim)/i, SHIFT_RE = /^\s*\d{1,2}\s*h?\s*[-–]\s*\d{1,2}\s*h?\s*$/;
+  const dayIdx = s => ['lun','mar','mer','jeu','ven','sam','dim'].indexOf(s.slice(0, 3).toLowerCase());
+  // Lignes de début de chaque jour (colonne A)
+  const dayRows = [];
+  for (let r = range.s.r; r <= range.e.r; r++) { const t = txt(r, 0); if (DAY_RE.test(t) && dayIdx(t) >= 0) dayRows.push({r, d: dayIdx(t)}); }
+  if (!dayRows.length) return {error: `Aucun jour (Lun, Mar…) trouvé en colonne A de l'onglet « ${sheetName} ».`};
+  const GROUP_BY_FILL = {'00FF00': 'mym', '9900FF': 'other', 'FFFF00': 'of'};
+  const models = new Map(), cells = {}, notes = {}, newNames = new Set();
+  let absents = 0, reps = 0, cuts = 0;
+  dayRows.forEach((dr, i) => {
+    const end = i + 1 < dayRows.length ? dayRows[i + 1].r - 1 : range.e.r;
+    // Lignes de shifts : une colonne contient « 04 - 10 », « 10 - 16 »…
+    const shiftRows = [];
+    for (let r = dr.r; r <= end; r++) for (let c = range.s.c; c <= Math.min(range.e.c, range.s.c + 40); c++) if (SHIFT_RE.test(txt(r, c))) { shiftRows.push(r); break; }
+    if (!shiftRows.length) return;
+    const shiftCols = new Set(); for (let c = range.s.c; c <= range.e.c; c++) if (SHIFT_RE.test(txt(shiftRows[0], c))) shiftCols.add(c);
+    // En-tête des modèles : la ligne juste au-dessus du premier shift
+    const hr = shiftRows[0] - 1;
+    const cols = [];
+    for (let c = 1; c <= range.e.c; c++) {
+      if (shiftCols.has(c)) continue;
+      const name = txt(hr, c); if (!name) continue;
+      const fill = fillOf(hr, c);
+      const firstShiftCol = [...shiftCols].sort((a, b) => a - b);
+      const g = GROUP_BY_FILL[fill] || (firstShiftCol.length > 1 && c > firstShiftCol[1] ? 'of' : 'mym');
+      const base = (g === 'mym' ? name.replace(/\s*mym\s*$/i, '') : g === 'of' ? name.replace(/\s*of\s*$/i, '') : name).trim();
+      const key = `${g}|${base.toLowerCase()}`;
+      if (!models.has(key)) models.set(key, {name: base, group: g});
+      cols.push({c, key});
+    }
+    shiftRows.slice(0, 4).forEach((r, s) => {
+      for (const {c, key} of cols) {
+        const {text, colors} = runsOf(r, c); if (!text.trim()) continue;
+        const parts = []; let depth = 0, start = 0;
+        for (let k = 0; k < text.length; k++) { const ch = text[k]; if (ch === '(') depth++; else if (ch === ')') depth = Math.max(0, depth - 1); else if (ch === '/' && !depth) { parts.push([start, k]); start = k + 1; } }
+        parts.push([start, text.length]);
+        const list = [];
+        for (const [a, b] of parts) {
+          const seg = text.slice(a, b); if (!seg.trim()) continue;
+          const m = seg.match(/^\s*([^()]+?)\s*(?:\(([^)]*)\))?\s*$/);
+          if (!m) { list.push({n: seg.trim()}); continue; }
+          const n = m[1].trim(), rep = (m[2] || '').trim();
+          const i0 = a + seg.indexOf(m[1]); const cs = colors.slice(i0, i0 + m[1].length).filter(Boolean);
+          const main = cs.length ? cs.sort((x, y) => cs.filter(v => v === y).length - cs.filter(v => v === x).length)[0] : null;
+          const e = {n}; if (rep) { e.r = rep.replace(/\s*\/\s*/g, ' / '); reps++; }
+          if (main === 'FF0000') { e.a = 1; absents++; }
+          if (main === '9900FF') { e.c = 1; cuts++; }        // violet : coupure de courant
+          if (main === '0000FF') newNames.add(n);             // bleu : nouveau chatter
+          list.push(e);
+        }
+        if (list.length) (cells[`${dr.d}|${s}|${key}`] ||= []).push(...list);
+      }
+    });
+    // Notes : lignes après le dernier shift, jusqu'au jour suivant
+    const nl = [];
+    for (let r = shiftRows[shiftRows.length - 1] + 1; r <= end; r++) for (const {c, key} of cols) { const t = txt(r, c); if (t) { const m = models.get(key); nl.push(`${m.name}${m.group === 'mym' ? ' MYM' : m.group === 'of' ? ' OF' : ''} : ${t}`); } }
+    if (nl.length) notes[dr.d] = (notes[dr.d] ? notes[dr.d] + '\n' : '') + nl.join('\n');
+  });
+  if (!Object.keys(cells).length) return {error: `Aucune affectation trouvée dans l'onglet « ${sheetName} » : ce n'est peut-être pas un planning de semaine.`};
+  return {models: [...models.entries()].map(([key, m]) => ({key, ...m})), cells, notes, newNames: [...newNames], absents, reps, cuts, days: [...new Set(dayRows.map(x => x.d))].length};
+}
+// Nom d'onglet → lundi de la semaine : « 2809 », « S 201025 » (jj mm aa), « S604 » ; année la plus proche d'aujourd'hui si absente
+function planWeekFromSheetName(name, today = new Date()) {
+  const g = (String(name).match(/\d{3,6}/) || [])[0]; if (!g) return null;
+  let dd, mm, yy = null;
+  if (g.length === 6) { dd = +g.slice(0, 2); mm = +g.slice(2, 4); yy = 2000 + +g.slice(4); }
+  else if (g.length === 4) { dd = +g.slice(0, 2); mm = +g.slice(2); }
+  else if (g.length === 3) { dd = +g.slice(0, 1); mm = +g.slice(1); }
+  else return null;
+  if (dd < 1 || dd > 31 || mm < 1 || mm > 12) return null;
+  const y0 = today.getFullYear();
+  // sans année : la date la plus récente qui ne dépasse pas aujourd'hui + 2 mois (on prépare rarement un planning plus loin)
+  const limit = new Date(today); limit.setDate(limit.getDate() + 60);
+  const best = yy ? new Date(yy, mm - 1, dd) : [y0 - 1, y0, y0 + 1].map(y => new Date(y, mm - 1, dd)).filter(d => d <= limit).sort((a, b) => b - a)[0];
+  const d = new Date(best); d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function importExcelModal(defaultWk) {
+  if (!window.XLSX || !XLSX.CFB) { toast(`Le lecteur Excel n'a pas pu se charger (connexion internet ?). Réessayez dans un instant.`, true); return; }
+  const st = {buf:null, fileName:'', sheets:[], sheet:'', wk:defaultWk, res:null, busy:false, flagNew:true};
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  const draw = () => {
+    const r = st.res, exists = st.wk && planState.weeks[st.wk] && Object.keys(planState.weeks[st.wk].cells || {}).length;
+    const known = r && !r.error && r.models ? r.models.filter(m => !allModels().some(x => x.group === m.group && normName(x.name).replace(/\s/g, '') === normName(m.name).replace(/\s/g, ''))) : [];
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:620px"><h3>Importer un planning depuis Excel</h3>
+      <p class="hint" style="margin-top:0">Le fichier doit suivre votre format habituel : un onglet par semaine, les jours en colonne A, les shifts (04 - 10…) et les modèles en en-tête. Les prénoms en rouge sont importés comme absents, en violet comme coupure de courant, en bleu comme nouveaux, et « Prévu (Remplaçant) » comme remplacement.</p>
+      <label class="btn" for="xl-file" style="cursor:pointer">${icon('import')}${st.fileName ? esc(st.fileName) : 'Choisir le fichier Excel (.xlsx)'}</label><input type="file" id="xl-file" accept=".xlsx,.xlsm,.xls" hidden>
+      ${st.sheets.length ? `<div class="set-grid" style="grid-template-columns:1fr 1fr;margin-top:14px">
+        <label>Onglet de la semaine<select id="xl-sheet">${st.sheets.map(s => `<option value="${esc(s.name)}" ${s.name === st.sheet ? 'selected' : ''}>${esc(s.name)}${s.wk ? ` → ${esc(planWeekLabel(s.wk))}` : ''}${s.hidden ? ' (masqué)' : ''}</option>`).join('')}</select></label>
+        <label>Semaine du (lundi)<input type="date" id="xl-wk" value="${esc(st.wk || '')}"></label></div>` : ''}
+      <div id="xl-sum" style="margin-top:14px">${st.busy ? '<p class="hint">Lecture de l’onglet…</p>' : !r ? '' : r.error ? `<div class="alert err">${esc(r.error)}</div>`
+        : r.off ? `<div class="alert ok">Onglet de jours OFF : ${plural(r.off.length, 'chatter', 'chatters')} (${plural(r.off.filter(x => x.days.length).length, 'avec un jour OFF', 'avec un jour OFF')}). Ils seront ajoutés ou mis à jour dans « Jours OFF ».</div>`
+        : `<div class="alert ok">${plural(r.models.length, 'modèle', 'modèles')} · ${plural(Object.keys(r.cells).length, 'case remplie', 'cases remplies')} · ${plural(r.absents, 'absent', 'absents')} · ${plural(r.reps, 'remplacement', 'remplacements')} · ${plural(r.cuts || 0, 'coupure', 'coupures')} · ${plural(r.days, 'jour', 'jours')}</div>
+          ${known.length ? `<p class="hint" style="margin:8px 0 0">Nouvelles modèles ajoutées au planning : ${known.map(m => esc(m.name)).join(', ')}.</p>` : ''}
+          ${r.newNames.length ? `<label class="check" style="margin-top:8px"><input type="checkbox" id="xl-new" ${st.flagNew ? 'checked' : ''}> Marquer comme nouveaux les prénoms en bleu : ${r.newNames.map(esc).join(', ')}</label>` : ''}
+          ${exists ? `<div class="alert warn" style="margin-top:8px">La ${esc(planWeekLabel(st.wk))} contient déjà des cases : elle sera <strong>remplacée</strong> par le contenu de l'Excel.</div>` : ''}`}</div>
+      <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button" ${r && !r.error && (r.off || st.wk) ? '' : 'disabled'}>${r && r.off ? 'Importer les jours OFF' : `Importer ${st.wk ? esc(planWeekLabel(st.wk)) : ''}`}</button></div></div>`;
+  };
+  const parseSheet = () => {
+    st.busy = true; st.res = null; draw();
+    setTimeout(() => {
+      try {
+        if (/\boff\b/i.test(st.sheet)) {   // onglet « Jour OFF » : liste Chatter | Jour OFF | Note
+          const wb = XLSX.read(st.buf, {type: 'array', sheets: [st.sheet]});
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[st.sheet], {header: 1, raw: false, defval: ''});
+          const off = parseOffList(rows.map(r => r.slice(0, 3).join('\t')).join('\n')).filter(x => x.days.length || x.none);
+          st.res = off.length ? {off} : {error: `Aucun jour OFF lisible dans l'onglet « ${st.sheet} ».`};
+        } else st.res = planXlsxParse(XLSX, st.buf, st.sheet);
+      } catch (e) { st.res = {error: `Lecture impossible : ${e.message}`}; }
+      st.busy = false; draw();
+    }, 30);
+  };
+  draw();
+  bg.addEventListener('change', async e => {
+    const t = e.target;
+    if (t.id === 'xl-file' && t.files[0]) {
+      const f = t.files[0]; st.fileName = f.name; st.buf = await f.arrayBuffer();
+      try {
+        st.sheets = planXlsxSheets(XLSX, st.buf).map(s => ({...s, wk: planWeekFromSheetName(s.name)}));
+        const weekly = st.sheets.filter(s => s.wk && !s.hidden).sort((a, b) => b.wk.localeCompare(a.wk));
+        st.sheets = [...weekly, ...st.sheets.filter(s => !weekly.includes(s))];
+        const pick = st.sheets.find(s => s.wk === defaultWk) || weekly[0] || st.sheets[0];
+        st.sheet = pick ? pick.name : ''; st.wk = pick && pick.wk ? pick.wk : defaultWk;
+      } catch (err) { st.res = {error: `Fichier illisible : ${err.message}`}; draw(); return; }
+      parseSheet();
+    }
+    if (t.id === 'xl-sheet') { st.sheet = t.value; const s = st.sheets.find(x => x.name === t.value); if (s && s.wk) st.wk = s.wk; parseSheet(); }
+    if (t.id === 'xl-wk' && t.value) { st.wk = mondayOf(t.value); draw(); }
+    if (t.id === 'xl-new') st.flagNew = t.checked;
+  });
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') bg.remove(); });
+  bg.addEventListener('click', async e => {
+    if (e.target === bg) { bg.remove(); return; }
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === '1') {
+      const r = st.res, wk = st.wk; if (!r || r.error) return;
+      if (r.off) {
+        const map = dayOff(); for (const x of r.off) map[offKey(x.name)] = {name: x.name, days: x.days, ...(x.note ? {note: x.note} : {})};
+        savePlan(); planUI.tab = 'off'; toast(`${plural(r.off.length, 'jour OFF importé', 'jours OFF importés')} depuis « ${st.sheet} ».`); bg.remove(); render(); return;
+      }
+      if (!wk) return;
+      const map = planModelsMap(), idFor = {}; let added = 0;
+      const norm2 = s => normName(s).replace(/\s/g, '');
+      for (const m of r.models) {
+        const ex = allModels().find(x => x.group === m.group && norm2(x.name) === norm2(m.name));
+        if (ex) { idFor[m.key] = ex.id; continue; }
+        const name = m.name === m.name.toUpperCase() && m.name.length > 2 ? m.name.charAt(0) + m.name.slice(1).toLowerCase() : m.name;
+        const id = `${m.group}-${normName(name).replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36).slice(-4)}${added}`;
+        map[id] = {name, group: m.group, order: Math.max(0, ...Object.values(map).filter(x => x.group === m.group).map(x => (x.order ?? 0) + 1)), start: wk};
+        idFor[m.key] = id; added++;
+      }
+      const cells = {};
+      for (const [k, list] of Object.entries(r.cells)) { const [d, s, ...rest] = k.split('|'); const id = idFor[rest.join('|')]; if (id) cells[`${d}|${s}|${id}`] = list; }
+      planState.weeks[wk] = {cells, notes: {...r.notes}, createdAt: Date.now(), from: `excel:${st.sheet}`};
+      if (st.flagNew) for (const n of r.newNames) planState.chatters[normName(n)] = {...(planState.chatters[normName(n)] || {}), name: n, isNew: true};
+      savePlan(); planUI.week = wk; planUI.day = 0;
+      toast(`${planWeekLabel(wk)} importée depuis « ${st.sheet} » : ${plural(Object.keys(cells).length, 'case', 'cases')}${added ? `, ${plural(added, 'nouvelle modèle', 'nouvelles modèles')}` : ''}.`);
+      bg.remove(); render(); return;
+    }
+    bg.remove();
+  });
+  document.body.appendChild(bg);
+}
+function bindPlanTabs(main) { main.querySelectorAll('[data-ptab]').forEach(b => b.addEventListener('click', () => { planUI.tab = b.dataset.ptab; render(); })); }
+function offViewHTML() {
+  const list = Object.entries(dayOff()).map(([k, o]) => ({k, ...o})).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  const perDay = PLAN_DAYS.map((_, i) => list.filter(o => (o.days || []).includes(i)).length);
+  return `<div class="stack">
+    <section class="panel"><h2>Coller la liste des jours OFF</h2>
+      <p class="hint">Copiez les colonnes « Chatter », « Jour OFF » et « Note » depuis Excel et collez-les ici (une ligne par chatter). Un jour (« Jeudi »), plusieurs (« Samedi, Dimanche ») ou « Pas de off ». Les chatters déjà présents sont mis à jour.</p>
+      <textarea id="off-paste" rows="6" placeholder="Alex&#9;Jeudi&#10;Ambinintsoa MYM&#9;Samedi&#10;Ferlin&#9;Pas de off&#9;Enchaine tous les jours"></textarea>
+      <div id="off-prev" class="hint" style="margin:8px 0 0"></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
+        <label class="check"><input type="checkbox" id="off-replace"> Remplacer toute la liste (sinon : ajout et mise à jour)</label>
+        <button class="btn primary" id="off-apply" type="button" disabled style="margin-left:auto">Enregistrer la liste</button></div>
+    </section>
+    <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">Jours OFF de l'équipe · ${plural(list.length, 'chatter', 'chatters')}</h2>
+      <span class="muted" style="font-size:12.5px">${PLAN_DAYS.map((x, i) => `${x} ${perDay[i]}`).join(' · ')}</span>
+      <input type="search" id="off-q" placeholder="Rechercher" style="margin-left:auto;max-width:220px" value="${esc(planUI.offq || '')}"></div>
+      ${list.length ? `<div class="tbl-wrap" style="max-height:560px"><table><thead><tr><th>Chatter</th>${PLAN_DAYS.map(x => `<th style="text-align:center">${x}</th>`).join('')}<th>Note</th><th></th></tr></thead><tbody>
+      ${list.filter(o => !planUI.offq || normName(o.name).includes(normName(planUI.offq))).map(o => `<tr><td><strong>${esc(o.name)}</strong>${!(o.days || []).length ? ' <span class="sub">pas de OFF</span>' : ''}</td>
+        ${PLAN_DAYS.map((_, i) => `<td style="text-align:center"><input type="checkbox" data-offd="${esc(o.k)}|${i}" ${(o.days || []).includes(i) ? 'checked' : ''} aria-label="${esc(o.name)} OFF ${PLAN_DAYS_LONG[i]}"></td>`).join('')}
+        <td><input type="text" data-offn="${esc(o.k)}" value="${esc(o.note || '')}" placeholder="—" style="min-width:180px"></td>
+        <td class="num"><button class="btn ghost" data-offx="${esc(o.k)}" type="button" aria-label="Retirer ${esc(o.name)}">×</button></td></tr>`).join('')}
+      </tbody></table></div>` : '<p class="hint" style="margin:0">Aucun jour OFF enregistré : collez votre liste ci-dessus.</p>'}
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><input type="text" id="off-new" placeholder="Ajouter un chatter" list="pl-names3"><datalist id="pl-names3">${knownChatters().map(n => `<option value="${esc(n)}">`).join('')}</datalist><button class="btn" id="off-add" type="button">Ajouter</button></div>
+    </section></div>`;
+}
+function bindOffView() {
+  const ta = document.getElementById('off-paste'), prev = document.getElementById('off-prev'), go = document.getElementById('off-apply');
+  let parsed = [];
+  const show = () => {
+    parsed = parseOffList(ta.value);
+    const unk = parsed.filter(x => x.unknown);
+    prev.innerHTML = parsed.length ? `${plural(parsed.length, 'chatter lu', 'chatters lus')} : ${parsed.slice(0, 6).map(x => `${esc(x.name)} → ${x.days.length ? x.days.map(d => PLAN_DAYS[d]).join(', ') : 'pas de OFF'}`).join(' · ')}${parsed.length > 6 ? '…' : ''}${unk.length ? `<br><span class="sc-mid">Jour non reconnu pour : ${unk.map(x => esc(x.name)).join(', ')}</span>` : ''}` : '';
+    go.disabled = !parsed.length;
+  };
+  ta.addEventListener('input', show);
+  go.addEventListener('click', () => {
+    const map = document.getElementById('off-replace').checked ? (planState.dayoff = {}) : dayOff();
+    for (const x of parsed) { const k = offKey(x.name); map[k] = {name: x.name, days: x.days, ...(x.note ? {note: x.note} : {})}; }
+    savePlan(); toast(`${plural(parsed.length, 'jour OFF enregistré', 'jours OFF enregistrés')}.`); render();
+  });
+  const qi = document.getElementById('off-q'); let t;
+  qi?.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { planUI.offq = qi.value; render(); const n = document.getElementById('off-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
+  document.querySelectorAll('[data-offd]').forEach(cb => cb.addEventListener('change', () => {
+    const [k, i] = cb.dataset.offd.split('|'); const o = dayOff()[k]; const set = new Set(o.days || []);
+    cb.checked ? set.add(+i) : set.delete(+i); o.days = [...set].sort(); savePlan();
+  }));
+  document.querySelectorAll('[data-offn]').forEach(inp => inp.addEventListener('change', () => { const o = dayOff()[inp.dataset.offn]; if (inp.value.trim()) o.note = inp.value.trim(); else delete o.note; savePlan(); }));
+  document.querySelectorAll('[data-offx]').forEach(b => b.addEventListener('click', () => { delete dayOff()[b.dataset.offx]; savePlan(); render(); }));
+  document.getElementById('off-add').addEventListener('click', () => { const n = document.getElementById('off-new').value.trim(); if (!n) return; const k = offKey(n); if (!dayOff()[k]) dayOff()[k] = {name: n, days: []}; savePlan(); render(); });
 }
 function bindPlanningHead(main, wk) {
+  bindPlanTabs(main);
   const go = k => { planUI.week = k; planUI.day = null; render(); };
   document.getElementById('pw-prev').addEventListener('click', () => go(addDaysIso(wk, -7)));
   document.getElementById('pw-next').addEventListener('click', () => go(addDaysIso(wk, 7)));
@@ -3160,6 +3458,7 @@ function editCell(wk, key) {
       ${list.length ? `<div class="pe-list">${list.map((e, i) => `<div class="pe-row">
         <strong class="${e.a && !e.r ? 'sc-lo' : ''}">${esc(e.n)}</strong>
         <label class="check"><input type="checkbox" data-abs="${i}" ${e.a ? 'checked' : ''}> Absent</label>
+        <label class="check" title="Coupure de courant"><input type="checkbox" data-cut="${i}" ${e.c ? 'checked' : ''}> Coupure</label>
         <input type="text" list="pl-names" data-rep="${i}" value="${esc(e.r || '')}" placeholder="Remplaçant (facultatif)">
         <label class="check" title="Mis en couleur sur ses ${NEW_SHIFTS} premiers shifts travaillés"><input type="checkbox" data-new="${i}" ${isFlaggedNew(e.n) ? 'checked' : ''}> Nouveau</label>
         <button class="btn ghost" type="button" data-del="${i}" aria-label="Retirer ${esc(e.n)}">×</button></div>`).join('')}</div>` : '<p class="hint">Personne sur ce shift.</p>'}
@@ -3169,6 +3468,7 @@ function editCell(wk, key) {
   };
   const sync = () => {
     bg.querySelectorAll('[data-abs]').forEach(c => { list[+c.dataset.abs].a = c.checked ? 1 : 0; });
+    bg.querySelectorAll('[data-cut]').forEach(c => { list[+c.dataset.cut].c = c.checked ? 1 : 0; });
     bg.querySelectorAll('[data-rep]').forEach(c => { const v = c.value.trim(); list[+c.dataset.rep].r = v || undefined; });
   };
   const add = () => { sync(); const v = bg.querySelector('#pe-add').value; for (const n of v.split('/').map(x => x.trim()).filter(Boolean)) if (!list.some(e => normName(e.n) === normName(n))) list.push({n}); draw(); };
@@ -3183,7 +3483,7 @@ function editCell(wk, key) {
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a === '1') {
       sync(); if (bg.querySelector('#pe-add').value.trim()) add();
-      const clean = list.map(e => { const o = {n: e.n}; if (e.a) o.a = 1; if (e.r) o.r = e.r; return o; });
+      const clean = list.map(e => { const o = {n: e.n}; if (e.a) o.a = 1; if (e.c) o.c = 1; if (e.r) o.r = e.r; return o; });
       if (clean.length) W.cells[key] = clean; else delete W.cells[key];
       for (const [k, f] of Object.entries(newFlags)) { if (f.on) planState.chatters[k] = {...(planState.chatters[k] || {}), name: f.name, isNew: true}; else if (planState.chatters[k]) planState.chatters[k].isNew = false; }
       savePlan(); render();
@@ -3362,7 +3662,7 @@ const Sync = (() => {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
     } else if (key === 'planning') {
-      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models && Object.keys(data.models).length ? {models: data.models} : {})}; lsSet(LS_PLAN, planState);
+      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models && Object.keys(data.models).length ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {})}; lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
       planCfgSaved = data && Array.isArray(data.models) && data.models.length ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
