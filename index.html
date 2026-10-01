@@ -389,6 +389,38 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .small-btn{padding:4px 10px;min-height:34px;font-size:16px}
 @media (max-width:1180px){.glegend{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:620px){.glegend{grid-template-columns:1fr}}
+.pbadge.plan{background:linear-gradient(135deg,#22c55e,#a855f7 55%,#eab308)}
+.plan-bar{display:flex;flex-direction:column;gap:12px}
+.ptabs{display:flex;gap:6px;flex-wrap:wrap}
+.ptab{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:74px;padding:7px 10px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--bg);color:var(--muted);cursor:pointer}
+.ptab b{color:var(--text);font-size:14px}
+.ptab span{font-size:11.5px}
+.ptab.on{border-color:var(--ember);background:linear-gradient(180deg,rgba(224,51,106,.18),rgba(91,63,208,.12));color:var(--text)}
+.pactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pactions input[type=search]{flex:1;min-width:200px;max-width:320px}
+.plegend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);align-items:center}
+.pgrid-wrap{overflow:auto}
+.pgrid{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+.pgrid th,.pgrid td{border-bottom:1px solid var(--line-soft);border-right:1px solid var(--line-soft);white-space:normal;vertical-align:top}
+.pgrid thead th{position:sticky;top:0;z-index:2}
+.pgrid .pg{text-align:left;font-weight:800;font-size:12.5px;letter-spacing:.3px;padding:6px 12px}
+.pgrid .pm{min-width:118px;max-width:150px;font-size:12.5px;color:var(--text);background:var(--raised);text-align:center;padding:8px 6px}
+.pgrid .sh{position:sticky;left:0;z-index:3;background:var(--raised);color:var(--text);font-weight:700;font-size:12.5px;white-space:nowrap;min-width:78px}
+.pgrid thead .sh{z-index:4}
+.pcell{min-width:118px;max-width:150px;padding:6px;cursor:pointer;background:var(--surface);transition:background .1s}
+.pcell:hover,.pcell:focus{background:var(--raised);outline:none}
+.pcell.empty .plus{color:var(--faint);font-size:16px;display:block;text-align:center;opacity:.5}
+.pcell.hit{background:rgba(234,179,8,.14);box-shadow:inset 0 0 0 2px #eab308}
+.pchip{display:block;font-size:12.5px;line-height:1.35;margin:1px 0}
+.pc{color:var(--text)}
+.pc.new{color:#60a5fa;font-weight:700}
+.pc.abs{color:#f87171;font-weight:700;text-decoration:none}
+.pchip.rep s{color:#f87171;opacity:.85}
+.pchip .arr{color:var(--faint);margin:0 3px}
+.pe-list{display:flex;flex-direction:column;gap:8px}
+.pe-row{display:grid;grid-template-columns:minmax(90px,1fr) auto minmax(120px,1.2fr) auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line-soft);border-radius:var(--r-sm);background:var(--bg)}
+.un-days{display:flex;gap:10px;flex-wrap:wrap}
+@media (max-width:620px){.pe-row{grid-template-columns:1fr 1fr}.ptab{min-width:56px}}
 </style>
 </head>
 <body>
@@ -1462,6 +1494,7 @@ const ICONS = {
   import:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
   settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   download:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+  planning:'<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M7.5 13.5h3M13.5 13.5h3M7.5 17h3"/>',
   asv:'<circle cx="12" cy="12" r="9"/><path d="M15 9.2c-.4-1-1.6-1.7-3-1.7-1.8 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2-1.5 0-2.7-.7-3.1-1.8M12 6v1.5M12 16.5V18"/>'
 };
 const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
@@ -1477,6 +1510,7 @@ function route() {
   const pid = m ? m[1] : 'of', rest = m ? m[2] : h;
   if (rest.startsWith('chatter/')) return {pid, page:'chatters', chatter:rest.slice(8)};
   if (rest === 'partage') return {pid, page:'partage'};
+  if (rest === 'planning') return {pid, page:'planning'};
   if (rest === 'asv' || rest.startsWith('asv/')) return {pid, page:'asv', sub: rest.split('/')[1] || 'dashboard'};
   return {pid, page: PAGE_LABEL[rest] ? rest : 'dashboard'};
 }
@@ -1513,9 +1547,10 @@ function renderNav(rt) {
   navRt = rt;
   // La rubrique de la page ouverte est toujours dépliée
   for (const s of NAV_SECTIONS) if (s.pages && s.pages.some(([k]) => k === rt.page)) { const key = `${rt.pid}-${s.id}`; if (!ui.navOpen[key]) { ui.navOpen[key] = true; saveUI(); } }
-  document.getElementById('nav').innerHTML = PIDS.map(pid => {
+  const planOn = rt.page === 'planning';
+  document.getElementById('nav').innerHTML = `<div class="nav-group"><a href="#${rt.pid}/planning" class="nav-top ${planOn ? 'on' : ''}" ${planOn ? 'aria-current="page"' : ''} title="Planning de l'équipe">${icon('planning')}<span>Planning</span></a></div>` + PIDS.map(pid => {
     const P = PLATFORMS[pid];
-    return `<div class="nav-group ${rt.pid === pid ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
+    return `<div class="nav-group ${rt.pid === pid && !planOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
       ${NAV_SECTIONS.map(s => {
         if (s.link) { const on = rt.pid === pid && rt.page === s.link; return `<a href="#${pid}/${s.link}" class="nav-top ${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span></a>`; }
         const key = `${pid}-${s.id}`, open = !!ui.navOpen[key], inside = rt.pid === pid && s.pages.some(([k]) => k === rt.page);
@@ -1575,6 +1610,7 @@ function render() {
   Sync.drawStatus();
   if (rt.page === 'partage') { renderPartage(main); return; }
   if (Sync.needsLogin()) { renderLogin(main); return; }
+  if (rt.page === 'planning') { renderPlanning(main); return; }
   if (rt.page === 'asv') renderASV(main, P, rt.sub);
   else if (rt.page === 'dashboard') renderDashboard(main, P);
   else if (rt.page === 'chatters') rt.chatter != null ? renderDetail(main, P, rt.chatter) : renderChatters(main, P);
@@ -2903,16 +2939,328 @@ function bindAsvReglages(main, P) {
 }
 
 /* =====================================================================
+   PLANNING — semaine par semaine, commun à MYM, Reveal/Telegram et OnlyFans
+   Contenu (affectations, absences, notes) : modifiable par toute l'équipe → clé partagée « planning ».
+   Structure (liste des modèles) : administrateurs uniquement → clé partagée « plancfg ».
+   ===================================================================== */
+const PLAN_SEED = {"week":"2026-09-28","models":[{"id":"mym-naya","name":"Naya","group":"mym"},{"id":"mym-thais","name":"Thais","group":"mym"},{"id":"mym-carla","name":"Carla","group":"mym"},{"id":"mym-ava-paid-subs","name":"Ava Paid Subs","group":"mym"},{"id":"mym-marie","name":"Marie","group":"mym"},{"id":"mym-flavie","name":"Flavie","group":"mym"},{"id":"mym-chloe","name":"Chloe","group":"mym"},{"id":"mym-eden","name":"Eden","group":"mym"},{"id":"mym-carla-baby","name":"Carla Baby","group":"mym"},{"id":"other-ava-reveal","name":"Ava Reveal","group":"other"},{"id":"mym-angel","name":"Angel","group":"mym"},{"id":"mym-charlotte","name":"Charlotte","group":"mym"},{"id":"mym-tia","name":"Tia","group":"mym"},{"id":"mym-steffy","name":"Steffy","group":"mym"},{"id":"mym-victoria","name":"Victoria","group":"mym"},{"id":"mym-anaelle","name":"Anaelle","group":"mym"},{"id":"other-lila-telegram","name":"Lila Telegram","group":"other"},{"id":"of-naya","name":"Naya","group":"of"},{"id":"of-angel","name":"Angel","group":"of"},{"id":"of-carla-baby","name":"Carla Baby","group":"of"},{"id":"of-steffy","name":"Steffy","group":"of"},{"id":"of-ava","name":"Ava","group":"of"},{"id":"of-mae","name":"Mae","group":"of"},{"id":"of-thais","name":"Thaïs","group":"of"},{"id":"of-flavie","name":"Flavie","group":"of"},{"id":"of-carla-trans","name":"Carla Trans","group":"of"},{"id":"of-marie","name":"Marie","group":"of"},{"id":"of-eden","name":"Eden","group":"of"},{"id":"of-lila","name":"Lila","group":"of"}],"cells":{"0|0|mym-naya":[{"n":"Narindra"}],"0|0|mym-thais":[{"n":"Rouchdiath"}],"0|0|mym-carla":[{"n":"Narindra"}],"0|0|mym-ava-paid-subs":[{"n":"Laura"},{"n":"Ny Antsa"}],"0|0|mym-marie":[{"n":"Rouchdiath"}],"0|0|mym-flavie":[{"n":"Narcisse"}],"0|0|mym-chloe":[{"n":"Daniella"}],"0|0|mym-eden":[{"n":"Daniella"}],"0|0|mym-carla-baby":[{"n":"Fitia"}],"0|0|other-ava-reveal":[{"n":"Ny Antsa"}],"0|0|mym-angel":[{"n":"Ilo"}],"0|0|mym-charlotte":[{"n":"Rojotiana"}],"0|0|mym-tia":[{"n":"Ilo"}],"0|0|mym-steffy":[{"n":"Raphael"}],"0|0|mym-victoria":[{"n":"Raphael"}],"0|0|mym-anaelle":[{"n":"Rojotiana"}],"0|0|of-naya":[{"n":"Kael"}],"0|0|of-angel":[{"n":"Jordy"}],"0|0|of-carla-baby":[{"n":"Kael"}],"0|0|of-steffy":[{"n":"Carlotta","r":"Guillaume"}],"0|0|of-ava":[{"n":"Carlotta"}],"0|0|of-mae":[{"n":"Jordy"}],"0|0|of-thais":[{"n":"Jordy"}],"0|0|of-flavie":[{"n":"Stéphie"}],"0|0|of-carla-trans":[{"n":"Manael"}],"0|0|of-marie":[{"n":"Manael"}],"0|0|of-eden":[{"n":"Geovith"}],"0|0|of-lila":[{"n":"Geovith"}],"0|1|mym-naya":[{"n":"Nekena"}],"0|1|mym-thais":[{"n":"Narindra"}],"0|1|mym-carla":[{"n":"Rocharlot"}],"0|1|mym-ava-paid-subs":[{"n":"Manuela"},{"n":"Elvis"},{"n":"Brandon"}],"0|1|mym-marie":[{"n":"Léonidas"},{"n":"Mazid"}],"0|1|mym-flavie":[{"n":"Stéphie"},{"n":"Tyavina"},{"n":"Jefferson"},{"n":"Daniella"}],"0|1|mym-chloe":[{"n":"Antonio"}],"0|1|mym-eden":[{"n":"Tsiky"},{"n":"Natty"},{"n":"Andro Marc","a":1},{"n":"Jerry"}],"0|1|mym-carla-baby":[{"n":"Tsoa","a":1},{"n":"Lys"},{"n":"Tanjona"},{"n":"Riantsoa"}],"0|1|other-ava-reveal":[{"n":"Brandon"}],"0|1|mym-angel":[{"n":"Nel"}],"0|1|mym-charlotte":[{"n":"Marc"},{"n":"Fenitra"},{"n":"Ambinitsoa"},{"n":"Fitia"},{"n":"Ornélie"}],"0|1|mym-tia":[{"n":"Narindra"}],"0|1|mym-steffy":[{"n":"Alex"},{"n":"Iako"}],"0|1|mym-victoria":[{"n":"Nekena"}],"0|1|mym-anaelle":[{"n":"Alex"},{"n":"Iako"}],"0|1|of-naya":[{"n":"Nelia"}],"0|1|of-angel":[{"n":"Jorès"}],"0|1|of-carla-baby":[{"n":"Sandy","a":1},{"n":"Valisoa"}],"0|1|of-steffy":[{"n":"Ferlin"}],"0|1|of-ava":[{"n":"Yoann"}],"0|1|of-mae":[{"n":"Mitia"}],"0|1|of-thais":[{"n":"Mitia"}],"0|1|of-flavie":[{"n":"Norosoa"},{"n":"Prisca"}],"0|1|of-carla-trans":[{"n":"Jorès"}],"0|1|of-marie":[{"n":"Manoa"}],"0|1|of-eden":[{"n":"Ferlin"}],"0|1|of-lila":[{"n":"Nelia"}],"0|2|mym-naya":[{"n":"Mahery Christian"},{"n":"Sitraka"}],"0|2|mym-thais":[{"n":"Lalaina"}],"0|2|mym-carla":[{"n":"Iako"}],"0|2|mym-ava-paid-subs":[{"n":"Njiva"},{"n":"Kanto"},{"n":"Steph"}],"0|2|mym-marie":[{"n":"Simone"},{"n":"Nathan"},{"n":"Nelly"}],"0|2|mym-flavie":[{"n":"Nix"},{"n":"Ben'j"},{"n":"Ismael"},{"n":"Jerry"},{"n":"Jefferson"},{"n":"Gracia"}],"0|2|mym-chloe":[{"n":"Hoby","a":1},{"n":"Mahery"},{"n":"Rocharlot"}],"0|2|mym-eden":[{"n":"Natty"},{"n":"Tojo"},{"n":"Manohisoa"},{"n":"Tsiky"}],"0|2|mym-carla-baby":[{"n":"Antoine"},{"n":"Sylvia"},{"n":"Finoana"},{"n":"Antonio"},{"n":"Gary"},{"n":"Tanjona"}],"0|2|other-ava-reveal":[{"n":"Njiva"}],"0|2|mym-angel":[{"n":"Andry"}],"0|2|mym-charlotte":[{"n":"Hasina"},{"n":"Ulrich"},{"n":"Sergio"},{"n":"Esperandos","a":1},{"n":"Jean François","a":1},{"n":"Dialy"}],"0|2|mym-tia":[{"n":"Stephen"}],"0|2|mym-steffy":[{"n":"Nekena"}],"0|2|mym-victoria":[{"n":"Nekena"}],"0|2|mym-anaelle":[{"n":"Fenitra"}],"0|2|of-naya":[{"n":"Styve"}],"0|2|of-angel":[{"n":"Geraldo"}],"0|2|of-carla-baby":[{"n":"Mackendji"},{"n":"Yousseinah"},{"n":"Toky"}],"0|2|of-steffy":[{"n":"Guillaume"}],"0|2|of-ava":[{"n":"Manoa"}],"0|2|of-mae":[{"n":"Béa"}],"0|2|of-thais":[{"n":"Béa"}],"0|2|of-flavie":[{"n":"Cynthia"},{"n":"Tatian"},{"n":"Valisoa"}],"0|2|of-carla-trans":[{"n":"Jorès"}],"0|2|of-marie":[{"n":"Ferlin"}],"0|2|of-eden":[{"n":"Dera"}],"0|2|of-lila":[{"n":"Styve"}],"0|3|mym-naya":[{"n":"Trésor"}],"0|3|mym-thais":[{"n":"Gerard"}],"0|3|mym-carla":[{"n":"Samsou"}],"0|3|mym-ava-paid-subs":[{"n":"Niry"},{"n":"Steph"},{"n":"Sarobidy"}],"0|3|mym-marie":[{"n":"Sitraka"},{"n":"Prince"},{"n":"Jerry Fady"}],"0|3|mym-flavie":[{"n":"Rivaldo"},{"n":"Rafik"},{"n":"Mahatsangy"},{"n":"Gildas"},{"n":"Quelent","a":1}],"0|3|mym-chloe":[{"n":"Billy"}],"0|3|mym-eden":[{"n":"Benedicte"},{"n":"Rijih"},{"n":"Ny Anjara","a":1}],"0|3|mym-carla-baby":[{"n":"Carlotta"},{"n":"Fanomezantsoa"},{"n":"Riantsoa"},{"n":"Sylvia"},{"n":"Daniella Tona"}],"0|3|other-ava-reveal":[{"n":"Niry"}],"0|3|mym-angel":[{"n":"Thomas"}],"0|3|mym-charlotte":[{"n":"Daniel"},{"n":"Harry"},{"n":"Jean François"}],"0|3|mym-tia":[{"n":"Tito"}],"0|3|mym-steffy":[{"n":"Charbel"}],"0|3|mym-victoria":[{"n":"Tafita"}],"0|3|mym-anaelle":[{"n":"Yannis"}],"0|3|of-naya":[{"n":"Lahatra","r":"Manael","a":1}],"0|3|of-angel":[{"n":"Jaunecy","r":"Tendry"}],"0|3|of-carla-baby":[{"n":"Sandy","a":1},{"n":"Geovith"},{"n":"Prisca"},{"n":"Toky"}],"0|3|of-steffy":[{"n":"Guillaume"},{"n":"Tsanta"}],"0|3|of-ava":[{"n":"Tsanta"}],"0|3|of-mae":[{"n":"Arnaud"}],"0|3|of-thais":[{"n":"Arnaud"}],"0|3|of-flavie":[{"n":"Ellah"},{"n":"Mandresy"},{"n":"Phalerus"},{"n":"Andy"}],"0|3|of-carla-trans":[{"n":"Guillaume"}],"0|3|of-marie":[{"n":"Manael"}],"0|3|of-eden":[{"n":"Tendry"}],"0|3|of-lila":[{"n":"Tendry"}],"1|0|mym-naya":[{"n":"Narindra"}],"1|0|mym-thais":[{"n":"Hasintsoa"}],"1|0|mym-carla":[{"n":"Narindra"}],"1|0|mym-ava-paid-subs":[{"n":"Laura"},{"n":"Ny Antsa"}],"1|0|mym-marie":[{"n":"Rouchdiath"}],"1|0|mym-flavie":[{"n":"Narcisse"},{"n":"Benj"}],"1|0|mym-chloe":[{"n":"Daniella"}],"1|0|mym-eden":[{"n":"Amboara"},{"n":"Stéphie","a":1}],"1|0|mym-carla-baby":[{"n":"Fitia"},{"n":"Vonjy"}],"1|0|other-ava-reveal":[{"n":"Ny Antsa"}],"1|0|mym-angel":[{"n":"Ilo"}],"1|0|mym-charlotte":[{"n":"Hasintsoa"},{"n":"Rojotiana"}],"1|0|mym-tia":[{"n":"Ilo"}],"1|0|mym-steffy":[{"n":"Raphael"}],"1|0|mym-victoria":[{"n":"Rojotiana"}],"1|0|mym-anaelle":[{"n":"Raphael"}],"1|0|of-naya":[{"n":"Géovith"}],"1|0|of-angel":[{"n":"Hoby"}],"1|0|of-carla-baby":[{"n":"Kael"}],"1|0|of-steffy":[{"n":"Carlotta"}],"1|0|of-ava":[{"n":"Carlotta"}],"1|0|of-mae":[{"n":"Kael"}],"1|0|of-thais":[{"n":"Manael"}],"1|0|of-flavie":[{"n":"Manael"}],"1|0|of-carla-trans":[{"n":"Hoby"}],"1|0|of-marie":[{"n":"Haywardine"}],"1|0|of-eden":[{"n":"Géovith"}],"1|0|of-lila":[{"n":"Haywardine"}],"1|1|mym-naya":[{"n":"Thierry","r":"Natty / Andro marc","a":1}],"1|1|mym-thais":[{"n":"Princy"}],"1|1|mym-carla":[{"n":"Marc"}],"1|1|mym-ava-paid-subs":[{"n":"Manuela"},{"n":"Elvis"},{"n":"Brandon"}],"1|1|mym-marie":[{"n":"Léonidas","a":1},{"n":"Mazid"},{"n":"Fitia"}],"1|1|mym-flavie":[{"n":"Jefferson"},{"n":"Stéphie","a":1},{"n":"Hasintsoa"},{"n":"Jerry"}],"1|1|mym-chloe":[{"n":"Antonio"}],"1|1|mym-eden":[{"n":"Natty"},{"n":"Andro Marc"}],"1|1|mym-carla-baby":[{"n":"Lys"},{"n":"Fitia"},{"n":"Tyavina"},{"n":"Tanjona"}],"1|1|other-ava-reveal":[{"n":"Brandon"}],"1|1|mym-angel":[{"n":"Alex"}],"1|1|mym-charlotte":[{"n":"Fenitra"},{"n":"Ambinintsoa"},{"n":"Ornélie"}],"1|1|mym-tia":[{"n":"Alex"}],"1|1|mym-steffy":[{"n":"Nel","r":"Rocharlot","a":1}],"1|1|mym-victoria":[{"n":"Riantsoa","r":"Rocharlot","a":1}],"1|1|mym-anaelle":[{"n":"Iako"}],"1|1|of-naya":[{"n":"Nirina","r":"Sandy","a":1}],"1|1|of-angel":[{"n":"Nirina","r":"Yoann","a":1}],"1|1|of-carla-baby":[{"n":"Olivia"}],"1|1|of-steffy":[{"n":"Manoa"}],"1|1|of-ava":[{"n":"Yoann"}],"1|1|of-mae":[{"n":"Mitia"}],"1|1|of-thais":[{"n":"Mitia"}],"1|1|of-flavie":[{"n":"Norosoa"},{"n":"Prisca"}],"1|1|of-carla-trans":[{"n":"Nelia"}],"1|1|of-marie":[{"n":"Manoa"}],"1|1|of-eden":[{"n":"Sandy"}],"1|1|of-lila":[{"n":"Nelia"}],"1|2|mym-naya":[{"n":"Mahery Christian","a":1},{"n":"Andry"},{"n":"Stephen"}],"1|2|mym-thais":[{"n":"Iako"}],"1|2|mym-carla":[{"n":"Rocharlot"}],"1|2|mym-ava-paid-subs":[{"n":"Njiva"},{"n":"Kanto"},{"n":"Dialy"},{"n":"Nix"}],"1|2|mym-marie":[{"n":"Simone"},{"n":"Nathan"},{"n":"Lalaina"},{"n":"Nelly"},{"n":"ansène"}],"1|2|mym-flavie":[{"n":"Ben'j"},{"n":"Ismael"},{"n":"Gracia"},{"n":"Jerry"},{"n":"Daniella"}],"1|2|mym-chloe":[{"n":"Hoby"},{"n":"Mahery"}],"1|2|mym-eden":[{"n":"Manohisoa"},{"n":"Natty"},{"n":"Tojo"}],"1|2|mym-carla-baby":[{"n":"Antoine"},{"n":"Tanjona"},{"n":"Sylvia"},{"n":"Antonio"},{"n":"Gary"}],"1|2|other-ava-reveal":[{"n":"Njiva"}],"1|2|mym-angel":[{"n":"Andrea"}],"1|2|mym-charlotte":[{"n":"Hasina"},{"n":"Ulrich"},{"n":"Hafaliana"},{"n":"Jefferson"},{"n":"Jean François"}],"1|2|mym-tia":[{"n":"Alex"}],"1|2|mym-steffy":[{"n":"Mahery Christian","a":1},{"n":"Fenitra"}],"1|2|mym-victoria":[{"n":"Serge"}],"1|2|mym-anaelle":[{"n":"Sergio"}],"1|2|of-naya":[{"n":"Styve"}],"1|2|of-angel":[{"n":"Geraldo"}],"1|2|of-carla-baby":[{"n":"Mackendji"},{"n":"Toky"}],"1|2|of-steffy":[{"n":"Guillaume"}],"1|2|of-ava":[{"n":"Manoa"}],"1|2|of-mae":[{"n":"Béa"}],"1|2|of-thais":[{"n":"Béa"}],"1|2|of-flavie":[{"n":"Cynthia"},{"n":"Tatiana"},{"n":"Franckie"}],"1|2|of-carla-trans":[{"n":"Guillaume"}],"1|2|of-marie":[{"n":"Ferlin"}],"1|2|of-eden":[{"n":"Dera"}],"1|2|of-lila":[{"n":"Styve"}],"1|3|mym-naya":[{"n":"Trésor"}],"1|3|mym-thais":[{"n":"Gerard"}],"1|3|mym-carla":[{"n":"Samsou"}],"1|3|mym-ava-paid-subs":[{"n":"Niry"},{"n":"Sarobidy"},{"n":"Rivaldo"}],"1|3|mym-marie":[{"n":"Tito"},{"n":"Prince"},{"n":"Jerry Fady"},{"n":"Ny Anjara"}],"1|3|mym-flavie":[{"n":"Quelent"},{"n":"Mahatsangy"},{"n":"Rafik"},{"n":"Gildas"},{"n":"Fanomezantsoa"}],"1|3|mym-chloe":[{"n":"Billy"},{"n":"Jeth"}],"1|3|mym-eden":[{"n":"Darell","a":1},{"n":"Benedicte"},{"n":"Rijih"}],"1|3|mym-carla-baby":[{"n":"Carlotta"},{"n":"Vonjy"},{"n":"Finoana"},{"n":"Daniella Tona"},{"n":"Sylvia"}],"1|3|other-ava-reveal":[{"n":"Sarobidy"}],"1|3|mym-angel":[{"n":"Thomas"}],"1|3|mym-charlotte":[{"n":"Daniel"},{"n":"Ronalde"},{"n":"Harry"},{"n":"Jean François"}],"1|3|mym-tia":[{"n":"Noel"}],"1|3|mym-steffy":[{"n":"Charbel"}],"1|3|mym-victoria":[{"n":"Tafita"}],"1|3|mym-anaelle":[{"n":"Yannis"}],"1|3|of-naya":[{"n":"Jerome"}],"1|3|of-angel":[{"n":"Jerome"}],"1|3|of-carla-baby":[{"n":"Toky","a":1},{"n":"Prisca"},{"n":"Sandy"},{"n":"Geovith","a":1}],"1|3|of-steffy":[{"n":"Guillaume","a":1}],"1|3|of-ava":[{"n":"Tsanta"}],"1|3|of-mae":[{"n":"Mandresy"}],"1|3|of-thais":[{"n":"Mandresy"}],"1|3|of-flavie":[{"n":"Ellah"},{"n":"Andy"},{"n":"Phalerus"}],"1|3|of-carla-trans":[{"n":"Guillaume","a":1}],"1|3|of-marie":[{"n":"Manael"}],"1|3|of-eden":[{"n":"Tendry"}],"1|3|of-lila":[{"n":"Manael"}],"2|0|mym-naya":[{"n":"Narindra"}],"2|0|mym-thais":[{"n":"Narindra"}],"2|0|mym-carla":[{"n":"Narindra"}],"2|0|mym-ava-paid-subs":[{"n":"Ny Antsa"},{"n":"Laura","a":1}],"2|0|mym-marie":[{"n":"Rouchdiath","r":"Hasintsoa","a":1}],"2|0|mym-flavie":[{"n":"Narcisse","a":1}],"2|0|mym-chloe":[{"n":"Rojotiana"}],"2|0|mym-eden":[{"n":"Amboara"}],"2|0|mym-carla-baby":[{"n":"Fitia"},{"n":"Vonjy"}],"2|0|other-ava-reveal":[{"n":"Ny Antsa"}],"2|0|mym-angel":[{"n":"Ilo"}],"2|0|mym-charlotte":[{"n":"Hasintsoa"},{"n":"Benj"}],"2|0|mym-tia":[{"n":"Ilo"}],"2|0|mym-steffy":[{"n":"Raphael"}],"2|0|mym-victoria":[{"n":"Rouchdiath","r":"Vonjy","a":1}],"2|0|mym-anaelle":[{"n":"Raphael"}],"2|0|of-naya":[{"n":"Haywardine"}],"2|0|of-angel":[{"n":"Hoby"}],"2|0|of-carla-baby":[{"n":"kael"}],"2|0|of-steffy":[{"n":"Carlotta"}],"2|0|of-ava":[{"n":"Carlotta"}],"2|0|of-mae":[{"n":"Jordy"}],"2|0|of-thais":[{"n":"Jordy"}],"2|0|of-flavie":[{"n":"Manael"}],"2|0|of-carla-trans":[{"n":"Hoby"}],"2|0|of-marie":[{"n":"Haywardine"}],"2|0|of-eden":[{"n":"Carlotta"}],"2|0|of-lila":[{"n":"Manael"}],"2|1|mym-naya":[{"n":"Nekena"},{"n":"Rocharlot"}],"2|1|mym-thais":[{"n":"Princy"}],"2|1|mym-carla":[{"n":"Marc"}],"2|1|mym-ava-paid-subs":[{"n":"Manuela"},{"n":"Elvis"},{"n":"Brandon"}],"2|1|mym-marie":[{"n":"Léonidas"},{"n":"Alex"},{"n":"Mazid"}],"2|1|mym-flavie":[{"n":"Tsiky"},{"n":"Hasintsoa"},{"n":"Tyavina"}],"2|1|mym-chloe":[{"n":"Antonio"}],"2|1|mym-eden":[{"n":"Andro Marc"},{"n":"Jerry"}],"2|1|mym-carla-baby":[{"n":"Lys"},{"n":"Fitia"},{"n":"Tanjona"}],"2|1|other-ava-reveal":[{"n":"Brandon"}],"2|1|mym-angel":[{"n":"Princy"}],"2|1|mym-charlotte":[{"n":"Ambinitsoa"},{"n":"Ornélie"},{"n":"Riantsoa"}],"2|1|mym-tia":[{"n":"Narindra"}],"2|1|mym-steffy":[{"n":"Nel"}],"2|1|mym-victoria":[{"n":"Nekena"},{"n":"Rocharlot"}],"2|1|mym-anaelle":[{"n":"Iako","a":1},{"n":"Tsoa"}],"2|1|of-naya":[{"n":"Nelia"}],"2|1|of-angel":[{"n":"Jorès","r":"Manoa"}],"2|1|of-carla-baby":[{"n":"Olivia"}],"2|1|of-steffy":[{"n":"Yoann"}],"2|1|of-ava":[{"n":"Yoann"}],"2|1|of-mae":[{"n":"Mitia"}],"2|1|of-thais":[{"n":"Mitia"}],"2|1|of-flavie":[{"n":"Norosoa"},{"n":"Prisca"},{"n":"Valisoa"}],"2|1|of-carla-trans":[{"n":"Jorès","r":"Sandy"}],"2|1|of-marie":[{"n":"Manoa"}],"2|1|of-eden":[{"n":"Sandy"}],"2|1|of-lila":[{"n":"Nelia"}],"2|2|mym-naya":[{"n":"Mahery Christian"}],"2|2|mym-thais":[{"n":"Lalaina"}],"2|2|mym-carla":[{"n":"Iako","a":1},{"n":"Sitraka"}],"2|2|mym-ava-paid-subs":[{"n":"Njiva"},{"n":"Kanto"},{"n":"Steph"}],"2|2|mym-marie":[{"n":"Simone"},{"n":"Nathan"},{"n":"Ansène"},{"n":"Nelly"}],"2|2|mym-flavie":[{"n":"Ben'j"},{"n":"Ismael"},{"n":"Gracia"},{"n":"Tyavina"},{"n":"Sylvia"}],"2|2|mym-chloe":[{"n":"Mahery"},{"n":"Rocharlot"}],"2|2|mym-eden":[{"n":"Tojo"},{"n":"Nekena"},{"n":"Mandaniaina"}],"2|2|mym-carla-baby":[{"n":"Tanjona"},{"n":"Antonio"},{"n":"Gary"},{"n":"Antoine"},{"n":"Tsiky"},{"n":"Dialy"}],"2|2|other-ava-reveal":[{"n":"Kanto"}],"2|2|mym-angel":[{"n":"Andry"}],"2|2|mym-charlotte":[{"n":"Hasina"},{"n":"Ulrich"},{"n":"Sergio"},{"n":"Jean François"},{"n":"Hafaliana"}],"2|2|mym-tia":[{"n":"Alex"}],"2|2|mym-steffy":[{"n":"Stephen"}],"2|2|mym-victoria":[{"n":"Serge"}],"2|2|of-naya":[{"n":"Styve"}],"2|2|of-angel":[{"n":"Geraldo"}],"2|2|of-carla-baby":[{"n":"Mackendji"},{"n":"Toky"},{"n":"Yousseinah"}],"2|2|of-steffy":[{"n":"Jorès"}],"2|2|of-ava":[{"n":"Valisoa"}],"2|2|of-mae":[{"n":"Béa"}],"2|2|of-thais":[{"n":"Béa"}],"2|2|of-flavie":[{"n":"Cynthia"},{"n":"Tatiana"},{"n":"Franckie"}],"2|2|of-carla-trans":[{"n":"Jorès"}],"2|2|of-marie":[{"n":"Ferlin"}],"2|2|of-eden":[{"n":"Dera"}],"2|2|of-lila":[{"n":"Styve"}],"2|3|mym-naya":[{"n":"Trésor","a":1}],"2|3|mym-thais":[{"n":"Noel"}],"2|3|mym-carla":[{"n":"Samsou"}],"2|3|mym-ava-paid-subs":[{"n":"Steph"},{"n":"Rivaldo"},{"n":"Billy"}],"2|3|mym-marie":[{"n":"Prince"},{"n":"Jerry Fady"},{"n":"Ny Anjara"}],"2|3|mym-flavie":[{"n":"Quelent"},{"n":"Mahatsangy"},{"n":"Rafik"},{"n":"Gildas"},{"n":"Patty"}],"2|3|mym-chloe":[{"n":"Jeth"}],"2|3|mym-eden":[{"n":"Benedicte"},{"n":"Sitraka"},{"n":"Rijih"}],"2|3|mym-carla-baby":[{"n":"Daniella Tona"},{"n":"Vonjy"},{"n":"Riantsoa"},{"n":"Sylvia"},{"n":"Jean François"},{"n":"Finoana"}],"2|3|other-ava-reveal":[{"n":"Sarobidy"}],"2|3|mym-angel":[{"n":"Thomas"}],"2|3|mym-charlotte":[{"n":"Daniel"},{"n":"Ronalde"},{"n":"Harry"}],"2|3|mym-tia":[{"n":"Gerard"}],"2|3|mym-steffy":[{"n":"Charbel"}],"2|3|mym-victoria":[{"n":"Tafita"}],"2|3|mym-anaelle":[{"n":"Yannis"}],"2|3|of-naya":[{"n":"Jerome"}],"2|3|of-angel":[{"n":"Lahatra"}],"2|3|of-carla-baby":[{"n":"Prisca"},{"n":"Sandy"},{"n":"Toky"}],"2|3|of-steffy":[{"n":"Guillaume"}],"2|3|of-ava":[{"n":"Tsanta"}],"2|3|of-mae":[{"n":"Arnaud"}],"2|3|of-thais":[{"n":"Arnaud"}],"2|3|of-flavie":[{"n":"Ellah"},{"n":"Phalérus"},{"n":"Mandresy"}],"2|3|of-carla-trans":[{"n":"Guillaume"}],"2|3|of-marie":[{"n":"Géovith"}],"2|3|of-eden":[{"n":"Tendry"},{"n":"Manael"}],"2|3|of-lila":[{"n":"Lahatra"}],"3|0|mym-naya":[{"n":"Narindra"}],"3|0|mym-thais":[{"n":"Hasintsoa"}],"3|0|mym-carla":[{"n":"Narindra"}],"3|0|mym-ava-paid-subs":[{"n":"Ny Antsa"},{"n":"Laura"}],"3|0|mym-marie":[{"n":"Sarobidy"}],"3|0|mym-flavie":[{"n":"Narcisse"},{"n":"Stephie"}],"3|0|mym-chloe":[{"n":"Daniella"}],"3|0|mym-eden":[{"n":"Hasintsoa"}],"3|0|mym-carla-baby":[{"n":"Amboara"},{"n":"Vonjy"}],"3|0|other-ava-reveal":[{"n":"Laura"}],"3|0|mym-angel":[{"n":"Ilo"}],"3|0|mym-charlotte":[{"n":"Benj"}],"3|0|mym-tia":[{"n":"Ilo"}],"3|0|mym-steffy":[{"n":"Raphael"}],"3|0|mym-victoria":[{"n":"Rojotiana"}],"3|0|mym-anaelle":[{"n":"Raphael"}],"3|0|of-naya":[{"n":"Mitia"}],"3|0|of-angel":[{"n":"Hoby"}],"3|0|of-carla-baby":[{"n":"Géovith"}],"3|0|of-steffy":[{"n":"Mitia"}],"3|0|of-ava":[{"n":"Carlotta"}],"3|0|of-mae":[{"n":"Jordy"}],"3|0|of-thais":[{"n":"Jordy"}],"3|0|of-flavie":[{"n":"Manael"}],"3|0|of-carla-trans":[{"n":"Hoby"}],"3|0|of-marie":[{"n":"Haywardine"}],"3|0|of-eden":[{"n":"Carlotta"}],"3|0|of-lila":[{"n":"Haywardine"}],"3|1|mym-naya":[{"n":"Nekena"}],"3|1|mym-thais":[{"n":"Princy"}],"3|1|mym-carla":[{"n":"Marc"}],"3|1|mym-ava-paid-subs":[{"n":"Manuela"},{"n":"Elvis"},{"n":"Brandon"}],"3|1|mym-marie":[{"n":"Rocharlot"},{"n":"Léonidas"},{"n":"Tsiky"},{"n":"Lionel"}],"3|1|mym-flavie":[{"n":"Tyavina"},{"n":"Stéphie"},{"n":"Jefferson"},{"n":"Hasintsoa"}],"3|1|mym-chloe":[{"n":"Antonio"},{"n":"Rocharlot"}],"3|1|mym-eden":[{"n":"Natty"},{"n":"Jerry"}],"3|1|mym-carla-baby":[{"n":"Lys"},{"n":"Tanjona"},{"n":"Tsoa"},{"n":"Laura"}],"3|1|other-ava-reveal":[{"n":"Brandon"}],"3|1|mym-angel":[{"n":"Princy"}],"3|1|mym-charlotte":[{"n":"Ambinitsoa"},{"n":"Ornélie"},{"n":"Riantsoa"}],"3|1|mym-tia":[{"n":"Fenitra"}],"3|1|mym-steffy":[{"n":"Nel"}],"3|1|mym-victoria":[{"n":"Nekena"}],"3|1|of-naya":[{"n":"Nelia"}],"3|1|of-angel":[{"n":"Jorès"}],"3|1|of-carla-baby":[{"n":"Olivia"}],"3|1|of-steffy":[{"n":"Yoann"}],"3|1|of-ava":[{"n":"Yoann"}],"3|1|of-mae":[{"n":"Ally"}],"3|1|of-thais":[{"n":"Ally"}],"3|1|of-flavie":[{"n":"Norosoa"},{"n":"Prisca"},{"n":"Valisoa"}],"3|1|of-carla-trans":[{"n":"Jorès"}],"3|1|of-marie":[{"n":"Manoa"}],"3|1|of-eden":[{"n":"Sandy"}],"3|1|of-lila":[{"n":"Nelia"}],"3|2|mym-naya":[{"n":"Mahery Christian"}],"3|2|mym-thais":[{"n":"Lalaina","r":"Andrea"}],"3|2|mym-carla":[{"n":"Iako"}],"3|2|mym-ava-paid-subs":[{"n":"Njiva"},{"n":"Kanto"},{"n":"Steph"}],"3|2|mym-marie":[{"n":"Sitraka"},{"n":"Nelly"},{"n":"Simone"},{"n":"Marc"}],"3|2|mym-flavie":[{"n":"Ben'j"},{"n":"Ismael"},{"n":"Jerry"},{"n":"Gracia"},{"n":"Nix"}],"3|2|mym-chloe":[{"n":"Hoby"},{"n":"Rocharlot"}],"3|2|mym-eden":[{"n":"Natty"},{"n":"Stephen"},{"n":"Tojo"},{"n":"Nekena"}],"3|2|mym-carla-baby":[{"n":"Dialy"},{"n":"Antonio"},{"n":"Gary"},{"n":"Jefferson"},{"n":"Tsiky"},{"n":"Karl"}],"3|2|other-ava-reveal":[{"n":"Kanto"}],"3|2|mym-angel":[{"n":"Andry"}],"3|2|mym-charlotte":[{"n":"Hasina"},{"n":"Sergio"},{"n":"Mandaniaiana"},{"n":"Lalaina"}],"3|2|mym-tia":[{"n":"Hafaliana"},{"n":"Andrea"}],"3|2|mym-steffy":[{"n":"Mahery Christian"}],"3|2|mym-victoria":[{"n":"Serge"}],"3|2|mym-anaelle":[{"n":"Fenitra"},{"n":"Manohisoa"}],"3|2|of-naya":[{"n":"Styve"}],"3|2|of-angel":[{"n":"Jorès"}],"3|2|of-carla-baby":[{"n":"Toky"},{"n":"Tanjona"},{"n":"Olivia"}],"3|2|of-steffy":[{"n":"Guillaume"}],"3|2|of-ava":[{"n":"Manoa"},{"n":"Yousseinah"}],"3|2|of-mae":[{"n":"Ferlin"}],"3|2|of-thais":[{"n":"Ferlin"}],"3|2|of-flavie":[{"n":"Cynthia"},{"n":"Tatiana"},{"n":"Franckie"}],"3|2|of-carla-trans":[{"n":"Guillaume"}],"3|2|of-marie":[{"n":"Valisoa"}],"3|2|of-eden":[{"n":"Dera"}],"3|2|of-lila":[{"n":"Styve"}],"3|3|mym-naya":[{"n":"Noel"}],"3|3|mym-thais":[{"n":"Noel"}],"3|3|mym-carla":[{"n":"Samsou"}],"3|3|mym-ava-paid-subs":[{"n":"Niry"},{"n":"Steph"},{"n":"Billy"}],"3|3|mym-marie":[{"n":"Eurydice"},{"n":"Julianot"},{"n":"Jerry Fady"}],"3|3|mym-flavie":[{"n":"Quelent"},{"n":"Gildas"},{"n":"Rivaldo"},{"n":"Rafik"}],"3|3|mym-chloe":[{"n":"Mahery"},{"n":"Sarobidy"}],"3|3|mym-eden":[{"n":"Darell"},{"n":"Rijih"},{"n":"Sitraka"}],"3|3|mym-carla-baby":[{"n":"Carlotta"},{"n":"Vonjy"},{"n":"Fanomezantsoa"},{"n":"Riantsoa"},{"n":"Mahatsangy"}],"3|3|other-ava-reveal":[{"n":"Sarobidy"}],"3|3|mym-angel":[{"n":"Samsou"}],"3|3|mym-charlotte":[{"n":"Daniel"},{"n":"Tito"}],"3|3|mym-tia":[{"n":"Ronalde"}],"3|3|mym-steffy":[{"n":"Ronalde"}],"3|3|mym-victoria":[{"n":"Gérard"}],"3|3|mym-anaelle":[{"n":"Tafita"}],"3|3|of-naya":[{"n":"Jerome"}],"3|3|of-angel":[{"n":"Jannecy"}],"3|3|of-carla-baby":[{"n":"Tsanta"},{"n":"Prisca"},{"n":"Toky"},{"n":"Sandy"}],"3|3|of-steffy":[{"n":"Guillaume"}],"3|3|of-ava":[{"n":"Mandresy"}],"3|3|of-mae":[{"n":"Arnaud"}],"3|3|of-thais":[{"n":"Arnaud"}],"3|3|of-flavie":[{"n":"Ellah"},{"n":"Phalérus"},{"n":"Andy"}],"3|3|of-carla-trans":[{"n":"Guillaume"}],"3|3|of-marie":[{"n":"Manael"}],"3|3|of-eden":[{"n":"Tendry"}],"3|3|of-lila":[{"n":"Benedictus"}],"4|0|mym-naya":[{"n":"Narcisse"},{"n":"Narindra"}],"4|0|mym-thais":[{"n":"Hasintsoa","r":"Narindra"}],"4|0|mym-carla":[{"n":"Narindra"}],"4|0|mym-ava-paid-subs":[{"n":"Ny Antsa"},{"n":"Laura"}],"4|0|mym-marie":[{"n":"Rouchdiath"}],"4|0|mym-flavie":[{"n":"Stephie"},{"n":"Benj"}],"4|0|mym-chloe":[{"n":"Daniella"}],"4|0|mym-eden":[{"n":"Raphael"}],"4|0|mym-carla-baby":[{"n":"Fitia"},{"n":"Vonjy"},{"n":"Amboara"}],"4|0|other-ava-reveal":[{"n":"Laura"}],"4|0|mym-angel":[{"n":"Ilo","r":"Daniella"}],"4|0|mym-charlotte":[{"n":"Rojotiana"}],"4|0|mym-tia":[{"n":"Ilo"}],"4|0|mym-steffy":[{"n":"Joda","r":"Rojotiana"}],"4|0|mym-victoria":[{"n":"Hasintsoa","r":"Vonjy"}],"4|0|mym-anaelle":[{"n":"Hasintsoa","r":"Fitia"}],"4|0|of-naya":[{"n":"Tendry"}],"4|0|of-angel":[{"n":"Hoby"}],"4|0|of-carla-baby":[{"n":"Kael"}],"4|0|of-steffy":[{"n":"Carlotta"}],"4|0|of-ava":[{"n":"Carlotta"}],"4|0|of-mae":[{"n":"Jordy"}],"4|0|of-thais":[{"n":"Jordy"}],"4|0|of-flavie":[{"n":"Manael"}],"4|0|of-carla-trans":[{"n":"Hoby"}],"4|0|of-marie":[{"n":"Haywardine"}],"4|0|of-eden":[{"n":"Tendry"}],"4|0|of-lila":[{"n":"Haywardine"}],"4|1|mym-naya":[{"n":"Nekena"}],"4|1|mym-thais":[{"n":"Princy"}],"4|1|mym-carla":[{"n":"Marc"}],"4|1|mym-ava-paid-subs":[{"n":"Kanto"},{"n":"Elvis"},{"n":"Laura"}],"4|1|mym-marie":[{"n":"Léonidas"},{"n":"Alex"},{"n":"Mazid"}],"4|1|mym-flavie":[{"n":"Hasintsoa"},{"n":"Tsiky"},{"n":"Stephie"},{"n":"Jefferson"}],"4|1|mym-chloe":[{"n":"Rocharlot"},{"n":"Fitia"}],"4|1|mym-eden":[{"n":"Natty"},{"n":"Andro Marc"}],"4|1|mym-carla-baby":[{"n":"Tyavina"},{"n":"Brandon"},{"n":"Tsoa"},{"n":"Tanjona"}],"4|1|other-ava-reveal":[{"n":"Brandon"}],"4|1|mym-angel":[{"n":"Princy"}],"4|1|mym-charlotte":[{"n":"Ambinintsoa"},{"n":"Ornélie"}],"4|1|mym-tia":[{"n":"Narindra"}],"4|1|mym-steffy":[{"n":"Alex"}],"4|1|mym-victoria":[{"n":"Nekena"}],"4|1|mym-anaelle":[{"n":"Fenitra"}],"4|1|of-naya":[{"n":"Nelia"}],"4|1|of-angel":[{"n":"Nirina"}],"4|1|of-carla-baby":[{"n":"Olivia"}],"4|1|of-steffy":[{"n":"Nirina"}],"4|1|of-ava":[{"n":"yoann"}],"4|1|of-mae":[{"n":"Mitia"}],"4|1|of-thais":[{"n":"Mitia"}],"4|1|of-flavie":[{"n":"Valisoa"},{"n":"Prisca"},{"n":"Norosoa"}],"4|1|of-carla-trans":[{"n":"Nelia"}],"4|1|of-marie":[{"n":"Jorès"}],"4|1|of-eden":[{"n":"Ferlin"}],"4|1|of-lila":[{"n":"Jorès"}],"4|2|mym-naya":[{"n":"Mahery Christian"}],"4|2|mym-thais":[{"n":"Lalaina"}],"4|2|mym-carla":[{"n":"Sitraka"}],"4|2|mym-ava-paid-subs":[{"n":"Dialy"},{"n":"Njiva"},{"n":"Steph"}],"4|2|mym-marie":[{"n":"Nelly"},{"n":"Simone"},{"n":"Nathan"},{"n":"Marc"},{"n":"Manohisoa"}],"4|2|mym-flavie":[{"n":"Ben'j"},{"n":"Ismael"},{"n":"Nix"},{"n":"Tsiky"},{"n":"Gracia"},{"n":"Jefferson"}],"4|2|mym-chloe":[{"n":"Hoby"},{"n":"Rocharlot"}],"4|2|mym-eden":[{"n":"Tojo"},{"n":"Natty"},{"n":"Nekena"}],"4|2|mym-carla-baby":[{"n":"Sylvia"},{"n":"Finoana"},{"n":"Gary"},{"n":"Antoine"},{"n":"Olivia"},{"n":"Mandaniaiana"}],"4|2|other-ava-reveal":[{"n":"Njiva"}],"4|2|mym-angel":[{"n":"Andry"}],"4|2|mym-charlotte":[{"n":"Sergio"},{"n":"Ulrich"},{"n":"Stephen"},{"n":"Hafaliana"}],"4|2|mym-tia":[{"n":"Andrea"}],"4|2|mym-steffy":[{"n":"Mahery Christian"}],"4|2|mym-victoria":[{"n":"Serge"}],"4|2|mym-anaelle":[{"n":"Fenitra"}],"4|2|of-naya":[{"n":"Styve"}],"4|2|of-angel":[{"n":"Geraldo"}],"4|2|of-carla-baby":[{"n":"Tanjona"},{"n":"Mackendji"},{"n":"Yousseinah"}],"4|2|of-steffy":[{"n":"Guillaume"}],"4|2|of-ava":[{"n":"Manoa"}],"4|2|of-mae":[{"n":"Geraldo"}],"4|2|of-thais":[{"n":"Manoa"}],"4|2|of-flavie":[{"n":"Franckie"},{"n":"Cynthia"},{"n":"Ferlin"}],"4|2|of-carla-trans":[{"n":"Guillaume"}],"4|2|of-marie":[{"n":"Jorès"}],"4|2|of-eden":[{"n":"Valisoa"}],"4|2|of-lila":[{"n":"Styve"}],"4|3|mym-naya":[{"n":"Noel"}],"4|3|mym-thais":[{"n":"Noel"}],"4|3|mym-carla":[{"n":"Tito"}],"4|3|mym-ava-paid-subs":[{"n":"Vonjy"},{"n":"Niry"},{"n":"Steph"},{"n":"Sarobidy"}],"4|3|mym-marie":[{"n":"Julianot"},{"n":"Jerry Fady"},{"n":"Prince"},{"n":"NyAnjara"}],"4|3|mym-flavie":[{"n":"Rijih"},{"n":"Sylvia"},{"n":"Rafik"},{"n":"Gildas"}],"4|3|mym-chloe":[{"n":"Jean François"}],"4|3|mym-eden":[{"n":"Darell"},{"n":"Benedicte"},{"n":"Sitraka"}],"4|3|mym-carla-baby":[{"n":"Carlotta"},{"n":"Fanomezantsoa"},{"n":"Riantsoa"},{"n":"Daniella Tona"}],"4|3|other-ava-reveal":[{"n":"Niry"}],"4|3|mym-angel":[{"n":"Thomas"}],"4|3|mym-charlotte":[{"n":"Daniel"},{"n":"Ronalde"}],"4|3|mym-tia":[{"n":"Yannis"}],"4|3|mym-steffy":[{"n":"Charbel"}],"4|3|mym-victoria":[{"n":"Gérard"}],"4|3|mym-anaelle":[{"n":"Tafita"}],"4|3|of-naya":[{"n":"Jerome"}],"4|3|of-angel":[{"n":"Jerome"}],"4|3|of-carla-baby":[{"n":"Prisca"},{"n":"Sandy"},{"n":"Geovith"}],"4|3|of-steffy":[{"n":"Guillaume"}],"4|3|of-ava":[{"n":"Tsanta"}],"4|3|of-mae":[{"n":"Arnaud"}],"4|3|of-thais":[{"n":"Arnaud"}],"4|3|of-flavie":[{"n":"Phalérus"},{"n":"Andy"},{"n":"Manael"}],"4|3|of-carla-trans":[{"n":"Benedictus"}],"4|3|of-marie":[{"n":"Jaunecy"},{"n":"Manael"}],"4|3|of-eden":[{"n":"Lahatra"}],"4|3|of-lila":[{"n":"Guillaume"}],"5|0|mym-naya":[{"n":"Narindra"}],"5|0|mym-thais":[{"n":"Hasintsoa"}],"5|0|mym-carla":[{"n":"Narindra"}],"5|0|mym-ava-paid-subs":[{"n":"Ny Antsa"},{"n":"Amboara"}],"5|0|mym-marie":[{"n":"Rouchdiath"}],"5|0|mym-flavie":[{"n":"Narcisse"},{"n":"Benj"}],"5|0|mym-chloe":[{"n":"Daniella"}],"5|0|mym-eden":[{"n":"Raphael"}],"5|0|mym-carla-baby":[{"n":"Fitia"},{"n":"Vonjy"}],"5|0|other-ava-reveal":[{"n":"Ny Antsa"}],"5|0|mym-angel":[{"n":"Ilo"}],"5|0|mym-charlotte":[{"n":"Rojotiana"}],"5|0|mym-tia":[{"n":"Ilo"}],"5|0|mym-steffy":[{"n":"Raphael"}],"5|0|mym-victoria":[{"n":"Rojotiana"}],"5|0|mym-anaelle":[{"n":"Hasintsoa"}],"5|0|of-naya":[{"n":"Geovith"}],"5|0|of-angel":[{"n":"Manael"}],"5|0|of-carla-baby":[{"n":"Kael"}],"5|0|of-steffy":[{"n":"Carlotta"}],"5|0|of-ava":[{"n":"Carlotta"}],"5|0|of-mae":[{"n":"Jordy"}],"5|0|of-thais":[{"n":"Jordy"}],"5|0|of-flavie":[{"n":"Manael"}],"5|0|of-carla-trans":[{"n":"Manael"}],"5|0|of-marie":[{"n":"Haywardine"}],"5|0|of-eden":[{"n":"Geovith"}],"5|0|of-lila":[{"n":"Haywardine"}],"5|1|mym-naya":[{"n":"Nekena"}],"5|1|mym-thais":[{"n":"Princy"}],"5|1|mym-carla":[{"n":"Marc"}],"5|1|mym-ava-paid-subs":[{"n":"Manuela"},{"n":"kanto"},{"n":"elvis"}],"5|1|mym-marie":[{"n":"Léonidas"},{"n":"Alex"},{"n":"Mazid"}],"5|1|mym-flavie":[{"n":"Hasintsoa"},{"n":"Daniela"},{"n":"Stéphie"}],"5|1|mym-chloe":[{"n":"Antonio"}],"5|1|mym-eden":[{"n":"Natty"},{"n":"Andro Marc"}],"5|1|mym-carla-baby":[{"n":"Fitia"},{"n":"Jefferson"},{"n":"Lys"}],"5|1|other-ava-reveal":[{"n":"Kanto"}],"5|1|mym-angel":[{"n":"Princy"}],"5|1|mym-charlotte":[{"n":"Jerry"},{"n":"Ornelie"},{"n":"Rocharlot"},{"n":"Tsiky"}],"5|1|mym-tia":[{"n":"Thierry"}],"5|1|mym-steffy":[{"n":"Marc"}],"5|1|mym-victoria":[{"n":"Nekena"}],"5|1|mym-anaelle":[{"n":"Fenitra"}],"5|1|of-naya":[{"n":"Nelia"}],"5|1|of-angel":[{"n":"Nirina"}],"5|1|of-carla-baby":[{"n":"Olivia"}],"5|1|of-steffy":[{"n":"Nirina"}],"5|1|of-ava":[{"n":"Yoann"}],"5|1|of-mae":[{"n":"Mitia"}],"5|1|of-thais":[{"n":"Mitia"}],"5|1|of-flavie":[{"n":"Prisca"},{"n":"Norosoa"},{"n":"Valisoa"}],"5|1|of-carla-trans":[{"n":"Jorès"}],"5|1|of-marie":[{"n":"Manoa"}],"5|1|of-eden":[{"n":"Ferlin"}],"5|1|of-lila":[{"n":"Nelia"}],"5|2|mym-naya":[{"n":"Mahery Christian"}],"5|2|mym-thais":[{"n":"Sitraka"}],"5|2|mym-carla":[{"n":"Iako"}],"5|2|mym-ava-paid-subs":[{"n":"Njiva"},{"n":"Steph"},{"n":"Niry"},{"n":"Kanto"}],"5|2|mym-marie":[{"n":"Nelly"},{"n":"Simone"},{"n":"Nathan"},{"n":"Lalaina"}],"5|2|mym-flavie":[{"n":"Ben'J"},{"n":"Ismael"},{"n":"Nix"},{"n":"Mandaniaiana"},{"n":"Jerry"}],"5|2|mym-chloe":[{"n":"Hoby"},{"n":"Rocharlot"}],"5|2|mym-eden":[{"n":"Tojo"},{"n":"Natty"},{"n":"Nekena"}],"5|2|mym-carla-baby":[{"n":"Antonio"},{"n":"Finoana"},{"n":"Antoine"},{"n":"Jefferson"},{"n":"Tsiky"},{"n":"Dialy"}],"5|2|other-ava-reveal":[{"n":"Kanto"}],"5|2|mym-angel":[{"n":"Andry"}],"5|2|mym-charlotte":[{"n":"Hasina"},{"n":"Fenitra"},{"n":"Ulrich"},{"n":"Sergio"},{"n":"Stephen"},{"n":"Hafaliana"}],"5|2|mym-tia":[{"n":"Andrea"}],"5|2|mym-steffy":[{"n":"Mahery Christian"}],"5|2|mym-victoria":[{"n":"Serge"}],"5|2|mym-anaelle":[{"n":"Marc"},{"n":"Manohisoa"}],"5|2|of-naya":[{"n":"Geraldo"}],"5|2|of-angel":[{"n":"Geraldo"}],"5|2|of-carla-baby":[{"n":"Mackendji"},{"n":"Toky"}],"5|2|of-steffy":[{"n":"Jorès"}],"5|2|of-ava":[{"n":"Valisoa"}],"5|2|of-mae":[{"n":"Lahatra"}],"5|2|of-thais":[{"n":"Lahatra"}],"5|2|of-flavie":[{"n":"Tatiana"},{"n":"Yousseinah"},{"n":"Franckie"}],"5|2|of-carla-trans":[{"n":"Guillaume"}],"5|2|of-marie":[{"n":"Ferlin"}],"5|2|of-eden":[{"n":"Dera"}],"5|2|of-lila":[{"n":"Guillaume"}],"5|3|mym-naya":[{"n":"Noel"}],"5|3|mym-thais":[{"n":"Noel"}],"5|3|mym-carla":[{"n":"Samsou"}],"5|3|mym-ava-paid-subs":[{"n":"Niry"},{"n":"Steph"},{"n":"Billy"}],"5|3|mym-marie":[{"n":"Jerry Fady"},{"n":"Prince"},{"n":"Ny Anjara"}],"5|3|mym-flavie":[{"n":"Sarobidy"},{"n":"Quelent"},{"n":"Rafik"},{"n":"Gildas"},{"n":"Sylvia"}],"5|3|mym-chloe":[{"n":"Mahery"}],"5|3|mym-eden":[{"n":"Darell"},{"n":"Benedicte"},{"n":"Rijih"}],"5|3|mym-carla-baby":[{"n":"Riantsoa"},{"n":"Vonjy"},{"n":"Fanomezantsoa"},{"n":"Daniella Tona"},{"n":"Mahatsangy"}],"5|3|other-ava-reveal":[{"n":"Niry"}],"5|3|mym-angel":[{"n":"Thomas"}],"5|3|mym-charlotte":[{"n":"Daniel"},{"n":"Tito"},{"n":"Ronalde"},{"n":"Rivaldo"},{"n":"Jean François"}],"5|3|mym-tia":[{"n":"Yannis"}],"5|3|mym-steffy":[{"n":"Sitraka"}],"5|3|mym-victoria":[{"n":"Gérard"}],"5|3|mym-anaelle":[{"n":"Tafita"}],"5|3|of-naya":[{"n":"Jerome"}],"5|3|of-angel":[{"n":"Guillaume"}],"5|3|of-carla-baby":[{"n":"Prisca"},{"n":"Toky"},{"n":"Géovith"}],"5|3|of-steffy":[{"n":"Guillaume"}],"5|3|of-ava":[{"n":"Sandy"},{"n":"Mandresy"}],"5|3|of-mae":[{"n":"Arnaud"}],"5|3|of-thais":[{"n":"Arnaud"}],"5|3|of-flavie":[{"n":"Ellah"},{"n":"Andy","r":"Mandresy"}],"5|3|of-carla-trans":[{"n":"Benedictus"}],"5|3|of-marie":[{"n":"Jaunecy"},{"n":"Manael"}],"5|3|of-eden":[{"n":"Tendry"}],"5|3|of-lila":[{"n":"Jerome"}],"6|0|mym-naya":[{"n":"Joda"}],"6|0|mym-thais":[{"n":"Joda"}],"6|0|mym-carla":[{"n":"Hasintsoa"}],"6|0|mym-ava-paid-subs":[{"n":"Laura"}],"6|0|mym-marie":[{"n":"Rouchdiath"}],"6|0|mym-flavie":[{"n":"Narcisse"},{"n":"Benj"}],"6|0|mym-chloe":[{"n":"Daniella"}],"6|0|mym-eden":[{"n":"Raphael"}],"6|0|mym-carla-baby":[{"n":"Fitia"},{"n":"Vonjy"}],"6|0|other-ava-reveal":[{"n":"Laura"}],"6|0|mym-angel":[{"n":"Ilo"}],"6|0|mym-charlotte":[{"n":"Amboara"},{"n":"Sarobidy"}],"6|0|mym-tia":[{"n":"Ilo"}],"6|0|mym-steffy":[{"n":"Raphael"}],"6|0|mym-victoria":[{"n":"Rouchdiath"}],"6|0|mym-anaelle":[{"n":"Hasintsoa"}],"6|0|of-naya":[{"n":"Haywardine"}],"6|0|of-angel":[{"n":"Manael"}],"6|0|of-carla-baby":[{"n":"Kael"}],"6|0|of-steffy":[{"n":"Kael"}],"6|0|of-ava":[{"n":"Tendry"}],"6|0|of-mae":[{"n":"Jordy"}],"6|0|of-thais":[{"n":"Jordy"}],"6|0|of-flavie":[{"n":"Manael"}],"6|0|of-carla-trans":[{"n":"Manael"}],"6|0|of-marie":[{"n":"Haywardine"}],"6|0|of-eden":[{"n":"Tendry"}],"6|0|of-lila":[{"n":"Haywardine"}],"6|1|mym-naya":[{"n":"Nekena"}],"6|1|mym-thais":[{"n":"Princy"}],"6|1|mym-carla":[{"n":"Marc"}],"6|1|mym-ava-paid-subs":[{"n":"Tsiky"},{"n":"Manuela"},{"n":"kanto"}],"6|1|mym-marie":[{"n":"Léonidas"},{"n":"Alex"},{"n":"Mazid"}],"6|1|mym-flavie":[{"n":"Stéphie"},{"n":"Tyavina"},{"n":"Fitia"},{"n":"Hasintsoa"}],"6|1|mym-chloe":[{"n":"Tsoa"}],"6|1|mym-eden":[{"n":"Natty"},{"n":"Andro Marc"},{"n":"Daniela"}],"6|1|mym-carla-baby":[{"n":"Lys"},{"n":"Bandron"},{"n":"Antonio"},{"n":"Tanjona"}],"6|1|other-ava-reveal":[{"n":"Kanto"}],"6|1|mym-angel":[{"n":"Princy"}],"6|1|mym-charlotte":[{"n":"Ambinintsoa"},{"n":"Rocharlot"},{"n":"Jerry"},{"n":"Ornélie"}],"6|1|mym-tia":[{"n":"Thierry"}],"6|1|mym-steffy":[{"n":"Marc"}],"6|1|mym-victoria":[{"n":"Nekena"}],"6|1|mym-anaelle":[{"n":"Fenitra"}],"6|1|of-naya":[{"n":"Nelia"}],"6|1|of-angel":[{"n":"Jorès"}],"6|1|of-carla-baby":[{"n":"Olivia"}],"6|1|of-steffy":[{"n":"Jorès"}],"6|1|of-ava":[{"n":"Yoann"},{"n":"Manoa"}],"6|1|of-mae":[{"n":"Nirina"}],"6|1|of-thais":[{"n":"Nirina"}],"6|1|of-flavie":[{"n":"Norosoa"},{"n":"Valisoa"}],"6|1|of-carla-trans":[{"n":"Valisoa"}],"6|1|of-marie":[{"n":"Ferlin"}],"6|1|of-eden":[{"n":"Valisoa"}],"6|1|of-lila":[{"n":"Manoa"}],"6|2|mym-naya":[{"n":"Mahery Christian"}],"6|2|mym-thais":[{"n":"Sitraka"}],"6|2|mym-carla":[{"n":"Iako"}],"6|2|mym-ava-paid-subs":[{"n":"Kanto"},{"n":"Steph"},{"n":"Nix"}],"6|2|mym-marie":[{"n":"Nelly"},{"n":"Simone"},{"n":"Nathan"},{"n":"Lalaina"}],"6|2|mym-flavie":[{"n":"Ben'J"},{"n":"Ismael"},{"n":"Sylvia"},{"n":"Gracia"},{"n":"Mandaniaina"}],"6|2|mym-chloe":[{"n":"Andrea"}],"6|2|mym-eden":[{"n":"Natty"},{"n":"Tojo"},{"n":"Rocharlot"}],"6|2|mym-carla-baby":[{"n":"Antoine"},{"n":"Finoana"},{"n":"Antonio"},{"n":"Gary"},{"n":"Jefferson"},{"n":"Tsiky"}],"6|2|other-ava-reveal":[{"n":"Kanto"}],"6|2|mym-angel":[{"n":"Mahery Christian"}],"6|2|mym-charlotte":[{"n":"Hasina"},{"n":"Stephen"},{"n":"Ulrich"},{"n":"Sergio"},{"n":"Fenitra"},{"n":"Hafaliana"}],"6|2|mym-tia":[{"n":"Nekena"}],"6|2|mym-steffy":[{"n":"Mahery Christian"}],"6|2|mym-victoria":[{"n":"Serge"}],"6|2|mym-anaelle":[{"n":"Manohisoa"}],"6|2|of-naya":[{"n":"Styve"}],"6|2|of-angel":[{"n":"Geraldo"}],"6|2|of-carla-baby":[{"n":"Mackendji"},{"n":"Yousseinah"},{"n":"Tanjona"}],"6|2|of-steffy":[{"n":"Geraldo"}],"6|2|of-ava":[{"n":"Valisoa"}],"6|2|of-mae":[{"n":"Lahatra"}],"6|2|of-thais":[{"n":"Lahatra"}],"6|2|of-flavie":[{"n":"Cynthia"},{"n":"Tatiana"},{"n":"Franckie"}],"6|2|of-carla-trans":[{"n":"Jorès"}],"6|2|of-marie":[{"n":"Manoa"}],"6|2|of-eden":[{"n":"Dera"}],"6|2|of-lila":[{"n":"Styve"}],"6|3|mym-naya":[{"n":"Noel"}],"6|3|mym-thais":[{"n":"Noel"}],"6|3|mym-carla":[{"n":"Samsou"}],"6|3|mym-ava-paid-subs":[{"n":"Niry"},{"n":"Steph"},{"n":"Billy"}],"6|3|mym-marie":[{"n":"Jerry Fady"},{"n":"Prince"},{"n":"Ny Anjara"}],"6|3|mym-flavie":[{"n":"Quelent"},{"n":"Mahatsangy"},{"n":"Sylvia"},{"n":"Rafik"},{"n":"Gildas"}],"6|3|mym-chloe":[{"n":"Mahery"}],"6|3|mym-eden":[{"n":"Darell"},{"n":"Benedicte"},{"n":"Rijih"}],"6|3|mym-carla-baby":[{"n":"Riantsoas"},{"n":"Vonjy"},{"n":"Carlotta"},{"n":"Fanomezantsoa"},{"n":"Daniella Tona"}],"6|3|other-ava-reveal":[{"n":"Niry"}],"6|3|mym-angel":[{"n":"Thomas"}],"6|3|mym-charlotte":[{"n":"Daniel"},{"n":"Tito"},{"n":"Ronalde"},{"n":"Rivaldo"},{"n":"Jean François"}],"6|3|mym-tia":[{"n":"Yannis"}],"6|3|mym-steffy":[{"n":"Charbel"}],"6|3|mym-victoria":[{"n":"Gerard"}],"6|3|mym-anaelle":[{"n":"Sitraka"}],"6|3|of-naya":[{"n":"Jerome"}],"6|3|of-angel":[{"n":"Manael"}],"6|3|of-carla-baby":[{"n":"Tsanta"},{"n":"Toky"},{"n":"Géovith"}],"6|3|of-steffy":[{"n":"Benedictus"}],"6|3|of-ava":[{"n":"Mandresy"}],"6|3|of-mae":[{"n":"Arnaud"}],"6|3|of-thais":[{"n":"Arnaud"}],"6|3|of-flavie":[{"n":"Ellah"},{"n":"Phalérus"},{"n":"Andy"}],"6|3|of-carla-trans":[{"n":"Benedictus"}],"6|3|of-marie":[{"n":"Jaunecy"}],"6|3|of-eden":[{"n":"Tendry"}],"6|3|of-lila":[{"n":"Jaunecy"}]},"notes":{"0":"Flavie Mym : quelent pb co\nChloe MYM : Hoby ne sera pas present masi mercredi oui\nEden Mym : Ny Anjara abs injustifiée\nAngel Mym : ilo(retard)\nNaya OF : Lahatra encore malade il a dit","1":"Victoria Mym : Riantsoa OFF\nNaya OF : Nirina abs sans infos","2":"Ava Paid Subs : Laura(Absente) Cf canal Privé\nMarie Mym : Rouchdiath(Coupure)\nFlavie Mym : Narcisse(retard)\nAngel OF : Jores souci de connexion","3":"Victoria Mym : inactivité"},"newChatters":["Ally","Ilo","Jeth","Lionel","Patty","Trésor"]};
+const PLAN_GROUPS = [
+  {id:'mym', label:'MYM', color:'#22c55e', ink:'#062b14'},
+  {id:'other', label:'Reveal / Telegram', color:'#a855f7', ink:'#ffffff'},
+  {id:'of', label:'OnlyFans', color:'#eab308', ink:'#2a1d02'}
+];
+const PLAN_SHIFTS = ['04 - 10', '10 - 16', '16 - 22', '22 - 04'];
+const PLAN_DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const PLAN_DAYS_LONG = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+const NEW_SHIFTS = 5;   // un nouveau chatter est mis en couleur sur ses 5 premiers shifts travaillés
+const LS_PLAN = 'rca.plan.v1', LS_PLANCFG = 'rca.plancfg.v1';
+const DEFAULT_PLANCFG = {models: PLAN_SEED.models.map((m, i) => ({...m, order: i}))};
+let planState = (() => { const s = lsGet(LS_PLAN, null) || {}; s.weeks ||= {}; s.chatters ||= {}; return s; })();
+let planCfgSaved = lsGet(LS_PLANCFG, null);
+const planCfg = () => planCfgSaved && Array.isArray(planCfgSaved.models) && planCfgSaved.models.length ? planCfgSaved : DEFAULT_PLANCFG;
+const savePlan = () => { lsSet(LS_PLAN, planState); Sync.changed('planning'); };
+const savePlanCfg = () => { lsSet(LS_PLANCFG, planCfgSaved); Sync.changed('plancfg'); };
+const planUI = {week:null, day:null, q:''};
+const normName = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+const cellKey = (d, s, mid) => `${d}|${s}|${mid}`;
+const activeModels = () => planCfg().models.filter(m => !m.archived).sort((a, b) => (PLAN_GROUPS.findIndex(g => g.id === a.group) - PLAN_GROUPS.findIndex(g => g.id === b.group)) || (a.order ?? 0) - (b.order ?? 0));
+const modelLabel = m => m.group === 'mym' ? `${m.name} MYM` : m.group === 'of' ? `${m.name} OF` : m.name;
+const weekOf = wk => planState.weeks[wk];
+// Qui travaille réellement : le remplaçant s'il y en a un, sinon le prévu s'il n'est pas absent
+const workerOf = e => e.r ? e.r : (e.a ? null : e.n);
+
+/* ---------- Nouveaux chatters : 5 premiers shifts travaillés, dans l'ordre chronologique ---------- */
+function newHighlights() {
+  const flagged = new Map(Object.entries(planState.chatters || {}).filter(([, c]) => c && c.isNew).map(([k, c]) => [k, c]));
+  const out = new Map();
+  if (!flagged.size) return out;
+  const counts = {};
+  const models = activeModels();
+  for (const wk of Object.keys(planState.weeks).sort()) {
+    const W = planState.weeks[wk];
+    for (let d = 0; d < 7; d++) {
+      const date = addDaysIso(wk, d);
+      for (let s = 0; s < PLAN_SHIFTS.length; s++) {
+        const seen = new Set();
+        for (const m of models) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) {
+          const w = workerOf(e); if (!w) continue;
+          for (const one of w.split('/').map(x => x.trim()).filter(Boolean)) {
+            const k = normName(one), c = flagged.get(k);
+            if (!c || seen.has(k) || (c.since && date < c.since)) continue;
+            seen.add(k); counts[k] = (counts[k] || 0) + 1;
+            if (counts[k] <= NEW_SHIFTS) out.set(`${wk}|${d}|${s}|${k}`, counts[k]);
+          }
+        }
+      }
+    }
+  }
+  return out;
+}
+const isFlaggedNew = name => !!(planState.chatters[normName(name)] || {}).isNew;
+function knownChatters() {
+  const set = new Map();
+  for (const W of Object.values(planState.weeks)) for (const list of Object.values(W.cells || {})) for (const e of list) for (const n of [e.n, ...(e.r ? e.r.split('/') : [])]) { const t = (n || '').trim(); if (t) set.set(normName(t), t); }
+  for (const p of store.periods) for (const r of p.rows) if (!set.has(normName(r.name))) set.set(normName(r.name), r.name);
+  return [...set.values()].sort((a, b) => a.localeCompare(b, 'fr'));
+}
+
+/* ---------- Semaines ---------- */
+const thisMonday = () => mondayOf(isoOf(new Date()));
+// Nom d'un planning, comme les onglets Excel : « Semaine du 28/09 », « Semaine du 05/10 »…
+const planWeekLabel = wk => { const d = parseDate(wk); const y = d.getFullYear() !== new Date().getFullYear() ? `/${d.getFullYear()}` : ''; return `Semaine du ${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}${y}`; };
+function planWeekKey() {
+  if (!planUI.week) { const ks = Object.keys(planState.weeks).sort(); const t = thisMonday(); planUI.week = planState.weeks[t] ? t : (ks.length ? ks[ks.length - 1] : t); }
+  return planUI.week;
+}
+function planDay(wk) {
+  if (planUI.day == null) { const t = isoOf(new Date()); planUI.day = t >= wk && t <= addDaysIso(wk, 6) ? (new Date().getDay() + 6) % 7 : 0; }
+  return planUI.day;
+}
+function createWeek(wk, fromWk) {
+  const src = fromWk && planState.weeks[fromWk];
+  const cells = {};
+  // On reprend les chatters prévus, sans absences, remplacements ni notes
+  if (src) for (const [k, list] of Object.entries(src.cells || {})) { const l = list.map(e => ({n: e.n})); if (l.length) cells[k] = l; }
+  planState.weeks[wk] = {cells, notes: {}, createdAt: Date.now(), from: fromWk || null};
+  savePlan();
+}
+
+/* ---------- Affichage ---------- */
+function chipHTML(e, wk, d, s, hl) {
+  const nk = n => hl.get(`${wk}|${d}|${s}|${normName(n)}`);
+  const nm = n => { const i = nk(n); return i ? `<span class="pc new" title="Nouveau : shift ${i}/${NEW_SHIFTS}">${esc(n)}</span>` : `<span class="pc">${esc(n)}</span>`; };
+  if (e.r) return `<span class="pchip rep" title="${esc(e.n)} remplacé(e) par ${esc(e.r)}"><s>${esc(e.n)}</s><span class="arr">→</span>${e.r.split('/').map(x => nm(x.trim())).join(' / ')}</span>`;
+  if (e.a) return `<span class="pchip"><span class="pc abs" title="Absent(e)">${esc(e.n)}</span></span>`;
+  return `<span class="pchip">${nm(e.n)}</span>`;
+}
+function renderPlanning(main) {
+  const wk = planWeekKey(), W = weekOf(wk), d = planDay(wk);
+  const models = activeModels();
+  const allWeeks = [...new Set([...Object.keys(planState.weeks), thisMonday(), addDaysIso(thisMonday(), 7), wk])].sort().reverse();
+  const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
+  const hl = newHighlights();
+  const q = normName(planUI.q);
+  const head = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1>
+    <div class="picker viewpick"><button class="btn ghost small-btn" id="pw-prev" type="button" aria-label="Semaine précédente">‹</button>
+      <select id="pw-sel">${allWeeks.map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}${planState.weeks[k] ? '' : ' (vide)'}</option>`).join('')}</select>
+      <button class="btn ghost small-btn" id="pw-next" type="button" aria-label="Semaine suivante">›</button></div></div>`;
+  if (!W) {
+    const canSeed = !Object.keys(planState.weeks).length;
+    main.innerHTML = head + `<div class="panel empty"><h2 style="font-size:18px;margin-bottom:6px">${esc(planWeekLabel(wk))} n'existe pas encore</h2>
+      <p class="hint" style="margin:0 auto 14px;max-width:520px">${prevExisting ? `Créez-la à partir de ${esc(planWeekLabel(prevExisting))} : les chatters sont repris, les absences, remplacements et notes repartent à zéro.` : 'Créez une semaine vide, ou chargez la semaine du 28 septembre depuis votre fichier Excel.'}</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        ${prevExisting ? `<button class="btn primary" id="pw-copy" type="button">Créer à partir de la semaine précédente</button>` : ''}
+        <button class="btn" id="pw-empty" type="button">Créer une semaine vide</button>
+        ${canSeed ? `<button class="btn" id="pw-seed" type="button">Charger la semaine du 28 sept. (Excel)</button>` : ''}</div></div>`;
+    bindPlanningHead(main, wk);
+    document.getElementById('pw-copy')?.addEventListener('click', () => { createWeek(wk, prevExisting); toast(`${planWeekLabel(wk)} créée à partir de ${planWeekLabel(prevExisting)}.`); render(); });
+    document.getElementById('pw-empty')?.addEventListener('click', () => { createWeek(wk, null); render(); });
+    document.getElementById('pw-seed')?.addEventListener('click', () => {
+      planState.weeks[PLAN_SEED.week] = {cells: JSON.parse(JSON.stringify(PLAN_SEED.cells)), notes: {...PLAN_SEED.notes}, createdAt: Date.now(), from: 'excel'};
+      for (const n of PLAN_SEED.newChatters) planState.chatters[normName(n)] = {name: n, isNew: true};
+      savePlan(); planUI.week = PLAN_SEED.week; planUI.day = 0; toast('Semaine du 28 septembre chargée depuis l’Excel.'); render();
+    });
+    return;
+  }
+  const nextWk = addDaysIso(wk, 7);
+  const groupsShown = PLAN_GROUPS.map(g => ({g, ms: models.filter(m => m.group === g.id)})).filter(x => x.ms.length);
+  const note = (W.notes || {})[d] || '';
+  // Planning d'un chatter recherché
+  let found = [];
+  if (q) for (let dd = 0; dd < 7; dd++) for (let s = 0; s < PLAN_SHIFTS.length; s++) for (const m of models) for (const e of (W.cells[cellKey(dd, s, m.id)] || [])) {
+    const names = [e.n, ...(e.r ? e.r.split('/').map(x => x.trim()) : [])];
+    if (names.some(n => normName(n).includes(q))) found.push({dd, s, m, e});
+  }
+  main.innerHTML = head + `<div class="stack">
+    <section class="panel plan-bar">
+      <div class="ptabs" role="tablist">${PLAN_DAYS.map((x, i) => `<button type="button" role="tab" class="ptab ${i === d ? 'on' : ''}" data-day="${i}" aria-selected="${i === d}"><b>${x}</b><span>${parseDate(addDaysIso(wk, i)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</span></button>`).join('')}</div>
+      <div class="pactions">
+        <input type="search" id="p-q" placeholder="Rechercher un chatter" value="${esc(planUI.q)}" aria-label="Rechercher un chatter">
+        <button class="btn" id="p-unav" type="button">Indisponibilité</button>
+        ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>`}
+      </div>
+      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
+    </section>
+    ${q ? `<section class="panel"><h2>Planning de « ${esc(planUI.q)} » · ${esc(planWeekLabel(wk))}</h2>${found.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Jour</th><th>Shift</th><th>Modèle</th><th>Statut</th></tr></thead><tbody>${found.map(x => `<tr><td>${PLAN_DAYS_LONG[x.dd]} ${parseDate(addDaysIso(wk, x.dd)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</td><td>${PLAN_SHIFTS[x.s]}</td><td>${esc(modelLabel(x.m))}</td><td>${x.e.r ? `remplacé(e) par ${esc(x.e.r)}` : x.e.a ? '<span class="sc-lo">absent</span>' : 'prévu'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Aucun shift trouvé cette semaine.</p>'}</section>` : ''}
+    <section class="panel" style="padding:12px">
+      <div class="tbl-wrap pgrid-wrap" style="max-height:none"><table class="pgrid"><thead>
+        <tr><th class="sh"></th>${groupsShown.map(x => `<th colspan="${x.ms.length}" class="pg" style="background:${x.g.color};color:${x.g.ink}">${esc(x.g.label)}</th>`).join('')}</tr>
+        <tr><th class="sh">${PLAN_DAYS_LONG[d]}</th>${groupsShown.map(x => x.ms.map(m => `<th class="pm" style="box-shadow:inset 0 3px 0 ${x.g.color}">${esc(m.name)}</th>`).join('')).join('')}</tr>
+      </thead><tbody>
+        ${PLAN_SHIFTS.map((sh, s) => `<tr><th class="sh">${sh}</th>${groupsShown.map(x => x.ms.map(m => {
+          const list = W.cells[cellKey(d, s, m.id)] || [];
+          const hit = q && list.some(e => [e.n, ...(e.r ? e.r.split('/') : [])].some(n => normName(n).includes(q)));
+          return `<td class="pcell ${hit ? 'hit' : ''} ${list.length ? '' : 'empty'}" data-cell="${cellKey(d, s, m.id)}" tabindex="0" title="${esc(modelLabel(m))} · ${PLAN_DAYS_LONG[d]} ${sh}">${list.map(e => chipHTML(e, wk, d, s, hl)).join('') || '<span class="plus">+</span>'}</td>`;
+        }).join('')).join('')}</tr>`).join('')}
+      </tbody></table></div>
+    </section>
+    <section class="panel"><h2>Notes du ${PLAN_DAYS_LONG[d].toLowerCase()}</h2><textarea id="p-note" rows="4" placeholder="Retards, absences, problèmes de connexion…">${esc(note)}</textarea><p class="hint" style="margin:6px 0 0;font-size:12px">Enregistré automatiquement et visible par toute l'équipe.</p></section>
+    ${Sync.canManage() ? planStructureHTML() : ''}
+  </div>`;
+  bindPlanningHead(main, wk);
+  main.querySelectorAll('[data-day]').forEach(b => b.addEventListener('click', () => { planUI.day = +b.dataset.day; render(); }));
+  const qi = document.getElementById('p-q'); let qt;
+  qi.addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => { planUI.q = qi.value; render(); const n = document.getElementById('p-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 300); });
+  main.querySelectorAll('[data-cell]').forEach(td => { const open = () => editCell(wk, td.dataset.cell); td.addEventListener('click', open); td.addEventListener('keydown', e => { if (e.key === 'Enter') open(); }); });
+  const nt = document.getElementById('p-note'); let ntt;
+  nt.addEventListener('input', () => { clearTimeout(ntt); ntt = setTimeout(() => { W.notes ||= {}; if (nt.value.trim()) W.notes[d] = nt.value; else delete W.notes[d]; savePlan(); }, 600); });
+  document.getElementById('p-next')?.addEventListener('click', async () => {
+    if (!(await modal('Préparer la semaine suivante', `<p>Créer <strong>${esc(planWeekLabel(nextWk))}</strong> à partir de cette semaine ? Les chatters prévus sont repris ; les absences, remplacements et notes repartent à zéro. La semaine en cours ne change pas.</p>`, 'Créer la semaine'))) return;
+    createWeek(nextWk, wk); planUI.week = nextWk; planUI.day = 0; toast(`${planWeekLabel(nextWk)} créée.`); render();
+  });
+  document.getElementById('p-gonext')?.addEventListener('click', () => { planUI.week = nextWk; planUI.day = 0; render(); });
+  document.getElementById('p-unav').addEventListener('click', () => unavailability(wk));
+  if (Sync.canManage()) bindPlanStructure();
+}
+function bindPlanningHead(main, wk) {
+  const go = k => { planUI.week = k; planUI.day = null; render(); };
+  document.getElementById('pw-prev').addEventListener('click', () => go(addDaysIso(wk, -7)));
+  document.getElementById('pw-next').addEventListener('click', () => go(addDaysIso(wk, 7)));
+  document.getElementById('pw-sel').addEventListener('change', e => go(e.target.value));
+}
+
+/* ---------- Modifier une case ---------- */
+function editCell(wk, key) {
+  const [d, s, mid] = key.split('|'); const m = planCfg().models.find(x => x.id === mid);
+  const W = weekOf(wk);
+  let list = (W.cells[key] || []).map(e => ({...e}));
+  const names = knownChatters();
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  const draw = () => {
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:640px"><h3>${esc(m ? modelLabel(m) : mid)} · ${PLAN_DAYS_LONG[d]} ${parseDate(addDaysIso(wk, +d)).toLocaleDateString('fr-FR', {day:'numeric', month:'long'})} · ${PLAN_SHIFTS[s]}</h3>
+      <datalist id="pl-names">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+      ${list.length ? `<div class="pe-list">${list.map((e, i) => `<div class="pe-row">
+        <strong class="${e.a && !e.r ? 'sc-lo' : ''}">${esc(e.n)}</strong>
+        <label class="check"><input type="checkbox" data-abs="${i}" ${e.a ? 'checked' : ''}> Absent</label>
+        <input type="text" list="pl-names" data-rep="${i}" value="${esc(e.r || '')}" placeholder="Remplaçant (facultatif)">
+        <label class="check" title="Mis en couleur sur ses ${NEW_SHIFTS} premiers shifts travaillés"><input type="checkbox" data-new="${i}" ${isFlaggedNew(e.n) ? 'checked' : ''}> Nouveau</label>
+        <button class="btn ghost" type="button" data-del="${i}" aria-label="Retirer ${esc(e.n)}">×</button></div>`).join('')}</div>` : '<p class="hint">Personne sur ce shift.</p>'}
+      <div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="pe-add" list="pl-names" placeholder="Ajouter un ou plusieurs chatters (séparés par /)" style="flex:1"><button class="btn" id="pe-addb" type="button">Ajouter</button></div>
+      <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
+    bg.querySelector('#pe-add').focus();
+  };
+  const sync = () => {
+    bg.querySelectorAll('[data-abs]').forEach(c => { list[+c.dataset.abs].a = c.checked ? 1 : 0; });
+    bg.querySelectorAll('[data-rep]').forEach(c => { const v = c.value.trim(); list[+c.dataset.rep].r = v || undefined; });
+  };
+  const add = () => { sync(); const v = bg.querySelector('#pe-add').value; for (const n of v.split('/').map(x => x.trim()).filter(Boolean)) if (!list.some(e => normName(e.n) === normName(n))) list.push({n}); draw(); };
+  const newFlags = {};
+  draw();
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') bg.remove(); if (e.key === 'Enter' && e.target.id === 'pe-add') { e.preventDefault(); add(); } });
+  bg.addEventListener('change', e => { const t = e.target; if (t.dataset.new != null) newFlags[normName(list[+t.dataset.new].n)] = {name: list[+t.dataset.new].n, on: t.checked}; });
+  bg.addEventListener('click', e => {
+    if (e.target === bg) { bg.remove(); return; }
+    if (e.target.id === 'pe-addb') { add(); return; }
+    const del = e.target.closest('[data-del]'); if (del) { sync(); list.splice(+del.dataset.del, 1); draw(); return; }
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === '1') {
+      sync(); if (bg.querySelector('#pe-add').value.trim()) add();
+      const clean = list.map(e => { const o = {n: e.n}; if (e.a) o.a = 1; if (e.r) o.r = e.r; return o; });
+      if (clean.length) W.cells[key] = clean; else delete W.cells[key];
+      for (const [k, f] of Object.entries(newFlags)) { if (f.on) planState.chatters[k] = {...(planState.chatters[k] || {}), name: f.name, isNew: true}; else if (planState.chatters[k]) planState.chatters[k].isNew = false; }
+      savePlan(); render();
+    }
+    bg.remove();
+  });
+  document.body.appendChild(bg);
+}
+
+/* ---------- Indisponibilité : retirer ou marquer absent un chatter sur plusieurs jours d'un coup ---------- */
+function unavailability(wk) {
+  const W = weekOf(wk), models = activeModels(), names = knownChatters();
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  const st = {name:'', days:new Set(), mode:'abs'};
+  const slots = () => { const k = normName(st.name); if (!k) return []; const out = [];
+    for (const d of st.days) for (let s = 0; s < PLAN_SHIFTS.length; s++) for (const m of models) (W.cells[cellKey(d, s, m.id)] || []).forEach((e, i) => { if (normName(e.n) === k) out.push({d, s, m, i}); });
+    return out; };
+  const draw = () => {
+    const sl = slots();
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:600px"><h3>Indisponibilité · ${esc(planWeekLabel(wk))}</h3>
+      <datalist id="pl-names2">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+      <label style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)">Chatter<input type="text" id="un-name" list="pl-names2" value="${esc(st.name)}" placeholder="Prénom"></label>
+      <div style="margin:12px 0 6px;font-size:13px;color:var(--muted)">Jours concernés</div>
+      <div class="un-days">${PLAN_DAYS.map((x, i) => `<label class="check"><input type="checkbox" data-ud="${i}" ${st.days.has(i) ? 'checked' : ''}> ${x} ${parseDate(addDaysIso(wk, i)).getDate()}</label>`).join('')}</div>
+      <div class="un-days" style="margin-top:12px"><label class="check"><input type="radio" name="un-mode" value="abs" ${st.mode === 'abs' ? 'checked' : ''}> Marquer absent (prénom en rouge, on peut ajouter un remplaçant)</label>
+        <label class="check"><input type="radio" name="un-mode" value="del" ${st.mode === 'del' ? 'checked' : ''}> Retirer du planning</label></div>
+      <p class="hint" id="un-prev" style="margin:12px 0 0"></p>
+      <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button" id="un-go" disabled>Appliquer</button></div></div>`;
+  };
+  const preview = () => {
+    const sl = slots();
+    bg.querySelector('#un-prev').innerHTML = st.name && st.days.size ? (sl.length ? `${plural(sl.length, 'créneau trouvé', 'créneaux trouvés')} : ${sl.slice(0, 8).map(x => `${PLAN_DAYS[x.d]} ${PLAN_SHIFTS[x.s]} ${esc(modelLabel(x.m))}`).join(' · ')}${sl.length > 8 ? '…' : ''}` : 'Aucun créneau trouvé pour ce chatter sur ces jours.') : 'Choisissez un chatter et des jours.';
+    bg.querySelector('#un-go').disabled = !sl.length;
+  };
+  draw(); preview();
+  bg.addEventListener('input', e => { if (e.target.id === 'un-name') { st.name = e.target.value; preview(); } });
+  bg.addEventListener('change', e => {
+    const t = e.target;
+    if (t.dataset.ud != null) t.checked ? st.days.add(+t.dataset.ud) : st.days.delete(+t.dataset.ud);
+    if (t.name === 'un-mode') st.mode = t.value;
+    preview();
+  });
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') bg.remove(); });
+  bg.addEventListener('click', e => {
+    if (e.target === bg) { bg.remove(); return; }
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === '1') {
+      const sl = slots();
+      const byKey = {};
+      for (const x of sl) (byKey[cellKey(x.d, x.s, x.m.id)] ||= []).push(x.i);
+      for (const [k, idx] of Object.entries(byKey)) {
+        if (st.mode === 'abs') idx.forEach(i => { W.cells[k][i].a = 1; });
+        else { W.cells[k] = W.cells[k].filter((_, i) => !idx.includes(i)); if (!W.cells[k].length) delete W.cells[k]; }
+      }
+      savePlan(); toast(`${st.name} : ${plural(sl.length, 'créneau', 'créneaux')} ${st.mode === 'abs' ? 'marqué(s) absent' : 'retiré(s) du planning'}.`); render();
+    }
+    bg.remove();
+  });
+  document.body.appendChild(bg);
+}
+
+/* ---------- Structure : liste des modèles (administrateurs) ---------- */
+function planStructureHTML() {
+  const ms = [...planCfg().models].sort((a, b) => (PLAN_GROUPS.findIndex(g => g.id === a.group) - PLAN_GROUPS.findIndex(g => g.id === b.group)) || (a.order ?? 0) - (b.order ?? 0));
+  return `<details class="panel"><summary style="cursor:pointer;font-weight:700">Modèles du planning (administrateurs)</summary>
+    <p class="hint" style="margin-top:10px">Ajoutez, renommez, déplacez ou masquez une modèle. Une modèle masquée disparaît du planning, son historique est conservé.</p>
+    <div class="tbl-wrap" style="max-height:420px"><table><thead><tr><th>Groupe</th><th>Nom</th><th>Ordre</th><th></th></tr></thead><tbody>
+    ${ms.map(m => `<tr class="${m.archived ? 'muted' : ''}"><td><select data-mg="${m.id}">${PLAN_GROUPS.map(g => `<option value="${g.id}" ${g.id === m.group ? 'selected' : ''}>${g.label}</option>`).join('')}</select></td>
+      <td><input type="text" data-mn="${m.id}" value="${esc(m.name)}"></td>
+      <td><button class="btn ghost small-btn" data-mu="${m.id}" type="button" aria-label="Monter">↑</button> <button class="btn ghost small-btn" data-md="${m.id}" type="button" aria-label="Descendre">↓</button></td>
+      <td class="num"><button class="btn ghost" data-ma="${m.id}" type="button">${m.archived ? 'Réafficher' : 'Masquer'}</button></td></tr>`).join('')}
+    </tbody></table></div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><select id="nm-g">${PLAN_GROUPS.map(g => `<option value="${g.id}">${g.label}</option>`).join('')}</select><input type="text" id="nm-n" placeholder="Nom de la modèle"><button class="btn" id="nm-add" type="button">Ajouter la modèle</button></div>
+  </details>`;
+}
+function bindPlanStructure() {
+  const ensure = () => { if (!planCfgSaved) planCfgSaved = JSON.parse(JSON.stringify(DEFAULT_PLANCFG)); return planCfgSaved.models; };
+  const find = id => ensure().find(m => m.id === id);
+  const done = () => { savePlanCfg(); render(); document.querySelector('details.panel')?.setAttribute('open', ''); };
+  document.querySelectorAll('[data-mg]').forEach(el => el.addEventListener('change', () => { find(el.dataset.mg).group = el.value; done(); }));
+  document.querySelectorAll('[data-mn]').forEach(el => el.addEventListener('change', () => { if (el.value.trim()) { find(el.dataset.mn).name = el.value.trim(); done(); } }));
+  document.querySelectorAll('[data-ma]').forEach(el => el.addEventListener('click', () => { const m = find(el.dataset.ma); m.archived = !m.archived; done(); }));
+  const move = (id, dir) => { const ms = ensure(), m = find(id); const same = ms.filter(x => x.group === m.group).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)); same.forEach((x, i) => { x.order = i; }); const i = same.indexOf(m), j = i + dir; if (j < 0 || j >= same.length) return; [same[i].order, same[j].order] = [same[j].order, same[i].order]; done(); };
+  document.querySelectorAll('[data-mu]').forEach(el => el.addEventListener('click', () => move(el.dataset.mu, -1)));
+  document.querySelectorAll('[data-md]').forEach(el => el.addEventListener('click', () => move(el.dataset.md, 1)));
+  document.getElementById('nm-add').addEventListener('click', () => {
+    const n = document.getElementById('nm-n').value.trim(), g = document.getElementById('nm-g').value; if (!n) return;
+    const ms = ensure(); const id = `${g}-${normName(n).replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36).slice(-4)}`;
+    ms.push({id, name: n, group: g, order: Math.max(0, ...ms.filter(x => x.group === g).map(x => (x.order ?? 0) + 1))}); done();
+  });
+}
+
+/* =====================================================================
    PARTAGE DES DONNÉES (Supabase) — tout le monde voit et importe les mêmes données
    Trois blocs sont partagés : « periods » (chatters OF + MYM), « settings » (paramètres de notation), « asv ».
    ===================================================================== */
 const Sync = (() => {
-  const KEYS = ['periods', 'settings', 'asv', 'asvcfg'];
+  const KEYS = ['periods', 'settings', 'asv', 'asvcfg', 'planning', 'plancfg'];
+  const OPTIONAL = new Set(['planning', 'plancfg']);   // lignes ajoutées par un script SQL plus récent
+  const missing = new Set();
   // Paramètres de notation et réglages ASV : modifiables uniquement par les administrateurs (vérifié aussi côté Supabase)
-  const PROTECTED = new Set(['settings', 'asvcfg']);
+  const PROTECTED = new Set(['settings', 'asvcfg', 'plancfg']);
   let isAdmin = true, rolesConfigured = false, admins = [], noCfgRow = false;
   const LS_CFG = 'rca.sync.cfg', LS_SES = 'rca.sync.session', LS_META = 'rca.sync.meta';
-  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: []}, asvcfg: {}};
+  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: []}, asvcfg: {}, planning: {weeks: {}, chatters: {}}, plancfg: {}};
   const clone = o => JSON.parse(JSON.stringify(o ?? null));
   const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
   let session = lsGet(LS_SES, null);
@@ -2933,6 +3281,8 @@ const Sync = (() => {
     if (key === 'periods') return clone(store.periods);
     if (key === 'settings') return clone({of: allSettings.of, mym: allSettings.mym});
     if (key === 'asvcfg') return clone(asvState.settings);
+    if (key === 'planning') return clone(planState);
+    if (key === 'plancfg') return clone(planCfgSaved || {});
     return clone({models: asvState.models, entries: asvState.entries});
   }
   function setData(key, data) {
@@ -2943,6 +3293,10 @@ const Sync = (() => {
     } else if (key === 'settings') {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
+    } else if (key === 'planning') {
+      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}}; lsSet(LS_PLAN, planState);
+    } else if (key === 'plancfg') {
+      planCfgSaved = data && Array.isArray(data.models) && data.models.length ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
       if (data && Object.keys(data).length) { asvState.settings = mergeAsvSettings(data); lsSet(LS_ASV, asvState); }
     } else {
@@ -2951,8 +3305,9 @@ const Sync = (() => {
       lsSet(LS_ASV, asvState);
     }
   }
-  const hasLocal = key => key === 'periods' ? store.periods.length > 0 : key === 'asv' ? asvState.models.length > 0 || asvState.entries.length > 0 : true;
-  const remoteEmpty = (key, d) => key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
+  const hasLocal = key => key === 'periods' ? store.periods.length > 0 : key === 'asv' ? asvState.models.length > 0 || asvState.entries.length > 0
+    : key === 'planning' ? Object.keys(planState.weeks).length > 0 : key === 'plancfg' ? !!planCfgSaved : true;
+  const remoteEmpty = (key, d) => key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || !(d.models || []).length : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
 
   /* ---------- Fusion à trois (base commune, local, distant) ---------- */
   function mergeById(b = [], l = [], r = []) {
@@ -2967,11 +3322,28 @@ const Sync = (() => {
     return out;
   }
   const pick = (b, l, r) => !same(l, b) ? l : r;
+  const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
+  // Fusion clé par clé (planning) : deux personnes qui modifient des cases différentes ne s'écrasent jamais.
+  function deepMerge(b, l, r) {
+    if (isObj(l) && isObj(r)) {
+      const out = {};
+      for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) {
+        const bb = isObj(b) ? b[k] : undefined, ll = l[k], rr = r[k];
+        if (ll === undefined) { if (bb === undefined || !same(rr, bb)) out[k] = rr; continue; }
+        if (rr === undefined) { if (bb === undefined || !same(ll, bb)) out[k] = ll; continue; }
+        out[k] = deepMerge(bb, ll, rr);
+      }
+      return out;
+    }
+    return !same(l, b) ? l : r;
+  }
   function merge(key, b, l, r, preferRemote) {
     b = b ?? clone(EMPTY[key]);
     if (key === 'periods') return mergeById(b, l, r);
     if (key === 'settings') return preferRemote ? r : {of: pick(b.of, l.of, r.of), mym: pick(b.mym, l.mym, r.mym)};
     if (key === 'asvcfg') return preferRemote ? r : pick(b, l, r);
+    if (key === 'plancfg') return preferRemote ? r : pick(b, l, r);
+    if (key === 'planning') return deepMerge(b, l, r);
     return {models: mergeById(b.models, l.models, r?.models), entries: mergeById(b.entries, l.entries, r?.entries)};
   }
 
@@ -3038,6 +3410,8 @@ const Sync = (() => {
       let legacyAsvCfg = null; noCfgRow = false;
       for (const key of KEYS) {
         const row = (rows || []).find(x => x.key === key);
+        if (!row && OPTIONAL.has(key)) { missing.add(key); continue; }
+        if (row) missing.delete(key);
         if (!row) {
           if (key === 'asvcfg') {   // ligne pas encore créée (ancien script SQL) : on lit les réglages ASV de l'ancien format
             noCfgRow = true;
@@ -3052,7 +3426,7 @@ const Sync = (() => {
           setData('asvcfg', legacyAsvCfg); changed = true;   // reprise des réglages ASV enregistrés avec l'ancienne version
           meta.version[key] = row.version; meta.base[key] = clone(row.data); if (isAdmin) dirty.add(key); continue;
         }
-        if (first && known === undefined) {
+        if (known === undefined) {   // première synchronisation de cette donnée (connexion, ou ligne nouvellement créée)
           if (row.version === 0 || remoteEmpty(key, row.data)) { if (hasLocal(key) && (!PROTECTED.has(key) || isAdmin)) dirty.add(key); meta.version[key] = row.version; meta.base[key] = clone(row.data); continue; }
           if (hasLocal(key) && key !== 'settings') {
             const merged = merge(key, EMPTY[key], getData(key), row.data, true);
@@ -3077,7 +3451,7 @@ const Sync = (() => {
     return changed;
   }
   async function pushKey(key, attempt = 0) {
-    if ((PROTECTED.has(key) && !isAdmin) || (key === 'asvcfg' && noCfgRow)) { dirty.delete(key); return; }
+    if ((PROTECTED.has(key) && !isAdmin) || (key === 'asvcfg' && noCfgRow) || missing.has(key)) { dirty.delete(key); return; }
     const local = getData(key), v = meta.version[key] ?? 0;
     const rows = await api(`/rest/v1/app_state?key=eq.${key}&version=eq.${v}`, {method: 'PATCH', headers: {Prefer: 'return=representation'},
       body: JSON.stringify({data: local, version: v + 1, updated_at: new Date().toISOString(), updated_by: session.email || null})});
@@ -3141,7 +3515,7 @@ const Sync = (() => {
   return {configured, connected, cfg, login, logout, pull, changed, init, drawStatus, status: () => status, lastError: () => lastError,
     saveLocalCfg(url, key) { lsSet(LS_CFG, url ? {url, anonKey: key} : null); session = null; lsSet(LS_SES, null); meta.version = {}; meta.base = {}; saveMeta(); drawStatus(); },
     needsLogin: () => configured() && !session, email: () => session?.email || '', _merge: merge,
-    canManage, isAdmin: () => isAdmin, rolesConfigured: () => rolesConfigured, admins: () => admins.slice(), addAdmin, removeAdmin, refreshRoles};
+    canManage, isAdmin: () => isAdmin, planningShared: () => connected() && !missing.has('planning'), rolesConfigured: () => rolesConfigured, admins: () => admins.slice(), addAdmin, removeAdmin, refreshRoles};
 })();
 
 /* ---------- Écrans : connexion et page « Partage des données » ---------- */
