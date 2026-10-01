@@ -2963,7 +2963,19 @@ const savePlanCfg = () => { lsSet(LS_PLANCFG, planCfgSaved); Sync.changed('planc
 const planUI = {week:null, day:null, q:''};
 const normName = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 const cellKey = (d, s, mid) => `${d}|${s}|${mid}`;
-const activeModels = () => planCfg().models.filter(m => !m.archived).sort((a, b) => (PLAN_GROUPS.findIndex(g => g.id === a.group) - PLAN_GROUPS.findIndex(g => g.id === b.group)) || (a.order ?? 0) - (b.order ?? 0));
+const groupIdx = g => PLAN_GROUPS.findIndex(x => x.id === g);
+const sortModels = list => list.sort((a, b) => groupIdx(a.group) - groupIdx(b.group) || (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name, 'fr'));
+// Modèles du planning : enregistrées avec le planning (modifiables par toute l'équipe).
+// Chacune a une date de début et une date de fin facultatives : une modèle lancée un mardi n'apparaît qu'à partir de ce mardi,
+// puis dès le lundi les semaines suivantes ; les semaines passées ne changent pas.
+function planModelsMap() {
+  if (!planState.models || !Object.keys(planState.models).length)
+    planState.models = Object.fromEntries(planCfg().models.map((m, i) => [m.id, {name: m.name, group: m.group, order: m.order ?? i, ...(m.archived ? {end: '2000-01-01'} : {})}]));
+  return planState.models;
+}
+const allModels = () => sortModels(Object.entries(planModelsMap()).map(([id, m]) => ({id, ...m})));
+const modelActiveOn = (m, date) => (!m.start || date >= m.start) && (!m.end || date <= m.end);
+const activeModels = () => allModels();
 const modelLabel = m => m.group === 'mym' ? `${m.name} MYM` : m.group === 'of' ? `${m.name} OF` : m.name;
 const weekOf = wk => planState.weeks[wk];
 // Qui travaille réellement : le remplaçant s'il y en a un, sinon le prévu s'il n'est pas absent
@@ -3020,7 +3032,12 @@ function createWeek(wk, fromWk) {
   const src = fromWk && planState.weeks[fromWk];
   const cells = {};
   // On reprend les chatters prévus, sans absences, remplacements ni notes
-  if (src) for (const [k, list] of Object.entries(src.cells || {})) { const l = list.map(e => ({n: e.n})); if (l.length) cells[k] = l; }
+  const models = planModelsMap();
+  if (src) for (const [k, list] of Object.entries(src.cells || {})) {
+    const [d, , mid] = k.split('|'), m = models[mid];
+    if (m && !modelActiveOn(m, addDaysIso(wk, +d))) continue;   // modèle arrêtée (ou pas encore lancée) ce jour-là
+    const l = list.map(e => ({n: e.n})); if (l.length) cells[k] = l;
+  }
   planState.weeks[wk] = {cells, notes: {}, createdAt: Date.now(), from: fromWk || null};
   savePlan();
 }
@@ -3045,7 +3062,7 @@ function renderPlanning(main) {
       <select id="pw-sel">${allWeeks.map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}${planState.weeks[k] ? '' : ' (vide)'}</option>`).join('')}</select>
       <button class="btn ghost small-btn" id="pw-next" type="button" aria-label="Semaine suivante">›</button></div></div>`;
   if (!W) {
-    const canSeed = !Object.keys(planState.weeks).length;
+    const canSeed = wk === PLAN_SEED.week;
     main.innerHTML = head + `<div class="panel empty"><h2 style="font-size:18px;margin-bottom:6px">${esc(planWeekLabel(wk))} n'existe pas encore</h2>
       <p class="hint" style="margin:0 auto 14px;max-width:520px">${prevExisting ? `Créez-la à partir de ${esc(planWeekLabel(prevExisting))} : les chatters sont repris, les absences, remplacements et notes repartent à zéro.` : 'Créez une semaine vide, ou chargez la semaine du 28 septembre depuis votre fichier Excel.'}</p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
@@ -3055,15 +3072,13 @@ function renderPlanning(main) {
     bindPlanningHead(main, wk);
     document.getElementById('pw-copy')?.addEventListener('click', () => { createWeek(wk, prevExisting); toast(`${planWeekLabel(wk)} créée à partir de ${planWeekLabel(prevExisting)}.`); render(); });
     document.getElementById('pw-empty')?.addEventListener('click', () => { createWeek(wk, null); render(); });
-    document.getElementById('pw-seed')?.addEventListener('click', () => {
-      planState.weeks[PLAN_SEED.week] = {cells: JSON.parse(JSON.stringify(PLAN_SEED.cells)), notes: {...PLAN_SEED.notes}, createdAt: Date.now(), from: 'excel'};
-      for (const n of PLAN_SEED.newChatters) planState.chatters[normName(n)] = {name: n, isNew: true};
-      savePlan(); planUI.week = PLAN_SEED.week; planUI.day = 0; toast('Semaine du 28 septembre chargée depuis l’Excel.'); render();
-    });
+    document.getElementById('pw-seed')?.addEventListener('click', loadSeedWeek);
     return;
   }
   const nextWk = addDaysIso(wk, 7);
-  const groupsShown = PLAN_GROUPS.map(g => ({g, ms: models.filter(m => m.group === g.id)})).filter(x => x.ms.length);
+  const dayDate = addDaysIso(wk, d);
+  const dayModels = models.filter(m => modelActiveOn(m, dayDate) || PLAN_SHIFTS.some((_, s) => (W.cells[cellKey(d, s, m.id)] || []).length));
+  const groupsShown = PLAN_GROUPS.map(g => ({g, ms: dayModels.filter(m => m.group === g.id)})).filter(x => x.ms.length);
   const note = (W.notes || {})[d] || '';
   // Planning d'un chatter recherché
   let found = [];
@@ -3077,7 +3092,9 @@ function renderPlanning(main) {
       <div class="pactions">
         <input type="search" id="p-q" placeholder="Rechercher un chatter" value="${esc(planUI.q)}" aria-label="Rechercher un chatter">
         <button class="btn" id="p-unav" type="button">Indisponibilité</button>
+        <button class="btn" id="p-addm" type="button">+ Ajouter une modèle</button>
         ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>`}
+        ${wk === PLAN_SEED.week ? `<button class="btn ghost" id="p-seed" type="button">${Object.keys(W.cells || {}).length ? 'Recharger depuis l’Excel' : 'Charger depuis l’Excel'}</button>` : ''}
       </div>
       <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
     </section>
@@ -3095,7 +3112,7 @@ function renderPlanning(main) {
       </tbody></table></div>
     </section>
     <section class="panel"><h2>Notes du ${PLAN_DAYS_LONG[d].toLowerCase()}</h2><textarea id="p-note" rows="4" placeholder="Retards, absences, problèmes de connexion…">${esc(note)}</textarea><p class="hint" style="margin:6px 0 0;font-size:12px">Enregistré automatiquement et visible par toute l'équipe.</p></section>
-    ${Sync.canManage() ? planStructureHTML() : ''}
+    ${planModelsHTML(wk, d)}
   </div>`;
   bindPlanningHead(main, wk);
   main.querySelectorAll('[data-day]').forEach(b => b.addEventListener('click', () => { planUI.day = +b.dataset.day; render(); }));
@@ -3110,7 +3127,18 @@ function renderPlanning(main) {
   });
   document.getElementById('p-gonext')?.addEventListener('click', () => { planUI.week = nextWk; planUI.day = 0; render(); });
   document.getElementById('p-unav').addEventListener('click', () => unavailability(wk));
-  if (Sync.canManage()) bindPlanStructure();
+  document.getElementById('p-seed')?.addEventListener('click', loadSeedWeek);
+  bindPlanModels(wk, d);
+  document.getElementById('p-addm').addEventListener('click', () => addModelModal(dayDate));
+}
+// Charge la semaine du 28/09 convertie depuis le fichier Excel (remplace son contenu après confirmation)
+async function loadSeedWeek() {
+  const W = planState.weeks[PLAN_SEED.week];
+  const filled = W && Object.keys(W.cells || {}).length;
+  if (filled && !(await modal('Recharger depuis l’Excel', `<p>La ${esc(planWeekLabel(PLAN_SEED.week))} contient déjà ${plural(Object.keys(W.cells).length, 'case remplie', 'cases remplies')}. La remplacer par le contenu du fichier Excel ? Les modifications faites depuis seront perdues.</p>`, 'Remplacer'))) return;
+  planState.weeks[PLAN_SEED.week] = {cells: JSON.parse(JSON.stringify(PLAN_SEED.cells)), notes: {...PLAN_SEED.notes}, createdAt: Date.now(), from: 'excel'};
+  for (const n of PLAN_SEED.newChatters) planState.chatters[normName(n)] = {...(planState.chatters[normName(n)] || {}), name: n, isNew: true};
+  savePlan(); planUI.week = PLAN_SEED.week; planUI.day = 0; toast(`${planWeekLabel(PLAN_SEED.week)} chargée depuis l’Excel.`); render();
 }
 function bindPlanningHead(main, wk) {
   const go = k => { planUI.week = k; planUI.day = null; render(); };
@@ -3121,7 +3149,7 @@ function bindPlanningHead(main, wk) {
 
 /* ---------- Modifier une case ---------- */
 function editCell(wk, key) {
-  const [d, s, mid] = key.split('|'); const m = planCfg().models.find(x => x.id === mid);
+  const [d, s, mid] = key.split('|'); const m = allModels().find(x => x.id === mid);
   const W = weekOf(wk);
   let list = (W.cells[key] || []).map(e => ({...e}));
   const names = knownChatters();
@@ -3217,35 +3245,75 @@ function unavailability(wk) {
   document.body.appendChild(bg);
 }
 
-/* ---------- Structure : liste des modèles (administrateurs) ---------- */
-function planStructureHTML() {
-  const ms = [...planCfg().models].sort((a, b) => (PLAN_GROUPS.findIndex(g => g.id === a.group) - PLAN_GROUPS.findIndex(g => g.id === b.group)) || (a.order ?? 0) - (b.order ?? 0));
-  return `<details class="panel"><summary style="cursor:pointer;font-weight:700">Modèles du planning (administrateurs)</summary>
-    <p class="hint" style="margin-top:10px">Ajoutez, renommez, déplacez ou masquez une modèle. Une modèle masquée disparaît du planning, son historique est conservé.</p>
-    <div class="tbl-wrap" style="max-height:420px"><table><thead><tr><th>Groupe</th><th>Nom</th><th>Ordre</th><th></th></tr></thead><tbody>
-    ${ms.map(m => `<tr class="${m.archived ? 'muted' : ''}"><td><select data-mg="${m.id}">${PLAN_GROUPS.map(g => `<option value="${g.id}" ${g.id === m.group ? 'selected' : ''}>${g.label}</option>`).join('')}</select></td>
-      <td><input type="text" data-mn="${m.id}" value="${esc(m.name)}"></td>
+/* ---------- Modèles du planning (toute l'équipe) ---------- */
+const fmtDayFr = iso => iso ? parseDate(iso).toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'}) : '';
+function addModelModal(defaultStart) {
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:460px"><h3>Ajouter une modèle au planning</h3>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <label style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)">Nom<input type="text" id="am-n" placeholder="ex. Jade"></label>
+      <label style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)">Plateforme<select id="am-g">${PLAN_GROUPS.map(g => `<option value="${g.id}">${g.label}</option>`).join('')}</select></label>
+      <label style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)">Lancée à partir du<input type="date" id="am-s" value="${esc(defaultStart)}"></label>
+      <p class="hint" style="margin:0">Elle apparaît dans le planning à partir de cette date, puis dans toutes les semaines suivantes dès le lundi. Les jours et semaines d'avant ne changent pas.</p>
+    </div>
+    <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Ajouter</button></div></div>`;
+  const close = () => bg.remove();
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  bg.addEventListener('click', e => {
+    if (e.target === bg) return close();
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === '1') {
+      const name = bg.querySelector('#am-n').value.trim(), g = bg.querySelector('#am-g').value, start = bg.querySelector('#am-s').value;
+      if (!name) { bg.querySelector('#am-n').focus(); return; }
+      const map = planModelsMap();
+      const id = `${g}-${normName(name).replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36).slice(-5)}`;
+      map[id] = {name, group: g, order: Math.max(0, ...Object.values(map).filter(m => m.group === g).map(m => (m.order ?? 0) + 1)), ...(start ? {start} : {})};
+      savePlan(); toast(`${name} ajoutée au planning${start ? ` à partir du ${fmtDayFr(start)}` : ''}.`); render();
+    }
+    close();
+  });
+  document.body.appendChild(bg); bg.querySelector('#am-n').focus();
+}
+function planModelsHTML(wk, d) {
+  const date = addDaysIso(wk, d);
+  return `<details class="panel" id="pm-panel" ${planUI.modelsOpen ? 'open' : ''}><summary style="cursor:pointer;font-weight:700">Modèles du planning</summary>
+    <p class="hint" style="margin-top:10px">Chaque modèle apparaît entre sa date de lancement et sa date d'arrêt (vides = toujours). Pour arrêter une modèle, indiquez son dernier jour : elle disparaît ensuite du planning, et les semaines passées restent intactes.</p>
+    <div class="tbl-wrap" style="max-height:440px"><table><thead><tr><th>Plateforme</th><th>Nom</th><th>Lancée le</th><th>Dernier jour</th><th>Ordre</th><th>Statut ${esc(fmtDayFr(date))}</th></tr></thead><tbody>
+    ${allModels().map(m => `<tr><td><select data-mg="${m.id}">${PLAN_GROUPS.map(g => `<option value="${g.id}" ${g.id === m.group ? 'selected' : ''}>${g.label}</option>`).join('')}</select></td>
+      <td><input type="text" data-mn="${m.id}" value="${esc(m.name)}" style="min-width:140px"></td>
+      <td><input type="date" data-ms="${m.id}" value="${esc(m.start || '')}"></td>
+      <td><input type="date" data-me="${m.id}" value="${esc(m.end && m.end > '2000-01-01' ? m.end : (m.end ? '2000-01-01' : ''))}"></td>
       <td><button class="btn ghost small-btn" data-mu="${m.id}" type="button" aria-label="Monter">↑</button> <button class="btn ghost small-btn" data-md="${m.id}" type="button" aria-label="Descendre">↓</button></td>
-      <td class="num"><button class="btn ghost" data-ma="${m.id}" type="button">${m.archived ? 'Réafficher' : 'Masquer'}</button></td></tr>`).join('')}
+      <td>${modelActiveOn(m, date) ? '<span class="pill Strong">Affichée</span>' : (m.start && date < m.start ? '<span class="pill OnTrack">Pas encore lancée</span>' : '<span class="pill Warning">Arrêtée</span>')}</td></tr>`).join('')}
     </tbody></table></div>
-    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><select id="nm-g">${PLAN_GROUPS.map(g => `<option value="${g.id}">${g.label}</option>`).join('')}</select><input type="text" id="nm-n" placeholder="Nom de la modèle"><button class="btn" id="nm-add" type="button">Ajouter la modèle</button></div>
+    <button class="btn" id="pm-add" type="button" style="margin-top:12px">+ Ajouter une modèle</button>
   </details>`;
 }
-function bindPlanStructure() {
-  const ensure = () => { if (!planCfgSaved) planCfgSaved = JSON.parse(JSON.stringify(DEFAULT_PLANCFG)); return planCfgSaved.models; };
-  const find = id => ensure().find(m => m.id === id);
-  const done = () => { savePlanCfg(); render(); document.querySelector('details.panel')?.setAttribute('open', ''); };
-  document.querySelectorAll('[data-mg]').forEach(el => el.addEventListener('change', () => { find(el.dataset.mg).group = el.value; done(); }));
-  document.querySelectorAll('[data-mn]').forEach(el => el.addEventListener('change', () => { if (el.value.trim()) { find(el.dataset.mn).name = el.value.trim(); done(); } }));
-  document.querySelectorAll('[data-ma]').forEach(el => el.addEventListener('click', () => { const m = find(el.dataset.ma); m.archived = !m.archived; done(); }));
-  const move = (id, dir) => { const ms = ensure(), m = find(id); const same = ms.filter(x => x.group === m.group).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)); same.forEach((x, i) => { x.order = i; }); const i = same.indexOf(m), j = i + dir; if (j < 0 || j >= same.length) return; [same[i].order, same[j].order] = [same[j].order, same[i].order]; done(); };
-  document.querySelectorAll('[data-mu]').forEach(el => el.addEventListener('click', () => move(el.dataset.mu, -1)));
-  document.querySelectorAll('[data-md]').forEach(el => el.addEventListener('click', () => move(el.dataset.md, 1)));
-  document.getElementById('nm-add').addEventListener('click', () => {
-    const n = document.getElementById('nm-n').value.trim(), g = document.getElementById('nm-g').value; if (!n) return;
-    const ms = ensure(); const id = `${g}-${normName(n).replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36).slice(-4)}`;
-    ms.push({id, name: n, group: g, order: Math.max(0, ...ms.filter(x => x.group === g).map(x => (x.order ?? 0) + 1))}); done();
-  });
+function bindPlanModels(wk, d) {
+  const panel = document.getElementById('pm-panel'); if (!panel) return;
+  panel.addEventListener('toggle', () => { planUI.modelsOpen = panel.open; });
+  const map = planModelsMap();
+  const done = () => { savePlan(); render(); };
+  panel.querySelectorAll('[data-mg]').forEach(el => el.addEventListener('change', () => { map[el.dataset.mg].group = el.value; done(); }));
+  panel.querySelectorAll('[data-mn]').forEach(el => el.addEventListener('change', () => { if (el.value.trim()) { map[el.dataset.mn].name = el.value.trim(); done(); } }));
+  panel.querySelectorAll('[data-ms]').forEach(el => el.addEventListener('change', () => { const m = map[el.dataset.ms]; if (el.value) m.start = el.value; else delete m.start; done(); }));
+  panel.querySelectorAll('[data-me]').forEach(el => el.addEventListener('change', () => {
+    const id = el.dataset.me, m = map[id];
+    if (!el.value) { delete m.end; return done(); }
+    m.end = el.value;
+    // Les cases recopiées après le dernier jour sont vidées (seulement après cette date)
+    let removed = 0;
+    for (const [wkey, W] of Object.entries(planState.weeks)) for (const k of Object.keys(W.cells || {})) {
+      const [dd, , mid] = k.split('|');
+      if (mid === id && addDaysIso(wkey, +dd) > m.end) { delete W.cells[k]; removed++; }
+    }
+    if (removed) toast(`${m.name} : dernier jour le ${fmtDayFr(m.end)}, ${plural(removed, 'case vidée', 'cases vidées')} après cette date.`);
+    done();
+  }));
+  const move = (id, dir) => { const same = allModels().filter(x => x.group === map[id].group); same.forEach((x, i) => { map[x.id].order = i; }); const i = same.findIndex(x => x.id === id), j = i + dir; if (j < 0 || j >= same.length) return; map[same[i].id].order = j; map[same[j].id].order = i; done(); };
+  panel.querySelectorAll('[data-mu]').forEach(el => el.addEventListener('click', () => move(el.dataset.mu, -1)));
+  panel.querySelectorAll('[data-md]').forEach(el => el.addEventListener('click', () => move(el.dataset.md, 1)));
+  document.getElementById('pm-add').addEventListener('click', () => addModelModal(addDaysIso(wk, d)));
 }
 
 /* =====================================================================
@@ -3294,7 +3362,7 @@ const Sync = (() => {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
     } else if (key === 'planning') {
-      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}}; lsSet(LS_PLAN, planState);
+      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models && Object.keys(data.models).length ? {models: data.models} : {})}; lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
       planCfgSaved = data && Array.isArray(data.models) && data.models.length ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
