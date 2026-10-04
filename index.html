@@ -455,6 +455,23 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .qpt.on,.qpt:hover{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 18%,transparent)}
 .sui-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media (max-width:620px){.sform{grid-template-columns:1fr}.sui-stats{grid-template-columns:1fr 1fr}}
+.pbadge.cam{background:linear-gradient(135deg,#38bdf8,#a78bfa);font-size:15px}
+.nbadge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 6px;border-radius:99px;font-size:11px;font-weight:800;background:#f59e0b;color:#1c1203;margin-left:auto}
+.nbadge.hot{background:#ef4444;color:#fff;box-shadow:0 0 10px rgba(239,68,68,.6)}
+.ptopt .nbadge{margin-left:6px}
+.cam-card{border-top:3px solid #38bdf8}
+.cam-group{display:flex;align-items:center;gap:8px;margin:4px 0 8px;font-weight:700;font-size:13.5px;color:var(--text)}
+.cam-group.hot{color:#fca5a5}
+.cam-table td{white-space:normal;vertical-align:top}
+.cam-table .creq{color:var(--muted);font-size:12.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cam-table tr.done td{opacity:.6}
+.cam-table tr.done .creq{text-decoration:line-through}
+.cam-table tr.cancel td{background:rgba(239,68,68,.16);color:#fecaca}
+.cam-table td.nc{text-align:center}
+.cdone{width:20px;height:20px;accent-color:#45d08f;cursor:pointer}
+.ctype{display:inline-block;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:99px;color:var(--tc);background:color-mix(in srgb,var(--tc) 16%,transparent);white-space:nowrap}
+.age{font-size:12px;font-weight:700;color:var(--muted)}
+.age.warm{color:#fbbf24}.age.hot{color:#f87171}
 </style>
 </head>
 <body>
@@ -1529,6 +1546,7 @@ const ICONS = {
   import:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
   settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   download:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+  cams:'<rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/>',
   suivi:'<path d="M12 3v18M6 21h12M4 8h16M4 8l-2.5 6a3 3 0 0 0 5 0L4 8zM20 8l-2.5 6a3 3 0 0 0 5 0L20 8z"/>',
   planning:'<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M7.5 13.5h3M13.5 13.5h3M7.5 17h3"/>',
   asv:'<circle cx="12" cy="12" r="9"/><path d="M15 9.2c-.4-1-1.6-1.7-3-1.7-1.8 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2-1.5 0-2.7-.7-3.1-1.8M12 6v1.5M12 16.5V18"/>'
@@ -1548,6 +1566,7 @@ function route() {
   if (rest === 'partage') return {pid, page:'partage'};
   if (rest === 'planning') return {pid, page:'planning'};
   if (rest === 'suivi') return {pid, page:'suivi'};
+  if (rest === 'cams') return {pid, page:'cams'};
   if (rest === 'asv' || rest.startsWith('asv/')) return {pid, page:'asv', sub: rest.split('/')[1] || 'dashboard'};
   return {pid, page: PAGE_LABEL[rest] ? rest : 'dashboard'};
 }
@@ -1584,11 +1603,13 @@ function renderNav(rt) {
   navRt = rt;
   // La rubrique de la page ouverte est toujours dépliée
   for (const s of NAV_SECTIONS) if (s.pages && s.pages.some(([k]) => k === rt.page)) { const key = `${rt.pid}-${s.id}`; if (!ui.navOpen[key]) { ui.navOpen[key] = true; saveUI(); } }
-  const planOn = rt.page === 'planning', suiOn = rt.page === 'suivi';
+  const planOn = rt.page === 'planning', suiOn = rt.page === 'suivi', camOn = rt.page === 'cams';
+  const pend = camsPending();
   document.getElementById('nav').innerHTML = `<div class="nav-group"><a href="#${rt.pid}/planning" class="nav-top ${planOn ? 'on' : ''}" ${planOn ? 'aria-current="page"' : ''} title="Planning de l'équipe">${icon('planning')}<span>Planning</span></a>
-    <a href="#${rt.pid}/suivi" class="nav-top ${suiOn ? 'on' : ''}" ${suiOn ? 'aria-current="page"' : ''} title="Pénalités, réattributions et primes">${icon('suivi')}<span>Primes & Pénalités</span></a></div>` + PIDS.map(pid => {
+    <a href="#${rt.pid}/suivi" class="nav-top ${suiOn ? 'on' : ''}" ${suiOn ? 'aria-current="page"' : ''} title="Pénalités, réattributions et primes">${icon('suivi')}<span>Primes & Pénalités</span></a>
+    <a href="#${rt.pid}/cams" class="nav-top ${camOn ? 'on' : ''}" ${camOn ? 'aria-current="page"' : ''} title="Gestion des cams et customs${pend.all.length ? ` · ${pend.all.length} en attente` : ''}">${icon('cams')}<span>Cam / Custom</span>${pend.all.length ? `<span class="nbadge ${pend.old.length ? 'hot' : ''}">${pend.all.length}</span>` : ''}</a></div>` + PIDS.map(pid => {
     const P = PLATFORMS[pid];
-    return `<div class="nav-group ${rt.pid === pid && !planOn && !suiOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
+    return `<div class="nav-group ${rt.pid === pid && !planOn && !suiOn && !camOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
       ${NAV_SECTIONS.map(s => {
         if (s.link) { const on = rt.pid === pid && rt.page === s.link; return `<a href="#${pid}/${s.link}" class="nav-top ${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span></a>`; }
         const key = `${pid}-${s.id}`, open = !!ui.navOpen[key], inside = rt.pid === pid && s.pages.some(([k]) => k === rt.page);
@@ -1648,8 +1669,10 @@ function render() {
   Sync.drawStatus();
   if (rt.page === 'partage') { renderPartage(main); return; }
   if (Sync.needsLogin()) { renderLogin(main); return; }
+  camsReminder();
   if (rt.page === 'planning') { renderPlanning(main); return; }
   if (rt.page === 'suivi') { renderSuivi(main); return; }
+  if (rt.page === 'cams') { renderCams(main); return; }
   if (rt.page === 'asv') renderASV(main, P, rt.sub);
   else if (rt.page === 'dashboard') renderDashboard(main, P);
   else if (rt.page === 'chatters') rt.chatter != null ? renderDetail(main, P, rt.chatter) : renderChatters(main, P);
@@ -3847,18 +3870,207 @@ function suiviCSV(wk, kind) {
 }
 
 /* =====================================================================
+   GESTION CAM / CUSTOM — demandes personnalisées, suivi « faite », rappels des demandes en attente
+   Partagé avec toute l'équipe (clé « cams »). Une demande en attente reste visible tant qu'elle n'est pas faite.
+   ===================================================================== */
+const LS_CAMS = 'rca.cams.v1', LS_CAMS_REMIND = 'rca.cams.remind';
+let camsState = (() => { const s = lsGet(LS_CAMS, null) || {}; s.items ||= {}; return s; })();
+const saveCams = () => { lsSet(LS_CAMS, camsState); Sync.changed('cams'); };
+const camsUI = {tab:'todo', week:null, type:'all', model:'', q:''};
+const CAM_TYPES = [['custom', 'Custom', '#a78bfa'], ['cam', 'Cam', '#38bdf8'], ['snap', 'Snap', '#facc15']];
+const camType = t => CAM_TYPES.find(x => x[0] === t) || ['autre', t || 'Autre', '#94a3b8'];
+const camList = () => Object.entries(camsState.items).map(([id, e]) => ({id, ...e}));
+const camCur = e => /\bof\b/i.test(e.model || '') ? '$' : /\bmym\b/i.test(e.model || '') ? '€' : '';
+const camMoney = (v, c) => v == null || v === '' ? '—' : `${nf(+v, 0, 2)}${c ? '\u00a0' + c : ''}`;
+const camRest = e => Math.max(0, (+e.price || 0) - (+e.paid || 0));
+const daysSince = iso => Math.max(0, Math.round((parseDate(isoOf(new Date())) - parseDate(iso)) / 86400000));
+function camsPending() {
+  const thisMon = mondayOf(isoOf(new Date()));
+  const todo = camList().filter(e => (e.status || 'todo') === 'todo');
+  return {all: todo, old: todo.filter(e => e.date < thisMon)};
+}
+// Rappel : une fois par jour et par navigateur, s'il reste des demandes en attente
+function camsReminder() {
+  const p = camsPending(); if (!p.all.length) return;
+  const today = isoOf(new Date()); if (lsGet(LS_CAMS_REMIND, '') === today) return;
+  lsSet(LS_CAMS_REMIND, today);
+  setTimeout(() => toast(`Rappel : ${plural(p.all.length, 'cam/custom en attente', 'cams/customs en attente')}${p.old.length ? `, dont ${p.old.length} des semaines précédentes` : ''}.`), 900);
+}
+function camsSuggest() {
+  const m = {chatter:new Map(), model:new Map()};
+  const add = (map, v) => { const t = String(v || '').trim(); if (t) map.set(t.toLowerCase(), t); };
+  for (const e of camList()) { add(m.chatter, e.chatter); add(m.model, e.model); }
+  for (const n of knownChatters()) add(m.chatter, n);
+  for (const x of allModels()) add(m.model, modelLabel(x));
+  const s = map => [...map.values()].sort((a, b) => a.localeCompare(b, 'fr'));
+  return {chatter: s(m.chatter), model: s(m.model)};
+}
+
+/* ---------- Page ---------- */
+function renderCams(main) {
+  const wk = camsUI.week ||= mondayOf(isoOf(new Date()));
+  const thisMon = mondayOf(isoOf(new Date()));
+  const pend = camsPending();
+  const tab = camsUI.tab, q = normName(camsUI.q);
+  const weeksAvail = [...new Set([...camList().map(e => mondayOf(e.date)), thisMon, wk])].sort().reverse();
+  const all = camList();
+  const models = [...new Map(all.filter(e => e.model).map(e => [normName(e.model), e.model])).values()].sort((a, b) => a.localeCompare(b, 'fr'));
+  const filt = e => (camsUI.type === 'all' || (e.type || 'custom') === camsUI.type) && (!camsUI.model || normName(e.model) === normName(camsUI.model))
+    && (!q || [e.chatter, e.fan, e.fanId, e.model, e.request].some(v => normName(v).includes(q)));
+  const head = `<div class="top"><h1><span class="pbadge lg cam" aria-hidden="true">●</span><span>Gestion Cam / Custom</span></h1>
+    ${tab !== 'todo' ? `<div class="picker viewpick"><button class="btn ghost small-btn" id="cw-prev" type="button" aria-label="Semaine précédente">‹</button>
+      <select id="cw-sel">${weeksAvail.map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}</option>`).join('')}</select>
+      <button class="btn ghost small-btn" id="cw-next" type="button" aria-label="Semaine suivante">›</button></div>` : ''}
+    <button class="btn primary" id="c-add" type="button">+ Nouvelle demande</button></div>`;
+  const tabs = `<div class="ptopt" role="tablist">
+    <button type="button" class="${tab === 'todo' ? 'on' : ''}" data-ctab="todo">En attente ${pend.all.length ? `<span class="nbadge ${pend.old.length ? 'hot' : ''}">${pend.all.length}</span>` : ''}</button>
+    <button type="button" class="${tab === 'week' ? 'on' : ''}" data-ctab="week">${esc(planWeekLabel(wk))}</button>
+    <button type="button" class="${tab === 'model' ? 'on' : ''}" data-ctab="model">Par modèle</button></div>`;
+  const filters = `<div class="sui-bar">
+    <div class="qrow">${[['all', 'Tous', '#e2e8f0'], ...CAM_TYPES].map(([k, l, c]) => `<button type="button" class="qpt ${camsUI.type === k ? 'on' : ''}" data-cf="${k}" style="--tc:${c}">${l}</button>`).join('')}</div>
+    <select id="c-model"><option value="">Toutes les modèles</option>${models.map(m => `<option ${normName(m) === normName(camsUI.model) ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select>
+    <input type="search" id="c-q" placeholder="Rechercher (chatteur, fan, demande…)" value="${esc(camsUI.q)}"></div>`;
+  let body = '';
+  if (tab === 'todo') {
+    const rows = pend.all.filter(filt).sort((a, b) => a.date.localeCompare(b.date) || (a.at || 0) - (b.at || 0));
+    const old = rows.filter(e => e.date < thisMon), cur = rows.filter(e => e.date >= thisMon);
+    body = `<section class="panel cam-card">${filters}
+      ${!rows.length ? `<div class="empty" style="padding:34px 10px"><div style="font-size:15px;color:var(--text);font-weight:600">Aucune demande en attente ${q || camsUI.type !== 'all' || camsUI.model ? 'avec ces filtres' : ''}</div><div class="hint" style="margin-top:4px">Tout est à jour. Ajoutez une demande avec « + Nouvelle demande ».</div></div>`
+      : `${old.length ? `<div class="cam-group hot"><span>⚠ Rappel : ${plural(old.length, 'demande des semaines précédentes', 'demandes des semaines précédentes')} toujours en attente</span></div>${camTable(old, true)}` : ''}
+         ${cur.length ? `<div class="cam-group"><span>Cette semaine · ${plural(cur.length, 'demande en attente', 'demandes en attente')}</span></div>${camTable(cur, true)}` : ''}`}
+    </section>`;
+  } else if (tab === 'week') {
+    const rows = all.filter(e => mondayOf(e.date) === wk).filter(filt).sort((a, b) => b.date.localeCompare(a.date) || (b.at || 0) - (a.at || 0));
+    const live = rows.filter(e => e.status !== 'cancel');
+    const done = live.filter(e => e.status === 'done').length;
+    const byCur = c => live.filter(e => camCur(e) === c);
+    const money = key => ['€', '$', ''].map(c => { const l = byCur(c); const v = l.reduce((a, e) => a + (key === 'rest' ? camRest(e) : (+e[key] || 0)), 0); return l.length && v ? camMoney(v, c) : null; }).filter(Boolean).join(' · ') || '—';
+    body = `<section class="stats sui-stats">
+        <div class="stat"><div class="k">Demandes</div><div class="v">${live.length}</div><div class="d">${CAM_TYPES.map(([k, l]) => `${l} ${live.filter(e => (e.type || 'custom') === k).length}`).join(' · ')}</div></div>
+        <div class="stat"><div class="k">Faites</div><div class="v sc-hi">${done}</div><div class="d">${live.length ? Math.round(done / live.length * 100) : 0} % réalisées</div></div>
+        <div class="stat"><div class="k">En attente</div><div class="v ${live.length - done ? 'sc-mid' : ''}">${live.length - done}</div><div class="d">${rows.length - live.length ? plural(rows.length - live.length, 'annulée', 'annulées') : 'aucune annulée'}</div></div>
+        <div class="stat"><div class="k">CA · payé · reste</div><div class="v" style="font-size:16px">${money('price')}</div><div class="d">payé ${money('paid')} · reste ${money('rest')}</div></div>
+      </section>
+      <section class="panel cam-card">${filters}${rows.length ? camTable(rows, false) : `<div class="empty" style="padding:30px 10px">Aucune demande pour la ${esc(planWeekLabel(wk))}.</div>`}</section>`;
+  } else {
+    const rows = all.filter(e => mondayOf(e.date) === wk && e.status !== 'cancel');
+    const by = new Map();
+    for (const e of rows) { const k = normName(e.model) || '—'; const r = by.get(k) || {model:e.model || '—', n:0, done:0, price:0, paid:0, cur:camCur(e), types:{}}; r.n++; if (e.status === 'done') r.done++; r.price += +e.price || 0; r.paid += +e.paid || 0; const t = e.type || 'custom'; r.types[t] = (r.types[t] || 0) + 1; by.set(k, r); }
+    const list = [...by.values()].sort((a, b) => b.n - a.n || a.model.localeCompare(b.model, 'fr'));
+    body = `<section class="panel"><h2>Par modèle · ${esc(planWeekLabel(wk))}</h2><p class="hint">Cliquez sur une modèle pour voir ses demandes de la semaine.</p>
+      ${list.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Modèle</th><th class="num">Demandes</th><th>Types</th><th class="num">Faites</th><th class="num">En attente</th><th class="num">CA</th><th class="num">Payé</th><th class="num">Reste</th></tr></thead><tbody>
+      ${list.map(r => `<tr class="click" data-cm="${esc(r.model)}"><td><strong>${esc(r.model)}</strong></td><td class="num">${r.n}</td><td>${Object.entries(r.types).map(([t, n]) => `<span class="ctype" style="--tc:${camType(t)[2]}">${camType(t)[1]} ${n}</span>`).join(' ')}</td>
+        <td class="num sc-hi">${r.done}</td><td class="num ${r.n - r.done ? 'sc-mid' : ''}">${r.n - r.done}</td><td class="num">${camMoney(r.price, r.cur)}</td><td class="num">${camMoney(r.paid, r.cur)}</td><td class="num"><strong>${camMoney(Math.max(0, r.price - r.paid), r.cur)}</strong></td></tr>`).join('')}
+      </tbody></table></div>` : `<div class="empty" style="padding:30px 10px">Aucune demande pour la ${esc(planWeekLabel(wk))}.</div>`}</section>`;
+  }
+  main.innerHTML = head + tabs + `<div class="stack">${body}</div>`;
+  bindCams(main, wk);
+}
+function camTable(rows, pendingView) {
+  return `<div class="tbl-wrap" style="max-height:none;margin-bottom:14px"><table class="cam-table"><thead><tr><th style="width:44px">Faite</th><th>Date</th><th>Type</th><th class="num">Prix</th><th class="num">Payé</th><th>Fan</th><th>Modèle</th><th>Chatteur</th><th>Demande</th>${pendingView ? '<th>Depuis</th>' : '<th>Statut</th>'}</tr></thead><tbody>
+    ${rows.map(e => { const t = camType(e.type), c = camCur(e), st = e.status || 'todo', age = daysSince(e.date), rest = camRest(e);
+      return `<tr class="click ${st === 'cancel' ? 'cancel' : st === 'done' ? 'done' : ''}" data-cid="${e.id}">
+      <td class="nc"><input type="checkbox" class="cdone" data-cd="${e.id}" ${st === 'done' ? 'checked' : ''} ${st === 'cancel' ? 'disabled' : ''} aria-label="Marquer comme faite" title="${st === 'done' ? `Faite le ${esc(fmtDateFr(e.doneAt))}` : 'Cocher quand elle est faite'}"></td>
+      <td>${esc(fmtDateFr(e.date))}${e.due ? `<div class="sub" style="margin:0">avant le ${esc(fmtDateFr(e.due))}</div>` : ''}</td>
+      <td><span class="ctype" style="--tc:${t[2]}">${esc(t[1])}</span></td>
+      <td class="num"><strong>${camMoney(e.price, c)}</strong></td>
+      <td class="num">${+e.paid && rest === 0 ? '<span class="sc-hi">tout payé</span>' : camMoney(e.paid, c)}${rest > 0 && +e.paid ? `<div class="sub" style="margin:0">reste ${camMoney(rest, c)}</div>` : ''}</td>
+      <td><span class="fanc">${esc(e.fan || '')}</span>${e.fanId ? `<div class="sub" style="margin:0">${esc(e.fanId)}</div>` : ''}</td>
+      <td>${esc(e.model || '')}</td><td><strong>${esc(e.chatter || '')}</strong></td>
+      <td style="min-width:200px;max-width:360px"><div class="creq" title="${esc(e.request || '')}">${esc(e.request || '')}</div></td>
+      ${pendingView ? `<td><span class="age ${age > 6 ? 'hot' : age > 2 ? 'warm' : ''}">${age === 0 ? "aujourd'hui" : plural(age, 'jour', 'jours')}</span></td>`
+        : `<td>${st === 'done' ? `<span class="pill Strong">Faite${e.doneAt ? ` le ${esc(fmtDateFr(e.doneAt).slice(0, 5))}` : ''}</span>` : st === 'cancel' ? '<span class="pill Critical">Annulée</span>' : '<span class="pill Warning">En attente</span>'}</td>`}</tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+function bindCams(main, wk) {
+  const goW = k => { camsUI.week = k; render(); };
+  document.getElementById('cw-prev')?.addEventListener('click', () => goW(addDaysIso(wk, -7)));
+  document.getElementById('cw-next')?.addEventListener('click', () => goW(addDaysIso(wk, 7)));
+  document.getElementById('cw-sel')?.addEventListener('change', e => goW(e.target.value));
+  main.querySelectorAll('[data-ctab]').forEach(b => b.addEventListener('click', () => { camsUI.tab = b.dataset.ctab; render(); }));
+  document.getElementById('c-add').addEventListener('click', () => camEdit(null));
+  main.querySelectorAll('[data-cf]').forEach(b => b.addEventListener('click', () => { camsUI.type = b.dataset.cf; render(); }));
+  document.getElementById('c-model')?.addEventListener('change', e => { camsUI.model = e.target.value; render(); });
+  const qi = document.getElementById('c-q'); let t;
+  qi?.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { camsUI.q = qi.value; render(); const n = document.getElementById('c-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
+  main.querySelectorAll('[data-cd]').forEach(cb => {
+    cb.addEventListener('click', e => e.stopPropagation());
+    cb.addEventListener('change', () => {
+      const it = camsState.items[cb.dataset.cd];
+      if (cb.checked) { it.status = 'done'; it.doneAt = isoOf(new Date()); } else { it.status = 'todo'; delete it.doneAt; }
+      saveCams(); toast(cb.checked ? `Marquée comme faite (${it.chatter || ''} · ${it.model || ''}).` : 'Remise en attente.'); render();
+    });
+  });
+  main.querySelectorAll('tr[data-cid]').forEach(tr => tr.addEventListener('click', () => camEdit(tr.dataset.cid)));
+  main.querySelectorAll('[data-cm]').forEach(tr => tr.addEventListener('click', () => { camsUI.model = tr.dataset.cm === '—' ? '' : tr.dataset.cm; camsUI.tab = 'week'; render(); }));
+}
+
+/* ---------- Saisie / modification ---------- */
+function camEdit(id) {
+  const sug = camsSuggest();
+  const cur = id ? {...camsState.items[id]} : {date: isoOf(new Date()), type: 'custom', status: 'todo'};
+  const f = (label, html, wide) => `<label class="sf ${wide ? 'wide' : ''}"><span>${label}</span>${html}</label>`;
+  const inp = (name, extra = '') => `<input type="text" name="${name}" value="${esc(cur[name] ?? '')}" ${extra}>`;
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal sui-modal" role="dialog" aria-modal="true" style="--tc:#38bdf8;max-width:680px"><h3><span class="sdot"></span>${id ? 'Modifier la demande' : 'Nouvelle demande cam / custom'}</h3>
+    <form class="sform" novalidate>
+      ${f('Type', `<div class="qrow">${CAM_TYPES.map(([k, l, c]) => `<button type="button" class="qpt ${cur.type === k ? 'on' : ''}" data-ty="${k}" style="--tc:${c}">${l}</button>`).join('')}</div><input type="hidden" name="type" value="${esc(cur.type || 'custom')}">`)}
+      ${f('Date de la demande', `<input type="date" name="date" value="${esc(cur.date || '')}">`)}
+      ${f('Modèle', inp('model', 'list="cd-model" placeholder="Ava MYM, Steffy OF…"'))}
+      ${f('Chatteur', inp('chatter', 'list="cd-chatter"'))}
+      ${f('Fan', inp('fan', 'placeholder="Nom du fan"'))}
+      ${f('ID du fan', inp('fanId', 'placeholder="@pseudo"'))}
+      ${f('Prix', `<input type="number" name="price" min="0" step="any" value="${esc(cur.price ?? '')}" placeholder="450">`)}
+      ${f('Déjà payé', `<div class="qrow"><input type="number" name="paid" min="0" step="any" value="${esc(cur.paid ?? '')}" placeholder="0" style="width:120px"><button type="button" class="qpt" data-allpaid style="--tc:#45d08f">Tout payé</button></div>`)}
+      ${f('Détail de la demande', `<textarea name="request" rows="3" placeholder="Ce que le fan demande…">${esc(cur.request || '')}</textarea>`, true)}
+      ${f('Statut', `<select name="status"><option value="todo" ${cur.status === 'todo' ? 'selected' : ''}>En attente</option><option value="done" ${cur.status === 'done' ? 'selected' : ''}>Faite</option><option value="cancel" ${cur.status === 'cancel' ? 'selected' : ''}>Annulée</option></select>`)}
+      ${f('À faire avant le (facultatif)', `<input type="date" name="due" value="${esc(cur.due || '')}">`)}
+    </form>
+    <datalist id="cd-chatter">${sug.chatter.map(v => `<option value="${esc(v)}">`).join('')}</datalist><datalist id="cd-model">${sug.model.map(v => `<option value="${esc(v)}">`).join('')}</datalist>
+    <div id="c-err" class="sc-lo" style="min-height:18px;font-size:13px;margin-top:6px"></div>
+    <div class="acts">${id ? '<button class="btn danger" data-a="del" type="button" style="margin-right:auto">Supprimer</button>' : ''}<button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">${id ? 'Enregistrer' : 'Ajouter la demande'}</button></div></div>`;
+  const form = bg.querySelector('form'), close = () => bg.remove();
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  bg.addEventListener('click', async e => {
+    if (e.target === bg) return close();
+    const ty = e.target.closest('[data-ty]'); if (ty) { form.type.value = ty.dataset.ty; bg.querySelectorAll('[data-ty]').forEach(b => b.classList.toggle('on', b === ty)); return; }
+    if (e.target.closest('[data-allpaid]')) { form.paid.value = form.price.value || ''; return; }
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === '0') return close();
+    if (a.dataset.a === 'del') {
+      if (!(await modal('Supprimer la demande', `<p>Supprimer cette demande (${esc(cur.model || '')} · ${esc(cur.chatter || '')}) ? Cette action est définitive.</p>`, 'Supprimer'))) return;
+      delete camsState.items[id]; saveCams(); close(); toast('Demande supprimée.'); render(); return;
+    }
+    const d = Object.fromEntries([...new FormData(form).entries()].map(([k, v]) => [k, String(v).trim()]));
+    const err = !d.date ? 'Indiquez la date de la demande.' : !d.model ? 'Indiquez la modèle.' : !d.chatter ? 'Indiquez le chatteur.' : d.price !== '' && !(+d.price >= 0) ? 'Le prix doit être un nombre.' : '';
+    if (err) { bg.querySelector('#c-err').textContent = err; return; }
+    const it = Object.fromEntries(Object.entries(d).filter(([, v]) => v !== ''));
+    if (it.price != null) it.price = +it.price; if (it.paid != null) it.paid = +it.paid;
+    // Même modèle / chatteur écrit avec d'autres majuscules : on reprend le nom déjà connu
+    const canon = (v, list) => list.find(x => normName(x) === normName(v)) || v;
+    it.model = canon(it.model, sug.model); it.chatter = canon(it.chatter, sug.chatter);
+    it.at = id ? (cur.at || Date.now()) : Date.now();
+    if (it.status === 'done') it.doneAt = cur.doneAt || isoOf(new Date());
+    camsState.items[id || 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)] = it;
+    saveCams(); close(); toast(id ? 'Demande mise à jour.' : 'Demande ajoutée : elle apparaît dans « En attente » jusqu’à ce qu’elle soit cochée.'); render();
+  });
+  document.body.appendChild(bg);
+  form.model.focus();
+}
+
+/* =====================================================================
    PARTAGE DES DONNÉES (Supabase) — tout le monde voit et importe les mêmes données
    Trois blocs sont partagés : « periods » (chatters OF + MYM), « settings » (paramètres de notation), « asv ».
    ===================================================================== */
 const Sync = (() => {
-  const KEYS = ['periods', 'settings', 'asv', 'asvcfg', 'planning', 'plancfg', 'suivi'];
-  const OPTIONAL = new Set(['planning', 'plancfg', 'suivi']);   // lignes ajoutées par un script SQL plus récent
+  const KEYS = ['periods', 'settings', 'asv', 'asvcfg', 'planning', 'plancfg', 'suivi', 'cams'];
+  const OPTIONAL = new Set(['planning', 'plancfg', 'suivi', 'cams']);   // lignes ajoutées par un script SQL plus récent
   const missing = new Set();
   // Paramètres de notation et réglages ASV : modifiables uniquement par les administrateurs (vérifié aussi côté Supabase)
   const PROTECTED = new Set(['settings', 'asvcfg', 'plancfg']);
   let isAdmin = true, rolesConfigured = false, admins = [], noCfgRow = false;
   const LS_CFG = 'rca.sync.cfg', LS_SES = 'rca.sync.session', LS_META = 'rca.sync.meta';
-  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: []}, asvcfg: {}, planning: {weeks: {}, chatters: {}}, plancfg: {}, suivi: {weeks: {}}};
+  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: []}, asvcfg: {}, planning: {weeks: {}, chatters: {}}, plancfg: {}, suivi: {weeks: {}}, cams: {items: {}}};
   const clone = o => JSON.parse(JSON.stringify(o ?? null));
   const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
   let session = lsGet(LS_SES, null);
@@ -3881,6 +4093,7 @@ const Sync = (() => {
     if (key === 'asvcfg') return clone(asvState.settings);
     if (key === 'planning') return clone(planState);
     if (key === 'suivi') return clone(suiviState);
+    if (key === 'cams') return clone(camsState);
     if (key === 'plancfg') return clone(planCfgSaved || {});
     return clone({models: asvState.models, entries: asvState.entries});
   }
@@ -3892,6 +4105,8 @@ const Sync = (() => {
     } else if (key === 'settings') {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
+    } else if (key === 'cams') {
+      camsState = {items: (data && data.items) || {}}; lsSet(LS_CAMS, camsState);
     } else if (key === 'suivi') {
       suiviState = {weeks: (data && data.weeks) || {}}; lsSet(LS_SUIVI, suiviState);
     } else if (key === 'planning') {
@@ -3907,8 +4122,8 @@ const Sync = (() => {
     }
   }
   const hasLocal = key => key === 'periods' ? store.periods.length > 0 : key === 'asv' ? asvState.models.length > 0 || asvState.entries.length > 0
-    : key === 'planning' ? Object.keys(planState.weeks).length > 0 : key === 'plancfg' ? !!planCfgSaved : key === 'suivi' ? Object.keys(suiviState.weeks).length > 0 : true;
-  const remoteEmpty = (key, d) => key === 'suivi' ? !d || !Object.keys(d.weeks || {}).length : key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || !(d.models || []).length : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
+    : key === 'planning' ? Object.keys(planState.weeks).length > 0 : key === 'plancfg' ? !!planCfgSaved : key === 'suivi' ? Object.keys(suiviState.weeks).length > 0 : key === 'cams' ? Object.keys(camsState.items).length > 0 : true;
+  const remoteEmpty = (key, d) => key === 'cams' ? !d || !Object.keys(d.items || {}).length : key === 'suivi' ? !d || !Object.keys(d.weeks || {}).length : key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || !(d.models || []).length : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
 
   /* ---------- Fusion à trois (base commune, local, distant) ---------- */
   function mergeById(b = [], l = [], r = []) {
@@ -3944,7 +4159,7 @@ const Sync = (() => {
     if (key === 'settings') return preferRemote ? r : {of: pick(b.of, l.of, r.of), mym: pick(b.mym, l.mym, r.mym)};
     if (key === 'asvcfg') return preferRemote ? r : pick(b, l, r);
     if (key === 'plancfg') return preferRemote ? r : pick(b, l, r);
-    if (key === 'planning' || key === 'suivi') return deepMerge(b, l, r);
+    if (key === 'planning' || key === 'suivi' || key === 'cams') return deepMerge(b, l, r);
     return {models: mergeById(b.models, l.models, r?.models), entries: mergeById(b.entries, l.entries, r?.entries)};
   }
 
