@@ -429,6 +429,7 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .ptopt button{padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-weight:700;cursor:pointer}
 .ptopt button.on{color:var(--text);border-color:var(--ember);background:linear-gradient(90deg,rgba(224,51,106,.16),rgba(91,63,208,.12))}
 .offbar{padding:12px 16px}
+.bigpaste{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;min-height:180px}
 </style>
 </head>
 <body>
@@ -877,6 +878,7 @@ const RCA = (() => {
       if (/acc[eè]s\s+r[eé]voqu[eé]/i.test(name)) issues.push({sev:'warn', msg:'Accès révoqué : exclu par défaut'});
       else if (/@/.test(name)) issues.push({sev:'warn', msg:'Adresse e-mail, pas un chatter : exclue par défaut'});
       else if (/superviseu?r|\bsup\b/i.test(name)) issues.push({sev:'warn', msg:'Superviseur : exclu par défaut'});
+      else if (/\bmanager\b/i.test(name)) issues.push({sev:'warn', msg:'Manager : exclu par défaut'});
       out.push({line: r + 1, name, values, derived, issues, notes, include: false});
     }
     const counts = {};
@@ -1998,8 +2000,10 @@ function startDraft(P, grid, sourceName) {
   const headers = grid[headerRow].map(c => RCA.cellText(c).trim());
   const det = RCA.detectColumns(P, headers, s);
   const dates = (file.name.match(/\d{4}-\d{2}-\d{2}/g) || []);
+  // Sans dates dans le nom : par défaut la semaine dernière (lundi → dimanche), puisque l'analyse se fait le lundi
+  const lastMon = addDaysIso(mondayOf(isoOf(new Date())), -7);
   const d = importDraft[P.id] = {fileName: file.name, grid, headerRow, headers, det, mapping: Object.fromEntries(P.fields.map(f => [f.key, det[f.key].idx])), manual:{}, onlyIssues:false, remember:true,
-    start: dates[0] || '', end: dates[1] || dates[0] || ''};
+    start: dates[0] || lastMon, end: dates[1] || dates[0] || addDaysIso(lastMon, 6), autoDates: !dates.length};
   d.rows = RCA.buildRows(P, grid, headerRow, d.mapping);
   const matched = P.fields.filter(f => d.mapping[f.key] >= 0).length;
   if (matched <= 2) toast(`Très peu de colonnes reconnues. Vérifiez qu'il s'agit bien d'un export ${P.name}.`, true);
@@ -2011,13 +2015,14 @@ function renderImport(main, P) {
   const hint = P.id === 'mym'
     ? `Le plus simple : sur MyPulse, onglet « Résumé chatter », sélectionnez le tableau, copiez-le et collez-le dans la zone ci-dessous. Un fichier CSV ou XLSX fonctionne aussi. Colonnes lues : Chatter, Réactivité, Proposé, Vendu, Taux conv., CA PPV, CA Tips, CA Total.`
     : `Exportez le rapport de performance Infloww en CSV ou XLSX. Les colonnes sont détectées automatiquement, dans n'importe quel ordre.`;
-  let html = topbar(P, 'Import', false) + `<div class="stack">
-    <section class="panel"><h2>Importer un export ${P.name}</h2><p class="hint">${hint} Vous pouvez corriger la correspondance des colonnes avant l'enregistrement.</p>
-      <label class="drop" id="drop" tabindex="0"><input type="file" id="file" accept=".csv,.xlsx,.xls,.tsv,.txt" hidden>
-        <strong>${d ? esc(d.fileName) : `Déposez un rapport ${P.name} ici ou choisissez un fichier`}</strong><span>${d ? 'Déposez un autre fichier pour le remplacer' : 'Formats acceptés : .csv, .xlsx'}</span></label>
-      <label style="display:flex;flex-direction:column;gap:6px;margin-top:14px;font-size:13px;color:var(--muted)">Ou collez le tableau copié${P.id === 'mym' ? ' depuis MyPulse (« Résumé chatter »)' : ''} — la lecture est automatique
-        <textarea id="imp-paste" rows="5" placeholder="${P.id === 'mym' ? 'Vonjy Mym&#10;140s&#9;1173&#9;248&#9;21.1%&#9;4 966,31 EUR&#9;684,48 EUR&#9;5 650,79 EUR' : 'Collez ici le tableau copié, avec sa ligne d’en-têtes'}"></textarea></label>
-    </section>`;
+  const dropHTML = `<label class="drop" id="drop" tabindex="0"><input type="file" id="file" accept=".csv,.xlsx,.xls,.tsv,.txt" hidden>
+        <strong>${d && d.fileName !== 'Tableau collé' ? esc(d.fileName) : `Déposez un rapport ${P.name} ici ou choisissez un fichier`}</strong><span>${d ? 'Déposez un autre fichier pour le remplacer' : 'Formats acceptés : .csv, .xlsx'}</span></label>`;
+  const pasteHTML = (big) => `<label style="display:flex;flex-direction:column;gap:6px;${big ? '' : 'margin-top:14px;'}font-size:13px;color:var(--muted)">${big ? '' : `Ou collez le tableau copié — la lecture est automatique`}
+        <textarea id="imp-paste" rows="${big ? 9 : 5}" class="${big ? 'bigpaste' : ''}" placeholder="${P.id === 'mym' ? 'Collez ici les stats copiées depuis MyPulse, par exemple :&#10;Vonjy Mym&#10;234s&#9;1048&#9;164&#9;15.6%&#9;2 960,07 EUR&#9;438,37 EUR&#9;3 398,44 EUR&#10;Antonio&#10;173s&#9;436&#9;94&#9;21.6%&#9;1 791,19 EUR&#9;1 299,72 EUR&#9;3 090,91 EUR' : 'Collez ici le tableau copié, avec sa ligne d’en-têtes'}">${d && d.fileName === 'Tableau collé' && d.pasteText ? esc(d.pasteText) : ''}</textarea></label>`;
+  let html = topbar(P, 'Import', false) + `<div class="stack">` + (P.id === 'mym'
+    ? `<section class="panel"><h2 style="font-size:17px">Coller les stats MyPulse</h2><p class="hint">Sur MyPulse, onglet « Résumé chatter », sélectionnez tout le tableau, copiez-le et collez-le ci-dessous : la lecture est automatique, sans retouche. Les accès révoqués, superviseurs et managers sont exclus d'office.</p>${pasteHTML(true)}
+      <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">Ou importer un fichier CSV / XLSX</summary><div style="margin-top:10px">${dropHTML}</div></details></section>`
+    : `<section class="panel"><h2>Importer un export ${P.name}</h2><p class="hint">${hint} Vous pouvez corriger la correspondance des colonnes avant l'enregistrement.</p>${dropHTML}${pasteHTML(false)}</section>`);
   if (d) {
     const missing = RCA.missingFields(P, d.mapping);
     const partial = P.fields.filter(f => d.mapping[f.key] >= 0 && !d.manual[f.key] && d.det[f.key].type === 'partial');
@@ -2028,7 +2033,10 @@ function renderImport(main, P) {
     const sameDates = platformPeriods(P.id).find(p => p.start === d.start && p.end === d.end);
     const blocker = missing.length ? `Colonne manquante : ${missing.map(f => f.label).join(', ')}.` : dateErr || (!incl.length ? 'Aucune ligne sélectionnée pour la notation.' : '') || (dupIncluded ? `« ${dupIncluded} » est inclus plusieurs fois. Ne gardez qu'une seule des lignes en double.` : '');
     const tagFor = f => d.mapping[f.key] >= 0 ? (d.manual[f.key] ? 'manual' : d.det[f.key].type) : (f.derive && f.derive.from.every(x => d.mapping[x] >= 0)) ? 'derived' : f.optional ? 'optional' : 'missing';
-    html += `<section class="panel"><h2>Période</h2><p class="hint">Chaque import est enregistré comme une période ${P.name} distincte et n'est jamais mélangé aux autres.</p>
+    const lastMon = addDaysIso(mondayOf(isoOf(new Date())), -7), thisMon = mondayOf(isoOf(new Date()));
+    const quick = [['Semaine dernière', lastMon], ['Cette semaine', thisMon], ['Il y a 2 semaines', addDaysIso(lastMon, -7)]];
+    html += `<section class="panel"><h2>Période</h2><p class="hint">${d.autoDates ? `<strong style="color:var(--text)">Préremplie avec la semaine dernière</strong> (${esc(fmtRange(lastMon, addDaysIso(lastMon, 6)))}) — vérifiez avant d'importer. ` : ''}Chaque import est enregistré comme une période ${P.name} distincte et n'est jamais mélangé aux autres.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">${quick.map(([l, m]) => `<button class="btn ${d.start === m && d.end === addDaysIso(m, 6) ? 'primary' : 'ghost'}" type="button" data-qw="${m}">${l} · ${esc(fmtRange(m, addDaysIso(m, 6)))}</button>`).join('')}</div>
       <div class="fieldrow"><label>Date de début<input type="date" id="d-start" value="${esc(d.start)}"></label><label>Date de fin<input type="date" id="d-end" value="${esc(d.end)}"></label>
       <label style="flex:1;min-width:200px">Nom (facultatif)<input type="text" id="d-label" value="${esc(d.label || '')}" placeholder="${esc(d.start && d.end ? fmtRange(d.start, d.end) : 'Reprend les dates')}"></label></div>
       ${sameDates ? `<div class="alert warn" style="margin-top:12px">Une période ${P.name} avec ces dates existe déjà (${esc(sameDates.name)}). Cet import sera enregistré à part ; supprimez l'ancienne ci-dessous s'il s'agit d'un réimport.</div>` : ''}
@@ -2079,7 +2087,9 @@ function bindImport(P) {
     if (grid.length < 2) { toast('Aucune ligne de données reconnue dans le texte collé.', true); return; }
     const prev = importDraft[P.id];
     startDraft(P, grid, 'Tableau collé');
-    if (prev && importDraft[P.id]) { importDraft[P.id].start = prev.start; importDraft[P.id].end = prev.end; importDraft[P.id].label = prev.label; render(); }
+    if (importDraft[P.id]) importDraft[P.id].pasteText = txt;
+    if (prev && importDraft[P.id] && !prev.autoDates) { importDraft[P.id].start = prev.start; importDraft[P.id].end = prev.end; importDraft[P.id].label = prev.label; importDraft[P.id].autoDates = false; }
+    render();
   };
   pasteBox.addEventListener('paste', () => { clearTimeout(pasteTimer); pasteTimer = setTimeout(readPaste, 0); });
   pasteBox.addEventListener('input', () => { clearTimeout(pasteTimer); pasteTimer = setTimeout(readPaste, 600); });
@@ -2094,7 +2104,8 @@ function bindImport(P) {
   const d = importDraft[P.id];
   if (!d) return;
   const keep = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
-  document.getElementById('d-start').addEventListener('change', e => { d.start = e.target.value; keep(); });
+  document.querySelectorAll('[data-qw]').forEach(b => b.addEventListener('click', () => { d.start = b.dataset.qw; d.end = addDaysIso(b.dataset.qw, 6); d.autoDates = false; keep(); }));
+  document.getElementById('d-start').addEventListener('change', e => { d.start = e.target.value; d.autoDates = false; keep(); });
   document.getElementById('d-end').addEventListener('change', e => { d.end = e.target.value; keep(); });
   document.getElementById('d-label').addEventListener('input', e => { d.label = e.target.value; });
   document.getElementById('remember')?.addEventListener('change', e => { d.remember = e.target.checked; });
