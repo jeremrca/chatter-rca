@@ -430,6 +430,31 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .ptopt button.on{color:var(--text);border-color:var(--ember);background:linear-gradient(90deg,rgba(224,51,106,.16),rgba(91,63,208,.12))}
 .offbar{padding:12px 16px}
 .bigpaste{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;min-height:180px}
+.pbadge.sui{background:linear-gradient(135deg,#f0605e,#f2a43c 50%,#45d08f);font-size:18px}
+.sui-tabs button{display:inline-flex;align-items:center;gap:7px}
+.sui-tabs .sdot,.sui-modal .sdot{width:9px;height:9px;border-radius:50%;background:var(--tc);display:inline-block;box-shadow:0 0 8px var(--tc)}
+.sui-tabs button.on[style]{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 14%,transparent)}
+.sui-card{border-top:3px solid var(--tc)}
+.sui-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.sui-bar input[type=search]{flex:1;min-width:220px;max-width:380px}
+.sui-total{margin-left:auto;font-size:13px}
+.sui-table td{white-space:normal;vertical-align:top}
+.sui-table td:nth-last-child(2){min-width:220px}
+.ptsb{display:inline-block;font-weight:800;padding:2px 9px;border-radius:99px;font-size:12.5px}
+.ptsb.pen{color:#fca5a5;background:rgba(240,96,94,.15)}
+.ptsb.pri{color:#86efac;background:rgba(69,208,143,.15)}
+.fanc{color:#a3e635;font-weight:700}
+.sui-modal{max-width:640px;border-top:3px solid var(--tc)}
+.sui-modal h3{display:flex;align-items:center;gap:9px}
+.sform{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sf{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+.sf.wide{grid-column:1/-1}
+.sf textarea{min-height:64px}
+.qrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.qpt{padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-weight:700;cursor:pointer;font-size:13px}
+.qpt.on,.qpt:hover{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 18%,transparent)}
+.sui-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:620px){.sform{grid-template-columns:1fr}.sui-stats{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -1504,6 +1529,7 @@ const ICONS = {
   import:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
   settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   download:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+  suivi:'<path d="M12 3v18M6 21h12M4 8h16M4 8l-2.5 6a3 3 0 0 0 5 0L4 8zM20 8l-2.5 6a3 3 0 0 0 5 0L20 8z"/>',
   planning:'<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M7.5 13.5h3M13.5 13.5h3M7.5 17h3"/>',
   asv:'<circle cx="12" cy="12" r="9"/><path d="M15 9.2c-.4-1-1.6-1.7-3-1.7-1.8 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2-1.5 0-2.7-.7-3.1-1.8M12 6v1.5M12 16.5V18"/>'
 };
@@ -1521,6 +1547,7 @@ function route() {
   if (rest.startsWith('chatter/')) return {pid, page:'chatters', chatter:rest.slice(8)};
   if (rest === 'partage') return {pid, page:'partage'};
   if (rest === 'planning') return {pid, page:'planning'};
+  if (rest === 'suivi') return {pid, page:'suivi'};
   if (rest === 'asv' || rest.startsWith('asv/')) return {pid, page:'asv', sub: rest.split('/')[1] || 'dashboard'};
   return {pid, page: PAGE_LABEL[rest] ? rest : 'dashboard'};
 }
@@ -1557,10 +1584,11 @@ function renderNav(rt) {
   navRt = rt;
   // La rubrique de la page ouverte est toujours dépliée
   for (const s of NAV_SECTIONS) if (s.pages && s.pages.some(([k]) => k === rt.page)) { const key = `${rt.pid}-${s.id}`; if (!ui.navOpen[key]) { ui.navOpen[key] = true; saveUI(); } }
-  const planOn = rt.page === 'planning';
-  document.getElementById('nav').innerHTML = `<div class="nav-group"><a href="#${rt.pid}/planning" class="nav-top ${planOn ? 'on' : ''}" ${planOn ? 'aria-current="page"' : ''} title="Planning de l'équipe">${icon('planning')}<span>Planning</span></a></div>` + PIDS.map(pid => {
+  const planOn = rt.page === 'planning', suiOn = rt.page === 'suivi';
+  document.getElementById('nav').innerHTML = `<div class="nav-group"><a href="#${rt.pid}/planning" class="nav-top ${planOn ? 'on' : ''}" ${planOn ? 'aria-current="page"' : ''} title="Planning de l'équipe">${icon('planning')}<span>Planning</span></a>
+    <a href="#${rt.pid}/suivi" class="nav-top ${suiOn ? 'on' : ''}" ${suiOn ? 'aria-current="page"' : ''} title="Pénalités, réattributions et primes">${icon('suivi')}<span>Primes & Pénalités</span></a></div>` + PIDS.map(pid => {
     const P = PLATFORMS[pid];
-    return `<div class="nav-group ${rt.pid === pid && !planOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
+    return `<div class="nav-group ${rt.pid === pid && !planOn && !suiOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
       ${NAV_SECTIONS.map(s => {
         if (s.link) { const on = rt.pid === pid && rt.page === s.link; return `<a href="#${pid}/${s.link}" class="nav-top ${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span></a>`; }
         const key = `${pid}-${s.id}`, open = !!ui.navOpen[key], inside = rt.pid === pid && s.pages.some(([k]) => k === rt.page);
@@ -1621,6 +1649,7 @@ function render() {
   if (rt.page === 'partage') { renderPartage(main); return; }
   if (Sync.needsLogin()) { renderLogin(main); return; }
   if (rt.page === 'planning') { renderPlanning(main); return; }
+  if (rt.page === 'suivi') { renderSuivi(main); return; }
   if (rt.page === 'asv') renderASV(main, P, rt.sub);
   else if (rt.page === 'dashboard') renderDashboard(main, P);
   else if (rt.page === 'chatters') rt.chatter != null ? renderDetail(main, P, rt.chatter) : renderChatters(main, P);
@@ -3628,18 +3657,208 @@ function bindPlanModels(wk, d) {
 }
 
 /* =====================================================================
+   PRIMES & PÉNALITÉS — pénalités, réattributions de ventes et primes, semaine par semaine
+   Partagé avec toute l'équipe (clé « suivi »). Les semaines de plus de 5 semaines sont supprimées automatiquement.
+   ===================================================================== */
+const LS_SUIVI = 'rca.suivi.v1', LS_SUIVI_SUP = 'rca.suivi.sup';
+const SUIVI_KEEP_WEEKS = 5;
+let suiviState = (() => { const s = lsGet(LS_SUIVI, null) || {}; s.weeks ||= {}; return s; })();
+const saveSuivi = () => { lsSet(LS_SUIVI, suiviState); Sync.changed('suivi'); };
+const suiviUI = {week:null, tab:'pen', q:''};
+const SUIVI_KINDS = {
+  pen: {label:'Pénalités', one:'pénalité', add:'Ajouter une pénalité', color:'#f0605e', pts:'Malus'},
+  rea: {label:'Réattributions', one:'réattribution', add:'Ajouter une réattribution', color:'#f2a43c'},
+  pri: {label:'Primes', one:'prime', add:'Ajouter une prime', color:'#45d08f', pts:'Bonus'}
+};
+const suiviWeek = wk => (suiviState.weeks[wk] ||= {pen:{}, rea:{}, pri:{}});
+const suiviList = (wk, kind) => Object.entries((suiviState.weeks[wk] || {})[kind] || {}).map(([id, e]) => ({id, ...e})).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.at || 0) - (a.at || 0));
+const fmtDateFr = iso => iso ? parseDate(iso).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'}) : '';
+const saleAmount = s => { const nums = String(s || '').replace(/(\d)\s+(?=\d{3}\b)/g, '$1').match(/\d+(?:[.,]\d+)?/g); return nums ? nums.reduce((a, n) => a + parseFloat(n.replace(',', '.')), 0) : 0; };
+
+// Suppression automatique : on garde la semaine en cours et les 5 précédentes
+function purgeSuivi() {
+  const cutoff = addDaysIso(mondayOf(isoOf(new Date())), -7 * SUIVI_KEEP_WEEKS);
+  const old = Object.keys(suiviState.weeks).filter(k => k < cutoff);
+  if (old.length) { old.forEach(k => delete suiviState.weeks[k]); saveSuivi(); }
+}
+function suiviSuggestions() {
+  const s = {chatter:new Map(), sup:new Map(), comment:new Map(), model:new Map(), type:new Map()};
+  const add = (m, v) => { const t = String(v || '').trim(); if (t) m.set(t.toLowerCase(), t); };
+  for (const W of Object.values(suiviState.weeks)) for (const kind of ['pen', 'rea', 'pri']) for (const e of Object.values(W[kind] || {})) {
+    add(s.chatter, e.chatter); add(s.sup, e.sup); add(s.comment, e.comment); add(s.model, e.model); add(s.type, e.type);
+  }
+  for (const n of knownChatters()) add(s.chatter, n);
+  for (const m of allModels()) add(s.model, modelLabel(m));
+  ['Média', 'Tips', 'Média + tips', 'Custom', 'Sextape'].forEach(t => add(s.type, t));
+  ['Prime CUSTOM', 'Prime CAM'].forEach(t => add(s.comment, t));
+  const sorted = m => [...m.values()].sort((a, b) => a.localeCompare(b, 'fr'));
+  return {chatter:sorted(s.chatter), sup:sorted(s.sup), comment:sorted(s.comment), model:sorted(s.model), type:sorted(s.type)};
+}
+
+/* ---------- Page ---------- */
+function renderSuivi(main) {
+  purgeSuivi();
+  const wk = suiviUI.week ||= mondayOf(isoOf(new Date()));
+  const W = suiviState.weeks[wk] || {pen:{}, rea:{}, pri:{}};
+  const counts = {pen: Object.keys(W.pen || {}).length, rea: Object.keys(W.rea || {}).length, pri: Object.keys(W.pri || {}).length};
+  const tab = suiviUI.tab;
+  const weeksAvail = [...new Set([...Object.keys(suiviState.weeks), mondayOf(isoOf(new Date())), wk])].sort().reverse();
+  const head = `<div class="top"><h1><span class="pbadge lg sui" aria-hidden="true">±</span><span>Primes & Pénalités</span></h1>
+    <div class="picker viewpick"><button class="btn ghost small-btn" id="sw-prev" type="button" aria-label="Semaine précédente">‹</button>
+      <select id="sw-sel">${weeksAvail.map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}</option>`).join('')}</select>
+      <button class="btn ghost small-btn" id="sw-next" type="button" aria-label="Semaine suivante">›</button></div></div>`;
+  const tabs = `<div class="ptopt sui-tabs" role="tablist">${['pen', 'rea', 'pri'].map(k => `<button type="button" class="${tab === k ? 'on' : ''}" data-stab="${k}" style="--tc:${SUIVI_KINDS[k].color}"><span class="sdot"></span>${SUIVI_KINDS[k].label} <span class="sub">${counts[k] || ''}</span></button>`).join('')}<button type="button" class="${tab === 'bilan' ? 'on' : ''}" data-stab="bilan">Bilan de la semaine</button></div>`;
+  let body;
+  if (tab === 'bilan') body = suiviBilanHTML(wk);
+  else {
+    const K = SUIVI_KINDS[tab], q = normName(suiviUI.q);
+    const rows = suiviList(wk, tab).filter(e => !q || normName(e.chatter).includes(q) || normName(e.comment).includes(q));
+    const total = tab === 'rea' ? rows.reduce((a, e) => a + saleAmount(e.sale), 0) : rows.reduce((a, e) => a + (+e.pts || 0), 0);
+    const cols = tab === 'rea'
+      ? [['Date', e => fmtDateFr(e.date)], ['Type', e => esc(e.type || '')], ['Vente', e => `<strong>${esc(e.sale || '')}</strong>`], ['Fan', e => `<span class="fanc">${esc(e.fan || '')}</span>`], ['ID', e => `<span class="muted">${esc(e.fanId || '')}</span>`], ['Modèle', e => esc(e.model || '')], ['Chatteur', e => `<strong>${esc(e.chatter || '')}</strong>`], ['Commentaire', e => esc(e.comment || '')], ['Superviseur', e => esc(e.sup || '')]]
+      : [['Date', e => fmtDateFr(e.date)], [K.pts, e => `<span class="ptsb ${tab}">${tab === 'pen' ? '−' : '+'}${esc(e.pts)}</span>`], ['Chatteur', e => `<strong>${esc(e.chatter || '')}</strong>`], ['Commentaire', e => esc(e.comment || '')], ['Superviseur', e => esc(e.sup || '')]];
+    body = `<section class="panel sui-card" style="--tc:${K.color}">
+      <div class="sui-bar"><button class="btn primary" id="s-add" type="button">+ ${K.add}</button>
+        <input type="search" id="s-q" placeholder="Rechercher un chatteur ou un commentaire" value="${esc(suiviUI.q)}">
+        <span class="muted sui-total">${rows.length ? plural(rows.length, K.one, K.label.toLowerCase()) : ''}${rows.length ? ` · ${tab === 'rea' ? `${nf(total, 0, 2)} au total` : `${tab === 'pen' ? '−' : '+'}${nf(total, 0, 1)} pts`}` : ''}</span>
+        ${rows.length ? `<button class="btn ghost" id="s-csv" type="button">${icon('download')}CSV</button>` : ''}</div>
+      ${rows.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table"><thead><tr>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr></thead><tbody>
+        ${rows.map(e => `<tr class="click" data-sid="${e.id}" tabindex="0" title="Cliquer pour modifier">${cols.map(c => `<td>${c[1](e)}</td>`).join('')}</tr>`).join('')}
+      </tbody></table></div>`
+      : `<div class="empty" style="padding:34px 10px"><div style="font-size:15px;color:var(--text);font-weight:600">Aucune ${K.one} ${q ? 'trouvée' : `pour la ${esc(planWeekLabel(wk))}`}</div><div class="hint" style="margin-top:4px">${q ? 'Essayez une autre recherche.' : `Cliquez sur « ${K.add} » pour en saisir une.`}</div></div>`}
+    </section>`;
+  }
+  main.innerHTML = head + tabs + `<div class="stack">${body}
+    <p class="hint" style="text-align:center;font-size:12px;margin:0">Partagé avec toute l'équipe · les ${SUIVI_KEEP_WEEKS} dernières semaines sont conservées, les plus anciennes sont supprimées automatiquement.</p></div>`;
+  const goW = k => { suiviUI.week = k; render(); };
+  document.getElementById('sw-prev').addEventListener('click', () => goW(addDaysIso(wk, -7)));
+  document.getElementById('sw-next').addEventListener('click', () => goW(addDaysIso(wk, 7)));
+  document.getElementById('sw-sel').addEventListener('change', e => goW(e.target.value));
+  main.querySelectorAll('[data-stab]').forEach(b => b.addEventListener('click', () => { suiviUI.tab = b.dataset.stab; render(); }));
+  if (tab !== 'bilan') {
+    document.getElementById('s-add').addEventListener('click', () => suiviEdit(wk, tab, null));
+    const qi = document.getElementById('s-q'); let t;
+    qi.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { suiviUI.q = qi.value; render(); const n = document.getElementById('s-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
+    main.querySelectorAll('[data-sid]').forEach(tr => { const open = () => suiviEdit(wk, tab, tr.dataset.sid); tr.addEventListener('click', open); tr.addEventListener('keydown', e => { if (e.key === 'Enter') open(); }); });
+    document.getElementById('s-csv')?.addEventListener('click', () => suiviCSV(wk, tab));
+  } else {
+    main.querySelectorAll('[data-bil]').forEach(tr => tr.addEventListener('click', () => { suiviUI.q = tr.dataset.bil; suiviUI.tab = tr.dataset.tab || 'pen'; render(); }));
+    document.getElementById('s-csv-all')?.addEventListener('click', () => suiviCSV(wk, 'bilan'));
+  }
+}
+
+/* ---------- Bilan par chatteur ---------- */
+function suiviBilanData(wk) {
+  const by = new Map();
+  const row = n => { const k = normName(n); if (!by.has(k)) by.set(k, {name: n, mal: 0, nPen: 0, bon: 0, nPri: 0, nRea: 0, rea: 0}); return by.get(k); };
+  for (const e of suiviList(wk, 'pen')) { const r = row(e.chatter); r.mal += +e.pts || 0; r.nPen++; }
+  for (const e of suiviList(wk, 'pri')) { const r = row(e.chatter); r.bon += +e.pts || 0; r.nPri++; }
+  for (const e of suiviList(wk, 'rea')) { const r = row(e.chatter); r.nRea++; r.rea += saleAmount(e.sale); }
+  return [...by.values()].map(r => ({...r, net: r.bon - r.mal})).sort((a, b) => a.net - b.net || b.nRea - a.nRea || a.name.localeCompare(b.name, 'fr'));
+}
+function suiviBilanHTML(wk) {
+  const rows = suiviBilanData(wk);
+  const T = rows.reduce((a, r) => ({mal: a.mal + r.mal, bon: a.bon + r.bon, nPen: a.nPen + r.nPen, nPri: a.nPri + r.nPri, nRea: a.nRea + r.nRea, rea: a.rea + r.rea}), {mal:0, bon:0, nPen:0, nPri:0, nRea:0, rea:0});
+  return `<section class="stats sui-stats">
+      <div class="stat"><div class="k">Pénalités</div><div class="v" style="color:#f87171">−${nf(T.mal, 0, 1)} pts</div><div class="d">${plural(T.nPen, 'pénalité', 'pénalités')}</div></div>
+      <div class="stat"><div class="k">Primes</div><div class="v" style="color:#4ade80">+${nf(T.bon, 0, 1)} pts</div><div class="d">${plural(T.nPri, 'prime', 'primes')}</div></div>
+      <div class="stat"><div class="k">Réattributions</div><div class="v" style="color:#fbbf24">${T.nRea}</div><div class="d">${nf(T.rea, 0, 2)} au total</div></div>
+      <div class="stat"><div class="k">Chatteurs concernés</div><div class="v">${rows.length}</div><div class="d">${esc(planWeekLabel(wk))}</div></div>
+    </section>
+    <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">Bilan par chatteur</h2><span class="hint" style="margin:0">Du solde le plus négatif au plus positif · cliquez sur une ligne pour voir le détail</span>
+      ${rows.length ? `<button class="btn ghost" id="s-csv-all" type="button" style="margin-left:auto">${icon('download')}Exporter le bilan</button>` : ''}</div>
+      ${rows.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Chatteur</th><th class="num">Malus</th><th class="num">Bonus</th><th class="num">Solde</th><th class="num">Réattributions</th></tr></thead><tbody>
+        ${rows.map(r => `<tr class="click" data-bil="${esc(r.name)}" data-tab="${r.nPen ? 'pen' : r.nRea ? 'rea' : 'pri'}"><td><strong>${esc(r.name)}</strong></td>
+          <td class="num">${r.nPen ? `<span class="ptsb pen">−${nf(r.mal, 0, 1)}</span> <span class="sub">${r.nPen}×</span>` : '<span class="muted">—</span>'}</td>
+          <td class="num">${r.nPri ? `<span class="ptsb pri">+${nf(r.bon, 0, 1)}</span> <span class="sub">${r.nPri}×</span>` : '<span class="muted">—</span>'}</td>
+          <td class="num"><strong class="${r.net < 0 ? 'sc-lo' : r.net > 0 ? 'sc-hi' : ''}">${r.net > 0 ? '+' : ''}${nf(r.net, 0, 1)}</strong></td>
+          <td class="num">${r.nRea ? `${r.nRea} <span class="sub">(${nf(r.rea, 0, 2)})</span>` : '<span class="muted">—</span>'}</td></tr>`).join('')}
+      </tbody></table></div>` : `<div class="empty" style="padding:30px 10px">Rien de saisi pour la ${esc(planWeekLabel(wk))}.</div>`}
+    </section>`;
+}
+
+/* ---------- Saisie / modification ---------- */
+function suiviEdit(wk, kind, id) {
+  const K = SUIVI_KINDS[kind], sug = suiviSuggestions();
+  const today = isoOf(new Date());
+  const cur = id ? {...suiviState.weeks[wk][kind][id]} : {date: today >= wk && today <= addDaysIso(wk, 6) ? today : wk, sup: lsGet(LS_SUIVI_SUP, '') || '', pts: kind === 'pen' ? 5 : kind === 'pri' ? 10 : undefined};
+  const dl = (idn, list) => `<datalist id="${idn}">${list.map(v => `<option value="${esc(v)}">`).join('')}</datalist>`;
+  const f = (label, html, wide) => `<label class="sf ${wide ? 'wide' : ''}"><span>${label}</span>${html}</label>`;
+  const inp = (name, extra = '') => `<input type="text" name="${name}" value="${esc(cur[name] ?? '')}" ${extra}>`;
+  const quick = kind === 'pen' ? [2, 5, 10] : kind === 'pri' ? [5, 10, 20] : [];
+  const fields = kind === 'rea'
+    ? f('Date', `<input type="date" name="date" value="${esc(cur.date || '')}" required>`) + f('Type', inp('type', 'list="sd-type" placeholder="Média, Tips…"')) + f('Vente', inp('sale', 'placeholder="40 ou 25 tips + 100 ppv"'))
+      + f('Fan', inp('fan', 'placeholder="Nom du fan"')) + f('ID du fan', inp('fanId', 'placeholder="@u507578546"')) + f('Modèle', inp('model', 'list="sd-model" placeholder="Alice OF"'))
+      + f('Chatteur', inp('chatter', 'list="sd-chatter" required')) + f('Superviseur', inp('sup', 'list="sd-sup"')) + f('Commentaire', `<textarea name="comment" rows="2" placeholder="non respect du pricing…">${esc(cur.comment || '')}</textarea>`, true)
+    : f('Date', `<input type="date" name="date" value="${esc(cur.date || '')}" required>`)
+      + f(K.pts + ' (points)', `<div class="qrow">${quick.map(v => `<button type="button" class="qpt ${+cur.pts === v ? 'on' : ''}" data-qpt="${v}">${kind === 'pen' ? '−' : '+'}${v}</button>`).join('')}<input type="number" name="pts" min="0" step="any" value="${esc(cur.pts ?? '')}" style="width:90px"></div>`)
+      + f('Chatteur', inp('chatter', 'list="sd-chatter" required'))
+      + f('Superviseur', inp('sup', 'list="sd-sup"'))
+      + f('Commentaire', `${kind === 'pri' ? `<div class="qrow" style="margin-bottom:6px">${['Prime CUSTOM', 'Prime CAM'].map(v => `<button type="button" class="qpt" data-qc="${v}">${v}</button>`).join('')}</div>` : ''}<textarea name="comment" rows="2" placeholder="${kind === 'pen' ? 'Inactif, mauvais prix de sextape…' : 'Prime CUSTOM, Prime CAM…'}">${esc(cur.comment || '')}</textarea>`, true);
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal sui-modal" role="dialog" aria-modal="true" style="--tc:${K.color}"><h3><span class="sdot"></span>${id ? `Modifier la ${K.one}` : K.add}</h3>
+    <form class="sform" novalidate>${fields}</form>
+    ${dl('sd-chatter', sug.chatter)}${dl('sd-sup', sug.sup)}${dl('sd-model', sug.model)}${dl('sd-type', sug.type)}
+    <div id="s-err" class="sc-lo" style="min-height:18px;font-size:13px;margin-top:6px"></div>
+    <div class="acts">${id ? '<button class="btn danger" data-a="del" type="button" style="margin-right:auto">Supprimer</button>' : ''}<button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">${id ? 'Enregistrer' : 'Ajouter'}</button></div></div>`;
+  const form = bg.querySelector('form');
+  const close = () => bg.remove();
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') close(); if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); bg.querySelector('[data-a="1"]').click(); } });
+  bg.addEventListener('click', async e => {
+    if (e.target === bg) return close();
+    const q = e.target.closest('[data-qpt]'); if (q) { form.pts.value = q.dataset.qpt; bg.querySelectorAll('[data-qpt]').forEach(b => b.classList.toggle('on', b === q)); return; }
+    const qc = e.target.closest('[data-qc]'); if (qc) { form.comment.value = qc.dataset.qc; return; }
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === '0') return close();
+    if (a.dataset.a === 'del') {
+      if (!(await modal(`Supprimer cette ${K.one}`, `<p>Supprimer la ${K.one} de <strong>${esc(cur.chatter || '')}</strong> du ${esc(fmtDateFr(cur.date))} ? Cette action est définitive.</p>`, 'Supprimer'))) return;
+      delete suiviState.weeks[wk][kind][id]; saveSuivi(); close(); toast(`${K.one.charAt(0).toUpperCase() + K.one.slice(1)} supprimée.`); render(); return;
+    }
+    const data = Object.fromEntries(new FormData(form).entries());
+    for (const k of Object.keys(data)) data[k] = String(data[k]).trim();
+    const err = !data.date ? 'Choisissez une date.' : !data.chatter ? 'Indiquez le chatteur.' : kind !== 'rea' && !(+data.pts > 0) ? `Indiquez le ${K.pts.toLowerCase()} en points.` : '';
+    if (err) { bg.querySelector('#s-err').textContent = err; return; }
+    if (kind !== 'rea') data.pts = +data.pts;
+    const clean = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== ''));
+    clean.at = id ? (cur.at || Date.now()) : Date.now();
+    if (data.sup) lsSet(LS_SUIVI_SUP, data.sup);
+    const target = mondayOf(data.date);
+    if (id) delete suiviState.weeks[wk][kind][id];
+    suiviWeek(target)[kind][id || 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)] = clean;
+    saveSuivi(); close();
+    if (target !== wk) { suiviUI.week = target; toast(`Enregistrée dans la ${planWeekLabel(target)} (selon sa date).`); } else toast(id ? 'Modification enregistrée.' : `${K.one.charAt(0).toUpperCase() + K.one.slice(1)} ajoutée.`);
+    render();
+  });
+  document.body.appendChild(bg);
+  (bg.querySelector('[name="chatter"]') || bg.querySelector('input')).focus();
+}
+
+/* ---------- Export CSV ---------- */
+function suiviCSV(wk, kind) {
+  const w = planWeekLabel(wk).replace('Semaine du ', '').replace(/\//g, '-');
+  if (kind === 'bilan') {
+    const head = ['Chatteur','Malus (pts)','Nb pénalités','Bonus (pts)','Nb primes','Solde','Nb réattributions','Montant réattribué'];
+    return saveFile(`bilan-semaine-${w}.csv`, [head, ...suiviBilanData(wk).map(r => [r.name, r.mal, r.nPen, r.bon, r.nPri, r.net, r.nRea, Math.round(r.rea * 100) / 100])].map(l => l.map(csvCell).join(';')).join('\r\n'));
+  }
+  const rows = suiviList(wk, kind);
+  const spec = kind === 'rea' ? [['Date', 'date'], ['Type', 'type'], ['Vente', 'sale'], ['Fan', 'fan'], ['ID', 'fanId'], ['Modèle', 'model'], ['Chatteur', 'chatter'], ['Commentaire', 'comment'], ['Superviseur', 'sup']]
+    : [['Date', 'date'], [SUIVI_KINDS[kind].pts, 'pts'], ['Chatteur', 'chatter'], ['Commentaire', 'comment'], ['Superviseur', 'sup']];
+  saveFile(`${SUIVI_KINDS[kind].label.toLowerCase()}-semaine-${w}.csv`, [spec.map(s => s[0]), ...rows.map(e => spec.map(s => s[1] === 'date' ? fmtDateFr(e.date) : e[s[1]] ?? ''))].map(l => l.map(csvCell).join(';')).join('\r\n'));
+}
+
+/* =====================================================================
    PARTAGE DES DONNÉES (Supabase) — tout le monde voit et importe les mêmes données
    Trois blocs sont partagés : « periods » (chatters OF + MYM), « settings » (paramètres de notation), « asv ».
    ===================================================================== */
 const Sync = (() => {
-  const KEYS = ['periods', 'settings', 'asv', 'asvcfg', 'planning', 'plancfg'];
-  const OPTIONAL = new Set(['planning', 'plancfg']);   // lignes ajoutées par un script SQL plus récent
+  const KEYS = ['periods', 'settings', 'asv', 'asvcfg', 'planning', 'plancfg', 'suivi'];
+  const OPTIONAL = new Set(['planning', 'plancfg', 'suivi']);   // lignes ajoutées par un script SQL plus récent
   const missing = new Set();
   // Paramètres de notation et réglages ASV : modifiables uniquement par les administrateurs (vérifié aussi côté Supabase)
   const PROTECTED = new Set(['settings', 'asvcfg', 'plancfg']);
   let isAdmin = true, rolesConfigured = false, admins = [], noCfgRow = false;
   const LS_CFG = 'rca.sync.cfg', LS_SES = 'rca.sync.session', LS_META = 'rca.sync.meta';
-  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: []}, asvcfg: {}, planning: {weeks: {}, chatters: {}}, plancfg: {}};
+  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: []}, asvcfg: {}, planning: {weeks: {}, chatters: {}}, plancfg: {}, suivi: {weeks: {}}};
   const clone = o => JSON.parse(JSON.stringify(o ?? null));
   const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
   let session = lsGet(LS_SES, null);
@@ -3661,6 +3880,7 @@ const Sync = (() => {
     if (key === 'settings') return clone({of: allSettings.of, mym: allSettings.mym});
     if (key === 'asvcfg') return clone(asvState.settings);
     if (key === 'planning') return clone(planState);
+    if (key === 'suivi') return clone(suiviState);
     if (key === 'plancfg') return clone(planCfgSaved || {});
     return clone({models: asvState.models, entries: asvState.entries});
   }
@@ -3672,6 +3892,8 @@ const Sync = (() => {
     } else if (key === 'settings') {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
+    } else if (key === 'suivi') {
+      suiviState = {weeks: (data && data.weeks) || {}}; lsSet(LS_SUIVI, suiviState);
     } else if (key === 'planning') {
       planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models && Object.keys(data.models).length ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {})}; lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
@@ -3685,8 +3907,8 @@ const Sync = (() => {
     }
   }
   const hasLocal = key => key === 'periods' ? store.periods.length > 0 : key === 'asv' ? asvState.models.length > 0 || asvState.entries.length > 0
-    : key === 'planning' ? Object.keys(planState.weeks).length > 0 : key === 'plancfg' ? !!planCfgSaved : true;
-  const remoteEmpty = (key, d) => key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || !(d.models || []).length : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
+    : key === 'planning' ? Object.keys(planState.weeks).length > 0 : key === 'plancfg' ? !!planCfgSaved : key === 'suivi' ? Object.keys(suiviState.weeks).length > 0 : true;
+  const remoteEmpty = (key, d) => key === 'suivi' ? !d || !Object.keys(d.weeks || {}).length : key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || !(d.models || []).length : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
 
   /* ---------- Fusion à trois (base commune, local, distant) ---------- */
   function mergeById(b = [], l = [], r = []) {
@@ -3722,7 +3944,7 @@ const Sync = (() => {
     if (key === 'settings') return preferRemote ? r : {of: pick(b.of, l.of, r.of), mym: pick(b.mym, l.mym, r.mym)};
     if (key === 'asvcfg') return preferRemote ? r : pick(b, l, r);
     if (key === 'plancfg') return preferRemote ? r : pick(b, l, r);
-    if (key === 'planning') return deepMerge(b, l, r);
+    if (key === 'planning' || key === 'suivi') return deepMerge(b, l, r);
     return {models: mergeById(b.models, l.models, r?.models), entries: mergeById(b.entries, l.entries, r?.entries)};
   }
 
