@@ -418,7 +418,7 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .pchip.rep s{color:#f87171;opacity:.85}
 .pchip .arr{color:var(--faint);margin:0 3px}
 .pe-list{display:flex;flex-direction:column;gap:8px}
-.pe-row{display:grid;grid-template-columns:minmax(90px,1fr) auto auto minmax(120px,1.2fr) auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line-soft);border-radius:var(--r-sm);background:var(--bg)}
+.pe-row{display:grid;grid-template-columns:minmax(90px,1fr) auto auto auto minmax(120px,1.2fr) auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line-soft);border-radius:var(--r-sm);background:var(--bg)}
 .un-days{display:flex;gap:10px;flex-wrap:wrap}
 @media (max-width:620px){.pe-row{grid-template-columns:1fr 1fr}.ptab{min-width:56px}}
 .pc.cut{color:#c084fc;font-weight:700}
@@ -472,6 +472,8 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .ctype{display:inline-block;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:99px;color:var(--tc);background:color-mix(in srgb,var(--tc) 16%,transparent);white-space:nowrap}
 .age{font-size:12px;font-weight:700;color:var(--muted)}
 .age.warm{color:#fbbf24}.age.hot{color:#f87171}
+.pc.late{color:#fb923c;font-weight:700}
+.ptsb.late{color:#fdba74;background:rgba(251,146,60,.15)}
 </style>
 </head>
 <body>
@@ -2135,6 +2137,12 @@ function bindImport(P) {
   const readPaste = () => {
     const txt = pasteBox.value;
     if (!txt.trim()) return;
+    // Classement MyPulse (rang, ventes, CA, évolution ▲▼) : pas de réactivité ni de taux de conversion → impossible à noter
+    if (P.id === 'mym' && /[▲▼]|\bNouveau\b/.test(txt) && !/\d+\s*s\t/.test(txt)) {
+      modal('Ce n’est pas le bon tableau MyPulse', `<p>Vous avez collé le <strong>classement</strong> de MyPulse (ventes, CA, évolution ▲▼). Il ne contient pas la <strong>réactivité</strong> ni le <strong>taux de conversion</strong>, qui comptent dans la note MYM.</p>
+        <p>Sur MyPulse, ouvrez l'onglet <strong>« Résumé chatter »</strong> (colonnes Réactivité, Proposé, Vendu, Taux conv., CA PPV, CA Tips, CA Total), copiez tout le tableau et collez-le ici.</p>`, null, 'Compris');
+      pasteBox.value = ''; return;
+    }
     const grid = RCA.pasteToGrid(P.id, txt);
     if (grid.length < 2) { toast('Aucune ligne de données reconnue dans le texte collé.', true); return; }
     const prev = importDraft[P.id];
@@ -3145,6 +3153,7 @@ function chipHTML(e, wk, d, s, hl) {
   if (e.r) return `<span class="pchip rep" title="${esc(e.n)} remplacé(e) par ${esc(e.r)}"><s>${esc(e.n)}</s><span class="arr">→</span>${e.r.split('/').map(x => nm(x.trim())).join(' / ')}</span>`;
   if (e.a) return `<span class="pchip"><span class="pc abs" title="Absent(e)">${esc(e.n)}</span></span>`;
   if (e.c) return `<span class="pchip"><span class="pc cut ${offOn(e.n, d) ? 'offc' : ''}" title="Coupure de courant">${esc(e.n)}</span></span>`;
+  if (e.l) return `<span class="pchip"><span class="pc late ${offOn(e.n, d) ? 'offc' : ''}" title="En retard">${esc(e.n)}</span></span>`;
   return `<span class="pchip">${offOn(e.n, d) ? `<span class="offwrap" title="${esc(e.n)} est planifié(e) sur son jour OFF">${nm(e.n)}<b class="offtag">OFF</b></span>` : nm(e.n)}</span>`;
 }
 function renderPlanning(main) {
@@ -3154,7 +3163,14 @@ function renderPlanning(main) {
   const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
   const hl = newHighlights();
   const q = normName(planUI.q);
-  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab !== 'off' ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button></div>`;
+  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button></div>`;
+  if (planUI.tab === 'bilan') {
+    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1>
+      <div class="picker viewpick"><button class="btn ghost small-btn" id="pw-prev" type="button" aria-label="Semaine précédente">‹</button>
+      <select id="pw-sel">${[...new Set([...Object.keys(planState.weeks), wk])].sort().reverse().map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}</option>`).join('')}</select>
+      <button class="btn ghost small-btn" id="pw-next" type="button" aria-label="Semaine suivante">›</button></div></div>` + tabs + planBilanHTML(wk);
+    bindPlanningHead(main, wk); bindPlanBilan(main, wk); return;
+  }
   if (planUI.tab === 'off') { main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1></div>` + tabs + offViewHTML(); bindPlanTabs(main); bindOffView(); return; }
   const head = tabs + `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1>
     <div class="picker viewpick"><button class="btn ghost small-btn" id="pw-prev" type="button" aria-label="Semaine précédente">‹</button>
@@ -3194,9 +3210,9 @@ function renderPlanning(main) {
         ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>`}
         <button class="btn ghost" id="p-xls" type="button">Importer un Excel</button>
       </div>
-      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
+      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="pc late">Prénom</span> retard</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
     </section>
-    ${q ? `<section class="panel"><h2>Planning de « ${esc(planUI.q)} » · ${esc(planWeekLabel(wk))}</h2>${found.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Jour</th><th>Shift</th><th>Modèle</th><th>Statut</th></tr></thead><tbody>${found.map(x => `<tr><td>${PLAN_DAYS_LONG[x.dd]} ${parseDate(addDaysIso(wk, x.dd)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</td><td>${PLAN_SHIFTS[x.s]}</td><td>${esc(modelLabel(x.m))}</td><td>${x.e.r ? `remplacé(e) par ${esc(x.e.r)}` : x.e.a ? '<span class="sc-lo">absent</span>' : x.e.c ? '<span class="pc cut">coupure de courant</span>' : 'prévu'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Aucun shift trouvé cette semaine.</p>'}</section>` : ''}
+    ${q ? `<section class="panel"><h2>Planning de « ${esc(planUI.q)} » · ${esc(planWeekLabel(wk))}</h2>${found.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Jour</th><th>Shift</th><th>Modèle</th><th>Statut</th></tr></thead><tbody>${found.map(x => `<tr><td>${PLAN_DAYS_LONG[x.dd]} ${parseDate(addDaysIso(wk, x.dd)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</td><td>${PLAN_SHIFTS[x.s]}</td><td>${esc(modelLabel(x.m))}</td><td>${x.e.r ? `remplacé(e) par ${esc(x.e.r)}` : x.e.a ? '<span class="sc-lo">absent</span>' : x.e.c ? '<span class="pc cut">coupure de courant</span>' : x.e.l ? '<span class="pc late">retard</span>' : 'prévu'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Aucun shift trouvé cette semaine.</p>'}</section>` : ''}
     ${(() => {
       const offs = Object.values(planState.dayoff || {}).filter(o => (o.days || []).includes(d)).map(o => o.name).sort((a, b) => a.localeCompare(b, 'fr'));
       const clash = [];
@@ -3294,7 +3310,7 @@ function planXlsxParse(X, buf, sheetName) {
   if (!dayRows.length) return {error: `Aucun jour (Lun, Mar…) trouvé en colonne A de l'onglet « ${sheetName} ».`};
   const GROUP_BY_FILL = {'00FF00': 'mym', '9900FF': 'other', 'FFFF00': 'of'};
   const models = new Map(), cells = {}, notes = {}, newNames = new Set();
-  let absents = 0, reps = 0, cuts = 0;
+  let absents = 0, reps = 0, cuts = 0, lates = 0;
   dayRows.forEach((dr, i) => {
     const end = i + 1 < dayRows.length ? dayRows[i + 1].r - 1 : range.e.r;
     // Lignes de shifts : une colonne contient « 04 - 10 », « 10 - 16 »…
@@ -3333,6 +3349,7 @@ function planXlsxParse(X, buf, sheetName) {
           const e = {n}; if (rep) { e.r = rep.replace(/\s*\/\s*/g, ' / '); reps++; }
           if (main === 'FF0000') { e.a = 1; absents++; }
           if (main === '9900FF') { e.c = 1; cuts++; }        // violet : coupure de courant
+          if (main === 'FF9900') { e.l = 1; lates++; }       // orange : retard
           if (main === '0000FF') newNames.add(n);             // bleu : nouveau chatter
           list.push(e);
         }
@@ -3345,7 +3362,7 @@ function planXlsxParse(X, buf, sheetName) {
     if (nl.length) notes[dr.d] = (notes[dr.d] ? notes[dr.d] + '\n' : '') + nl.join('\n');
   });
   if (!Object.keys(cells).length) return {error: `Aucune affectation trouvée dans l'onglet « ${sheetName} » : ce n'est peut-être pas un planning de semaine.`};
-  return {models: [...models.entries()].map(([key, m]) => ({key, ...m})), cells, notes, newNames: [...newNames], absents, reps, cuts, days: [...new Set(dayRows.map(x => x.d))].length};
+  return {models: [...models.entries()].map(([key, m]) => ({key, ...m})), cells, notes, newNames: [...newNames], absents, reps, cuts, lates, days: [...new Set(dayRows.map(x => x.d))].length};
 }
 // Nom d'onglet → lundi de la semaine : « 2809 », « S 201025 » (jj mm aa), « S604 » ; année la plus proche d'aujourd'hui si absente
 function planWeekFromSheetName(name, today = new Date()) {
@@ -3372,14 +3389,14 @@ function importExcelModal(defaultWk) {
     const r = st.res, exists = st.wk && planState.weeks[st.wk] && Object.keys(planState.weeks[st.wk].cells || {}).length;
     const known = r && !r.error && r.models ? r.models.filter(m => !allModels().some(x => x.group === m.group && normName(x.name).replace(/\s/g, '') === normName(m.name).replace(/\s/g, ''))) : [];
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:620px"><h3>Importer un planning depuis Excel</h3>
-      <p class="hint" style="margin-top:0">Le fichier doit suivre votre format habituel : un onglet par semaine, les jours en colonne A, les shifts (04 - 10…) et les modèles en en-tête. Les prénoms en rouge sont importés comme absents, en violet comme coupure de courant, en bleu comme nouveaux, et « Prévu (Remplaçant) » comme remplacement.</p>
+      <p class="hint" style="margin-top:0">Le fichier doit suivre votre format habituel : un onglet par semaine, les jours en colonne A, les shifts (04 - 10…) et les modèles en en-tête. Les prénoms en rouge sont importés comme absents, en orange comme retards, en violet comme coupure de courant, en bleu comme nouveaux, et « Prévu (Remplaçant) » comme remplacement.</p>
       <label class="btn" for="xl-file" style="cursor:pointer">${icon('import')}${st.fileName ? esc(st.fileName) : 'Choisir le fichier Excel (.xlsx)'}</label><input type="file" id="xl-file" accept=".xlsx,.xlsm,.xls" hidden>
       ${st.sheets.length ? `<div class="set-grid" style="grid-template-columns:1fr 1fr;margin-top:14px">
         <label>Onglet de la semaine<select id="xl-sheet">${st.sheets.map(s => `<option value="${esc(s.name)}" ${s.name === st.sheet ? 'selected' : ''}>${esc(s.name)}${s.wk ? ` → ${esc(planWeekLabel(s.wk))}` : ''}${s.hidden ? ' (masqué)' : ''}</option>`).join('')}</select></label>
         <label>Semaine du (lundi)<input type="date" id="xl-wk" value="${esc(st.wk || '')}"></label></div>` : ''}
       <div id="xl-sum" style="margin-top:14px">${st.busy ? '<p class="hint">Lecture de l’onglet…</p>' : !r ? '' : r.error ? `<div class="alert err">${esc(r.error)}</div>`
         : r.off ? `<div class="alert ok">Onglet de jours OFF : ${plural(r.off.length, 'chatter', 'chatters')} (${plural(r.off.filter(x => x.days.length).length, 'avec un jour OFF', 'avec un jour OFF')}). Ils seront ajoutés ou mis à jour dans « Jours OFF ».</div>`
-        : `<div class="alert ok">${plural(r.models.length, 'modèle', 'modèles')} · ${plural(Object.keys(r.cells).length, 'case remplie', 'cases remplies')} · ${plural(r.absents, 'absent', 'absents')} · ${plural(r.reps, 'remplacement', 'remplacements')} · ${plural(r.cuts || 0, 'coupure', 'coupures')} · ${plural(r.days, 'jour', 'jours')}</div>
+        : `<div class="alert ok">${plural(r.models.length, 'modèle', 'modèles')} · ${plural(Object.keys(r.cells).length, 'case remplie', 'cases remplies')} · ${plural(r.absents, 'absent', 'absents')} · ${plural(r.reps, 'remplacement', 'remplacements')} · ${plural(r.cuts || 0, 'coupure', 'coupures')} · ${plural(r.lates || 0, 'retard', 'retards')} · ${plural(r.days, 'jour', 'jours')}</div>
           ${known.length ? `<p class="hint" style="margin:8px 0 0">Nouvelles modèles ajoutées au planning : ${known.map(m => esc(m.name)).join(', ')}.</p>` : ''}
           ${r.newNames.length ? `<label class="check" style="margin-top:8px"><input type="checkbox" id="xl-new" ${st.flagNew ? 'checked' : ''}> Marquer comme nouveaux les prénoms en bleu : ${r.newNames.map(esc).join(', ')}</label>` : ''}
           ${exists ? `<div class="alert warn" style="margin-top:8px">La ${esc(planWeekLabel(st.wk))} contient déjà des cases : elle sera <strong>remplacée</strong> par le contenu de l'Excel.</div>` : ''}`}</div>
@@ -3449,6 +3466,62 @@ function importExcelModal(defaultWk) {
     bg.remove();
   });
   document.body.appendChild(bg);
+}
+/* ---------- Bilan des absences et retards ---------- */
+// Une absence = prénom en rouge ou remplacé ; un retard = orange ; une coupure = violet. Comptés une fois par shift.
+function planIncidents(wk) {
+  const W = planState.weeks[wk]; const by = new Map();
+  if (!W) return by;
+  const seen = new Set();
+  for (const [k, list] of Object.entries(W.cells || {})) {
+    const [d, s, mid] = k.split('|'); const m = allModels().find(x => x.id === mid);
+    for (const e of list) {
+      const kind = e.a || e.r ? 'abs' : e.l ? 'late' : e.c ? 'cut' : null; if (!kind) continue;
+      const nk = normName(e.n), sk = `${nk}|${d}|${s}|${kind}`; if (seen.has(sk)) continue; seen.add(sk);
+      const r = by.get(nk) || {name: e.n, abs: 0, late: 0, cut: 0, details: []};
+      r[kind]++; r.details.push({kind, d: +d, s: +s, model: m ? modelLabel(m) : '', rep: e.r || ''});
+      by.set(nk, r);
+    }
+  }
+  return by;
+}
+function planBilanHTML(wk) {
+  const cur = planIncidents(wk);
+  const prev = [1, 2, 3].map(i => planIncidents(addDaysIso(wk, -7 * i)));
+  const keys = new Set([...cur.keys()]);
+  const rows = [...keys].map(k => {
+    const r = cur.get(k); const tot = {abs: r.abs, late: r.late};
+    for (const p of prev) { const x = p.get(k); if (x) { tot.abs += x.abs; tot.late += x.late; } }
+    return {...r, k, tot, score: r.abs * 2 + r.late};
+  }).sort((a, b) => b.score - a.score || b.cut - a.cut || a.name.localeCompare(b.name, 'fr'));
+  const T = rows.reduce((a, r) => ({abs: a.abs + r.abs, late: a.late + r.late, cut: a.cut + r.cut}), {abs: 0, late: 0, cut: 0});
+  if (!planState.weeks[wk]) return `<div class="panel empty">La ${esc(planWeekLabel(wk))} n'existe pas encore dans le planning.</div>`;
+  return `<div class="stack"><section class="stats sui-stats">
+      <div class="stat"><div class="k">Absences</div><div class="v" style="color:#f87171">${T.abs}</div><div class="d">shifts manqués (dont remplacés)</div></div>
+      <div class="stat"><div class="k">Retards</div><div class="v" style="color:#fb923c">${T.late}</div><div class="d">shifts commencés en retard</div></div>
+      <div class="stat"><div class="k">Coupures de courant</div><div class="v" style="color:#c084fc">${T.cut}</div><div class="d">non pénalisables en principe</div></div>
+      <div class="stat"><div class="k">Chatteurs concernés</div><div class="v">${rows.length}</div><div class="d">${esc(planWeekLabel(wk))}</div></div></section>
+    <section class="panel"><h2>Qui a eu le plus d'absences et de retards</h2><p class="hint">Classés par gravité (une absence compte double par rapport à un retard). La colonne « 4 dernières semaines » aide à repérer les habitués. « Pénaliser » ouvre une pénalité préremplie dans Primes & Pénalités.</p>
+      ${rows.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table"><thead><tr><th>Chatteur</th><th class="num">Absences</th><th class="num">Retards</th><th class="num">Coupures</th><th class="num">4 dernières semaines</th><th>Détail</th><th></th></tr></thead><tbody>
+      ${rows.map(r => `<tr><td><strong>${esc(r.name)}</strong></td>
+        <td class="num">${r.abs ? `<span class="ptsb pen">${r.abs}</span>` : '<span class="muted">—</span>'}</td>
+        <td class="num">${r.late ? `<span class="ptsb late">${r.late}</span>` : '<span class="muted">—</span>'}</td>
+        <td class="num">${r.cut ? `<span class="pc cut">${r.cut}</span>` : '<span class="muted">—</span>'}</td>
+        <td class="num"><span class="${r.tot.abs + r.tot.late >= 4 ? 'sc-lo' : r.tot.abs + r.tot.late >= 2 ? 'sc-mid' : ''}">${r.tot.abs} abs. · ${r.tot.late} ret.</span></td>
+        <td style="font-size:12.5px;color:var(--muted)">${r.details.sort((a, b) => a.d - b.d || a.s - b.s).map(x => `<span class="${x.kind === 'abs' ? 'pc abs' : x.kind === 'late' ? 'pc late' : 'pc cut'}" style="font-weight:600">${PLAN_DAYS[x.d]} ${PLAN_SHIFTS[x.s]}</span>${x.rep ? ` → ${esc(x.rep)}` : ''}`).join(' · ')}</td>
+        <td class="num">${r.abs || r.late ? `<button class="btn ghost" type="button" data-pen="${esc(r.k)}">Pénaliser</button>` : ''}</td></tr>`).join('')}
+      </tbody></table></div>` : `<div class="empty" style="padding:30px 10px">Aucune absence ni aucun retard noté pour la ${esc(planWeekLabel(wk))}.</div>`}
+    </section></div>`;
+}
+function bindPlanBilan(main, wk) {
+  const cur = planIncidents(wk);
+  main.querySelectorAll('[data-pen]').forEach(b => b.addEventListener('click', () => {
+    const r = cur.get(b.dataset.pen); if (!r) return;
+    const parts = [r.abs ? plural(r.abs, 'absence', 'absences') : '', r.late ? plural(r.late, 'retard', 'retards') : ''].filter(Boolean).join(' et ');
+    suiviUI.week = wk; suiviUI.tab = 'pen';
+    go(`${route().pid}/suivi`);
+    setTimeout(() => suiviEdit(wk, 'pen', null, {chatter: r.name, comment: `${parts} sur la ${planWeekLabel(wk).toLowerCase()} (planning)`, pts: r.abs ? 10 : 5}), 50);
+  }));
 }
 function bindPlanTabs(main) { main.querySelectorAll('[data-ptab]').forEach(b => b.addEventListener('click', () => { planUI.tab = b.dataset.ptab; render(); })); }
 function offViewHTML() {
@@ -3522,6 +3595,7 @@ function editCell(wk, key) {
         <strong class="${e.a && !e.r ? 'sc-lo' : ''}">${esc(e.n)}</strong>
         <label class="check"><input type="checkbox" data-abs="${i}" ${e.a ? 'checked' : ''}> Absent</label>
         <label class="check" title="Coupure de courant"><input type="checkbox" data-cut="${i}" ${e.c ? 'checked' : ''}> Coupure</label>
+        <label class="check" title="Arrivé(e) en retard"><input type="checkbox" data-late="${i}" ${e.l ? 'checked' : ''}> Retard</label>
         <input type="text" list="pl-names" data-rep="${i}" value="${esc(e.r || '')}" placeholder="Remplaçant (facultatif)">
         <label class="check" title="Mis en couleur sur ses ${NEW_SHIFTS} premiers shifts travaillés"><input type="checkbox" data-new="${i}" ${isFlaggedNew(e.n) ? 'checked' : ''}> Nouveau</label>
         <button class="btn ghost" type="button" data-del="${i}" aria-label="Retirer ${esc(e.n)}">×</button></div>`).join('')}</div>` : '<p class="hint">Personne sur ce shift.</p>'}
@@ -3532,6 +3606,7 @@ function editCell(wk, key) {
   const sync = () => {
     bg.querySelectorAll('[data-abs]').forEach(c => { list[+c.dataset.abs].a = c.checked ? 1 : 0; });
     bg.querySelectorAll('[data-cut]').forEach(c => { list[+c.dataset.cut].c = c.checked ? 1 : 0; });
+    bg.querySelectorAll('[data-late]').forEach(c => { list[+c.dataset.late].l = c.checked ? 1 : 0; });
     bg.querySelectorAll('[data-rep]').forEach(c => { const v = c.value.trim(); list[+c.dataset.rep].r = v || undefined; });
   };
   const add = () => { sync(); const v = bg.querySelector('#pe-add').value; for (const n of v.split('/').map(x => x.trim()).filter(Boolean)) if (!list.some(e => normName(e.n) === normName(n))) list.push({n}); draw(); };
@@ -3546,7 +3621,7 @@ function editCell(wk, key) {
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a === '1') {
       sync(); if (bg.querySelector('#pe-add').value.trim()) add();
-      const clean = list.map(e => { const o = {n: e.n}; if (e.a) o.a = 1; if (e.c) o.c = 1; if (e.r) o.r = e.r; return o; });
+      const clean = list.map(e => { const o = {n: e.n}; if (e.a) o.a = 1; if (e.c) o.c = 1; if (e.l) o.l = 1; if (e.r) o.r = e.r; return o; });
       if (clean.length) W.cells[key] = clean; else delete W.cells[key];
       for (const [k, f] of Object.entries(newFlags)) { if (f.on) planState.chatters[k] = {...(planState.chatters[k] || {}), name: f.name, isNew: true}; else if (planState.chatters[k]) planState.chatters[k].isNew = false; }
       savePlan(); render();
@@ -3801,10 +3876,10 @@ function suiviBilanHTML(wk) {
 }
 
 /* ---------- Saisie / modification ---------- */
-function suiviEdit(wk, kind, id) {
+function suiviEdit(wk, kind, id, prefill) {
   const K = SUIVI_KINDS[kind], sug = suiviSuggestions();
   const today = isoOf(new Date());
-  const cur = id ? {...suiviState.weeks[wk][kind][id]} : {date: today >= wk && today <= addDaysIso(wk, 6) ? today : wk, sup: lsGet(LS_SUIVI_SUP, '') || '', pts: kind === 'pen' ? 5 : kind === 'pri' ? 10 : undefined};
+  const cur = id ? {...suiviState.weeks[wk][kind][id]} : {date: today >= wk && today <= addDaysIso(wk, 6) ? today : addDaysIso(wk, 6), sup: lsGet(LS_SUIVI_SUP, '') || '', pts: kind === 'pen' ? 5 : kind === 'pri' ? 10 : undefined, ...(prefill || {})};
   const dl = (idn, list) => `<datalist id="${idn}">${list.map(v => `<option value="${esc(v)}">`).join('')}</datalist>`;
   const f = (label, html, wide) => `<label class="sf ${wide ? 'wide' : ''}"><span>${label}</span>${html}</label>`;
   const inp = (name, extra = '') => `<input type="text" name="${name}" value="${esc(cur[name] ?? '')}" ${extra}>`;
