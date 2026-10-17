@@ -474,6 +474,7 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .age.warm{color:#fbbf24}.age.hot{color:#f87171}
 .pc.late{color:#fb923c;font-weight:700}
 .ptsb.late{color:#fdba74;background:rgba(251,146,60,.15)}
+.platb{display:inline-block;font-size:11px;font-weight:800;padding:1px 7px;border-radius:6px;color:var(--tc);border:1px solid color-mix(in srgb,var(--tc) 55%,transparent);background:color-mix(in srgb,var(--tc) 12%,transparent);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -3951,11 +3952,24 @@ function suiviCSV(wk, kind) {
 const LS_CAMS = 'rca.cams.v1', LS_CAMS_REMIND = 'rca.cams.remind';
 let camsState = (() => { const s = lsGet(LS_CAMS, null) || {}; s.items ||= {}; return s; })();
 const saveCams = () => { lsSet(LS_CAMS, camsState); Sync.changed('cams'); };
-const camsUI = {tab:'todo', week:null, type:'all', model:'', q:''};
+const camsUI = {tab:'todo', week:null, type:'all', plat:'', model:'', q:''};
+// Plateformes : MYM, OF et Reveal par défaut ; toute plateforme saisie à la main devient ensuite un choix proposé.
+const CAM_PLATFORMS = ['MYM', 'OF', 'Reveal'];
+const PLAT_COLORS = {MYM: '#22c55e', OF: '#eab308', REVEAL: '#a855f7'};
+const platColor = p => PLAT_COLORS[String(p || '').toUpperCase()] || '#94a3b8';
+const platOf = e => e.platform || (/\bof\b/i.test(e.model || '') ? 'OF' : /\bmym\b/i.test(e.model || '') ? 'MYM' : /reveal/i.test(e.model || '') ? 'Reveal' : '');
+const modelBase = e => e.platform ? (e.model || '') : String(e.model || '').replace(/\s+(of|mym)$/i, '').trim();
+const camLabel = e => `${modelBase(e)}${platOf(e) ? ' ' + platOf(e) : ''}`.trim();
+const platBadge = p => p ? `<span class="platb" style="--tc:${platColor(p)}">${esc(p)}</span>` : '';
+function camPlatforms() {
+  const seen = new Map(CAM_PLATFORMS.map(p => [p.toLowerCase(), p]));
+  for (const e of camList()) { const p = platOf(e); if (p && !seen.has(p.toLowerCase())) seen.set(p.toLowerCase(), p); }
+  return [...seen.values()];
+}
 const CAM_TYPES = [['custom', 'Custom', '#a78bfa'], ['cam', 'Cam', '#38bdf8'], ['snap', 'Snap', '#facc15']];
 const camType = t => CAM_TYPES.find(x => x[0] === t) || ['autre', t || 'Autre', '#94a3b8'];
 const camList = () => Object.entries(camsState.items).map(([id, e]) => ({id, ...e}));
-const camCur = e => /\bof\b/i.test(e.model || '') ? '$' : /\bmym\b/i.test(e.model || '') ? '€' : '';
+const camCur = e => { const p = platOf(e).toUpperCase(); return p === 'OF' ? '$' : p === 'MYM' ? '€' : ''; };
 const camMoney = (v, c) => v == null || v === '' ? '—' : `${nf(+v, 0, 2)}${c ? '\u00a0' + c : ''}`;
 const camRest = e => Math.max(0, (+e.price || 0) - (+e.paid || 0));
 const daysSince = iso => Math.max(0, Math.round((parseDate(isoOf(new Date())) - parseDate(iso)) / 86400000));
@@ -3974,9 +3988,9 @@ function camsReminder() {
 function camsSuggest() {
   const m = {chatter:new Map(), model:new Map()};
   const add = (map, v) => { const t = String(v || '').trim(); if (t) map.set(t.toLowerCase(), t); };
-  for (const e of camList()) { add(m.chatter, e.chatter); add(m.model, e.model); }
+  for (const e of camList()) { add(m.chatter, e.chatter); add(m.model, modelBase(e)); }
   for (const n of knownChatters()) add(m.chatter, n);
-  for (const x of allModels()) add(m.model, modelLabel(x));
+  for (const x of allModels()) add(m.model, x.name);
   const s = map => [...map.values()].sort((a, b) => a.localeCompare(b, 'fr'));
   return {chatter: s(m.chatter), model: s(m.model)};
 }
@@ -3989,9 +4003,10 @@ function renderCams(main) {
   const tab = camsUI.tab, q = normName(camsUI.q);
   const weeksAvail = [...new Set([...camList().map(e => mondayOf(e.date)), thisMon, wk])].sort().reverse();
   const all = camList();
-  const models = [...new Map(all.filter(e => e.model).map(e => [normName(e.model), e.model])).values()].sort((a, b) => a.localeCompare(b, 'fr'));
-  const filt = e => (camsUI.type === 'all' || (e.type || 'custom') === camsUI.type) && (!camsUI.model || normName(e.model) === normName(camsUI.model))
-    && (!q || [e.chatter, e.fan, e.fanId, e.model, e.request].some(v => normName(v).includes(q)));
+  const models = [...new Map(all.filter(e => e.model).map(e => [normName(camLabel(e)), camLabel(e)])).values()].sort((a, b) => a.localeCompare(b, 'fr'));
+  const filt = e => (camsUI.type === 'all' || (e.type || 'custom') === camsUI.type) && (!camsUI.plat || normName(platOf(e)) === normName(camsUI.plat))
+    && (!camsUI.model || normName(camLabel(e)) === normName(camsUI.model))
+    && (!q || [e.chatter, e.fan, e.fanId, camLabel(e), e.request].some(v => normName(v).includes(q)));
   const head = `<div class="top"><h1><span class="pbadge lg cam" aria-hidden="true">●</span><span>Gestion Cam / Custom</span></h1>
     ${tab !== 'todo' ? `<div class="picker viewpick"><button class="btn ghost small-btn" id="cw-prev" type="button" aria-label="Semaine précédente">‹</button>
       <select id="cw-sel">${weeksAvail.map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}</option>`).join('')}</select>
@@ -4003,6 +4018,7 @@ function renderCams(main) {
     <button type="button" class="${tab === 'model' ? 'on' : ''}" data-ctab="model">Par modèle</button></div>`;
   const filters = `<div class="sui-bar">
     <div class="qrow">${[['all', 'Tous', '#e2e8f0'], ...CAM_TYPES].map(([k, l, c]) => `<button type="button" class="qpt ${camsUI.type === k ? 'on' : ''}" data-cf="${k}" style="--tc:${c}">${l}</button>`).join('')}</div>
+    <div class="qrow">${['', ...camPlatforms()].map(p => `<button type="button" class="qpt ${normName(camsUI.plat) === normName(p) ? 'on' : ''}" data-cp="${esc(p)}" style="--tc:${p ? platColor(p) : '#e2e8f0'}">${p ? esc(p) : 'Toutes plateformes'}</button>`).join('')}</div>
     <select id="c-model"><option value="">Toutes les modèles</option>${models.map(m => `<option ${normName(m) === normName(camsUI.model) ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select>
     <input type="search" id="c-q" placeholder="Rechercher (chatteur, fan, demande…)" value="${esc(camsUI.q)}"></div>`;
   let body = '';
@@ -4030,11 +4046,11 @@ function renderCams(main) {
   } else {
     const rows = all.filter(e => mondayOf(e.date) === wk && e.status !== 'cancel');
     const by = new Map();
-    for (const e of rows) { const k = normName(e.model) || '—'; const r = by.get(k) || {model:e.model || '—', n:0, done:0, price:0, paid:0, cur:camCur(e), types:{}}; r.n++; if (e.status === 'done') r.done++; r.price += +e.price || 0; r.paid += +e.paid || 0; const t = e.type || 'custom'; r.types[t] = (r.types[t] || 0) + 1; by.set(k, r); }
+    for (const e of rows) { const k = normName(camLabel(e)) || '—'; const r = by.get(k) || {model:camLabel(e) || '—', base:modelBase(e), plat:platOf(e), n:0, done:0, price:0, paid:0, cur:camCur(e), types:{}}; r.n++; if (e.status === 'done') r.done++; r.price += +e.price || 0; r.paid += +e.paid || 0; const t = e.type || 'custom'; r.types[t] = (r.types[t] || 0) + 1; by.set(k, r); }
     const list = [...by.values()].sort((a, b) => b.n - a.n || a.model.localeCompare(b.model, 'fr'));
     body = `<section class="panel"><h2>Par modèle · ${esc(planWeekLabel(wk))}</h2><p class="hint">Cliquez sur une modèle pour voir ses demandes de la semaine.</p>
       ${list.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Modèle</th><th class="num">Demandes</th><th>Types</th><th class="num">Faites</th><th class="num">En attente</th><th class="num">CA</th><th class="num">Payé</th><th class="num">Reste</th></tr></thead><tbody>
-      ${list.map(r => `<tr class="click" data-cm="${esc(r.model)}"><td><strong>${esc(r.model)}</strong></td><td class="num">${r.n}</td><td>${Object.entries(r.types).map(([t, n]) => `<span class="ctype" style="--tc:${camType(t)[2]}">${camType(t)[1]} ${n}</span>`).join(' ')}</td>
+      ${list.map(r => `<tr class="click" data-cm="${esc(r.model)}"><td><strong>${esc(r.base || r.model)}</strong> ${platBadge(r.plat)}</td><td class="num">${r.n}</td><td>${Object.entries(r.types).map(([t, n]) => `<span class="ctype" style="--tc:${camType(t)[2]}">${camType(t)[1]} ${n}</span>`).join(' ')}</td>
         <td class="num sc-hi">${r.done}</td><td class="num ${r.n - r.done ? 'sc-mid' : ''}">${r.n - r.done}</td><td class="num">${camMoney(r.price, r.cur)}</td><td class="num">${camMoney(r.paid, r.cur)}</td><td class="num"><strong>${camMoney(Math.max(0, r.price - r.paid), r.cur)}</strong></td></tr>`).join('')}
       </tbody></table></div>` : `<div class="empty" style="padding:30px 10px">Aucune demande pour la ${esc(planWeekLabel(wk))}.</div>`}</section>`;
   }
@@ -4042,7 +4058,7 @@ function renderCams(main) {
   bindCams(main, wk);
 }
 function camTable(rows, pendingView) {
-  return `<div class="tbl-wrap" style="max-height:none;margin-bottom:14px"><table class="cam-table"><thead><tr><th style="width:44px">Faite</th><th>Date</th><th>Type</th><th class="num">Prix</th><th class="num">Payé</th><th>Fan</th><th>Modèle</th><th>Chatteur</th><th>Demande</th>${pendingView ? '<th>Depuis</th>' : '<th>Statut</th>'}</tr></thead><tbody>
+  return `<div class="tbl-wrap" style="max-height:none;margin-bottom:14px"><table class="cam-table"><thead><tr><th style="width:44px">Faite</th><th>Date</th><th>Type</th><th class="num">Prix</th><th class="num">Payé</th><th>Fan</th><th>Modèle</th><th>Plateforme</th><th>Chatteur</th><th>Demande</th>${pendingView ? '<th>Depuis</th>' : '<th>Statut</th>'}</tr></thead><tbody>
     ${rows.map(e => { const t = camType(e.type), c = camCur(e), st = e.status || 'todo', age = daysSince(e.date), rest = camRest(e);
       return `<tr class="click ${st === 'cancel' ? 'cancel' : st === 'done' ? 'done' : ''}" data-cid="${e.id}">
       <td class="nc"><input type="checkbox" class="cdone" data-cd="${e.id}" ${st === 'done' ? 'checked' : ''} ${st === 'cancel' ? 'disabled' : ''} aria-label="Marquer comme faite" title="${st === 'done' ? `Faite le ${esc(fmtDateFr(e.doneAt))}` : 'Cocher quand elle est faite'}"></td>
@@ -4051,7 +4067,7 @@ function camTable(rows, pendingView) {
       <td class="num"><strong>${camMoney(e.price, c)}</strong></td>
       <td class="num">${+e.paid && rest === 0 ? '<span class="sc-hi">tout payé</span>' : camMoney(e.paid, c)}${rest > 0 && +e.paid ? `<div class="sub" style="margin:0">reste ${camMoney(rest, c)}</div>` : ''}</td>
       <td><span class="fanc">${esc(e.fan || '')}</span>${e.fanId ? `<div class="sub" style="margin:0">${esc(e.fanId)}</div>` : ''}</td>
-      <td>${esc(e.model || '')}</td><td><strong>${esc(e.chatter || '')}</strong></td>
+      <td>${esc(modelBase(e))}</td><td>${platBadge(platOf(e)) || '<span class="muted">—</span>'}</td><td><strong>${esc(e.chatter || '')}</strong></td>
       <td style="min-width:200px;max-width:360px"><div class="creq" title="${esc(e.request || '')}">${esc(e.request || '')}</div></td>
       ${pendingView ? `<td><span class="age ${age > 6 ? 'hot' : age > 2 ? 'warm' : ''}">${age === 0 ? "aujourd'hui" : plural(age, 'jour', 'jours')}</span></td>`
         : `<td>${st === 'done' ? `<span class="pill Strong">Faite${e.doneAt ? ` le ${esc(fmtDateFr(e.doneAt).slice(0, 5))}` : ''}</span>` : st === 'cancel' ? '<span class="pill Critical">Annulée</span>' : '<span class="pill Warning">En attente</span>'}</td>`}</tr>`; }).join('')}
@@ -4065,6 +4081,7 @@ function bindCams(main, wk) {
   main.querySelectorAll('[data-ctab]').forEach(b => b.addEventListener('click', () => { camsUI.tab = b.dataset.ctab; render(); }));
   document.getElementById('c-add').addEventListener('click', () => camEdit(null));
   main.querySelectorAll('[data-cf]').forEach(b => b.addEventListener('click', () => { camsUI.type = b.dataset.cf; render(); }));
+  main.querySelectorAll('[data-cp]').forEach(b => b.addEventListener('click', () => { camsUI.plat = b.dataset.cp; camsUI.model = ''; render(); }));
   document.getElementById('c-model')?.addEventListener('change', e => { camsUI.model = e.target.value; render(); });
   const qi = document.getElementById('c-q'); let t;
   qi?.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { camsUI.q = qi.value; render(); const n = document.getElementById('c-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
@@ -4083,7 +4100,9 @@ function bindCams(main, wk) {
 /* ---------- Saisie / modification ---------- */
 function camEdit(id) {
   const sug = camsSuggest();
-  const cur = id ? {...camsState.items[id]} : {date: isoOf(new Date()), type: 'custom', status: 'todo'};
+  const cur0 = id ? {...camsState.items[id]} : {date: isoOf(new Date()), type: 'custom', status: 'todo', platform: lsGet('rca.cams.plat', 'MYM')};
+  const cur = {...cur0, platform: platOf(cur0), model: modelBase(cur0)};
+  const plats = camPlatforms(); if (cur.platform && !plats.some(p => normName(p) === normName(cur.platform))) plats.push(cur.platform);
   const f = (label, html, wide) => `<label class="sf ${wide ? 'wide' : ''}"><span>${label}</span>${html}</label>`;
   const inp = (name, extra = '') => `<input type="text" name="${name}" value="${esc(cur[name] ?? '')}" ${extra}>`;
   const bg = document.createElement('div'); bg.className = 'modal-bg';
@@ -4091,7 +4110,9 @@ function camEdit(id) {
     <form class="sform" novalidate>
       ${f('Type', `<div class="qrow">${CAM_TYPES.map(([k, l, c]) => `<button type="button" class="qpt ${cur.type === k ? 'on' : ''}" data-ty="${k}" style="--tc:${c}">${l}</button>`).join('')}</div><input type="hidden" name="type" value="${esc(cur.type || 'custom')}">`)}
       ${f('Date de la demande', `<input type="date" name="date" value="${esc(cur.date || '')}">`)}
-      ${f('Modèle', inp('model', 'list="cd-model" placeholder="Ava MYM, Steffy OF…"'))}
+      ${f('Plateforme', `<div class="qrow">${plats.map(p => `<button type="button" class="qpt ${normName(cur.platform) === normName(p) ? 'on' : ''}" data-pl="${esc(p)}" style="--tc:${platColor(p)}">${esc(p)}</button>`).join('')}<button type="button" class="qpt" data-plnew style="--tc:#94a3b8">+ Autre</button></div>
+        <input type="text" id="pl-other" placeholder="Nom de la nouvelle plateforme (ex. Fansly)" style="display:none;margin-top:6px"><input type="hidden" name="platform" value="${esc(cur.platform || '')}">`, true)}
+      ${f('Modèle', inp('model', 'list="cd-model" placeholder="Ava, Steffy…"'))}
       ${f('Chatteur', inp('chatter', 'list="cd-chatter"'))}
       ${f('Fan', inp('fan', 'placeholder="Nom du fan"'))}
       ${f('ID du fan', inp('fanId', 'placeholder="@pseudo"'))}
@@ -4106,9 +4127,12 @@ function camEdit(id) {
     <div class="acts">${id ? '<button class="btn danger" data-a="del" type="button" style="margin-right:auto">Supprimer</button>' : ''}<button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">${id ? 'Enregistrer' : 'Ajouter la demande'}</button></div></div>`;
   const form = bg.querySelector('form'), close = () => bg.remove();
   bg.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  bg.addEventListener('input', e => { if (e.target.id === 'pl-other') form.platform.value = e.target.value.trim(); });
   bg.addEventListener('click', async e => {
     if (e.target === bg) return close();
     const ty = e.target.closest('[data-ty]'); if (ty) { form.type.value = ty.dataset.ty; bg.querySelectorAll('[data-ty]').forEach(b => b.classList.toggle('on', b === ty)); return; }
+    const pl = e.target.closest('[data-pl]'); if (pl) { form.platform.value = pl.dataset.pl; bg.querySelectorAll('[data-pl]').forEach(b => b.classList.toggle('on', b === pl)); bg.querySelector('[data-plnew]').classList.remove('on'); bg.querySelector('#pl-other').style.display = 'none'; return; }
+    if (e.target.closest('[data-plnew]')) { const o = bg.querySelector('#pl-other'); o.style.display = ''; o.focus(); bg.querySelectorAll('[data-pl]').forEach(b => b.classList.remove('on')); e.target.closest('[data-plnew]').classList.add('on'); form.platform.value = o.value.trim(); return; }
     if (e.target.closest('[data-allpaid]')) { form.paid.value = form.price.value || ''; return; }
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a === '0') return close();
@@ -4117,7 +4141,14 @@ function camEdit(id) {
       delete camsState.items[id]; saveCams(); close(); toast('Demande supprimée.'); render(); return;
     }
     const d = Object.fromEntries([...new FormData(form).entries()].map(([k, v]) => [k, String(v).trim()]));
-    const err = !d.date ? 'Indiquez la date de la demande.' : !d.model ? 'Indiquez la modèle.' : !d.chatter ? 'Indiquez le chatteur.' : d.price !== '' && !(+d.price >= 0) ? 'Le prix doit être un nombre.' : '';
+    // « Steffy MYM » : une plateforme connue écrite à la fin du nom l'emporte sur le bouton présélectionné
+    const typed = camPlatforms().find(p => d.model.toLowerCase().endsWith(' ' + p.toLowerCase()));
+    if (typed) { d.platform = typed; d.model = d.model.slice(0, -(typed.length + 1)).trim(); }
+    // « Ava OF » saisi sans plateforme : on la déduit du nom
+    if (!d.platform) { const m = d.model.match(/^(.*?)\s+(of|mym)$/i); if (m) { d.model = m[1]; d.platform = m[2].toUpperCase(); } }
+    else if (d.model.toLowerCase().endsWith(' ' + d.platform.toLowerCase())) d.model = d.model.slice(0, -(d.platform.length + 1)).trim();   // « Ava MYM » + MYM → « Ava »
+    const known = camPlatforms().find(p => normName(p) === normName(d.platform)); if (known) d.platform = known;
+    const err = !d.platform ? 'Choisissez la plateforme (ou « + Autre »).' : !d.date ? 'Indiquez la date de la demande.' : !d.model ? 'Indiquez la modèle.' : !d.chatter ? 'Indiquez le chatteur.' : d.price !== '' && !(+d.price >= 0) ? 'Le prix doit être un nombre.' : '';
     if (err) { bg.querySelector('#c-err').textContent = err; return; }
     const it = Object.fromEntries(Object.entries(d).filter(([, v]) => v !== ''));
     if (it.price != null) it.price = +it.price; if (it.paid != null) it.paid = +it.paid;
@@ -4126,6 +4157,7 @@ function camEdit(id) {
     it.model = canon(it.model, sug.model); it.chatter = canon(it.chatter, sug.chatter);
     it.at = id ? (cur.at || Date.now()) : Date.now();
     if (it.status === 'done') it.doneAt = cur.doneAt || isoOf(new Date());
+    lsSet('rca.cams.plat', it.platform);
     camsState.items[id || 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)] = it;
     saveCams(); close(); toast(id ? 'Demande mise à jour.' : 'Demande ajoutée : elle apparaît dans « En attente » jusqu’à ce qu’elle soit cochée.'); render();
   });
