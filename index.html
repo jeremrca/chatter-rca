@@ -475,6 +475,14 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .pc.late{color:#fb923c;font-weight:700}
 .ptsb.late{color:#fdba74;background:rgba(251,146,60,.15)}
 .platb{display:inline-block;font-size:11px;font-weight:800;padding:1px 7px;border-radius:6px;color:var(--tc);border:1px solid color-mix(in srgb,var(--tc) 55%,transparent);background:color-mix(in srgb,var(--tc) 12%,transparent);white-space:nowrap}
+.unplan{padding:10px 12px;border-radius:var(--r-md);border:1px solid rgba(242,164,60,.45);background:rgba(242,164,60,.08)}
+.unplan.ok{border-color:rgba(69,208,143,.35);background:rgba(69,208,143,.07);color:#86efac;font-size:13px}
+.unplan-h{font-weight:700;color:#fbbf24;font-size:13.5px;margin-bottom:8px}
+.unplan-l{display:flex;flex-wrap:wrap;gap:6px}
+.unchip{display:inline-flex;align-items:center;gap:2px;padding:3px 4px 3px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line);font-size:12.5px;font-weight:600}
+.unchip button{background:none;border:0;color:var(--faint);cursor:pointer;padding:0 5px;font-size:13px}
+.unchip button:hover{color:var(--text)}
+.unchip.off{opacity:.75}
 </style>
 </head>
 <body>
@@ -3045,6 +3053,36 @@ const planUI = {week:null, day:null, q:'', tab:'week'};
 const DAY_WORDS = {lundi:0, lun:0, mardi:1, mar:1, mercredi:2, mer:2, jeudi:3, jeu:3, vendredi:4, ven:4, samedi:5, sam:5, dimanche:6, dim:6};
 const offKey = n => normName(n).replace(/\s+(mym|of)$/, '');
 const dayOff = () => (planState.dayoff ||= {});
+// Équipe suivie = liste des Jours OFF + chatters planifiés sur les 3 dernières semaines (sauf « ne plus suivre »)
+const rosterKey = n => offKey(String(n || '').trim()).replace(/\s+/g, '');
+// Deux prénoms à une lettre près (« Juliannot » / « Julianot ») sont considérés comme la même personne
+function nearKey(a, b) {
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1 || Math.min(a.length, b.length) < 5) return false;
+  let i = 0, j = 0, diff = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { i++; j++; continue; }
+    if (++diff > 1) return false;
+    if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; }
+  }
+  return diff + (a.length - i) + (b.length - j) <= 1;
+}
+const hasNear = (keys, k) => { for (const x of keys) if (nearKey(x, k)) return true; return false; };
+function teamRoster(wk) {
+  const ign = planState.ignored || {}, roster = new Map();
+  const ignKeys = Object.keys(ign);
+  const add = n => { const t = String(n || '').trim(); const k = rosterKey(t); if (t && k && !hasNear(ignKeys, k) && !hasNear(roster.keys(), k)) roster.set(k, t.replace(/\s+(mym|of)$/i, '').trim() || t); };
+  for (const o of Object.values(planState.dayoff || {})) add(o.name);
+  for (const w of [wk, addDaysIso(wk, -7), addDaysIso(wk, -14)]) { const W = planState.weeks[w]; if (!W) continue; for (const list of Object.values(W.cells || {})) for (const e of list) [e.n, ...(e.r ? e.r.split('/') : [])].forEach(add); }
+  return roster;
+}
+function unplannedOn(wk, d) {
+  const W = planState.weeks[wk]; if (!W) return [];
+  const planned = new Set();
+  for (const [k, list] of Object.entries(W.cells || {})) { if (k.split('|')[0] !== String(d)) continue; for (const e of list) [e.n, ...(e.r ? e.r.split('/') : [])].forEach(n => { if (n) planned.add(rosterKey(n)); }); }
+  const offDay = new Set(Object.values(planState.dayoff || {}).filter(o => (o.days || []).includes(+d)).map(o => rosterKey(o.name)));
+  return [...teamRoster(wk)].filter(([k]) => !hasNear(planned, k) && !hasNear(offDay, k)).map(([k, n]) => ({k, n})).sort((a, b) => a.n.localeCompare(b.n, 'fr'));
+}
 function offOn(name, d) { if (!planState.dayoff) return false; return String(name).split('/').some(x => { const o = planState.dayoff[offKey(x.trim())]; return o && (o.days || []).includes(+d); }); }
 function parseDays(txt) {
   const t = normName(txt);
@@ -3074,7 +3112,7 @@ const sortModels = list => list.sort((a, b) => groupIdx(a.group) - groupIdx(b.gr
 // Chacune a une date de début et une date de fin facultatives : une modèle lancée un mardi n'apparaît qu'à partir de ce mardi,
 // puis dès le lundi les semaines suivantes ; les semaines passées ne changent pas.
 function planModelsMap() {
-  if (!planState.models || !Object.keys(planState.models).length)
+  if (!planState.models)
     planState.models = Object.fromEntries(planCfg().models.map((m, i) => [m.id, {name: m.name, group: m.group, order: m.order ?? i, ...(m.archived ? {end: '2000-01-01'} : {})}]));
   return planState.models;
 }
@@ -3218,8 +3256,10 @@ function renderPlanning(main) {
       const offs = Object.values(planState.dayoff || {}).filter(o => (o.days || []).includes(d)).map(o => o.name).sort((a, b) => a.localeCompare(b, 'fr'));
       const clash = [];
       for (let s = 0; s < PLAN_SHIFTS.length; s++) for (const m of dayModels) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) { const w = workerOf(e); if (w && offOn(w, d)) clash.push(`${w} (${modelLabel(m)} ${PLAN_SHIFTS[s]})`); }
-      if (!offs.length && !clash.length) return '';
-      return `<section class="panel offbar">${clash.length ? `<div class="alert warn" style="margin-bottom:${offs.length ? '10px' : '0'}"><strong>${plural(clash.length, 'créneau', 'créneaux')} sur un jour OFF :</strong> ${clash.map(esc).join(' · ')}</div>` : ''}${offs.length ? `<div class="muted" style="font-size:13px"><strong style="color:var(--text)">OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} (${offs.length}) :</strong> ${offs.map(esc).join(', ')}</div>` : ''}</section>`;
+      const un = unplannedOn(wk, d), noRoster = !Object.keys(planState.dayoff || {}).length;
+      const unHTML = un.length ? `<div class="unplan"><div class="unplan-h">⚠ Reste à planifier · ${plural(un.length, 'chatter', 'chatters')} pas OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} et sur aucun shift</div><div class="unplan-l">${un.map(x => `<span class="unchip">${esc(x.n)}<button type="button" data-ign="${esc(x.k)}" data-ignn="${esc(x.n)}" title="Ne plus suivre ce chatter (il a quitté l'équipe, par exemple)" aria-label="Ne plus suivre ${esc(x.n)}">×</button></span>`).join('')}</div></div>`
+        : `<div class="unplan ok"><span>✓ Tous les chatters de l'équipe sont planifiés ou OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()}.</span>${noRoster ? ' <span class="muted">Remplissez l’onglet « Jours OFF » pour que toute l’équipe soit vérifiée.</span>' : ''}</div>`;
+      return `<section class="panel offbar">${unHTML}${clash.length ? `<div class="alert warn" style="margin:10px 0 ${offs.length ? '10px' : '0'}"><strong>${plural(clash.length, 'créneau', 'créneaux')} sur un jour OFF :</strong> ${clash.map(esc).join(' · ')}</div>` : ''}${offs.length ? `<div class="muted" style="font-size:13px;margin-top:10px"><strong style="color:var(--text)">OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} (${offs.length}) :</strong> ${offs.map(esc).join(', ')}</div>` : ''}</section>`;
     })()}
     <section class="panel" style="padding:12px">
       <div class="tbl-wrap pgrid-wrap" style="max-height:none"><table class="pgrid"><thead>
@@ -3249,6 +3289,10 @@ function renderPlanning(main) {
   });
   document.getElementById('p-gonext')?.addEventListener('click', () => { planUI.week = nextWk; planUI.day = 0; render(); });
   document.getElementById('p-unav').addEventListener('click', () => unavailability(wk));
+  main.querySelectorAll('[data-ign]').forEach(b => b.addEventListener('click', () => {
+    (planState.ignored ||= {})[b.dataset.ign] = {name: b.dataset.ignn, at: Date.now()};
+    savePlan(); toast(`${b.dataset.ignn} n'est plus suivi(e). Réactivable dans l'onglet Jours OFF.`); render();
+  }));
   document.getElementById('p-xls')?.addEventListener('click', () => importExcelModal(wk));
   bindPlanModels(wk, d);
   document.getElementById('p-addm').addEventListener('click', () => addModelModal(dayDate));
@@ -3546,10 +3590,12 @@ function offViewHTML() {
         <td><input type="text" data-offn="${esc(o.k)}" value="${esc(o.note || '')}" placeholder="—" style="min-width:180px"></td>
         <td class="num"><button class="btn ghost" data-offx="${esc(o.k)}" type="button" aria-label="Retirer ${esc(o.name)}">×</button></td></tr>`).join('')}
       </tbody></table></div>` : '<p class="hint" style="margin:0">Aucun jour OFF enregistré : collez votre liste ci-dessus.</p>'}
+      ${Object.keys(planState.ignored || {}).length ? `<div style="margin-top:14px"><strong style="font-size:13px">Chatters non suivis</strong> <span class="hint" style="font-size:12px">(exclus de « Reste à planifier »)</span><div class="unplan-l" style="margin-top:6px">${Object.entries(planState.ignored).map(([k, o]) => `<span class="unchip off">${esc(o.name || k)}<button type="button" data-unign="${esc(k)}" title="Suivre à nouveau">↺</button></span>`).join('')}</div></div>` : ''}
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><input type="text" id="off-new" placeholder="Ajouter un chatter" list="pl-names3"><datalist id="pl-names3">${knownChatters().map(n => `<option value="${esc(n)}">`).join('')}</datalist><button class="btn" id="off-add" type="button">Ajouter</button></div>
     </section></div>`;
 }
 function bindOffView() {
+  document.querySelectorAll('[data-unign]').forEach(b => b.addEventListener('click', () => { delete (planState.ignored || {})[b.dataset.unign]; savePlan(); toast('Chatter de nouveau suivi.'); render(); }));
   const ta = document.getElementById('off-paste'), prev = document.getElementById('off-prev'), go = document.getElementById('off-apply');
   let parsed = [];
   const show = () => {
@@ -3717,13 +3763,13 @@ function planModelsHTML(wk, d) {
   const date = addDaysIso(wk, d);
   return `<details class="panel" id="pm-panel" ${planUI.modelsOpen ? 'open' : ''}><summary style="cursor:pointer;font-weight:700">Modèles du planning</summary>
     <p class="hint" style="margin-top:10px">Chaque modèle apparaît entre sa date de lancement et sa date d'arrêt (vides = toujours). Pour arrêter une modèle, indiquez son dernier jour : elle disparaît ensuite du planning, et les semaines passées restent intactes.</p>
-    <div class="tbl-wrap" style="max-height:440px"><table><thead><tr><th>Plateforme</th><th>Nom</th><th>Lancée le</th><th>Dernier jour</th><th>Ordre</th><th>Statut ${esc(fmtDayFr(date))}</th></tr></thead><tbody>
+    <div class="tbl-wrap" style="max-height:440px"><table><thead><tr><th>Plateforme</th><th>Nom</th><th>Lancée le</th><th>Dernier jour</th><th>Ordre</th><th>Statut ${esc(fmtDayFr(date))}</th>${Sync.canManage() ? '<th></th>' : ''}</tr></thead><tbody>
     ${allModels().map(m => `<tr><td><select data-mg="${m.id}">${PLAN_GROUPS.map(g => `<option value="${g.id}" ${g.id === m.group ? 'selected' : ''}>${g.label}</option>`).join('')}</select></td>
       <td><input type="text" data-mn="${m.id}" value="${esc(m.name)}" style="min-width:140px"></td>
       <td><input type="date" data-ms="${m.id}" value="${esc(m.start || '')}"></td>
       <td><input type="date" data-me="${m.id}" value="${esc(m.end && m.end > '2000-01-01' ? m.end : (m.end ? '2000-01-01' : ''))}"></td>
       <td><button class="btn ghost small-btn" data-mu="${m.id}" type="button" aria-label="Monter">↑</button> <button class="btn ghost small-btn" data-md="${m.id}" type="button" aria-label="Descendre">↓</button></td>
-      <td>${modelActiveOn(m, date) ? '<span class="pill Strong">Affichée</span>' : (m.start && date < m.start ? '<span class="pill OnTrack">Pas encore lancée</span>' : '<span class="pill Warning">Arrêtée</span>')}</td></tr>`).join('')}
+      <td>${modelActiveOn(m, date) ? '<span class="pill Strong">Affichée</span>' : (m.start && date < m.start ? '<span class="pill OnTrack">Pas encore lancée</span>' : '<span class="pill Warning">Arrêtée</span>')}</td>${Sync.canManage() ? `<td class="num"><button class="btn danger" data-mdel="${m.id}" type="button">Supprimer</button></td>` : ''}</tr>`).join('')}
     </tbody></table></div>
     <button class="btn" id="pm-add" type="button" style="margin-top:12px">+ Ajouter une modèle</button>
   </details>`;
@@ -3733,6 +3779,15 @@ function bindPlanModels(wk, d) {
   panel.addEventListener('toggle', () => { planUI.modelsOpen = panel.open; });
   const map = planModelsMap();
   const done = () => { savePlan(); render(); };
+  // Suppression définitive (administrateurs) : la modèle et toutes ses cases disparaissent de toutes les semaines
+  panel.querySelectorAll('[data-mdel]').forEach(b => b.addEventListener('click', async () => {
+    const id = b.dataset.mdel, m = map[id]; if (!m) return;
+    let n = 0; for (const W of Object.values(planState.weeks)) for (const k of Object.keys(W.cells || {})) if (k.split('|')[2] === id) n++;
+    if (!(await modal(`Supprimer ${m.name}`, `<p>Supprimer <strong>${esc(modelLabel({...m, id}))}</strong> du planning, sur toutes les semaines${n ? `, ainsi que ses ${plural(n, 'case remplie', 'cases remplies')}` : ''} ? Cette action est définitive.</p><p class="hint">Pour arrêter une modèle en gardant l'historique, indiquez plutôt son « Dernier jour ».</p>`, 'Supprimer définitivement'))) return;
+    delete map[id];
+    for (const W of Object.values(planState.weeks)) for (const k of Object.keys(W.cells || {})) if (k.split('|')[2] === id) delete W.cells[k];
+    savePlan(); toast(`${m.name} supprimée du planning.`); render();
+  }));
   panel.querySelectorAll('[data-mg]').forEach(el => el.addEventListener('change', () => { map[el.dataset.mg].group = el.value; done(); }));
   panel.querySelectorAll('[data-mn]').forEach(el => el.addEventListener('change', () => { if (el.value.trim()) { map[el.dataset.mn].name = el.value.trim(); done(); } }));
   panel.querySelectorAll('[data-ms]').forEach(el => el.addEventListener('change', () => { const m = map[el.dataset.ms]; if (el.value) m.start = el.value; else delete m.start; done(); }));
@@ -4217,7 +4272,7 @@ const Sync = (() => {
     } else if (key === 'suivi') {
       suiviState = {weeks: (data && data.weeks) || {}}; lsSet(LS_SUIVI, suiviState);
     } else if (key === 'planning') {
-      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models && Object.keys(data.models).length ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {})}; lsSet(LS_PLAN, planState);
+      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {})}; lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
       planCfgSaved = data && Array.isArray(data.models) && data.models.length ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
