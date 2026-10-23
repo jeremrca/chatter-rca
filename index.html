@@ -483,6 +483,42 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .unchip button{background:none;border:0;color:var(--faint);cursor:pointer;padding:0 5px;font-size:13px}
 .unchip button:hover{color:var(--text)}
 .unchip.off{opacity:.75}
+.gantt{display:flex;flex-direction:column;gap:6px;overflow-x:auto}
+.g-row{display:grid;grid-template-columns:170px minmax(560px,1fr);align-items:center;gap:10px}
+.g-name{display:flex;align-items:center;gap:7px;font-weight:700;font-size:13px;white-space:nowrap}
+.g-dot{width:10px;height:10px;border-radius:3px;flex:none}
+.g-track{position:relative;height:30px;background:var(--bg);border-radius:8px;border:1px solid var(--line-soft)}
+.g-axis .g-track{height:18px;background:none;border:0}
+.g-tick{position:absolute;top:0;transform:translateX(-50%);font-size:11px;color:var(--faint)}
+.g-grid{position:absolute;top:0;bottom:0;width:1px;background:var(--line-soft)}
+.g-bar{position:absolute;top:3px;bottom:3px;border-radius:6px;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.35)}
+.g-bar.carry{background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.18) 0 6px,transparent 6px 12px)!important}
+.g-off{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11.5px;font-weight:800;color:var(--faint);letter-spacing:.5px}
+.g-off.right{left:auto;right:10px}
+.g-now{position:absolute;top:-4px;bottom:-4px;width:2px;background:#ef4444;box-shadow:0 0 6px #ef4444;z-index:2}
+.g-cov{height:24px}
+.g-cell{position:absolute;top:2px;bottom:2px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border-right:1px solid var(--surface)}
+.g-cell.c0,.cov td.c0{background:rgba(239,68,68,.35);color:#fecaca}
+.g-cell.c1,.cov td.c1{background:rgba(242,164,60,.25);color:#fde68a}
+.g-cell.c2,.cov td.c2{background:rgba(69,208,143,.22);color:#bbf7d0}
+.g-cell.c3,.cov td.c3{background:rgba(69,208,143,.38);color:#dcfce7}
+.g-cell.c4,.cov td.c4{background:rgba(69,208,143,.55);color:#fff}
+.cov-wrap{overflow-x:auto}
+.cov{border-collapse:separate;border-spacing:2px;width:100%}
+.cov th{font-size:11px;color:var(--faint);font-weight:600;padding:2px;text-align:center;position:static;background:none}
+.cov tbody th{text-align:left;padding-right:6px;color:var(--text)}
+.cov td{height:26px;text-align:center;font-size:11.5px;font-weight:700;border-radius:4px;padding:0;border:0}
+.sup-table td{padding:6px 8px}
+.sup-name{display:flex;align-items:center;gap:8px}
+.sup-name input{min-width:120px;font-weight:700}
+.sup-sw{width:22px;height:22px;border-radius:6px;border:2px solid rgba(255,255,255,.25);cursor:pointer;flex:none}
+.sup-cell{min-width:86px;padding:6px 8px;border-radius:7px;border:0;cursor:pointer;font-weight:700;font-size:12.5px;background:var(--sc);color:var(--st)}
+.sup-cell.off{background:transparent;color:var(--faint);border:1px dashed var(--line)}
+.sup-cell.empty{background:transparent;color:var(--faint);border:1px dashed var(--line-soft)}
+.sup-cell.bad{outline:2px solid #ef4444}
+.sup-pal{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.sup-pal button{height:34px;border-radius:8px;border:2px solid transparent;cursor:pointer}
+.sup-pal button.on{border-color:#fff}
 </style>
 </head>
 <body>
@@ -3202,7 +3238,11 @@ function renderPlanning(main) {
   const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
   const hl = newHighlights();
   const q = normName(planUI.q);
-  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button></div>`;
+  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button></div>`;
+  if (planUI.tab === 'sups') {
+    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning des superviseurs</span></h1></div>` + tabs + supPlanHTML();
+    bindPlanTabs(main); bindSupPlan(main); return;
+  }
   if (planUI.tab === 'bilan') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1>
       <div class="picker viewpick"><button class="btn ghost small-btn" id="pw-prev" type="button" aria-label="Semaine précédente">‹</button>
@@ -3512,6 +3552,141 @@ function importExcelModal(defaultWk) {
   });
   document.body.appendChild(bg);
 }
+/* ---------- Planning superviseurs : planning fixe de la semaine type (pas de période) ---------- */
+const SUP_SEED = [
+  ['Tsiry', '#9fc5e8', '', ['OFF', '22h-8h', '22h-8h', '22h-8h', '22h-8h', '22h-8h', '']],
+  ['Safidy', '#b4a7d6', '', ['22h-8h', '22h-8h', '22h-8h', 'OFF', '8h-18h', '12h-22h', '8h-18h']],
+  ['Jimmy', '#e06666', 'OnlyFans', ['8h-18h', '8h-18h', '8h-18h', '8h-18h', '8h-18h', '8h-18h', 'OFF']],
+  ['Ilyas', '#ffd966', 'MYM', ['8h-18h', '8h-18h', '8h-18h', '8h-18h', 'OFF', '8h-18h', '8h-18h']],
+  ['Ariane', '#93c47d', '', ['12h-22h', '12h-22h', '12h-22h', '12h-22h', '12h-22h', 'OFF', '12h-22h']],
+  ['Fong', '#f4a7b9', '', ['16h-2h', '16h-2h', 'OFF', '16h-2h', '16h-2h', '16h-2h', '16h-2h']],
+  ['Tsiferana', '#3f3f46', '', ['22h-8h', 'OFF', '22h-8h', '22h-8h', '22h-8h', '22h-8h', '22h-8h']],
+  ['Aurel', '#10a37f', 'MYM', ['12h-22h', '12h-22h', '12h-22h', '12h-22h', '12h-22h', 'OFF', '12h-22h']],
+  ['Anselme', '#9c6b3e', 'OnlyFans', ['16h-2h', '16h-2h', '16h-2h', '16h-2h', '16h-2h', 'OFF', '16h-2h']],
+  ['Joevanny', '#64748b', 'MYM', ['8h-18h', '8h-18h', '8h-18h', '8h-18h', '8h-18h', 'OFF', '8h-18h']],
+  ['Stephane', '#1d6f93', '', ['22h-8h', '22h-8h', '22h-8h', '22h-8h', '22h-8h', '22h-8h', 'OFF']]
+];
+const SUP_PRESETS = ['8h-18h', '12h-22h', '16h-2h', '22h-8h', 'OFF'];
+const SUP_COLORS = ['#9fc5e8', '#b4a7d6', '#e06666', '#ffd966', '#93c47d', '#f4a7b9', '#3f3f46', '#10a37f', '#9c6b3e', '#64748b', '#1d6f93', '#f59e0b', '#ec4899', '#22d3ee', '#a3e635'];
+function supsMap() {
+  if (!planState.sups) planState.sups = Object.fromEntries(SUP_SEED.map(([n, c, f, days], i) => [`sup-${normName(n).replace(/[^a-z0-9]+/g, '-')}`, {name: n, color: c, focus: f, days, order: i}]));
+  return planState.sups;
+}
+const supList = () => Object.entries(supsMap()).map(([id, s]) => ({id, ...s})).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name, 'fr'));
+// « 22h-8h », « 22h30 - 8h », « 8-18 » → {start, end} en heures (end > 24 si le shift déborde sur le lendemain)
+function parseShift(t) {
+  const m = String(t || '').toLowerCase().replace(/\s+/g, '').match(/^(\d{1,2})(?:h|:)?(\d{2})?[-–à](\d{1,2})(?:h|:)?(\d{2})?h?$/);
+  if (!m) return null;
+  const s = +m[1] + (+m[2] || 0) / 60; let e = +m[3] + (+m[4] || 0) / 60;
+  if (s > 24 || e > 24) return null;
+  if (e <= s) e += 24;
+  return {start: s, end: e};
+}
+const isOff = t => /^\s*off\s*$/i.test(String(t || ''));
+const textOn = c => { const h = c.replace('#', ''); const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? '#111' : '#fff'; };
+const fmtH = h => { const x = ((h % 24) + 24) % 24; const hh = Math.floor(x), mm = Math.round((x - hh) * 60); return `${hh}h${mm ? String(mm).padStart(2, '0') : ''}`; };
+// Plages réellement couvertes un jour donné : son propre shift + la fin du shift de nuit de la veille
+function supBlocks(s, d) {
+  const out = [];
+  const own = parseShift(s.days[d]); if (own) out.push({start: own.start, end: Math.min(24, own.end), label: s.days[d]});
+  const prev = parseShift(s.days[(d + 6) % 7]); if (prev && prev.end > 24) out.push({start: 0, end: prev.end - 24, label: `${s.days[(d + 6) % 7]} (depuis la veille)`, carry: true});
+  return out;
+}
+function supCoverage() {
+  const grid = Array.from({length: 7}, () => Array(24).fill(0)), who = Array.from({length: 7}, () => Array.from({length: 24}, () => []));
+  for (const s of supList()) for (let d = 0; d < 7; d++) for (const b of supBlocks(s, d)) for (let h = 0; h < 24; h++) if (h + 0.5 > b.start && h + 0.5 < b.end) { grid[d][h]++; who[d][h].push(s.name); }
+  return {grid, who};
+}
+function supPlanHTML() {
+  const list = supList();
+  const today = (new Date().getDay() + 6) % 7;
+  const d = planUI.supDay ?? today;
+  const nowH = new Date().getHours() + new Date().getMinutes() / 60;
+  const {grid, who} = supCoverage();
+  const holes = [];
+  for (let dd = 0; dd < 7; dd++) { let h = 0; while (h < 24) { if (!grid[dd][h]) { const s = h; while (h < 24 && !grid[dd][h]) h++; holes.push(`${PLAN_DAYS[dd]} ${s}h-${h}h`); } else h++; } }
+  const ticks = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24];
+  return `<div class="stack">
+    <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px"><h2 style="margin:0">Qui supervise, heure par heure</h2>
+      <div class="ptabs" style="margin-left:auto">${PLAN_DAYS.map((x, i) => `<button type="button" class="ptab ${i === d ? 'on' : ''}" data-sd="${i}" style="min-width:58px;padding:5px 8px"><b>${x}</b>${i === today ? '<span>aujourd’hui</span>' : ''}</button>`).join('')}</div></div>
+      <div class="gantt">
+        <div class="g-row g-axis"><div class="g-name"></div><div class="g-track">${ticks.map(t => `<span class="g-tick" style="left:${t / 24 * 100}%">${t}h</span>`).join('')}</div></div>
+        ${list.map(s => { const blocks = supBlocks(s, d); const off = isOff(s.days[d]);
+          return `<div class="g-row"><div class="g-name"><span class="g-dot" style="background:${s.color}"></span>${esc(s.name)}${s.focus ? ` <span class="platb" style="--tc:${platColor(s.focus)}">${esc(s.focus)}</span>` : ''}</div>
+          <div class="g-track">${ticks.map(t => `<span class="g-grid" style="left:${t / 24 * 100}%"></span>`).join('')}
+            ${blocks.map(b => `<div class="g-bar ${b.carry ? 'carry' : ''}" style="left:${b.start / 24 * 100}%;width:${(b.end - b.start) / 24 * 100}%;background:${s.color};color:${textOn(s.color)}" title="${esc(s.name)} · ${esc(b.label)}">${b.end - b.start >= 2.5 ? esc(b.carry ? `→ ${fmtH(b.end)}` : s.days[d]) : ''}</div>`).join('')}
+            ${off && !blocks.length ? '<span class="g-off">OFF</span>' : off ? '<span class="g-off right">OFF</span>' : ''}
+            ${d === today ? `<span class="g-now" style="left:${nowH / 24 * 100}%"></span>` : ''}</div></div>`; }).join('')}
+        <div class="g-row"><div class="g-name muted">Présents</div><div class="g-track g-cov">${grid[d].map((n, h) => `<span class="g-cell c${Math.min(n, 4)}" style="left:${h / 24 * 100}%;width:${100 / 24}%" title="${h}h-${h + 1}h : ${n ? esc(who[d][h].join(', ')) : 'personne'}">${n}</span>`).join('')}</div></div>
+      </div>
+      <p class="hint" style="margin:10px 0 0;font-size:12px">Les shifts de nuit (22h-8h, 16h-2h) se prolongent sur le lendemain, en barre hachurée. ${d === today ? 'Le trait vertical indique l’heure actuelle.' : ''} Survolez « Présents » pour voir qui est là à chaque heure.</p>
+    </section>
+    <section class="panel"><h2>Couverture de la semaine</h2><p class="hint">Nombre de superviseurs présents par heure. ${holes.length ? `<strong class="sc-lo">Créneaux sans superviseur : ${holes.map(esc).join(' · ')}</strong>` : '<span class="sc-hi">Chaque heure de la semaine est couverte.</span>'}</p>
+      <div class="cov-wrap"><table class="cov"><thead><tr><th></th>${Array.from({length: 24}, (_, h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>
+      ${grid.map((row, dd) => `<tr><th>${PLAN_DAYS[dd]}</th>${row.map((n, h) => `<td class="c${Math.min(n, 4)}" title="${PLAN_DAYS_LONG[dd]} ${h}h-${h + 1}h : ${n ? esc(who[dd][h].join(', ')) : 'personne'}">${n || ''}</td>`).join('')}</tr>`).join('')}
+      </tbody></table></div></section>
+    <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">Planning des superviseurs</h2><span class="hint" style="margin:0">Planning fixe : il s'applique à toutes les semaines. Cliquez sur une case pour changer l'horaire.</span>
+      <button class="btn primary" id="sup-add" type="button" style="margin-left:auto">+ Ajouter un superviseur</button></div>
+      <div class="tbl-wrap" style="max-height:none"><table class="sup-table"><thead><tr><th>Superviseur</th>${PLAN_DAYS_LONG.map(x => `<th>${x}</th>`).join('')}<th>Focus projet</th><th></th></tr></thead><tbody>
+      ${list.map((s, i) => `<tr style="--sc:${s.color};--st:${textOn(s.color)}"><td class="sup-name"><button type="button" class="sup-sw" data-scol="${s.id}" title="Changer la couleur" style="background:${s.color}"></button><input type="text" data-sname="${s.id}" value="${esc(s.name)}"></td>
+        ${s.days.map((t, dd) => `<td><button type="button" class="sup-cell ${isOff(t) ? 'off' : !t ? 'empty' : !parseShift(t) ? 'bad' : ''}" data-scell="${s.id}|${dd}" title="${isOff(t) ? 'OFF' : t ? esc(t) : 'Non renseigné'}">${isOff(t) ? 'OFF' : t ? esc(t) : '—'}</button></td>`).join('')}
+        <td><input type="text" data-sfocus="${s.id}" value="${esc(s.focus || '')}" list="sup-focus" placeholder="—" style="width:110px"></td>
+        <td class="num" style="white-space:nowrap"><button class="btn ghost small-btn" data-sup-up="${s.id}" type="button" aria-label="Monter" ${i ? '' : 'disabled'}>↑</button> <button class="btn ghost small-btn" data-sup-dn="${s.id}" type="button" aria-label="Descendre" ${i < list.length - 1 ? '' : 'disabled'}>↓</button> <button class="btn ghost small-btn" data-sup-del="${s.id}" type="button" aria-label="Supprimer ${esc(s.name)}">×</button></td></tr>`).join('')}
+      </tbody></table></div><datalist id="sup-focus"><option value="OnlyFans"><option value="MYM"><option value="Reveal"></datalist></section></div>`;
+}
+function bindSupPlan(main) {
+  const map = supsMap(), done = () => { savePlan(); render(); };
+  main.querySelectorAll('[data-sd]').forEach(b => b.addEventListener('click', () => { planUI.supDay = +b.dataset.sd; render(); }));
+  main.querySelectorAll('[data-sname]').forEach(i => i.addEventListener('change', () => { if (i.value.trim()) { map[i.dataset.sname].name = i.value.trim(); done(); } }));
+  main.querySelectorAll('[data-sfocus]').forEach(i => i.addEventListener('change', () => { map[i.dataset.sfocus].focus = i.value.trim(); done(); }));
+  const reorder = (id, dir) => { const l = supList(); l.forEach((s, i) => { map[s.id].order = i; }); const i = l.findIndex(s => s.id === id), j = i + dir; if (j < 0 || j >= l.length) return; map[l[i].id].order = j; map[l[j].id].order = i; done(); };
+  main.querySelectorAll('[data-sup-up]').forEach(b => b.addEventListener('click', () => reorder(b.dataset.supUp, -1)));
+  main.querySelectorAll('[data-sup-dn]').forEach(b => b.addEventListener('click', () => reorder(b.dataset.supDn, 1)));
+  main.querySelectorAll('[data-sup-del]').forEach(b => b.addEventListener('click', async () => {
+    const s = map[b.dataset.supDel]; if (!(await modal('Supprimer le superviseur', `<p>Retirer <strong>${esc(s.name)}</strong> du planning des superviseurs ?</p>`, 'Supprimer'))) return;
+    delete map[b.dataset.supDel]; done();
+  }));
+  main.querySelectorAll('[data-scol]').forEach(b => b.addEventListener('click', () => {
+    const s = map[b.dataset.scol];
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:380px"><h3>Couleur de ${esc(s.name)}</h3><div class="sup-pal">${SUP_COLORS.map(c => `<button type="button" data-pc="${c}" style="background:${c}" class="${c === s.color ? 'on' : ''}" aria-label="${c}"></button>`).join('')}</div>
+      <label class="sf" style="margin-top:12px"><span>Ou une couleur précise</span><input type="color" id="pc-free" value="${esc(s.color)}"></label><div class="acts"><button class="btn ghost" data-a="0" type="button">Fermer</button></div></div>`;
+    bg.addEventListener('click', e => { const c = e.target.closest('[data-pc]'); if (c) { s.color = c.dataset.pc; bg.remove(); done(); return; } if (e.target === bg || e.target.closest('[data-a]')) bg.remove(); });
+    bg.querySelector('#pc-free').addEventListener('change', e => { s.color = e.target.value; bg.remove(); done(); });
+    document.body.appendChild(bg);
+  }));
+  main.querySelectorAll('[data-scell]').forEach(b => b.addEventListener('click', () => {
+    const [id, dd] = b.dataset.scell.split('|'); const s = map[id];
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:420px"><h3>${esc(s.name)} · ${PLAN_DAYS_LONG[dd]}</h3>
+      <div class="qrow">${SUP_PRESETS.map(p => `<button type="button" class="qpt ${normName(p) === normName(s.days[dd]) ? 'on' : ''}" data-ps="${p}" style="--tc:${s.color}">${p}</button>`).join('')}</div>
+      <label class="sf" style="margin-top:12px"><span>Autre horaire (ex. 10h-20h, 23h30-7h)</span><input type="text" id="ps-free" value="${esc(isOff(s.days[dd]) ? '' : s.days[dd] || '')}" placeholder="10h-20h"></label>
+      <div id="ps-err" class="sc-lo" style="min-height:18px;font-size:13px;margin-top:6px"></div>
+      <div class="acts"><button class="btn ghost" data-a="clear" type="button" style="margin-right:auto">Vider</button><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
+    const set = v => { s.days[dd] = v; bg.remove(); done(); };
+    bg.addEventListener('click', e => {
+      const p = e.target.closest('[data-ps]'); if (p) return set(p.dataset.ps);
+      if (e.target === bg) return bg.remove();
+      const a = e.target.closest('[data-a]'); if (!a) return;
+      if (a.dataset.a === '0') return bg.remove();
+      if (a.dataset.a === 'clear') return set('');
+      const v = bg.querySelector('#ps-free').value.trim();
+      if (!v) return set('');
+      if (!isOff(v) && !parseShift(v)) { bg.querySelector('#ps-err').textContent = 'Format attendu : 10h-20h, 22h-8h ou OFF.'; return; }
+      set(isOff(v) ? 'OFF' : v.replace(/\s+/g, ''));
+    });
+    bg.addEventListener('keydown', e => { if (e.key === 'Enter') bg.querySelector('[data-a="1"]').click(); if (e.key === 'Escape') bg.remove(); });
+    document.body.appendChild(bg); bg.querySelector('#ps-free').focus();
+  }));
+  document.getElementById('sup-add').addEventListener('click', async () => {
+    const n = await promptModal('Ajouter un superviseur', 'Prénom', ''); if (!n) return;
+    const id = `sup-${normName(n).replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36).slice(-4)}`;
+    const used = new Set(Object.values(map).map(s => s.color));
+    map[id] = {name: n, color: SUP_COLORS.find(c => !used.has(c)) || '#94a3b8', focus: '', days: Array(7).fill(''), order: Object.keys(map).length};
+    done(); toast(`${n} ajouté(e) : cliquez sur ses cases pour renseigner ses horaires.`);
+  });
+}
+
 /* ---------- Bilan des absences et retards ---------- */
 // Une absence = prénom en rouge ou remplacé ; un retard = orange ; une coupure = violet. Comptés une fois par shift.
 function planIncidents(wk) {
@@ -4272,7 +4447,7 @@ const Sync = (() => {
     } else if (key === 'suivi') {
       suiviState = {weeks: (data && data.weeks) || {}}; lsSet(LS_SUIVI, suiviState);
     } else if (key === 'planning') {
-      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {})}; lsSet(LS_PLAN, planState);
+      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {})}; lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
       planCfgSaved = data && Array.isArray(data.models) && data.models.length ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
