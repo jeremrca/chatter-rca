@@ -358,6 +358,8 @@ tr.issue-error .issues{color:var(--red)}
 .sync .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
 .sync.ok .dot{background:var(--green)} .sync.wait .dot{background:var(--orange)} .sync.bad .dot{background:var(--red)} .sync.off .dot{background:var(--red)}
 .sync-who{display:block;color:var(--faint);font-size:11px;margin:2px 0 0 16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sync-role{display:inline-block;margin:4px 0 0 16px;font-size:10.5px;font-weight:800;padding:1px 8px;border-radius:99px;background:var(--raised);color:var(--muted)}
+.sync-role.adm{background:rgba(69,208,143,.15);color:#86efac}
 .login-wrap{display:flex;justify-content:center;padding-top:8vh}
 .login{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
 .login .f{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
@@ -519,6 +521,28 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .sup-pal{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .sup-pal button{height:34px;border-radius:8px;border:2px solid transparent;cursor:pointer}
 .sup-pal button.on{border-color:#fff}
+.abstag{font-size:9.5px;font-weight:800;color:#fff;background:#ef4444;border-radius:4px;padding:0 4px;line-height:14px}
+.absbox{padding:10px 12px;border-radius:var(--r-md);border:1px solid rgba(239,68,68,.5);background:rgba(239,68,68,.09);margin-bottom:10px}
+.absbox-h{font-weight:700;color:#fca5a5;font-size:13.5px;margin-bottom:8px}
+.absbox-l{display:flex;flex-wrap:wrap;gap:6px}
+.abschip{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;padding:5px 10px;border-radius:10px;background:var(--bg);border:1px solid rgba(239,68,68,.4);color:var(--text);font-size:12.5px;cursor:pointer;text-align:left}
+.abschip span{color:#fca5a5;font-weight:700}.abschip em{color:var(--muted);font-style:normal}
+.absbox-w{margin-top:8px;font-size:12.5px;color:#fecaca;font-weight:600}
+.abs-card{border-top:3px solid #f87171}
+.shc{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(239,68,68,.14);color:#fca5a5;margin:1px 0;white-space:nowrap}
+.shc.all{background:rgba(239,68,68,.25);color:#fecaca}
+.qpt.chk{display:inline-flex;align-items:center;gap:6px}.qpt.chk input{accent-color:#f87171}
+.pc.just{color:#93c5fd;font-weight:700}
+.ptsb.just{color:#bfdbfe;background:rgba(96,165,250,.15)}
+.rnum{display:inline-flex;width:26px;height:26px;border-radius:50%;align-items:center;justify-content:center;font-weight:800;font-size:12.5px;background:var(--raised)}
+.rk-hot .rnum{background:#ef4444;color:#fff}.rk-warm .rnum{background:#f59e0b;color:#1c1203}
+.rk-hot td{background:rgba(239,68,68,.06)}
+.rbar{height:8px;border-radius:99px;background:var(--raised);overflow:hidden;width:120px;display:inline-block;vertical-align:middle}
+.rbar span{display:block;height:100%;border-radius:99px}
+.rsc{font-size:12px;font-weight:700;margin-left:8px;color:var(--muted);white-space:nowrap}
+.rank-table td:nth-child(3){white-space:nowrap}
+.rtag{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:99px;background:rgba(250,204,21,.15);color:#fde68a}
+.rtag.warm{background:rgba(245,158,11,.18);color:#fcd34d}.rtag.hot{background:rgba(239,68,68,.2);color:#fca5a5}.rtag.ok{background:rgba(96,165,250,.15);color:#bfdbfe}
 </style>
 </head>
 <body>
@@ -3117,6 +3141,7 @@ function unplannedOn(wk, d) {
   const planned = new Set();
   for (const [k, list] of Object.entries(W.cells || {})) { if (k.split('|')[0] !== String(d)) continue; for (const e of list) [e.n, ...(e.r ? e.r.split('/') : [])].forEach(n => { if (n) planned.add(rosterKey(n)); }); }
   const offDay = new Set(Object.values(planState.dayoff || {}).filter(o => (o.days || []).includes(+d)).map(o => rosterKey(o.name)));
+  for (const r of absReqsOnDate(addDaysIso(wk, +d))) if ((r.shifts || []).length === PLAN_SHIFTS.length) offDay.add(rosterKey(r.name));   // absent toute la journée
   return [...teamRoster(wk)].filter(([k]) => !hasNear(planned, k) && !hasNear(offDay, k)).map(([k, n]) => ({k, n})).sort((a, b) => a.n.localeCompare(b.n, 'fr'));
 }
 function offOn(name, d) { if (!planState.dayoff) return false; return String(name).split('/').some(x => { const o = planState.dayoff[offKey(x.trim())]; return o && (o.days || []).includes(+d); }); }
@@ -3229,6 +3254,8 @@ function chipHTML(e, wk, d, s, hl) {
   if (e.a) return `<span class="pchip"><span class="pc abs" title="Absent(e)">${esc(e.n)}</span></span>`;
   if (e.c) return `<span class="pchip"><span class="pc cut ${offOn(e.n, d) ? 'offc' : ''}" title="Coupure de courant">${esc(e.n)}</span></span>`;
   if (e.l) return `<span class="pchip"><span class="pc late ${offOn(e.n, d) ? 'offc' : ''}" title="En retard">${esc(e.n)}</span></span>`;
+  const ar = absReqFor(e.n, addDaysIso(wk, +d), s);
+  if (ar) return `<span class="pchip"><span class="offwrap" title="Demande d'absence (${esc(ABS_STATUS[ar.status][0].toLowerCase())})${ar.note ? ' : ' + esc(ar.note) : ''}">${nm(e.n)}<b class="abstag">ABS</b></span></span>`;
   return `<span class="pchip">${offOn(e.n, d) ? `<span class="offwrap" title="${esc(e.n)} est planifié(e) sur son jour OFF">${nm(e.n)}<b class="offtag">OFF</b></span>` : nm(e.n)}</span>`;
 }
 function renderPlanning(main) {
@@ -3238,7 +3265,11 @@ function renderPlanning(main) {
   const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
   const hl = newHighlights();
   const q = normName(planUI.q);
-  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button></div>`;
+  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button></div>`;
+  if (planUI.tab === 'abs') {
+    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Demandes d'absence</span></h1></div>` + tabs + absReqHTML();
+    bindPlanTabs(main); bindAbsReq(main); return;
+  }
   if (planUI.tab === 'sups') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning des superviseurs</span></h1></div>` + tabs + supPlanHTML();
     bindPlanTabs(main); bindSupPlan(main); return;
@@ -3297,9 +3328,14 @@ function renderPlanning(main) {
       const clash = [];
       for (let s = 0; s < PLAN_SHIFTS.length; s++) for (const m of dayModels) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) { const w = workerOf(e); if (w && offOn(w, d)) clash.push(`${w} (${modelLabel(m)} ${PLAN_SHIFTS[s]})`); }
       const un = unplannedOn(wk, d), noRoster = !Object.keys(planState.dayoff || {}).length;
+      const date = addDaysIso(wk, d), reqs = absReqsOnDate(date);
+      const reqClash = [];
+      for (let s = 0; s < PLAN_SHIFTS.length; s++) for (const m of dayModels) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) { const w = workerOf(e); if (w && !e.a && absReqFor(w, date, s)) reqClash.push(`${w} (${modelLabel(m)} ${PLAN_SHIFTS[s]})`); }
+      const reqHTML = reqs.length ? `<div class="absbox"><div class="absbox-h">Absences demandées ce ${PLAN_DAYS_LONG[d].toLowerCase()} · ${reqs.length}</div><div class="absbox-l">${reqs.map(r => `<button type="button" class="abschip" data-arid="${r.id}" title="Modifier la demande"><strong>${esc(r.name)}</strong> <span>${esc(shiftsLabel(r.shifts))}</span>${r.status === 'wait' ? ' <span class="pill Warning">en attente</span>' : ''}${r.note ? `<em>${esc(r.note)}</em>` : ''}</button>`).join('')}</div>
+        ${reqClash.length ? `<div class="absbox-w">⚠ Planifié(e)s malgré leur demande : ${reqClash.map(esc).join(' · ')}</div>` : ''}</div>` : '';
       const unHTML = un.length ? `<div class="unplan"><div class="unplan-h">⚠ Reste à planifier · ${plural(un.length, 'chatter', 'chatters')} pas OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} et sur aucun shift</div><div class="unplan-l">${un.map(x => `<span class="unchip">${esc(x.n)}<button type="button" data-ign="${esc(x.k)}" data-ignn="${esc(x.n)}" title="Ne plus suivre ce chatter (il a quitté l'équipe, par exemple)" aria-label="Ne plus suivre ${esc(x.n)}">×</button></span>`).join('')}</div></div>`
         : `<div class="unplan ok"><span>✓ Tous les chatters de l'équipe sont planifiés ou OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()}.</span>${noRoster ? ' <span class="muted">Remplissez l’onglet « Jours OFF » pour que toute l’équipe soit vérifiée.</span>' : ''}</div>`;
-      return `<section class="panel offbar">${unHTML}${clash.length ? `<div class="alert warn" style="margin:10px 0 ${offs.length ? '10px' : '0'}"><strong>${plural(clash.length, 'créneau', 'créneaux')} sur un jour OFF :</strong> ${clash.map(esc).join(' · ')}</div>` : ''}${offs.length ? `<div class="muted" style="font-size:13px;margin-top:10px"><strong style="color:var(--text)">OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} (${offs.length}) :</strong> ${offs.map(esc).join(', ')}</div>` : ''}</section>`;
+      return `<section class="panel offbar">${reqHTML}${unHTML}${clash.length ? `<div class="alert warn" style="margin:10px 0 ${offs.length ? '10px' : '0'}"><strong>${plural(clash.length, 'créneau', 'créneaux')} sur un jour OFF :</strong> ${clash.map(esc).join(' · ')}</div>` : ''}${offs.length ? `<div class="muted" style="font-size:13px;margin-top:10px"><strong style="color:var(--text)">OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} (${offs.length}) :</strong> ${offs.map(esc).join(', ')}</div>` : ''}</section>`;
     })()}
     <section class="panel" style="padding:12px">
       <div class="tbl-wrap pgrid-wrap" style="max-height:none"><table class="pgrid"><thead>
@@ -3329,6 +3365,7 @@ function renderPlanning(main) {
   });
   document.getElementById('p-gonext')?.addEventListener('click', () => { planUI.week = nextWk; planUI.day = 0; render(); });
   document.getElementById('p-unav').addEventListener('click', () => unavailability(wk));
+  main.querySelectorAll('.offbar [data-arid]').forEach(b => b.addEventListener('click', () => absReqEdit(b.dataset.arid)));
   main.querySelectorAll('[data-ign]').forEach(b => b.addEventListener('click', () => {
     (planState.ignored ||= {})[b.dataset.ign] = {name: b.dataset.ignn, at: Date.now()};
     savePlan(); toast(`${b.dataset.ignn} n'est plus suivi(e). Réactivable dans l'onglet Jours OFF.`); render();
@@ -3687,6 +3724,83 @@ function bindSupPlan(main) {
   });
 }
 
+/* ---------- Demandes d'absence ---------- */
+const ABS_STATUS = {ok: ['Acceptée', 'Strong'], wait: ['En attente', 'Warning'], no: ['Refusée', 'Critical']};
+const absReqs = () => (planState.absreq ||= {});
+const absList = () => Object.entries(planState.absreq || {}).map(([id, r]) => ({id, ...r}));
+// Demande (non refusée) d'un chatter couvrant une date et un shift
+function absReqFor(name, date, s) {
+  if (!planState.absreq || !name) return null; const k = rosterKey(name);
+  return absList().find(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from) && (r.shifts || []).includes(+s) && nearKey(rosterKey(r.name), k)) || null;
+}
+const absReqsOnDate = date => absList().filter(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from)).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+const shiftsLabel = sh => (sh || []).length === PLAN_SHIFTS.length ? 'journée entière' : (sh || []).slice().sort().map(s => PLAN_SHIFTS[s]).join(' + ');
+const absDates = r => !r.to || r.to === r.from ? fmtDayFr(r.from) : `du ${fmtDayFr(r.from)} au ${fmtDayFr(r.to)}`;
+function absReqHTML() {
+  const today = isoOf(new Date()), f = planUI.absf || 'next', q = normName(planUI.absq || '');
+  const rows = absList().filter(r => f === 'all' || (f === 'next' ? (r.to || r.from) >= today : (r.to || r.from) < today))
+    .filter(r => !q || normName(r.name).includes(q) || normName(r.note).includes(q))
+    .sort((a, b) => f === 'past' ? b.from.localeCompare(a.from) : a.from.localeCompare(b.from));
+  const wait = absList().filter(r => r.status === 'wait' && (r.to || r.from) >= today).length;
+  return `<div class="stack"><section class="panel abs-card">
+    <div class="sui-bar"><button class="btn primary" id="ar-add" type="button">+ Nouvelle demande</button>
+      <div class="qrow">${[['next', 'À venir'], ['past', 'Passées'], ['all', 'Toutes']].map(([k, l]) => `<button type="button" class="qpt ${f === k ? 'on' : ''}" data-arf="${k}" style="--tc:#f87171">${l}</button>`).join('')}</div>
+      <input type="search" id="ar-q" placeholder="Rechercher un chatter ou une raison" value="${esc(planUI.absq || '')}">
+      ${wait ? `<span class="pill Warning" style="margin-left:auto">${plural(wait, 'demande à valider', 'demandes à valider')}</span>` : ''}</div>
+    ${rows.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table"><thead><tr><th>Date</th><th>Chatter</th><th>Shifts</th><th>Raison</th><th>Statut</th><th>Saisie par</th></tr></thead><tbody>
+      ${rows.map(r => `<tr class="click ${r.status === 'no' ? 'muted' : ''}" data-arid="${r.id}"><td style="white-space:nowrap"><strong>${esc(absDates(r))}</strong></td><td><strong>${esc(r.name)}</strong></td>
+        <td>${(r.shifts || []).length === PLAN_SHIFTS.length ? '<span class="shc all">Journée entière</span>' : (r.shifts || []).slice().sort().map(s => `<span class="shc">${PLAN_SHIFTS[s]}</span>`).join(' ')}</td>
+        <td style="min-width:200px">${esc(r.note || '')}</td>
+        <td><select data-arst="${r.id}" aria-label="Statut">${Object.entries(ABS_STATUS).map(([k, [l]]) => `<option value="${k}" ${r.status === k ? 'selected' : ''}>${l}</option>`).join('')}</select></td>
+        <td class="muted" style="font-size:12.5px">${esc(r.by || '')}</td></tr>`).join('')}
+    </tbody></table></div>` : `<div class="empty" style="padding:34px 10px"><div style="font-size:15px;color:var(--text);font-weight:600">${f === 'next' ? 'Aucune demande d’absence à venir' : 'Aucune demande'}</div><div class="hint" style="margin-top:4px">Quand un chatter prévient qu’il ne sera pas là, ajoutez-la ici : elle apparaîtra dans le planning du jour concerné.</div></div>`}
+  </section></div>`;
+}
+function bindAbsReq(main) {
+  main.querySelectorAll('[data-arf]').forEach(b => b.addEventListener('click', () => { planUI.absf = b.dataset.arf; render(); }));
+  const qi = document.getElementById('ar-q'); let t;
+  qi.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { planUI.absq = qi.value; render(); const n = document.getElementById('ar-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
+  document.getElementById('ar-add').addEventListener('click', () => absReqEdit(null));
+  main.querySelectorAll('[data-arst]').forEach(s => { s.addEventListener('click', e => e.stopPropagation()); s.addEventListener('change', () => { absReqs()[s.dataset.arst].status = s.value; savePlan(); toast(`Demande ${ABS_STATUS[s.value][0].toLowerCase()}.`); render(); }); });
+  main.querySelectorAll('tr[data-arid]').forEach(tr => tr.addEventListener('click', () => absReqEdit(tr.dataset.arid)));
+}
+function absReqEdit(id, prefill) {
+  const cur = id ? {...absReqs()[id]} : {from: isoOf(new Date()), shifts: [], status: 'ok', ...(prefill || {})};
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  const f = (label, html, wide) => `<label class="sf ${wide ? 'wide' : ''}"><span>${label}</span>${html}</label>`;
+  bg.innerHTML = `<div class="modal sui-modal" role="dialog" aria-modal="true" style="--tc:#f87171;max-width:600px"><h3><span class="sdot"></span>${id ? 'Modifier la demande d’absence' : 'Nouvelle demande d’absence'}</h3>
+    <form class="sform" novalidate>
+      ${f('Chatter', `<input type="text" name="name" list="ar-names" value="${esc(cur.name || '')}" placeholder="Prénom">`, true)}
+      ${f('Date', `<input type="date" name="from" value="${esc(cur.from || '')}">`)}
+      ${f('Jusqu’au (plusieurs jours, facultatif)', `<input type="date" name="to" value="${esc(cur.to || '')}">`)}
+      ${f('Shifts concernés', `<div class="qrow">${PLAN_SHIFTS.map((sh, s) => `<label class="qpt chk ${(cur.shifts || []).includes(s) ? 'on' : ''}"><input type="checkbox" data-ars="${s}" ${(cur.shifts || []).includes(s) ? 'checked' : ''}>${sh}</label>`).join('')}<button type="button" class="qpt" data-arall>Journée entière</button></div>`, true)}
+      ${f('Raison', `<textarea name="note" rows="2" placeholder="Rendez-vous médical, examen, déplacement…">${esc(cur.note || '')}</textarea>`, true)}
+      ${f('Statut', `<select name="status">${Object.entries(ABS_STATUS).map(([k, [l]]) => `<option value="${k}" ${cur.status === k ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
+    </form><datalist id="ar-names">${knownChatters().map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+    <div id="ar-err" class="sc-lo" style="min-height:18px;font-size:13px;margin-top:6px"></div>
+    <div class="acts">${id ? '<button class="btn danger" data-a="del" type="button" style="margin-right:auto">Supprimer</button>' : ''}<button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">${id ? 'Enregistrer' : 'Ajouter la demande'}</button></div></div>`;
+  const form = bg.querySelector('form'), close = () => bg.remove();
+  const sync = () => bg.querySelectorAll('[data-ars]').forEach(c => c.closest('label').classList.toggle('on', c.checked));
+  bg.addEventListener('change', e => { if (e.target.dataset.ars != null) sync(); });
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  bg.addEventListener('click', async e => {
+    if (e.target === bg) return close();
+    if (e.target.closest('[data-arall]')) { const all = [...bg.querySelectorAll('[data-ars]')]; const on = !all.every(c => c.checked); all.forEach(c => { c.checked = on; }); sync(); return; }
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === '0') return close();
+    if (a.dataset.a === 'del') { if (!(await modal('Supprimer la demande', `<p>Supprimer la demande d’absence de <strong>${esc(cur.name)}</strong> (${esc(absDates(cur))}) ?</p>`, 'Supprimer'))) return; delete absReqs()[id]; savePlan(); close(); toast('Demande supprimée.'); render(); return; }
+    const name = form.name.value.trim(), from = form.from.value, to = form.to.value, shifts = [...bg.querySelectorAll('[data-ars]')].filter(c => c.checked).map(c => +c.dataset.ars);
+    const err = !name ? 'Indiquez le chatter.' : !from ? 'Choisissez la date.' : to && to < from ? 'La date de fin est avant la date de début.' : !shifts.length ? 'Cochez au moins un shift (ou « Journée entière »).' : '';
+    if (err) { bg.querySelector('#ar-err').textContent = err; return; }
+    const canon = knownChatters().find(n => normName(n) === normName(name)) || name;
+    const r = {name: canon, from, shifts: shifts.sort(), status: form.status.value, at: cur.at || Date.now(), by: cur.by || Sync.email() || lsGet(LS_SUIVI_SUP, '') || ''};
+    if (to && to !== from) r.to = to; const note = form.note.value.trim(); if (note) r.note = note;
+    absReqs()[id || 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)] = r;
+    savePlan(); close(); toast(id ? 'Demande mise à jour.' : `Demande d’absence de ${canon} ajoutée : elle apparaît dans le planning du ${fmtDayFr(from)}.`); render();
+  });
+  document.body.appendChild(bg); form.name.focus();
+}
+
 /* ---------- Bilan des absences et retards ---------- */
 // Une absence = prénom en rouge ou remplacé ; un retard = orange ; une coupure = violet. Comptés une fois par shift.
 function planIncidents(wk) {
@@ -3696,48 +3810,56 @@ function planIncidents(wk) {
   for (const [k, list] of Object.entries(W.cells || {})) {
     const [d, s, mid] = k.split('|'); const m = allModels().find(x => x.id === mid);
     for (const e of list) {
-      const kind = e.a || e.r ? 'abs' : e.l ? 'late' : e.c ? 'cut' : null; if (!kind) continue;
+      let kind = e.a || e.r ? 'abs' : e.l ? 'late' : e.c ? 'cut' : null; if (!kind) continue;
+      if (kind === 'abs' && absReqFor(e.n, addDaysIso(wk, +d), +s)) kind = 'absj';   // absence prévenue (demande non refusée)
       const nk = normName(e.n), sk = `${nk}|${d}|${s}|${kind}`; if (seen.has(sk)) continue; seen.add(sk);
-      const r = by.get(nk) || {name: e.n, abs: 0, late: 0, cut: 0, details: []};
+      const r = by.get(nk) || {name: e.n, abs: 0, absj: 0, late: 0, cut: 0, details: []};
       r[kind]++; r.details.push({kind, d: +d, s: +s, model: m ? modelLabel(m) : '', rep: e.r || ''});
       by.set(nk, r);
     }
   }
   return by;
 }
+// Score de fiabilité : absence non prévenue = 3 points, retard = 1, absence prévenue = 0
+const relScore = r => r.abs * 3 + r.late;
 function planBilanHTML(wk) {
+  if (!planState.weeks[wk]) return `<div class="panel empty">La ${esc(planWeekLabel(wk))} n'existe pas encore dans le planning.</div>`;
   const cur = planIncidents(wk);
   const prev = [1, 2, 3].map(i => planIncidents(addDaysIso(wk, -7 * i)));
-  const keys = new Set([...cur.keys()]);
-  const rows = [...keys].map(k => {
-    const r = cur.get(k); const tot = {abs: r.abs, late: r.late};
-    for (const p of prev) { const x = p.get(k); if (x) { tot.abs += x.abs; tot.late += x.late; } }
-    return {...r, k, tot, score: r.abs * 2 + r.late};
-  }).sort((a, b) => b.score - a.score || b.cut - a.cut || a.name.localeCompare(b.name, 'fr'));
-  const T = rows.reduce((a, r) => ({abs: a.abs + r.abs, late: a.late + r.late, cut: a.cut + r.cut}), {abs: 0, late: 0, cut: 0});
-  if (!planState.weeks[wk]) return `<div class="panel empty">La ${esc(planWeekLabel(wk))} n'existe pas encore dans le planning.</div>`;
+  const rows = [...cur.entries()].map(([k, r]) => {
+    const tot = {abs: r.abs, absj: r.absj, late: r.late};
+    for (const p of prev) { const x = p.get(k); if (x) { tot.abs += x.abs; tot.absj += x.absj; tot.late += x.late; } }
+    return {...r, k, tot, score: relScore(r), tscore: relScore(tot)};
+  }).sort((a, b) => b.score - a.score || b.tscore - a.tscore || b.absj - a.absj || a.name.localeCompare(b.name, 'fr'));
+  const max = Math.max(1, ...rows.map(r => r.score));
+  const T = rows.reduce((a, r) => ({abs: a.abs + r.abs, absj: a.absj + r.absj, late: a.late + r.late, cut: a.cut + r.cut}), {abs: 0, absj: 0, late: 0, cut: 0});
+  const seen = new Set(rows.map(r => rosterKey(r.name)));
+  const clean = [...teamRoster(wk)].filter(([k]) => !hasNear(seen, k)).map(([, n]) => n).sort((a, b) => a.localeCompare(b, 'fr'));
+  const tag = r => r.score >= 6 ? '<span class="rtag hot">À surveiller de près</span>' : r.score >= 3 ? '<span class="rtag warm">À surveiller</span>' : r.score > 0 ? '<span class="rtag">Léger</span>' : '<span class="rtag ok">Prévenu</span>';
   return `<div class="stack"><section class="stats sui-stats">
-      <div class="stat"><div class="k">Absences</div><div class="v" style="color:#f87171">${T.abs}</div><div class="d">shifts manqués (dont remplacés)</div></div>
-      <div class="stat"><div class="k">Retards</div><div class="v" style="color:#fb923c">${T.late}</div><div class="d">shifts commencés en retard</div></div>
-      <div class="stat"><div class="k">Coupures de courant</div><div class="v" style="color:#c084fc">${T.cut}</div><div class="d">non pénalisables en principe</div></div>
-      <div class="stat"><div class="k">Chatteurs concernés</div><div class="v">${rows.length}</div><div class="d">${esc(planWeekLabel(wk))}</div></div></section>
-    <section class="panel"><h2>Qui a eu le plus d'absences et de retards</h2><p class="hint">Classés par gravité (une absence compte double par rapport à un retard). La colonne « 4 dernières semaines » aide à repérer les habitués. « Pénaliser » ouvre une pénalité préremplie dans Primes & Pénalités.</p>
-      ${rows.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table"><thead><tr><th>Chatteur</th><th class="num">Absences</th><th class="num">Retards</th><th class="num">Coupures</th><th class="num">4 dernières semaines</th><th>Détail</th><th></th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td><strong>${esc(r.name)}</strong></td>
+      <div class="stat"><div class="k">Absences non prévenues</div><div class="v" style="color:#f87171">${T.abs}</div><div class="d">3 points chacune</div></div>
+      <div class="stat"><div class="k">Retards</div><div class="v" style="color:#fb923c">${T.late}</div><div class="d">1 point chacun</div></div>
+      <div class="stat"><div class="k">Absences prévenues</div><div class="v" style="color:#93c5fd">${T.absj}</div><div class="d">avec demande d'absence · 0 point</div></div>
+      <div class="stat"><div class="k">Coupures de courant</div><div class="v" style="color:#c084fc">${T.cut}</div><div class="d">non comptées</div></div></section>
+    <section class="panel"><h2>Classement de fiabilité · du pire au meilleur</h2><p class="hint">Absence non prévenue = 3 points, retard = 1 point, absence prévenue (demande d'absence) = 0. La colonne « 4 semaines » cumule la semaine affichée et les 3 précédentes pour repérer les habitués. « Pénaliser » ouvre une pénalité préremplie.</p>
+      ${rows.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table rank-table"><thead><tr><th class="num">#</th><th>Chatteur</th><th style="min-width:160px">Score de la semaine</th><th class="num">Abs. non prévenues</th><th class="num">Retards</th><th class="num">Abs. prévenues</th><th class="num">4 semaines</th><th>Détail</th><th></th></tr></thead><tbody>
+      ${rows.map((r, i) => `<tr class="${r.score >= 6 ? 'rk-hot' : r.score >= 3 ? 'rk-warm' : ''}"><td class="num"><span class="rnum">${i + 1}</span></td><td><strong>${esc(r.name)}</strong><div style="margin-top:3px">${tag(r)}</div></td>
+        <td><div class="rbar"><span style="width:${r.score / max * 100}%;background:${r.score >= 6 ? '#ef4444' : r.score >= 3 ? '#f59e0b' : r.score ? '#facc15' : '#60a5fa'}"></span></div><span class="rsc">${r.score} pt${r.score > 1 ? 's' : ''}</span></td>
         <td class="num">${r.abs ? `<span class="ptsb pen">${r.abs}</span>` : '<span class="muted">—</span>'}</td>
         <td class="num">${r.late ? `<span class="ptsb late">${r.late}</span>` : '<span class="muted">—</span>'}</td>
-        <td class="num">${r.cut ? `<span class="pc cut">${r.cut}</span>` : '<span class="muted">—</span>'}</td>
-        <td class="num"><span class="${r.tot.abs + r.tot.late >= 4 ? 'sc-lo' : r.tot.abs + r.tot.late >= 2 ? 'sc-mid' : ''}">${r.tot.abs} abs. · ${r.tot.late} ret.</span></td>
-        <td style="font-size:12.5px;color:var(--muted)">${r.details.sort((a, b) => a.d - b.d || a.s - b.s).map(x => `<span class="${x.kind === 'abs' ? 'pc abs' : x.kind === 'late' ? 'pc late' : 'pc cut'}" style="font-weight:600">${PLAN_DAYS[x.d]} ${PLAN_SHIFTS[x.s]}</span>${x.rep ? ` → ${esc(x.rep)}` : ''}`).join(' · ')}</td>
+        <td class="num">${r.absj ? `<span class="ptsb just">${r.absj}</span>` : '<span class="muted">—</span>'}</td>
+        <td class="num"><span class="${r.tscore >= 9 ? 'sc-lo' : r.tscore >= 4 ? 'sc-mid' : ''}" title="${r.tot.abs} abs. non prévenues · ${r.tot.late} retards · ${r.tot.absj} abs. prévenues">${r.tscore} pts</span></td>
+        <td style="font-size:12.5px;color:var(--muted)">${r.details.sort((a, b) => a.d - b.d || a.s - b.s).map(x => `<span class="${x.kind === 'abs' ? 'pc abs' : x.kind === 'late' ? 'pc late' : x.kind === 'absj' ? 'pc just' : 'pc cut'}" style="font-weight:600" title="${x.kind === 'abs' ? 'Absence non prévenue' : x.kind === 'absj' ? 'Absence prévenue' : x.kind === 'late' ? 'Retard' : 'Coupure'}">${PLAN_DAYS[x.d]} ${PLAN_SHIFTS[x.s]}</span>${x.rep ? ` → ${esc(x.rep)}` : ''}`).join(' · ')}</td>
         <td class="num">${r.abs || r.late ? `<button class="btn ghost" type="button" data-pen="${esc(r.k)}">Pénaliser</button>` : ''}</td></tr>`).join('')}
       </tbody></table></div>` : `<div class="empty" style="padding:30px 10px">Aucune absence ni aucun retard noté pour la ${esc(planWeekLabel(wk))}.</div>`}
+      ${clean.length ? `<details class="unplan ok" style="margin-top:14px"><summary style="cursor:pointer"><strong>✓ Les meilleurs : sans absence ni retard cette semaine (${clean.length})</strong></summary><div class="unplan-l" style="margin-top:8px">${clean.map(n => `<span class="unchip" style="padding-right:10px">${esc(n)}</span>`).join('')}</div></details>` : ''}
     </section></div>`;
 }
 function bindPlanBilan(main, wk) {
   const cur = planIncidents(wk);
   main.querySelectorAll('[data-pen]').forEach(b => b.addEventListener('click', () => {
     const r = cur.get(b.dataset.pen); if (!r) return;
-    const parts = [r.abs ? plural(r.abs, 'absence', 'absences') : '', r.late ? plural(r.late, 'retard', 'retards') : ''].filter(Boolean).join(' et ');
+    const parts = [r.abs ? plural(r.abs, 'absence non prévenue', 'absences non prévenues') : '', r.late ? plural(r.late, 'retard', 'retards') : ''].filter(Boolean).join(' et ');
     suiviUI.week = wk; suiviUI.tab = 'pen';
     go(`${route().pid}/suivi`);
     setTimeout(() => suiviEdit(wk, 'pen', null, {chatter: r.name, comment: `${parts} sur la ${planWeekLabel(wk).toLowerCase()} (planning)`, pts: r.abs ? 10 : 5}), 50);
@@ -3814,13 +3936,14 @@ function editCell(wk, key) {
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:640px"><h3>${esc(m ? modelLabel(m) : mid)} · ${PLAN_DAYS_LONG[d]} ${parseDate(addDaysIso(wk, +d)).toLocaleDateString('fr-FR', {day:'numeric', month:'long'})} · ${PLAN_SHIFTS[s]}</h3>
       <datalist id="pl-names">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
       ${list.length ? `<div class="pe-list">${list.map((e, i) => `<div class="pe-row">
-        <strong class="${e.a && !e.r ? 'sc-lo' : ''}">${esc(e.n)}</strong>
+        <strong class="${e.a && !e.r ? 'sc-lo' : ''}">${esc(e.n)}${absReqFor(e.n, addDaysIso(wk, +d), +s) ? ` <b class="abstag" title="${esc(absReqFor(e.n, addDaysIso(wk, +d), +s).note || 'Demande d’absence')}">ABS demandée</b>` : ''}</strong>
         <label class="check"><input type="checkbox" data-abs="${i}" ${e.a ? 'checked' : ''}> Absent</label>
         <label class="check" title="Coupure de courant"><input type="checkbox" data-cut="${i}" ${e.c ? 'checked' : ''}> Coupure</label>
         <label class="check" title="Arrivé(e) en retard"><input type="checkbox" data-late="${i}" ${e.l ? 'checked' : ''}> Retard</label>
         <input type="text" list="pl-names" data-rep="${i}" value="${esc(e.r || '')}" placeholder="Remplaçant (facultatif)">
         <label class="check" title="Mis en couleur sur ses ${NEW_SHIFTS} premiers shifts travaillés"><input type="checkbox" data-new="${i}" ${isFlaggedNew(e.n) ? 'checked' : ''}> Nouveau</label>
         <button class="btn ghost" type="button" data-del="${i}" aria-label="Retirer ${esc(e.n)}">×</button></div>`).join('')}</div>` : '<p class="hint">Personne sur ce shift.</p>'}
+      ${(() => { const rq = absReqsOnDate(addDaysIso(wk, +d)).filter(r => (r.shifts || []).includes(+s)); return rq.length ? `<div class="absbox" style="margin-top:12px"><div class="absbox-h">Demandes d’absence sur ce shift</div><div style="font-size:13px">${rq.map(r => `<strong>${esc(r.name)}</strong>${r.status === 'wait' ? ' (en attente)' : ''}${r.note ? ` — ${esc(r.note)}` : ''}`).join(' · ')}</div></div>` : ''; })()}
       <div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="pe-add" list="pl-names" placeholder="Ajouter un ou plusieurs chatters (séparés par /)" style="flex:1"><button class="btn" id="pe-addb" type="button">Ajouter</button></div>
       <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
     bg.querySelector('#pe-add').focus();
@@ -4447,7 +4570,7 @@ const Sync = (() => {
     } else if (key === 'suivi') {
       suiviState = {weeks: (data && data.weeks) || {}}; lsSet(LS_SUIVI, suiviState);
     } else if (key === 'planning') {
-      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {})}; lsSet(LS_PLAN, planState);
+      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {})}; lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
       planCfgSaved = data && Array.isArray(data.models) && data.models.length ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
@@ -4657,7 +4780,7 @@ const Sync = (() => {
     const ago = lastSync ? Math.max(0, Math.round((Date.now() - lastSync) / 1000)) : null;
     const label = {sync: 'Synchronisation…', saving: 'Enregistrement…', pending: 'Modifications en attente…', offline: 'Hors ligne · modifications gardées', error: 'Erreur de synchronisation', ok: `Partagé · à jour${ago != null && ago > 20 ? ` (il y a ${ago < 90 ? ago + ' s' : Math.round(ago / 60) + ' min'})` : ''}`, idle: 'Connexion…'}[status];
     el.className = 'sync ' + (status === 'ok' ? 'ok' : status === 'error' || status === 'offline' ? 'bad' : 'wait');
-    el.innerHTML = `<a href="#of/partage" class="sync-link" title="${esc(lastError)}"><span class="dot"></span>${esc(label)}</a><span class="sync-who">${esc(session.email || '')}${rolesConfigured ? ` · ${isAdmin ? 'Administrateur' : 'Équipe'}` : ''}</span>`;
+    el.innerHTML = `<a href="#of/partage" class="sync-link" title="${esc(lastError)}"><span class="dot"></span>${esc(label)}</a><span class="sync-who" title="${esc(session.email || '')}">${esc(session.email || '')}</span>${rolesConfigured ? `<span class="sync-role ${isAdmin ? 'adm' : ''}">${isAdmin ? 'Administrateur' : 'Équipe'}</span>` : ''}`;
   }
   setInterval(drawStatus, 30000);
 
