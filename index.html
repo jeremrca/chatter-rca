@@ -543,6 +543,28 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .rank-table td:nth-child(3){white-space:nowrap}
 .rtag{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:99px;background:rgba(250,204,21,.15);color:#fde68a}
 .rtag.warm{background:rgba(245,158,11,.18);color:#fcd34d}.rtag.hot{background:rgba(239,68,68,.2);color:#fca5a5}.rtag.ok{background:rgba(96,165,250,.15);color:#bfdbfe}
+.assign{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+.assign th,.assign td{border-bottom:1px solid var(--line-soft);padding:6px 8px;vertical-align:middle}
+.assign .as-name{position:sticky;left:0;z-index:2;background:var(--raised);white-space:nowrap;min-width:118px;text-align:left}
+.assign tbody .as-name{background:var(--surface);display:flex;align-items:center;gap:8px;border-left:4px solid var(--sc)}
+.assign .as-grp{text-align:left;font-weight:800;font-size:12.5px;padding:6px 12px}
+.assign .as-m{font-size:11.5px;font-weight:700;text-align:center;min-width:48px;max-width:72px;white-space:normal;line-height:1.2;padding:6px 3px;background:var(--raised);color:var(--text)}
+.assign .as-c{padding:5px 3px}
+.assign .gstart{border-left:2px solid var(--line)}
+.assign .as-c{text-align:center}
+.assign .as-tot{white-space:nowrap;min-width:76px;font-size:12px}
+.as-box{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer;transition:transform .08s}
+.as-box:hover{transform:scale(1.08);border-color:var(--sc)}
+.as-box input{position:absolute;opacity:0;width:0;height:0}
+.as-box span{opacity:0;font-weight:900;font-size:14px;color:var(--st)}
+.as-box.on{background:var(--sc);border-color:var(--sc)}
+.as-box.on span{opacity:1}
+.as-box:focus-within{outline:2px solid var(--sc);outline-offset:2px}
+.as-n{display:inline-block;min-width:22px;font-weight:800;font-size:12px;color:var(--muted)}
+.as-n.zero{color:#fff;background:#ef4444;border-radius:6px;padding:1px 6px}
+.assign tfoot th,.assign tfoot td{background:var(--raised)}
+.as-h{display:flex;align-items:center;gap:8px;font-size:15px;margin:14px 0 8px}
+.as-h>span:first-child{width:12px;height:12px;border-radius:3px;background:var(--gc);box-shadow:0 0 8px var(--gc)}
 </style>
 </head>
 <body>
@@ -3271,8 +3293,8 @@ function renderPlanning(main) {
     bindPlanTabs(main); bindAbsReq(main); return;
   }
   if (planUI.tab === 'sups') {
-    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning des superviseurs</span></h1></div>` + tabs + supPlanHTML();
-    bindPlanTabs(main); bindSupPlan(main); return;
+    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning des superviseurs</span></h1></div>` + tabs + supPlanHTML() + supAssignHTML();
+    bindPlanTabs(main); bindSupPlan(main); bindSupAssign(main); return;
   }
   if (planUI.tab === 'bilan') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1>
@@ -3722,6 +3744,37 @@ function bindSupPlan(main) {
     map[id] = {name: n, color: SUP_COLORS.find(c => !used.has(c)) || '#94a3b8', focus: '', days: Array(7).fill(''), order: Object.keys(map).length};
     done(); toast(`${n} ajouté(e) : cliquez sur ses cases pour renseigner ses horaires.`);
   });
+}
+
+
+/* ---------- Modèles attribuées à chaque superviseur (cases à cocher, MYM et OF séparés) ---------- */
+function supAssignHTML() {
+  const sups = supList(), today = isoOf(new Date());
+  const models = allModels().filter(m => !m.end || m.end >= today);
+  const groups = PLAN_GROUPS.map(g => ({g, ms: models.filter(m => m.group === g.id)})).filter(x => x.ms.length);
+  const A = planState.supAssign || {};
+  const has = (sid, mid) => !!(A[sid] && A[sid][mid]);
+  const colN = mid => sups.filter(s => has(s.id, mid)).length;
+  const orphans = models.filter(m => !colN(m.id));
+  const short = g => g.id === 'mym' ? 'MYM' : g.id === 'of' ? 'OF' : 'Reveal';
+  return `<section class="panel" style="margin-top:16px"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 style="margin:0">Modèles par superviseur</h2>
+      <span class="hint" style="margin:0">Cochez les modèles dont chaque superviseur s'occupe. MYM et OF sont séparés : un superviseur peut avoir des modèles sur les deux.</span></div>
+    ${orphans.length ? `<div class="alert warn" style="margin:10px 0">${plural(orphans.length, 'modèle sans superviseur', 'modèles sans superviseur')} : ${orphans.map(m => `<strong>${esc(modelLabel(m))}</strong>`).join(', ')}</div>` : models.length ? '<div class="unplan ok" style="margin:10px 0">✓ Chaque modèle a au moins un superviseur.</div>' : ''}
+    ${models.length && sups.length ? groups.map(x => `<h3 class="as-h" style="--gc:${x.g.color}"><span></span>Modèles ${short(x.g)} <span class="muted" style="font-weight:600;font-size:12.5px">· ${plural(x.ms.length, 'modèle', 'modèles')}</span></h3>
+      <div class="tbl-wrap" style="max-height:none;margin-bottom:18px"><table class="assign"><thead><tr><th class="as-name">Superviseur</th>${x.ms.map(m => `<th class="as-m" style="box-shadow:inset 0 3px 0 ${x.g.color}" title="${esc(modelLabel(m))}">${esc(m.name)}</th>`).join('')}<th class="as-tot">Total ${short(x.g)}</th></tr></thead><tbody>
+      ${sups.map(s => { const n = x.ms.filter(m => has(s.id, m.id)).length; return `<tr style="--sc:${s.color};--st:${textOn(s.color)}"><td class="as-name"><span class="g-dot" style="background:${s.color};width:12px;height:12px"></span><strong>${esc(s.name)}</strong>${s.focus ? ` <span class="platb" style="--tc:${platColor(s.focus)}">${esc(s.focus)}</span>` : ''}</td>
+        ${x.ms.map(m => `<td class="as-c"><label class="as-box ${has(s.id, m.id) ? 'on' : ''}" title="${esc(s.name)} · ${esc(modelLabel(m))}"><input type="checkbox" data-as="${s.id}|${m.id}" ${has(s.id, m.id) ? 'checked' : ''} aria-label="${esc(s.name)} s'occupe de ${esc(modelLabel(m))}"><span>✓</span></label></td>`).join('')}
+        <td class="as-tot">${n ? `<strong>${plural(n, 'modèle', 'modèles')}</strong>` : '<span class="muted">—</span>'}</td></tr>`; }).join('')}
+      </tbody><tfoot><tr><th class="as-name">Superviseurs</th>${x.ms.map(m => { const n = colN(m.id); return `<td class="as-c"><span class="as-n ${n ? '' : 'zero'}">${n}</span></td>`; }).join('')}<td></td></tr></tfoot></table></div>`).join('')
+      : `<div class="empty" style="padding:24px 10px">${sups.length ? 'Aucune modèle dans le planning : ajoutez-en depuis l’onglet « Planning de la semaine ».' : 'Ajoutez d’abord des superviseurs dans le tableau des horaires.'}</div>`}
+  </section>`;
+}
+function bindSupAssign(main) {
+  main.querySelectorAll('[data-as]').forEach(cb => cb.addEventListener('change', () => {
+    const [sid, mid] = cb.dataset.as.split('|'); const A = (planState.supAssign ||= {}); const row = (A[sid] ||= {});
+    if (cb.checked) row[mid] = true; else delete row[mid];
+    savePlan(); const y = window.scrollY; render(); window.scrollTo(0, y);
+  }));
 }
 
 /* ---------- Demandes d'absence ---------- */
@@ -4570,7 +4623,7 @@ const Sync = (() => {
     } else if (key === 'suivi') {
       suiviState = {weeks: (data && data.weeks) || {}}; lsSet(LS_SUIVI, suiviState);
     } else if (key === 'planning') {
-      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {})}; lsSet(LS_PLAN, planState);
+      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {}), ...(data && data.supAssign ? {supAssign: data.supAssign} : {})}; lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
       planCfgSaved = data && Array.isArray(data.models) && data.models.length ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
