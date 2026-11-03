@@ -4811,10 +4811,10 @@ function coachPeriod(pid, start, end) {
 function coachBuild(wk) {
   const cfg = coachCfg(), end = addDaysIso(wk, -1), start = addDaysIso(wk, -7 * cfg.span);
   const roster = teamRoster(wk);
-  const prevWk = addDaysIso(wk, -7), prev = coachState.weeks[prevWk];
+  const prevWk = addDaysIso(wk, -7), prev = coachState.weeks[prevWk] && coachState.weeks[prevWk].status === 'validated' ? coachState.weeks[prevWk] : null;   // un brouillon (test) ne compte jamais
   const planWeeks = [...Array(cfg.span)].map((_, i) => addDaysIso(wk, -7 * (i + 1)));
   const curShiftWeek = planState.weeks[wk] ? wk : prevWk;
-  const out = {items: {}, excluded: [], info: {}, start, end};
+  const out = {items: {}, excluded: [], info: {noPlan: !planState.weeks[wk] && !planState.weeks[prevWk], planWeek: planState.weeks[wk] ? wk : planState.weeks[prevWk] ? prevWk : null}, start, end};
   for (const pid of ['of', 'mym']) {
     const d = coachPeriod(pid, start, end);
     out.info[pid] = d ? {imports: d.n, count: d.res.results.length} : null;
@@ -4905,8 +4905,10 @@ function renderCoaching(main) {
     : `<section class="panel"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="pill ${W.status === 'validated' ? 'Strong' : 'Warning'}">${W.status === 'validated' ? `Validée${W.validatedBy ? ` par ${esc(W.validatedBy)}` : ''} · visible par les superviseurs` : 'Brouillon · pas encore visible par les superviseurs'}</span>
         <span class="hint" style="margin:0">Performances du ${esc(fmtDayFr(W.start))} au ${esc(fmtDayFr(W.end))} · OF : ${W.info && W.info.of ? plural(W.info.of.imports, 'import', 'imports') : '<strong class="sc-lo">aucun import</strong>'} · MYM : ${W.info && W.info.mym ? plural(W.info.mym.imports, 'import', 'imports') : '<strong class="sc-lo">aucun import</strong>'}</span>
-        <div style="margin-left:auto;display:flex;gap:8px"><button class="btn ghost" id="k-give" type="button" title="Donner quelques chatters à un superviseur sans refaire toute la répartition">+ Superviseur en cours de semaine</button>${W.status !== 'validated' ? `<button class="btn ghost" id="k-rebuild" type="button">Recalculer</button><button class="btn primary" id="k-validate" type="button">Valider et envoyer aux superviseurs</button>` : '<button class="btn ghost" id="k-unvalidate" type="button">Repasser en brouillon</button>'}</div></div>
-        <div class="kload">${loads.map(l => `<span class="kl ${l.n > cfg.cap ? 'over' : ''}" style="--sc:${l.s.color}"><span class="g-dot" style="background:${l.s.color}"></span>${esc(l.s.name)} <b>${l.n}</b>${supFocus(l.s) ? ` <small>${supFocus(l.s)}</small>` : ''}</span>`).join('')}${items.filter(i => !i.sup).length ? `<span class="kl over">Non attribués <b>${items.filter(i => !i.sup).length}</b></span>` : ''}</div></section>
+        <div style="margin-left:auto;display:flex;gap:8px"><button class="btn ghost" id="k-give" type="button" title="Donner quelques chatters à un superviseur sans refaire toute la répartition">+ Superviseur en cours de semaine</button>${W.status !== 'validated' ? `<button class="btn ghost" id="k-del" type="button">Supprimer le brouillon</button><button class="btn ghost" id="k-rebuild" type="button">Recalculer</button><button class="btn primary" id="k-validate" type="button">Valider et envoyer aux superviseurs</button>` : '<button class="btn ghost" id="k-unvalidate" type="button">Repasser en brouillon</button>'}</div></div>
+        <div class="kload">${loads.map(l => `<span class="kl ${l.n > cfg.cap ? 'over' : ''}" style="--sc:${l.s.color}"><span class="g-dot" style="background:${l.s.color}"></span>${esc(l.s.name)} <b>${l.n}</b>${supFocus(l.s) ? ` <small>${supFocus(l.s)}</small>` : ''}</span>`).join('')}${items.filter(i => !i.sup).length ? `<span class="kl over">Non attribués <b>${items.filter(i => !i.sup).length}</b></span>` : ''}${items.filter(i => i.sup && /aucune heure commune/.test(i.why || '')).length ? `<span class="kl over" title="Ces chatters ne travaillent jamais pendant les heures de leur superviseur : pas assez de superviseurs sur leurs shifts">Sans heure commune <b>${items.filter(i => i.sup && /aucune heure commune/.test(i.why || '')).length}</b></span>` : ''}</div></section>
+      ${W.info && W.info.noPlan ? `<div class="alert err">Aucun planning trouvé pour la ${esc(planWeekLabel(wk))} ni la semaine d’avant : le site ne sait pas quand les chatters travaillent, la répartition par horaires est donc impossible. Préparez le planning de la semaine, puis cliquez sur « Recalculer ».</div>`
+        : W.info && W.info.planWeek && W.info.planWeek !== wk ? `<div class="alert warn">Le planning de la ${esc(planWeekLabel(wk))} n’existe pas encore : la répartition s’appuie sur celui de la ${esc(planWeekLabel(W.info.planWeek))}. Recalculez une fois le planning de la semaine prêt.</div>` : ''}
       ${unmatched.length ? `<section class="panel"><h2>Noms à relier au planning · ${unmatched.length}</h2><p class="hint">Ces noms d'import n'ont pas été reconnus dans le planning. Choisissez le bon prénom : le site s'en souviendra pour les prochaines semaines.</p>
         <datalist id="k-roster">${roster.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
         <div class="klinks">${unmatched.map(it => `<label><span>${esc(it.name)}</span><input type="text" list="k-roster" data-klink="${esc(rosterKey(it.name))}" placeholder="Prénom au planning"></label>`).join('')}</div>
@@ -4933,6 +4935,10 @@ function renderCoaching(main) {
     W.status = 'validated'; W.validatedBy = (Sync.email() || '').split('@')[0]; W.validatedAt = Date.now(); saveCoach(); toast('Liste validée et envoyée aux superviseurs.'); render();
   });
   document.getElementById('k-unvalidate')?.addEventListener('click', () => { W.status = 'draft'; saveCoach(); render(); });
+  document.getElementById('k-del')?.addEventListener('click', async () => {
+    if (!(await modal('Supprimer le brouillon', `<p>Supprimer la liste de la ${esc(planWeekLabel(wk))} ? Elle n'a jamais été visible par les superviseurs. Vous pourrez la préparer de nouveau quand vous voulez.</p>`, 'Supprimer'))) return;
+    delete coachState.weeks[wk]; saveCoach(); toast('Brouillon supprimé.'); render();
+  });
   // Arrivée d'un superviseur en cours de semaine : on lui confie quelques chatters pris chez les plus chargés, sans toucher au reste
   document.getElementById('k-give')?.addEventListener('click', () => {
     const all = Object.entries(W.items || {}).map(([k, it]) => ({k, ...it}));
