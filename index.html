@@ -647,6 +647,11 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .kdec.decide{border-color:#ef4444;box-shadow:inset 3px 0 0 #ef4444}.kdec.decided{opacity:.75}
 .kdec-a{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.kdec-a .small-btn{font-size:11.5px;padding:3px 7px;min-height:26px}
 @media (max-width:1200px){.kcols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.krm{background:none;border:0;color:var(--faint);cursor:pointer;font-size:15px;padding:0 4px;margin-left:4px;vertical-align:middle}
+.krm:hover{color:#f87171}
+.rank-table tr.newin td{background:rgba(56,189,248,.08)}
+.ksugg{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 4px}
+.ksugg .qpt{padding:3px 9px;font-size:12px}
 </style>
 </head>
 <body>
@@ -3223,7 +3228,7 @@ const DAY_WORDS = {lundi:0, lun:0, mardi:1, mar:1, mercredi:2, mer:2, jeudi:3, j
 const offKey = n => normName(n).replace(/\s+(mym|of)$/, '');
 const dayOff = () => (planState.dayoff ||= {});
 // Équipe suivie = liste des Jours OFF + chatters planifiés sur les 3 dernières semaines (sauf « ne plus suivre »)
-const rosterKey = n => offKey(String(n || '').trim()).replace(/\s+/g, '');
+const rosterKey = n => offKey(String(n || '').replace(/\(.*?\)/g, ' ').trim()).replace(/[^a-z]/g, '');
 // Deux prénoms à une lettre près (« Juliannot » / « Julianot ») sont considérés comme la même personne
 function nearKey(a, b) {
   if (a === b) return true;
@@ -4775,16 +4780,44 @@ const supEligible = (s, pid) => { const f = supFocus(s); return !f || f === (pid
 const mySup = () => { const e = String(Sync.email() || '').toLowerCase(); return e ? supList().find(s => String(s.email || '').toLowerCase() === e) : null; };
 
 // Nom d'un import (« rocharlotrakotoson », « Vonjy Mym ») → prénom du planning (« Rocharlot », « Vonjy »)
+// Toute l'équipe connue : tous les plannings enregistrés + Jours OFF (pas seulement les 3 dernières semaines)
+function coachRoster(wk) {
+  const roster = new Map(teamRoster(wk));
+  const add = n => { const t = String(n || '').trim(); const k = rosterKey(t); if (t && k && !roster.has(k)) roster.set(k, t.replace(/\s+(mym|of)$/i, '').trim() || t); };
+  for (const W of Object.values(planState.weeks)) for (const list of Object.values(W.cells || {})) for (const e of list) [e.n, ...(e.r ? e.r.split('/') : [])].forEach(add);
+  return roster;
+}
+function editDist(a, b) {
+  const m = a.length, n = b.length; if (Math.abs(m - n) > 3) return 9;
+  let prev = Array.from({length: n + 1}, (_, j) => j);
+  for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+  return prev[n];
+}
+const firstWord = n => (normName(String(n || '').replace(/\(.*?\)/g, ' ')).split(/[^a-z]+/).find(w => w.length >= 3) || '');
 function coachMatch(importName, roster) {
   const k = rosterKey(importName); if (!k) return null;
   const link = coachState.links[k]; if (link) return link === '—' ? null : link;
   const list = [...roster];
+  const uniq = arr => { if (arr.length === 1) return arr[0][1]; if (arr.length > 1) { arr.sort((a, b) => b[0].length - a[0].length); if (arr[0][0].length > arr[1][0].length) return arr[0][1]; } return null; };
+  // 1. identique  2. une lettre d'écart  3. l'un commence par l'autre (« rocharlotrakotoson » / « Rocharlot »)
   let hit = list.find(([rk]) => rk === k) || list.find(([rk]) => nearKey(rk, k));
   if (hit) return hit[1];
-  const pre = list.filter(([rk]) => rk.length >= 4 && (k.startsWith(rk) || rk.startsWith(k) && k.length >= 4));
-  if (pre.length === 1) return pre[0][1];
-  if (pre.length > 1) { pre.sort((a, b) => b[0].length - a[0].length); if (pre[0][0].length > pre[1][0].length) return pre[0][1]; }
+  let r = uniq(list.filter(([rk]) => rk.length >= 4 && (k.startsWith(rk) || rk.startsWith(k) && k.length >= 4))); if (r) return r;
+  // 4. même premier prénom (« Mahery Christian » / « Mahery »), s'il est unique dans l'équipe
+  const fw = firstWord(importName);
+  if (fw.length >= 4) { r = uniq(list.filter(([rk, name]) => rk === fw || firstWord(name) === fw)); if (r) return r; }
+  // 4b. un des mots du nom (5 lettres et plus) est un prénom du planning (« Nate Fanomezantsoa » / « Fanomezantsoa »)
+  const words = normName(String(importName).replace(/\(.*?\)/g, ' ')).split(/[^a-z]+/).filter(w => w.length >= 5 && w !== 'mym');
+  if (normName(String(importName)).split(/[^a-z]+/).filter(Boolean).length > 1 && words.length) { r = uniq(list.filter(([rk]) => words.includes(rk))); if (r) return r; }
+  // 5. deux lettres d'écart pour les noms longs (7 lettres et plus), si un seul nom correspond
+  if (k.length >= 7) { const near2 = list.filter(([rk]) => rk.length >= 7 && editDist(rk, k) <= 2); if (near2.length === 1) return near2[0][1]; }
   return null;
+}
+// Prénoms du planning les plus proches d'un nom non reconnu (suggestions à valider en un clic)
+function coachSuggest(importName, roster) {
+  const k = rosterKey(importName), fw = firstWord(importName);
+  return [...roster].map(([rk, name]) => ({name, d: rk.includes(k) || k.includes(rk) ? 0.5 : fw && firstWord(name) === fw ? 0.6 : editDist(rk, k)}))
+    .filter(x => x.d <= Math.max(2, Math.floor(k.length / 3))).sort((a, b) => a.d - b.d || b.name.length - a.name.length).slice(0, 4).map(x => x.name);
 }
 // Shifts d'un chatter (prénom du planning) sur une plage de semaines : [{wk, d, s, mid}]
 function coachShifts(planName, weeks) {
@@ -4808,9 +4841,12 @@ function coachPeriod(pid, start, end) {
   return {p, n: inside.length, res: store.resultsFor(p)};
 }
 // Construit la liste de la semaine wk à partir des performances des semaines précédentes
-function coachBuild(wk) {
+// keepFrom : liste déjà préparée dont on garde la répartition (retrait d'une personne → le suivant entre, le reste ne bouge pas)
+function coachBuild(wk, keepFrom) {
+  const supKeys = supList().map(s => rosterKey(s.name)).filter(k => k.length >= 3);
+  const removed = (keepFrom && keepFrom.removed) || {};
   const cfg = coachCfg(), end = addDaysIso(wk, -1), start = addDaysIso(wk, -7 * cfg.span);
-  const roster = teamRoster(wk);
+  const roster = coachRoster(wk);
   const prevWk = addDaysIso(wk, -7), prev = coachState.weeks[prevWk] && coachState.weeks[prevWk].status === 'validated' ? coachState.weeks[prevWk] : null;   // un brouillon (test) ne compte jamais
   const planWeeks = [...Array(cfg.span)].map((_, i) => addDaysIso(wk, -7 * (i + 1)));
   const curShiftWeek = planState.weeks[wk] ? wk : prevWk;
@@ -4822,7 +4858,12 @@ function coachBuild(wk) {
     const cand = [];
     for (const r of d.res.results) {
       if (BAD_NAME.test(r.name)) { out.excluded.push({name: r.name, pid, why: 'accès révoqué / superviseur'}); continue; }
+      const rk = rosterKey(r.name);
+      if (supKeys.includes(rk)) { out.excluded.push({name: r.name, pid, why: 'superviseur (planning des superviseurs)'}); continue; }
+      const ign = (coachState.ignore || {})[rk];
+      if (ign) { out.excluded.push({name: r.name, pid, why: 'retiré définitivement (pas un chatter)', key: rk, restore: true}); continue; }
       const plan = coachMatch(r.name, roster);
+      if (removed[rosterKey(plan || r.name)]) { out.excluded.push({name: r.name, pid, why: 'retiré à la main cette semaine', key: rosterKey(plan || r.name), restoreWeek: true}); continue; }
       const fl = (coachState.flags || {})[rosterKey(plan || r.name)];
       if (fl && fl.state === 'stopped') { out.excluded.push({name: r.name, pid, why: `arrêté (décision de la ${planWeekLabel(fl.wk).toLowerCase()})`}); continue; }
       if (fl && fl.state === 'exited' && fl.wk === addDaysIso(wk, -7)) { out.excluded.push({name: r.name, pid, why: 'sorti du suivi la semaine dernière'}); continue; }
@@ -4850,14 +4891,18 @@ function coachBuild(wk) {
       const ov = coachOverlap(s, sh), mod = [...mids].filter(m => planState.supAssign && planState.supAssign[s.id] && planState.supAssign[s.id][m]).length;
       return {s, ov, mod};
     });
-    return {key, it, opts, prevSup: prev && prev.items && prev.items[key] ? prev.items[key].sup : null};
+    const kept = keepFrom && keepFrom.items && keepFrom.items[key];
+    if (kept) { it.sup = kept.sup || ''; it.why = kept.why; if (kept.isIn) it.isIn = true; if (kept.verdict) it.verdict = kept.verdict; if (kept.decision) it.decision = kept.decision; }
+    return {key, it, opts, kept: !!kept, prevSup: prev && prev.items && prev.items[key] ? prev.items[key].sup : null};
   });
+  for (const x of prep) if (x.kept && x.it.sup && load[x.it.sup] != null) load[x.it.sup]++;
   prep.sort((a, b) => a.opts.filter(o => o.ov > 0).length - b.opts.filter(o => o.ov > 0).length);
   for (const x of prep) {
+    if (x.kept) continue;   // déjà attribué dans la liste en cours : on n'y touche pas
     const cap = cfg.cap;
     const keep = x.prevSup && x.opts.find(o => o.s.id === x.prevSup && load[o.s.id] < cap);
     const best = keep || x.opts.filter(o => load[o.s.id] < cap).sort((a, b) => (b.ov + b.mod * 3 - load[b.s.id] * 2) - (a.ov + a.mod * 3 - load[a.s.id] * 2))[0];
-    if (best) { x.it.sup = best.s.id; x.it.why = keep ? 'même superviseur que la semaine dernière' : best.ov ? `${best.ov} h communes${best.mod ? ` · ${plural(best.mod, 'modèle attribuée', 'modèles attribuées')}` : ''}` : 'aucune heure commune trouvée'; load[best.s.id]++; }
+    if (best) { x.it.sup = best.s.id; x.it.why = (keepFrom && keepFrom.items ? 'entré dans la liste · ' : '') + (keep ? 'même superviseur que la semaine dernière' : best.ov ? `${best.ov} h communes${best.mod ? ` · ${plural(best.mod, 'modèle attribuée', 'modèles attribuées')}` : ''}` : 'aucune heure commune trouvée'); x.it.isIn = !!(keepFrom && keepFrom.items); load[best.s.id]++; }
     else { x.it.sup = ''; x.it.why = 'aucun superviseur disponible (plafond atteint ou focus incompatible)'; }
   }
   return out;
@@ -4883,11 +4928,11 @@ function renderCoaching(main) {
   const supName = id => (sups.find(s => s.id === id) || {}).name || '';
   const loads = sups.map(s => ({s, n: items.filter(i => i.sup === s.id).length}));
   const unmatched = items.filter(i => !i.plan);
-  const roster = [...teamRoster(wk).values()].sort((a, b) => a.localeCompare(b, 'fr'));
+  const rosterMap = coachRoster(wk), roster = [...rosterMap.values()].sort((a, b) => a.localeCompare(b, 'fr'));
   const byPid = pid => items.filter(i => i.pid === pid || (pid === 'of' && i.pid === 'both')).sort((a, b) => a.rank - b.rank);
   const row = it => {
     const elig = sups.filter(s => it.pid === 'both' ? supEligible(s, 'of') || supEligible(s, 'mym') : supEligible(s, it.pid));
-    return `<tr class="${it.sup ? '' : 'nosup'}"><td class="num"><span class="rnum">${it.rank}</span></td>
+    return `<tr class="${it.sup ? '' : 'nosup'} ${it.isIn ? 'newin' : ''}"><td class="num"><span class="rnum">${it.rank}</span><button type="button" class="krm" data-krm="${esc(it.k)}" title="Retirer de la liste (superviseur, manager…) : le suivant au classement prendra sa place" aria-label="Retirer ${esc(it.plan || it.name)}">×</button></td>
       <td><button type="button" class="linkbtn" data-kall="${esc(it.k)}" title="Voir la fiche"><strong>${esc(it.plan || it.name)}</strong></button>${it.verdict ? ' ' + verdictBadge(it.verdict) : ''}${it.plan && rosterKey(it.plan) !== rosterKey(it.name) ? `<div class="sub" style="margin:0">import : ${esc(it.name)}</div>` : ''}
         <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag warm">Nouveau · à vérifier</span>' : ''}${it.pid === 'both' ? `<span class="rtag">aussi ${esc(it.alsoRank || '')}</span>` : ''}${!it.plan ? '<span class="rtag hot">introuvable au planning</span>' : ''}</div></td>
       <td>${it.pid === 'both' ? platBadge('OF') + ' ' + platBadge('MYM') : platBadge(it.pid === 'of' ? 'OF' : 'MYM')}</td>
@@ -4911,11 +4956,11 @@ function renderCoaching(main) {
         : W.info && W.info.planWeek && W.info.planWeek !== wk ? `<div class="alert warn">Le planning de la ${esc(planWeekLabel(wk))} n’existe pas encore : la répartition s’appuie sur celui de la ${esc(planWeekLabel(W.info.planWeek))}. Recalculez une fois le planning de la semaine prêt.</div>` : ''}
       ${unmatched.length ? `<section class="panel"><h2>Noms à relier au planning · ${unmatched.length}</h2><p class="hint">Ces noms d'import n'ont pas été reconnus dans le planning. Choisissez le bon prénom : le site s'en souviendra pour les prochaines semaines.</p>
         <datalist id="k-roster">${roster.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
-        <div class="klinks">${unmatched.map(it => `<label><span>${esc(it.name)}</span><input type="text" list="k-roster" data-klink="${esc(rosterKey(it.name))}" placeholder="Prénom au planning"></label>`).join('')}</div>
+        <div class="klinks">${unmatched.map(it => { const sg = coachSuggest(it.name, rosterMap); return `<label><span>${esc(it.name)}</span>${sg.length ? `<span class="ksugg">${sg.map(n => `<button type="button" class="qpt" data-ksg="${esc(rosterKey(it.name))}|${esc(n)}" style="--tc:#38bdf8">${esc(n)} ?</button>`).join('')}</span>` : '<span class="sub" style="margin:0;font-weight:400">aucun prénom proche au planning</span>'}<input type="text" list="k-roster" data-klink="${esc(rosterKey(it.name))}" placeholder="ou tapez le prénom au planning"></label>`; }).join('')}</div>
         <button class="btn" id="k-links" type="button" style="margin-top:10px">Enregistrer et recalculer</button></section>` : ''}
       <section class="panel"><h2>${platBadge('OF')} Les ${byPid('of').length} moins performants sur OnlyFans</h2>${tbl('of')}</section>
       <section class="panel"><h2>${platBadge('MYM')} Les ${byPid('mym').length} moins performants sur MYM</h2>${tbl('mym')}</section>
-      ${(W.excluded || []).length ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Exclus de la liste · ${W.excluded.length}</summary><div class="tbl-wrap" style="max-height:320px;margin-top:10px"><table><tbody>${W.excluded.map(x => `<tr><td>${esc(x.name)}</td><td>${platBadge(x.pid === 'of' ? 'OF' : 'MYM')}</td><td class="muted">${esc(x.why)}</td></tr>`).join('')}</tbody></table></div></details>` : ''}`}
+      ${(W.excluded || []).length ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Exclus de la liste · ${W.excluded.length}</summary><div class="tbl-wrap" style="max-height:320px;margin-top:10px"><table><tbody>${W.excluded.map(x => `<tr><td>${esc(x.name)}</td><td>${platBadge(x.pid === 'of' ? 'OF' : 'MYM')}</td><td class="muted">${esc(x.why)}</td><td class="num">${x.restore || x.restoreWeek ? `<button class="btn ghost small-btn" type="button" data-krest="${esc(x.key)}|${x.restore ? 'all' : 'week'}">Remettre</button>` : ''}</td></tr>`).join('')}</tbody></table></div></details>` : ''}`}
     ${Sync.canManage() ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Réglages du suivi (administrateurs)</summary>
       <div class="set-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-top:12px">
         <label>Chatters par plateforme<input type="number" min="1" id="kc-n" value="${cfg.n}"></label>
@@ -4926,7 +4971,34 @@ function renderCoaching(main) {
   </div>`;
   bindCoachHead(wk); bindTabs();
   main.querySelectorAll('[data-kall]').forEach(b => b.addEventListener('click', () => { coachLoadNotes(); coachDetail(b.dataset.kall); }));
-  const build = () => { const r = coachBuild(wk); coachState.weeks[wk] = {status: 'draft', items: r.items, excluded: r.excluded, info: r.info, start: r.start, end: r.end, builtAt: Date.now()}; saveCoach(); render(); };
+  const build = () => { const removed = W && W.removed; const r = coachBuild(wk, removed ? {removed} : null); coachState.weeks[wk] = {status: 'draft', items: r.items, excluded: r.excluded, info: r.info, start: r.start, end: r.end, builtAt: Date.now(), ...(removed ? {removed} : {})}; saveCoach(); render(); };
+  // Rebuild en gardant la répartition existante : seuls les nouveaux entrants sont attribués
+  const refill = () => { const before = new Set(Object.keys(W.items || {})); const r = coachBuild(wk, W); W.items = r.items; W.excluded = r.excluded; W.info = r.info; saveCoach(); return Object.entries(r.items).filter(([k]) => !before.has(k)).map(([, it]) => it.plan || it.name); };
+  main.querySelectorAll('[data-krm]').forEach(b => b.addEventListener('click', async () => {
+    const key = b.dataset.krm, it = W.items[key];
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:480px"><h3>Retirer ${esc(it.plan || it.name)} de la liste</h3>
+      <p class="hint" style="margin-top:0">Le suivant au classement ${it.pid === 'mym' ? 'MYM' : 'OF'} prendra sa place. Le reste de la répartition ne bouge pas.</p>
+      <label class="check" style="margin:6px 0"><input type="radio" name="krm" value="always" checked> Toujours : ce n'est pas un chatter (superviseur, manager…), ne plus jamais le proposer</label>
+      <label class="check" style="margin:6px 0"><input type="radio" name="krm" value="week"> Juste cette semaine</label>
+      <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Retirer</button></div></div>`;
+    bg.addEventListener('click', e => {
+      if (e.target === bg) return bg.remove();
+      const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === '0') return bg.remove();
+      const mode = bg.querySelector('input[name="krm"]:checked').value;
+      if (mode === 'always') (coachState.ignore ||= {})[rosterKey(it.name)] = {name: it.name, at: Date.now()};
+      (W.removed ||= {})[key] = true;
+      delete W.items[key];
+      const ins = refill(); bg.remove();
+      toast(`${it.plan || it.name} retiré${ins.length ? ` · ${ins.join(', ')} entre dans la liste` : ''}.`); render();
+    });
+    document.body.appendChild(bg);
+  }));
+  main.querySelectorAll('[data-krest]').forEach(b => b.addEventListener('click', () => {
+    const [key, mode] = b.dataset.krest.split('|');
+    if (mode === 'all') delete (coachState.ignore || {})[key]; else delete (W.removed || {})[key];
+    refill(); toast('Remis dans le classement : la liste est mise à jour.'); render();
+  }));
   document.getElementById('k-build')?.addEventListener('click', () => { build(); toast('Liste préparée : vérifiez la répartition, puis validez.'); });
   document.getElementById('k-rebuild')?.addEventListener('click', async () => { if (await modal('Recalculer la liste', '<p>Recalculer remplace la liste et la répartition actuelles (vos changements manuels de superviseur seront perdus).</p>', 'Recalculer')) build(); });
   document.getElementById('k-validate')?.addEventListener('click', async () => {
@@ -4969,6 +5041,11 @@ function renderCoaching(main) {
     document.body.appendChild(bg);
   });
   main.querySelectorAll('[data-ksup]').forEach(sel => sel.addEventListener('change', () => { const it = W.items[sel.dataset.ksup]; it.sup = sel.value; it.why = 'choisi manuellement'; saveCoach(); const y = window.scrollY; render(); window.scrollTo(0, y); }));
+  main.querySelectorAll('[data-ksg]').forEach(b => b.addEventListener('click', () => {
+    const [k, n] = b.dataset.ksg.split('|'); coachState.links[k] = n; saveCoach();
+    if (W) { const r = coachBuild(wk, W); W.items = r.items; W.excluded = r.excluded; W.info = r.info; saveCoach(); }
+    toast(`Relié à ${n} : le site s'en souviendra.`); render();
+  }));
   document.getElementById('k-links')?.addEventListener('click', () => {
     let n = 0; main.querySelectorAll('[data-klink]').forEach(i => { const v = i.value.trim(); if (v) { coachState.links[i.dataset.klink] = v; n++; } });
     if (!n) { toast('Saisissez au moins un prénom.', true); return; }
@@ -5208,7 +5285,7 @@ const Sync = (() => {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
     } else if (key === 'coaching') {
-      coachState = {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}; lsSet(LS_COACH, coachState);
+      coachState = {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(data && data.ignore ? {ignore: data.ignore} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}; lsSet(LS_COACH, coachState);
     } else if (key === 'cams') {
       camsState = {items: (data && data.items) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {})}; lsSet(LS_CAMS, camsState);
     } else if (key === 'suivi') {
