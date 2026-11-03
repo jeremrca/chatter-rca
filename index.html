@@ -603,6 +603,50 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .cam-banner .btn{margin-left:auto}
 .cb-dot{width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef4444;animation:pulse 1.6s infinite}
 @media (max-width:760px){.cam-lv{grid-template-columns:1fr 1fr}}
+.pbadge.coach{background:linear-gradient(135deg,#f59e0b,#ef4444);font-size:16px}
+.kload{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.kl{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line);font-size:12.5px}
+.kl b{font-size:13px}.kl small{color:var(--faint);font-weight:700}
+.kl.over{border-color:#ef4444;color:#fecaca}
+.rank-table tr.nosup td{background:rgba(239,68,68,.08)}
+.klinks{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.klinks label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+.klinks span{color:var(--text);font-weight:700}
+.kcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.kcard{padding:14px;border-radius:var(--r-lg);background:var(--bg);border:1px solid var(--line)}
+.kcard.again{border-color:rgba(239,68,68,.6);box-shadow:inset 4px 0 0 #ef4444}
+.kcard-h{display:flex;align-items:center;gap:6px;font-size:15px}
+.kshifts{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.shc.mine{background:rgba(69,208,143,.2);color:#86efac}
+.shc.other{background:var(--raised);color:var(--muted)}
+.linkbtn{background:none;border:0;padding:0;color:var(--text);cursor:pointer;text-align:left}.linkbtn:hover strong{text-decoration:underline}
+.kcard2{border-left:4px solid var(--line)}.kcard2.again{border-left-color:#ef4444}
+.kcard2 .kcard-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kcompose{margin-top:12px;padding:10px;border-radius:var(--r-md);background:var(--bg);border:1px solid var(--line-soft)}
+.ktags{display:flex;flex-wrap:wrap;gap:6px}
+.ktag{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--raised);color:var(--muted);margin:0 4px 3px 0;border:1px solid transparent}
+.ktag.bad{color:#fca5a5}.ktag.good{color:#86efac}
+.ktag.sel{cursor:pointer;border-color:var(--line)}
+.ktag.sel.on.bad{background:rgba(239,68,68,.22);border-color:#ef4444;color:#fecaca}.ktag.sel.on.good{background:rgba(69,208,143,.22);border-color:#45d08f;color:#dcfce7}
+.kjournal,.kverd{margin-top:12px}
+.kj-h{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.knote{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line-soft)}
+.kn-d{font-size:12px;color:var(--faint);min-width:84px;padding-top:3px}.kn-b{font-size:13.5px;margin-top:2px}
+.kvbtns{display:flex;flex-wrap:wrap;gap:8px}
+.kvb{flex:1;min-width:150px;padding:10px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--bg);color:var(--text);font-weight:700;font-size:13px;cursor:pointer}
+.kvb:disabled{cursor:default;opacity:.6}
+.kvb.v-stop.on{background:rgba(239,68,68,.22);border-color:#ef4444;color:#fecaca}.kvb.v-prog.on{background:rgba(245,158,11,.22);border-color:#f59e0b;color:#fde68a}
+.kvb.v-auto.on{background:rgba(69,208,143,.22);border-color:#45d08f;color:#dcfce7}.kvb.v-unseen.on{background:rgba(148,163,184,.22);border-color:#94a3b8}
+.kreasons{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;padding:10px;border-radius:var(--r-md);background:rgba(239,68,68,.07)}
+.vbadge{display:inline-block;font-size:11px;font-weight:800;padding:1px 8px;border-radius:99px;background:var(--raised);color:var(--muted)}
+.vbadge.v-stop{background:rgba(239,68,68,.2);color:#fca5a5}.vbadge.v-prog{background:rgba(245,158,11,.2);color:#fcd34d}.vbadge.v-auto{background:rgba(69,208,143,.2);color:#86efac}
+.kcols{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start}
+.kcol{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:10px}
+.kcol-h{font-weight:800;font-size:13px;color:var(--vc);margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--vc)}
+.kdec{padding:9px;border-radius:var(--r-md);background:var(--bg);border:1px solid var(--line);margin-bottom:8px}
+.kdec.decide{border-color:#ef4444;box-shadow:inset 3px 0 0 #ef4444}.kdec.decided{opacity:.75}
+.kdec-a{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.kdec-a .small-btn{font-size:11.5px;padding:3px 7px;min-height:26px}
+@media (max-width:1200px){.kcols{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -1677,6 +1721,7 @@ const ICONS = {
   import:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
   settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   download:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+  coach:'<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/>',
   cams:'<rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/>',
   suivi:'<path d="M12 3v18M6 21h12M4 8h16M4 8l-2.5 6a3 3 0 0 0 5 0L4 8zM20 8l-2.5 6a3 3 0 0 0 5 0L20 8z"/>',
   planning:'<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M7.5 13.5h3M13.5 13.5h3M7.5 17h3"/>',
@@ -1698,6 +1743,7 @@ function route() {
   if (rest === 'planning') return {pid, page:'planning'};
   if (rest === 'suivi') return {pid, page:'suivi'};
   if (rest === 'cams') return {pid, page:'cams'};
+  if (rest === 'coaching') return {pid, page:'coaching'};
   if (rest === 'asv' || rest.startsWith('asv/')) return {pid, page:'asv', sub: rest.split('/')[1] || 'dashboard'};
   return {pid, page: PAGE_LABEL[rest] ? rest : 'dashboard'};
 }
@@ -1734,13 +1780,14 @@ function renderNav(rt) {
   navRt = rt;
   // La rubrique de la page ouverte est toujours dépliée
   for (const s of NAV_SECTIONS) if (s.pages && s.pages.some(([k]) => k === rt.page)) { const key = `${rt.pid}-${s.id}`; if (!ui.navOpen[key]) { ui.navOpen[key] = true; saveUI(); } }
-  const planOn = rt.page === 'planning', suiOn = rt.page === 'suivi', camOn = rt.page === 'cams';
+  const planOn = rt.page === 'planning', suiOn = rt.page === 'suivi', camOn = rt.page === 'cams', coOn = rt.page === 'coaching';
   const pend = camsPending();
   document.getElementById('nav').innerHTML = `<div class="nav-group"><a href="#${rt.pid}/planning" class="nav-top ${planOn ? 'on' : ''}" ${planOn ? 'aria-current="page"' : ''} title="Planning de l'équipe">${icon('planning')}<span>Planning</span></a>
     <a href="#${rt.pid}/suivi" class="nav-top ${suiOn ? 'on' : ''}" ${suiOn ? 'aria-current="page"' : ''} title="Pénalités, réattributions et primes">${icon('suivi')}<span>Primes & Pénalités</span></a>
-    <a href="#${rt.pid}/cams" class="nav-top ${camOn ? 'on' : ''}" ${camOn ? 'aria-current="page"' : ''} title="Gestion des cams et customs${pend.all.length ? ` · ${pend.all.length} en attente` : ''}">${icon('cams')}<span>Cam / Custom</span>${pend.all.length ? `<span class="nbadge ${pend.worst === 3 ? 'hot pulse' : pend.worst === 2 ? 'hot' : ''}">${pend.all.length}</span>` : ''}</a></div>` + PIDS.map(pid => {
+    <a href="#${rt.pid}/cams" class="nav-top ${camOn ? 'on' : ''}" ${camOn ? 'aria-current="page"' : ''} title="Gestion des cams et customs${pend.all.length ? ` · ${pend.all.length} en attente` : ''}">${icon('cams')}<span>Cam / Custom</span>${pend.all.length ? `<span class="nbadge ${pend.worst === 3 ? 'hot pulse' : pend.worst === 2 ? 'hot' : ''}">${pend.all.length}</span>` : ''}</a>
+    <a href="#${rt.pid}/coaching" class="nav-top ${coOn ? 'on' : ''}" ${coOn ? 'aria-current="page"' : ''} title="Chatters à accompagner cette semaine">${icon('coach')}<span>Suivi des chatters</span></a></div>` + PIDS.map(pid => {
     const P = PLATFORMS[pid];
-    return `<div class="nav-group ${rt.pid === pid && !planOn && !suiOn && !camOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
+    return `<div class="nav-group ${rt.pid === pid && !planOn && !suiOn && !camOn && !coOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
       ${NAV_SECTIONS.map(s => {
         if (s.link) { const on = rt.pid === pid && rt.page === s.link; return `<a href="#${pid}/${s.link}" class="nav-top ${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span></a>`; }
         const key = `${pid}-${s.id}`, open = !!ui.navOpen[key], inside = rt.pid === pid && s.pages.some(([k]) => k === rt.page);
@@ -1805,6 +1852,7 @@ function render() {
   if (rt.page === 'planning') { renderPlanning(main); return; }
   if (rt.page === 'suivi') { renderSuivi(main); return; }
   if (rt.page === 'cams') { renderCams(main); return; }
+  if (rt.page === 'coaching') { renderCoaching(main); return; }
   if (rt.page === 'asv') renderASV(main, P, rt.sub);
   else if (rt.page === 'dashboard') renderDashboard(main, P);
   else if (rt.page === 'chatters') rt.chatter != null ? renderDetail(main, P, rt.chatter) : renderChatters(main, P);
@@ -3725,10 +3773,11 @@ function supPlanHTML() {
       </tbody></table></div></section>
     <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">Planning des superviseurs</h2><span class="hint" style="margin:0">Planning fixe : il s'applique à toutes les semaines. Cliquez sur une case pour changer l'horaire.</span>
       <button class="btn primary" id="sup-add" type="button" style="margin-left:auto">+ Ajouter un superviseur</button></div>
-      <div class="tbl-wrap" style="max-height:none"><table class="sup-table"><thead><tr><th>Superviseur</th>${PLAN_DAYS_LONG.map(x => `<th>${x}</th>`).join('')}<th>Focus projet</th><th></th></tr></thead><tbody>
+      <div class="tbl-wrap" style="max-height:none"><table class="sup-table"><thead><tr><th>Superviseur</th>${PLAN_DAYS_LONG.map(x => `<th>${x}</th>`).join('')}<th>Focus projet</th><th>Compte (e-mail)</th><th></th></tr></thead><tbody>
       ${list.map((s, i) => `<tr style="--sc:${s.color};--st:${textOn(s.color)}"><td class="sup-name"><button type="button" class="sup-sw" data-scol="${s.id}" title="Changer la couleur" style="background:${s.color}"></button><input type="text" data-sname="${s.id}" value="${esc(s.name)}"></td>
         ${s.days.map((t, dd) => `<td><button type="button" class="sup-cell ${isOff(t) ? 'off' : !t ? 'empty' : !parseShift(t) ? 'bad' : ''}" data-scell="${s.id}|${dd}" title="${isOff(t) ? 'OFF' : t ? esc(t) : 'Non renseigné'}">${isOff(t) ? 'OFF' : t ? esc(t) : '—'}</button></td>`).join('')}
         <td><input type="text" data-sfocus="${s.id}" value="${esc(s.focus || '')}" list="sup-focus" placeholder="—" style="width:110px"></td>
+        <td><input type="email" data-semail="${s.id}" value="${esc(s.email || '')}" placeholder="e-mail de connexion" style="width:190px" ${Sync.canManage() ? '' : 'disabled'}></td>
         <td class="num" style="white-space:nowrap"><button class="btn ghost small-btn" data-sup-up="${s.id}" type="button" aria-label="Monter" ${i ? '' : 'disabled'}>↑</button> <button class="btn ghost small-btn" data-sup-dn="${s.id}" type="button" aria-label="Descendre" ${i < list.length - 1 ? '' : 'disabled'}>↓</button> <button class="btn ghost small-btn" data-sup-del="${s.id}" type="button" aria-label="Supprimer ${esc(s.name)}">×</button></td></tr>`).join('')}
       </tbody></table></div><datalist id="sup-focus"><option value="OnlyFans"><option value="MYM"><option value="Reveal"></datalist></section></div>`;
 }
@@ -3737,6 +3786,7 @@ function bindSupPlan(main) {
   main.querySelectorAll('[data-sd]').forEach(b => b.addEventListener('click', () => { planUI.supDay = +b.dataset.sd; render(); }));
   main.querySelectorAll('[data-sname]').forEach(i => i.addEventListener('change', () => { if (i.value.trim()) { map[i.dataset.sname].name = i.value.trim(); done(); } }));
   main.querySelectorAll('[data-sfocus]').forEach(i => i.addEventListener('change', () => { map[i.dataset.sfocus].focus = i.value.trim(); done(); }));
+  main.querySelectorAll('[data-semail]').forEach(i => i.addEventListener('change', () => { const v = i.value.trim().toLowerCase(); if (v) map[i.dataset.semail].email = v; else delete map[i.dataset.semail].email; done(); }));
   const reorder = (id, dir) => { const l = supList(); l.forEach((s, i) => { map[s.id].order = i; }); const i = l.findIndex(s => s.id === id), j = i + dir; if (j < 0 || j >= l.length) return; map[l[i].id].order = j; map[l[j].id].order = i; done(); };
   main.querySelectorAll('[data-sup-up]').forEach(b => b.addEventListener('click', () => reorder(b.dataset.supUp, -1)));
   main.querySelectorAll('[data-sup-dn]').forEach(b => b.addEventListener('click', () => reorder(b.dataset.supDn, 1)));
@@ -4709,18 +4759,413 @@ function camEdit(id) {
 }
 
 /* =====================================================================
+   SUIVI DES CHATTERS — liste des moins performants (2 dernières semaines), répartition entre superviseurs
+   Clé partagée « coaching ». Étape 1 : liste, reconnaissance des noms, répartition, validation par la Direction.
+   ===================================================================== */
+const LS_COACH = 'rca.coach.v1';
+let coachState = (() => { const s = lsGet(LS_COACH, null) || {}; s.weeks ||= {}; s.links ||= {}; return s; })();
+const saveCoach = () => { lsSet(LS_COACH, coachState); Sync.changed('coaching'); };
+const COACH_DEF = {n: 20, cap: 6, minShifts: 2, span: 2};
+const coachCfg = () => ({...COACH_DEF, ...(coachState.cfg || {})});
+const coachUI = {week: null};
+const BAD_NAME = /acc[eè]s\s+r[eé]voqu|superviseu?r|\bsup\b|\bmanager\b|@/i;
+const SHIFT_HOURS = [[4, 10], [10, 16], [16, 22], [22, 28]];
+const supFocus = s => /mym/i.test(s.focus || '') ? 'MYM' : /only|^\s*of\s*$/i.test(s.focus || '') ? 'OF' : '';
+const supEligible = (s, pid) => { const f = supFocus(s); return !f || f === (pid === 'of' ? 'OF' : 'MYM'); };
+const mySup = () => { const e = String(Sync.email() || '').toLowerCase(); return e ? supList().find(s => String(s.email || '').toLowerCase() === e) : null; };
+
+// Nom d'un import (« rocharlotrakotoson », « Vonjy Mym ») → prénom du planning (« Rocharlot », « Vonjy »)
+function coachMatch(importName, roster) {
+  const k = rosterKey(importName); if (!k) return null;
+  const link = coachState.links[k]; if (link) return link === '—' ? null : link;
+  const list = [...roster];
+  let hit = list.find(([rk]) => rk === k) || list.find(([rk]) => nearKey(rk, k));
+  if (hit) return hit[1];
+  const pre = list.filter(([rk]) => rk.length >= 4 && (k.startsWith(rk) || rk.startsWith(k) && k.length >= 4));
+  if (pre.length === 1) return pre[0][1];
+  if (pre.length > 1) { pre.sort((a, b) => b[0].length - a[0].length); if (pre[0][0].length > pre[1][0].length) return pre[0][1]; }
+  return null;
+}
+// Shifts d'un chatter (prénom du planning) sur une plage de semaines : [{wk, d, s, mid}]
+function coachShifts(planName, weeks) {
+  const k = rosterKey(planName), out = [], seen = new Set();
+  for (const wk of weeks) { const W = planState.weeks[wk]; if (!W) continue;
+    for (const [key, list] of Object.entries(W.cells || {})) { const [d, s, mid] = key.split('|');
+      for (const e of list) { const w = workerOf(e); if (!w) continue; if (w.split('/').some(n => nearKey(rosterKey(n), k))) { const sk = `${wk}|${d}|${s}`; if (!seen.has(sk)) { seen.add(sk); out.push({wk, d: +d, s: +s, mid}); } else out.push({wk, d: +d, s: +s, mid, dup: true}); } } } }
+  return out;
+}
+// Heures communes entre les shifts d'un chatter et un superviseur
+function coachOverlap(sup, shifts) {
+  let h = 0;
+  for (const x of shifts) { if (x.dup) continue; const [a, b] = SHIFT_HOURS[x.s];
+    for (let t = a; t < b; t++) { const d = (x.d + Math.floor(t / 24)) % 7, hh = t % 24; if (supBlocks(sup, d).some(bl => hh + 0.5 > bl.start && hh + 0.5 < bl.end)) h++; } }
+  return h;
+}
+function coachPeriod(pid, start, end) {
+  const inside = chronoPeriods(pid).filter(p => p.start && p.end && p.start >= start && p.end <= end);
+  if (!inside.length) return null;
+  const p = inside.length === 1 ? inside[0] : RCA.combinePeriods(pid, inside, {id: `coach:${pid}:${start}:${end}`, name: `${fmtRange(start, end)}`, start, end});
+  return {p, n: inside.length, res: store.resultsFor(p)};
+}
+// Construit la liste de la semaine wk à partir des performances des semaines précédentes
+function coachBuild(wk) {
+  const cfg = coachCfg(), end = addDaysIso(wk, -1), start = addDaysIso(wk, -7 * cfg.span);
+  const roster = teamRoster(wk);
+  const prevWk = addDaysIso(wk, -7), prev = coachState.weeks[prevWk];
+  const planWeeks = [...Array(cfg.span)].map((_, i) => addDaysIso(wk, -7 * (i + 1)));
+  const curShiftWeek = planState.weeks[wk] ? wk : prevWk;
+  const out = {items: {}, excluded: [], info: {}, start, end};
+  for (const pid of ['of', 'mym']) {
+    const d = coachPeriod(pid, start, end);
+    out.info[pid] = d ? {imports: d.n, count: d.res.results.length} : null;
+    if (!d) continue;
+    const cand = [];
+    for (const r of d.res.results) {
+      if (BAD_NAME.test(r.name)) { out.excluded.push({name: r.name, pid, why: 'accès révoqué / superviseur'}); continue; }
+      const plan = coachMatch(r.name, roster);
+      const fl = (coachState.flags || {})[rosterKey(plan || r.name)];
+      if (fl && fl.state === 'stopped') { out.excluded.push({name: r.name, pid, why: `arrêté (décision de la ${planWeekLabel(fl.wk).toLowerCase()})`}); continue; }
+      if (fl && fl.state === 'exited' && fl.wk === addDaysIso(wk, -7)) { out.excluded.push({name: r.name, pid, why: 'sorti du suivi la semaine dernière'}); continue; }
+      const shifts = plan ? coachShifts(plan, planWeeks).filter(x => !x.dup) : [];
+      if (plan && shifts.length < cfg.minShifts) { out.excluded.push({name: r.name, pid, why: `${plural(shifts.length, 'shift', 'shifts')} au planning sur la période`}); continue; }
+      cand.push({r, plan, shifts: shifts.length});
+    }
+    cand.sort((a, b) => a.r.final - b.r.final);
+    cand.slice(0, cfg.n).forEach((c, i) => {
+      const key = rosterKey(c.plan || c.r.name);
+      const ex = out.items[key];
+      const item = {name: c.r.name, plan: c.plan || '', pid, rank: i + 1, of: cand.length, score: Math.round(c.r.final * 10) / 10, grade: c.r.grade, ca: c.r.row.revenue ?? c.r.row.total ?? null, shifts: c.shifts,
+        isNew: c.plan ? isFlaggedNew(c.plan) : false, streak: prev && prev.items && prev.items[key] ? (prev.items[key].streak || 1) + 1 : 1};
+      if (ex) { ex.pid = 'both'; ex.alsoRank = `${pid.toUpperCase()} ${i + 1}`; } else out.items[key] = item;
+    });
+  }
+  // Répartition : continuité d'abord, puis heures communes + modèles attribuées + charge la plus faible
+  const sups = supList(), load = Object.fromEntries(sups.map(s => [s.id, 0]));
+  const items = Object.entries(out.items);
+  const prep = items.map(([key, it]) => {
+    const sh = it.plan ? coachShifts(it.plan, [curShiftWeek]) : [];
+    const mids = new Set(sh.map(x => x.mid));
+    const pids = it.pid === 'both' ? ['of', 'mym'] : [it.pid];
+    const opts = sups.filter(s => pids.some(p => supEligible(s, p))).map(s => {
+      const ov = coachOverlap(s, sh), mod = [...mids].filter(m => planState.supAssign && planState.supAssign[s.id] && planState.supAssign[s.id][m]).length;
+      return {s, ov, mod};
+    });
+    return {key, it, opts, prevSup: prev && prev.items && prev.items[key] ? prev.items[key].sup : null};
+  });
+  prep.sort((a, b) => a.opts.filter(o => o.ov > 0).length - b.opts.filter(o => o.ov > 0).length);
+  for (const x of prep) {
+    const cap = cfg.cap;
+    const keep = x.prevSup && x.opts.find(o => o.s.id === x.prevSup && load[o.s.id] < cap);
+    const best = keep || x.opts.filter(o => load[o.s.id] < cap).sort((a, b) => (b.ov + b.mod * 3 - load[b.s.id] * 2) - (a.ov + a.mod * 3 - load[a.s.id] * 2))[0];
+    if (best) { x.it.sup = best.s.id; x.it.why = keep ? 'même superviseur que la semaine dernière' : best.ov ? `${best.ov} h communes${best.mod ? ` · ${plural(best.mod, 'modèle attribuée', 'modèles attribuées')}` : ''}` : 'aucune heure commune trouvée'; load[best.s.id]++; }
+    else { x.it.sup = ''; x.it.why = 'aucun superviseur disponible (plafond atteint ou focus incompatible)'; }
+  }
+  return out;
+}
+
+/* ---------- Page ---------- */
+function renderCoaching(main) {
+  const wk = coachUI.week ||= mondayOf(isoOf(new Date()));
+  const W = coachState.weeks[wk];
+  const head = `<div class="top"><h1><span class="pbadge lg coach" aria-hidden="true">★</span><span>Suivi des chatters</span></h1>
+    <div class="picker viewpick"><button class="btn ghost small-btn" id="kw-prev" type="button" aria-label="Semaine précédente">‹</button>
+      <select id="kw-sel">${[...new Set([...Object.keys(coachState.weeks), mondayOf(isoOf(new Date())), wk])].sort().reverse().map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}</option>`).join('')}</select>
+      <button class="btn ghost small-btn" id="kw-next" type="button" aria-label="Semaine suivante">›</button></div></div>`;
+  if (!Sync.canDirect()) { main.innerHTML = head + coachSupView(wk); bindCoachHead(wk); bindCoachCards(main, wk); return; }
+  const meSup = mySup();
+  const tabsD = `<div class="ptopt" role="tablist">${[['list', 'Liste et répartition'], ['dec', 'Décisions'], ['sups', 'Suivi des superviseurs'], ...(meSup ? [['mine', 'Mes chatters']] : [])].map(([k, l]) => `<button type="button" class="${(coachUI.tab || 'list') === k ? 'on' : ''}" data-ktab="${k}">${l}</button>`).join('')}</div>`;
+  const bindTabs = () => main.querySelectorAll('[data-ktab]').forEach(b => b.addEventListener('click', () => { coachUI.tab = b.dataset.ktab; render(); }));
+  if (coachUI.tab === 'dec') { main.innerHTML = head + tabsD + coachDecisionsHTML(wk); bindCoachHead(wk); bindTabs(); bindCoachDecisions(main, wk); return; }
+  if (coachUI.tab === 'sups') { main.innerHTML = head + tabsD + coachSupsHTML(wk); bindCoachHead(wk); bindTabs(); return; }
+  if (coachUI.tab === 'mine' && meSup) { main.innerHTML = head + tabsD + coachSupView(wk); bindCoachHead(wk); bindTabs(); bindCoachCards(main, wk); return; }
+  const cfg = coachCfg(), sups = supList();
+  const items = W ? Object.entries(W.items || {}).map(([k, it]) => ({k, ...it})) : [];
+  const supName = id => (sups.find(s => s.id === id) || {}).name || '';
+  const loads = sups.map(s => ({s, n: items.filter(i => i.sup === s.id).length}));
+  const unmatched = items.filter(i => !i.plan);
+  const roster = [...teamRoster(wk).values()].sort((a, b) => a.localeCompare(b, 'fr'));
+  const byPid = pid => items.filter(i => i.pid === pid || (pid === 'of' && i.pid === 'both')).sort((a, b) => a.rank - b.rank);
+  const row = it => {
+    const elig = sups.filter(s => it.pid === 'both' ? supEligible(s, 'of') || supEligible(s, 'mym') : supEligible(s, it.pid));
+    return `<tr class="${it.sup ? '' : 'nosup'}"><td class="num"><span class="rnum">${it.rank}</span></td>
+      <td><button type="button" class="linkbtn" data-kall="${esc(it.k)}" title="Voir la fiche"><strong>${esc(it.plan || it.name)}</strong></button>${it.verdict ? ' ' + verdictBadge(it.verdict) : ''}${it.plan && rosterKey(it.plan) !== rosterKey(it.name) ? `<div class="sub" style="margin:0">import : ${esc(it.name)}</div>` : ''}
+        <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag warm">Nouveau · à vérifier</span>' : ''}${it.pid === 'both' ? `<span class="rtag">aussi ${esc(it.alsoRank || '')}</span>` : ''}${!it.plan ? '<span class="rtag hot">introuvable au planning</span>' : ''}</div></td>
+      <td>${it.pid === 'both' ? platBadge('OF') + ' ' + platBadge('MYM') : platBadge(it.pid === 'of' ? 'OF' : 'MYM')}</td>
+      <td class="num"><strong>${nf(it.score, 0, 1)}</strong> <span class="badge ${it.grade} g${it.grade}" style="width:22px;height:22px;font-size:12px">${it.grade}</span></td>
+      <td class="num">${it.ca != null ? moneyP(PLATFORMS[it.pid === 'both' ? 'of' : it.pid], it.ca) : '—'}</td>
+      <td class="num">${it.plan ? it.shifts : '—'}</td>
+      <td>${W.status === 'validated' && !Sync.canManage() && !Sync.canDirect() ? esc(supName(it.sup)) : `<select data-ksup="${esc(it.k)}" ${W.status === 'validated' ? '' : ''}><option value="">— non attribué —</option>${elig.map(s => `<option value="${s.id}" ${s.id === it.sup ? 'selected' : ''}>${esc(s.name)}${supFocus(s) ? ` (${supFocus(s)})` : ''} · ${loads.find(l => l.s.id === s.id).n}</option>`).join('')}</select>`}
+        <div class="sub" style="margin:2px 0 0">${esc(it.why || '')}</div></td></tr>`;
+  };
+  const tbl = pid => { const l = byPid(pid); return l.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table rank-table"><thead><tr><th class="num">#</th><th>Chatter</th><th>Plateforme</th><th class="num">Score 2 sem.</th><th class="num">CA</th><th class="num">Shifts</th><th>Superviseur</th></tr></thead><tbody>${l.map(row).join('')}</tbody></table></div>` : '<div class="empty" style="padding:20px">Aucun chatter.</div>'; };
+  main.innerHTML = head + tabsD + `<div class="stack">
+    ${!W ? `<section class="panel empty"><h2 style="font-size:18px;margin-bottom:6px">Liste de la ${esc(planWeekLabel(wk))} pas encore préparée</h2>
+      <p class="hint" style="margin:0 auto 14px;max-width:560px">Le site prend les ${cfg.n} chatters les moins performants sur OF et sur MYM, calculés sur les ${plural(cfg.span, 'semaine', 'semaines')} précédentes (du ${fmtDayFr(addDaysIso(wk, -7 * cfg.span))} au ${fmtDayFr(addDaysIso(wk, -1))}), puis les répartit entre superviseurs (${cfg.cap} maximum chacun) selon leurs horaires, leur focus et leurs modèles.</p>
+      <button class="btn primary" id="k-build" type="button">Préparer la liste de la semaine</button></section>`
+    : `<section class="panel"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="pill ${W.status === 'validated' ? 'Strong' : 'Warning'}">${W.status === 'validated' ? `Validée${W.validatedBy ? ` par ${esc(W.validatedBy)}` : ''} · visible par les superviseurs` : 'Brouillon · pas encore visible par les superviseurs'}</span>
+        <span class="hint" style="margin:0">Performances du ${esc(fmtDayFr(W.start))} au ${esc(fmtDayFr(W.end))} · OF : ${W.info && W.info.of ? plural(W.info.of.imports, 'import', 'imports') : '<strong class="sc-lo">aucun import</strong>'} · MYM : ${W.info && W.info.mym ? plural(W.info.mym.imports, 'import', 'imports') : '<strong class="sc-lo">aucun import</strong>'}</span>
+        <div style="margin-left:auto;display:flex;gap:8px"><button class="btn ghost" id="k-give" type="button" title="Donner quelques chatters à un superviseur sans refaire toute la répartition">+ Superviseur en cours de semaine</button>${W.status !== 'validated' ? `<button class="btn ghost" id="k-rebuild" type="button">Recalculer</button><button class="btn primary" id="k-validate" type="button">Valider et envoyer aux superviseurs</button>` : '<button class="btn ghost" id="k-unvalidate" type="button">Repasser en brouillon</button>'}</div></div>
+        <div class="kload">${loads.map(l => `<span class="kl ${l.n > cfg.cap ? 'over' : ''}" style="--sc:${l.s.color}"><span class="g-dot" style="background:${l.s.color}"></span>${esc(l.s.name)} <b>${l.n}</b>${supFocus(l.s) ? ` <small>${supFocus(l.s)}</small>` : ''}</span>`).join('')}${items.filter(i => !i.sup).length ? `<span class="kl over">Non attribués <b>${items.filter(i => !i.sup).length}</b></span>` : ''}</div></section>
+      ${unmatched.length ? `<section class="panel"><h2>Noms à relier au planning · ${unmatched.length}</h2><p class="hint">Ces noms d'import n'ont pas été reconnus dans le planning. Choisissez le bon prénom : le site s'en souviendra pour les prochaines semaines.</p>
+        <datalist id="k-roster">${roster.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+        <div class="klinks">${unmatched.map(it => `<label><span>${esc(it.name)}</span><input type="text" list="k-roster" data-klink="${esc(rosterKey(it.name))}" placeholder="Prénom au planning"></label>`).join('')}</div>
+        <button class="btn" id="k-links" type="button" style="margin-top:10px">Enregistrer et recalculer</button></section>` : ''}
+      <section class="panel"><h2>${platBadge('OF')} Les ${byPid('of').length} moins performants sur OnlyFans</h2>${tbl('of')}</section>
+      <section class="panel"><h2>${platBadge('MYM')} Les ${byPid('mym').length} moins performants sur MYM</h2>${tbl('mym')}</section>
+      ${(W.excluded || []).length ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Exclus de la liste · ${W.excluded.length}</summary><div class="tbl-wrap" style="max-height:320px;margin-top:10px"><table><tbody>${W.excluded.map(x => `<tr><td>${esc(x.name)}</td><td>${platBadge(x.pid === 'of' ? 'OF' : 'MYM')}</td><td class="muted">${esc(x.why)}</td></tr>`).join('')}</tbody></table></div></details>` : ''}`}
+    ${Sync.canManage() ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Réglages du suivi (administrateurs)</summary>
+      <div class="set-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-top:12px">
+        <label>Chatters par plateforme<input type="number" min="1" id="kc-n" value="${cfg.n}"></label>
+        <label>Maximum par superviseur<input type="number" min="1" id="kc-cap" value="${cfg.cap}"></label>
+        <label>Shifts minimum sur la période<input type="number" min="0" id="kc-min" value="${cfg.minShifts}"></label>
+        <label>Semaines de performances<select id="kc-span"><option value="1" ${cfg.span === 1 ? 'selected' : ''}>1 semaine</option><option value="2" ${cfg.span === 2 ? 'selected' : ''}>2 semaines</option></select></label></div>
+      <button class="btn primary" id="kc-save" type="button" style="margin-top:12px">Enregistrer</button></details>` : ''}
+  </div>`;
+  bindCoachHead(wk); bindTabs();
+  main.querySelectorAll('[data-kall]').forEach(b => b.addEventListener('click', () => { coachLoadNotes(); coachDetail(b.dataset.kall); }));
+  const build = () => { const r = coachBuild(wk); coachState.weeks[wk] = {status: 'draft', items: r.items, excluded: r.excluded, info: r.info, start: r.start, end: r.end, builtAt: Date.now()}; saveCoach(); render(); };
+  document.getElementById('k-build')?.addEventListener('click', () => { build(); toast('Liste préparée : vérifiez la répartition, puis validez.'); });
+  document.getElementById('k-rebuild')?.addEventListener('click', async () => { if (await modal('Recalculer la liste', '<p>Recalculer remplace la liste et la répartition actuelles (vos changements manuels de superviseur seront perdus).</p>', 'Recalculer')) build(); });
+  document.getElementById('k-validate')?.addEventListener('click', async () => {
+    const none = items.filter(i => !i.sup).length;
+    if (!(await modal('Valider la liste', `<p>Envoyer la liste aux superviseurs ? Chacun verra ses chatters dans « Suivi des chatters ».${none ? ` <strong>${plural(none, 'chatter n’a', 'chatters n’ont')} pas de superviseur.</strong>` : ''}</p>`, 'Valider'))) return;
+    W.status = 'validated'; W.validatedBy = (Sync.email() || '').split('@')[0]; W.validatedAt = Date.now(); saveCoach(); toast('Liste validée et envoyée aux superviseurs.'); render();
+  });
+  document.getElementById('k-unvalidate')?.addEventListener('click', () => { W.status = 'draft'; saveCoach(); render(); });
+  // Arrivée d'un superviseur en cours de semaine : on lui confie quelques chatters pris chez les plus chargés, sans toucher au reste
+  document.getElementById('k-give')?.addEventListener('click', () => {
+    const all = Object.entries(W.items || {}).map(([k, it]) => ({k, ...it}));
+    const load = id => all.filter(i => i.sup === id).length;
+    const active = new Set(all.map(i => i.sup).filter(Boolean)).size || 1;
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:520px"><h3>Donner des chatters à un superviseur</h3>
+      <p class="hint" style="margin-top:0">Pour un superviseur qui arrive en cours de semaine. Le site prend des chatters chez les superviseurs les plus chargés, en respectant le focus OF / MYM et en privilégiant ceux qui travaillent pendant ses heures. Les chatters suivis depuis plusieurs semaines gardent leur superviseur. Le reste de la répartition ne bouge pas.</p>
+      <div class="set-grid" style="grid-template-columns:1fr 1fr"><label>Superviseur<select id="kg-sup">${supList().map(s => `<option value="${s.id}">${esc(s.name)}${supFocus(s) ? ` (${supFocus(s)})` : ''} · ${load(s.id)} actuellement</option>`).join('')}</select></label>
+      <label>Nombre de chatters à lui donner<input type="number" id="kg-n" min="1" max="${coachCfg().cap}" value="${Math.min(coachCfg().cap, Math.max(1, Math.round(all.length / (active + 1))))}"></label></div>
+      <div id="kg-err" class="sc-lo" style="min-height:18px;font-size:13px;margin-top:6px"></div>
+      <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Attribuer</button></div></div>`;
+    bg.addEventListener('click', e => {
+      if (e.target === bg) return bg.remove();
+      const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === '0') return bg.remove();
+      const sup = supList().find(s => s.id === bg.querySelector('#kg-sup').value), n = Math.max(1, +bg.querySelector('#kg-n').value || 1);
+      const room = coachCfg().cap - load(sup.id);
+      if (room <= 0) { bg.querySelector('#kg-err').textContent = `${sup.name} a déjà ${load(sup.id)} chatters (maximum ${coachCfg().cap}).`; return; }
+      const curWk = planState.weeks[wk] ? wk : addDaysIso(wk, -7);
+      const cand = all.filter(i => i.sup !== sup.id && (i.pid === 'both' ? supEligible(sup, 'of') || supEligible(sup, 'mym') : supEligible(sup, i.pid)) && !i.verdict)
+        .map(i => ({i, ov: i.plan ? coachOverlap(sup, coachShifts(i.plan, [curWk])) : 0, from: i.sup ? load(i.sup) : 99}))
+        .sort((x, y) => ((x.i.streak || 1) > 1) - ((y.i.streak || 1) > 1) || (x.i.sup ? 0 : -1) - (y.i.sup ? 0 : -1) || y.from - x.from || y.ov - x.ov);
+      const take = cand.slice(0, Math.min(n, room));
+      if (!take.length) { bg.querySelector('#kg-err').textContent = 'Aucun chatter compatible à lui confier (focus OF / MYM, ou tous déjà notés).'; return; }
+      for (const x of take) { const it = W.items[x.i.k]; it.why = `réattribué à ${sup.name} en cours de semaine${x.ov ? ` · ${x.ov} h communes` : ''}`; it.sup = sup.id; }
+      saveCoach(); bg.remove(); toast(`${plural(take.length, 'chatter confié', 'chatters confiés')} à ${sup.name} : ${take.map(x => x.i.plan || x.i.name).join(', ')}.`); render();
+    });
+    document.body.appendChild(bg);
+  });
+  main.querySelectorAll('[data-ksup]').forEach(sel => sel.addEventListener('change', () => { const it = W.items[sel.dataset.ksup]; it.sup = sel.value; it.why = 'choisi manuellement'; saveCoach(); const y = window.scrollY; render(); window.scrollTo(0, y); }));
+  document.getElementById('k-links')?.addEventListener('click', () => {
+    let n = 0; main.querySelectorAll('[data-klink]').forEach(i => { const v = i.value.trim(); if (v) { coachState.links[i.dataset.klink] = v; n++; } });
+    if (!n) { toast('Saisissez au moins un prénom.', true); return; }
+    saveCoach(); build(); toast(`${plural(n, 'nom relié', 'noms reliés')}, liste recalculée.`);
+  });
+  document.getElementById('kc-save')?.addEventListener('click', () => {
+    const c = {n: +document.getElementById('kc-n').value || 20, cap: +document.getElementById('kc-cap').value || 6, minShifts: Math.max(0, +document.getElementById('kc-min').value), span: +document.getElementById('kc-span').value};
+    coachState.cfg = c; saveCoach(); toast('Réglages enregistrés : recalculez la liste pour les appliquer.'); render();
+  });
+}
+function bindCoachHead(wk) {
+  const go = k => { coachUI.week = k; render(); };
+  document.getElementById('kw-prev').addEventListener('click', () => go(addDaysIso(wk, -7)));
+  document.getElementById('kw-next').addEventListener('click', () => go(addDaysIso(wk, 7)));
+  document.getElementById('kw-sel').addEventListener('change', e => go(e.target.value));
+}
+/* ---------- Étape 2 : notes de suivi (table protégée) et verdicts ---------- */
+const VERDICTS = {
+  stop: {l: 'Non motivé · arrêt recommandé', s: 'Arrêt recommandé', c: '#ef4444', cls: 'v-stop'},
+  prog: {l: 'En progression', s: 'En progression', c: '#f59e0b', cls: 'v-prog'},
+  auto: {l: 'Autonome · formation validée', s: 'Autonome', c: '#45d08f', cls: 'v-auto'},
+  unseen: {l: 'Pas assez vu', s: 'Pas assez vu', c: '#94a3b8', cls: 'v-unseen'}
+};
+const STOP_REASONS = ['Toujours en retard ou absent', 'Micro ou partage d’écran KO', 'Ne pose aucune question', 'Je-m’en-foutiste', 'Ne veut pas évoluer', 'Ne répond pas aux feedbacks'];
+const NOTE_TAGS = [['abs', 'Absent / en retard', 'bad'], ['tech', 'Micro ou écran KO', 'bad'], ['noq', 'Ne pose aucune question', 'bad'], ['react', 'Répond juste par réaction', 'bad'], ['feedback', 'Ignore les feedbacks', 'bad'], ['understands', 'Comprend les consignes', 'good'], ['asks', 'Pose des questions', 'good'], ['progress', 'Progresse', 'good'], ['motivated', 'Motivé', 'good']];
+const tagInfo = k => NOTE_TAGS.find(t => t[0] === k) || [k, k, ''];
+// Cache des notes : chargées depuis la table coach_notes (Supabase), ou gardées dans ce navigateur sans partage
+const coachNotes = {list: [], loadedAt: 0, loading: false, remote: null};
+async function coachLoadNotes(force) {
+  if (coachNotes.loading || (!force && Date.now() - coachNotes.loadedAt < 60000)) return;
+  if (!Sync.connected()) { coachNotes.list = coachState.localNotes || []; coachNotes.remote = false; coachNotes.loadedAt = Date.now(); return; }
+  coachNotes.loading = true;
+  try { coachNotes.list = (await Sync.notesList(addDaysIso(mondayOf(isoOf(new Date())), -7 * 12))) || []; coachNotes.remote = true; }
+  catch (e) { coachNotes.remote = false; coachNotes.list = coachState.localNotes || []; }
+  coachNotes.loading = false; coachNotes.loadedAt = Date.now();
+  if (route().page === 'coaching') { const y = window.scrollY; render(); window.scrollTo(0, y); }
+}
+async function coachAddNote(n) {
+  if (coachNotes.remote) { const r = await Sync.notesAdd(n); coachNotes.list.unshift(...(r || [])); }
+  else { const x = {...n, id: 'n' + Date.now().toString(36), author: Sync.email() || 'local', created_at: new Date().toISOString()}; (coachState.localNotes ||= []).unshift(x); coachNotes.list = coachState.localNotes; saveCoach(); }
+}
+async function coachDelNote(id) {
+  if (coachNotes.remote) await Sync.notesDelete(id);
+  else { coachState.localNotes = (coachState.localNotes || []).filter(n => n.id !== id); saveCoach(); }
+  coachNotes.list = coachNotes.list.filter(n => n.id !== id);
+}
+const notesFor = key => coachNotes.list.filter(n => n.chatter_key === key).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+const who = e => String(e || '').split('@')[0];
+function noteHTML(n, canDel) {
+  return `<div class="knote"><span class="kn-d">${esc(fmtDayFr(String(n.created_at).slice(0, 10)))}</span><div style="flex:1">${(n.tags || []).map(t => `<span class="ktag ${tagInfo(t)[2]}">${esc(tagInfo(t)[1])}</span>`).join('')}${n.body ? `<div class="kn-b">${esc(n.body)}</div>` : ''}<div class="sub" style="margin:2px 0 0">${esc(who(n.author))}${n.week ? ` · ${esc(planWeekLabel(n.week))}` : ''}</div></div>${canDel ? `<button class="btn ghost small-btn" data-kndel="${esc(n.id)}" aria-label="Supprimer la note" title="Supprimer">×</button>` : ''}</div>`;
+}
+// Historique d'un chatter : ses passages dans la liste, verdicts et décisions
+function coachHistory(key) {
+  return Object.keys(coachState.weeks).sort().reverse().map(wk => ({wk, it: (coachState.weeks[wk].items || {})[key]})).filter(x => x.it);
+}
+function verdictBadge(v) { const V = VERDICTS[v && v.v]; return V ? `<span class="vbadge ${V.cls}">${V.s}</span>` : '<span class="vbadge">Pas de verdict</span>'; }
+
+// Vue superviseur : ses chatters, notes rapides, verdict de fin de semaine
+function coachSupView(wk) {
+  const me = mySup(), W = coachState.weeks[wk];
+  if (!me) return `<div class="panel empty"><h2 style="font-size:18px">Votre compte n'est pas encore relié à un superviseur</h2><p class="hint" style="margin:6px auto 0;max-width:460px">Demandez à un administrateur d'indiquer votre e-mail dans Planning → Planning superviseurs, colonne « Compte ».</p></div>`;
+  if (!W || W.status !== 'validated') return `<div class="panel empty"><h2 style="font-size:18px">La liste de la ${esc(planWeekLabel(wk))} n'est pas encore prête</h2><p class="hint" style="margin:6px 0 0">Elle apparaîtra ici dès que la Direction l'aura validée.</p></div>`;
+  coachLoadNotes();
+  const mine = Object.entries(W.items || {}).map(([k, it]) => ({k, ...it})).filter(it => it.sup === me.id);
+  const others = Object.values(W.items || {}).filter(it => it.sup && it.sup !== me.id);
+  const curWk = planState.weeks[wk] ? wk : addDaysIso(wk, -7);
+  const done = mine.filter(it => it.verdict).length;
+  return `<div class="stack"><section class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Cette semaine, vous suivez ${plural(mine.length, 'chatter', 'chatters')}</h2>
+      <span class="pill ${done === mine.length ? 'Strong' : 'Warning'}" style="margin-left:auto">${done === mine.length ? 'Tous les verdicts sont donnés' : `Verdicts : ${done}/${mine.length} · à donner avant dimanche soir`}</span>
+      ${coachNotes.remote === false && Sync.connected() ? '<p class="hint" style="width:100%;margin:0">Les notes ne sont pas encore partagées (script SQL « notes » à exécuter) : elles restent dans ce navigateur.</p>' : ''}</section>
+    ${mine.map(it => coachCardHTML(it, wk, curWk, me, true)).join('') || '<div class="panel empty">Aucun chatter ne vous est attribué cette semaine.</div>'}
+    ${others.length ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Chatters suivis par les autres superviseurs · ${others.length}</summary><div class="unplan-l" style="margin-top:10px">${others.map(it => `<span class="unchip" style="padding-right:10px">${esc(it.plan || it.name)} <span class="muted">· ${esc((supList().find(s => s.id === it.sup) || {}).name || '')}</span></span>`).join('')}</div></details>` : ''}</div>`;
+}
+function coachCardHTML(it, wk, curWk, me, editable) {
+  const sh = it.plan ? coachShifts(it.plan, [curWk]).filter(x => !x.dup) : [];
+  const notes = notesFor(it.k);
+  const prevV = coachHistory(it.k).filter(x => x.wk < wk && x.it.verdict)[0];
+  const v = it.verdict || {}, locked = !!it.decision;
+  return `<article class="panel kcard2 ${it.streak > 1 ? 'again' : ''}" data-kcard="${esc(it.k)}">
+    <div class="kcard-h"><strong style="font-size:17px">${esc(it.plan || it.name)}</strong> ${it.pid === 'both' ? platBadge('OF') + platBadge('MYM') : platBadge(it.pid === 'of' ? 'OF' : 'MYM')}
+      ${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag warm">Nouveau · à vérifier</span>' : ''}
+      <span class="sub" style="margin:0 0 0 auto">Rang ${it.rank}/${it.of} · score ${nf(it.score, 0, 1)} · grade ${it.grade}</span></div>
+    <div class="kshifts">${sh.length ? sh.sort((a, b) => a.d - b.d || a.s - b.s).map(x => { const m = allModels().find(mm => mm.id === x.mid); const mine2 = me && coachOverlap(me, [x]) > 0; return `<span class="shc ${mine2 ? 'mine' : 'other'}" title="${mine2 ? 'Pendant vos heures' : ''}">${PLAN_DAYS[x.d]} ${PLAN_SHIFTS[x.s]}${m ? ` · ${esc(m.name)}` : ''}</span>`; }).join('') : '<span class="muted">Pas de shift trouvé au planning cette semaine</span>'}</div>
+    ${editable ? `<div class="kcompose"><div class="ktags">${NOTE_TAGS.map(([k, l, c]) => `<button type="button" class="ktag sel ${c}" data-ktag="${k}">${esc(l)}</button>`).join('')}</div>
+      <div style="display:flex;gap:8px;margin-top:8px"><input type="text" data-knote="${esc(it.k)}" placeholder="Une phrase sur ce que vous avez observé (facultatif)" style="flex:1"><button class="btn" type="button" data-kadd="${esc(it.k)}">Ajouter la note</button></div></div>` : ''}
+    <div class="kjournal"><div class="kj-h">Journal · ${plural(notes.length, 'note', 'notes')}${prevV ? ` · semaine précédente : ${verdictBadge(prevV.it.verdict)}` : ''}</div>
+      ${notes.slice(0, 6).map(n => noteHTML(n, editable && String(n.author).toLowerCase() === String(Sync.email() || 'local').toLowerCase())).join('') || '<p class="hint" style="margin:4px 0">Pas encore de note.</p>'}
+      ${notes.length > 6 ? `<button class="btn ghost" type="button" data-kall="${esc(it.k)}">Voir les ${notes.length} notes</button>` : ''}</div>
+    <div class="kverd"><div class="kj-h">Verdict de la semaine${locked ? ' · <span class="muted">décision prise par la Direction</span>' : ''}</div>
+      <div class="kvbtns">${Object.entries(VERDICTS).map(([k, V]) => `<button type="button" class="kvb ${V.cls} ${v.v === k ? 'on' : ''}" data-kv="${esc(it.k)}|${k}" ${editable && !locked ? '' : 'disabled'}>${V.l}</button>`).join('')}</div>
+      ${v.v === 'stop' ? `<div class="kreasons">${STOP_REASONS.map(r => `<label class="check"><input type="checkbox" data-kr="${esc(it.k)}|${esc(r)}" ${(v.reasons || []).includes(r) ? 'checked' : ''} ${editable && !locked ? '' : 'disabled'}> ${esc(r)}</label>`).join('')}</div>` : ''}
+      ${v.v ? `<p class="sub" style="margin:6px 0 0">Donné par ${esc(v.by || '')} le ${esc(fmtDayFr(String(v.at || '').slice(0, 10)))}</p>` : ''}</div>
+  </article>`;
+}
+function bindCoachCards(main, wk) {
+  const W = coachState.weeks[wk];
+  main.querySelectorAll('[data-ktag]').forEach(b => b.addEventListener('click', () => b.classList.toggle('on')));
+  main.querySelectorAll('[data-kadd]').forEach(b => b.addEventListener('click', async () => {
+    const key = b.dataset.kadd, card = b.closest('[data-kcard]'); const it = W.items[key];
+    const tags = [...card.querySelectorAll('[data-ktag].on')].map(x => x.dataset.ktag), body = card.querySelector('[data-knote]').value.trim();
+    if (!tags.length && !body) { toast('Choisissez une étiquette ou écrivez une phrase.', true); return; }
+    b.disabled = true;
+    try { await coachAddNote({week: wk, chatter_key: key, chatter_name: it.plan || it.name, sup_id: it.sup || '', tags, body: body || null}); toast('Note ajoutée.'); }
+    catch (e) { toast(`Note non enregistrée : ${e.message}`, true); }
+    const y = window.scrollY; render(); window.scrollTo(0, y);
+  }));
+  main.querySelectorAll('[data-knote]').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') i.closest('[data-kcard]').querySelector('[data-kadd]').click(); }));
+  main.querySelectorAll('[data-kndel]').forEach(b => b.addEventListener('click', async () => { if (!(await modal('Supprimer la note', '<p>Supprimer cette note ?</p>', 'Supprimer'))) return; try { await coachDelNote(b.dataset.kndel); } catch (e) { toast(e.message, true); } const y = window.scrollY; render(); window.scrollTo(0, y); }));
+  main.querySelectorAll('[data-kv]').forEach(b => b.addEventListener('click', () => {
+    const [key, v] = b.dataset.kv.split('|'); const it = W.items[key];
+    it.verdict = it.verdict && it.verdict.v === v ? null : {v, reasons: v === 'stop' ? ((it.verdict && it.verdict.reasons) || []) : [], by: who(Sync.email()) || 'local', at: new Date().toISOString()};
+    if (!it.verdict) delete it.verdict;
+    saveCoach(); const y = window.scrollY; render(); window.scrollTo(0, y);
+  }));
+  main.querySelectorAll('[data-kr]').forEach(cb => cb.addEventListener('change', () => {
+    const [key, r] = cb.dataset.kr.split('|'); const v = W.items[key].verdict; const set = new Set(v.reasons || []);
+    cb.checked ? set.add(r) : set.delete(r); v.reasons = [...set]; saveCoach();
+  }));
+  main.querySelectorAll('[data-kall]').forEach(b => b.addEventListener('click', () => coachDetail(b.dataset.kall)));
+}
+// Fiche complète d'un chatter (Direction) : historique, verdicts, toutes les notes
+function coachDetail(key) {
+  const hist = coachHistory(key), last = hist[0] && hist[0].it, notes = notesFor(key);
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:720px"><h3>${esc((last && (last.plan || last.name)) || key)}</h3>
+    <div class="tbl-wrap" style="max-height:none;margin-bottom:12px"><table><thead><tr><th>Semaine</th><th>Superviseur</th><th class="num">Rang</th><th class="num">CA</th><th>Verdict</th><th>Décision</th></tr></thead><tbody>
+    ${hist.map(x => `<tr><td>${esc(planWeekLabel(x.wk))}</td><td>${esc((supList().find(s => s.id === x.it.sup) || {}).name || '—')}</td><td class="num">${x.it.rank}/${x.it.of}</td><td class="num">${x.it.ca != null ? moneyP(PLATFORMS[x.it.pid === 'mym' ? 'mym' : 'of'], x.it.ca) : '—'}</td><td>${verdictBadge(x.it.verdict)}${x.it.verdict && x.it.verdict.reasons && x.it.verdict.reasons.length ? `<div class="sub" style="margin:2px 0 0">${x.it.verdict.reasons.map(esc).join(' · ')}</div>` : ''}</td><td>${x.it.decision ? esc({stop: 'Arrêté', cont: 'Continuer', exit: 'Sorti du suivi'}[x.it.decision.d]) : '—'}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="kj-h">Toutes les notes · ${notes.length}</div><div style="max-height:360px;overflow:auto">${notes.map(n => noteHTML(n, false)).join('') || '<p class="hint">Aucune note.</p>'}</div>
+    <div class="acts"><button class="btn ghost" data-a="0" type="button">Fermer</button></div></div>`;
+  bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-a]')) bg.remove(); });
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') bg.remove(); });
+  document.body.appendChild(bg);
+}
+
+/* ---------- Étape 3 : tableau des décisions et suivi des superviseurs (Direction) ---------- */
+function coachCaEvolution(key, wk) {
+  const hist = coachHistory(key).filter(x => x.wk <= wk).reverse();   // de la plus ancienne à wk
+  const first = hist[0] && hist[0].it, cur = hist[hist.length - 1] && hist[hist.length - 1].it;
+  if (!first || !cur || first === cur || !first.ca || cur.ca == null) return null;
+  return Math.round((cur.ca - first.ca) / first.ca * 100);
+}
+function coachDecisionsHTML(wk) {
+  const W = coachState.weeks[wk]; if (!W) return '<div class="panel empty">Pas de liste pour cette semaine.</div>';
+  coachLoadNotes();
+  const items = Object.entries(W.items || {}).map(([k, it]) => ({k, ...it}));
+  const supName = id => (supList().find(s => s.id === id) || {}).name || '—';
+  const col = (vk, title) => {
+    const list = items.filter(it => (it.verdict && it.verdict.v) === vk || (!vk && !it.verdict)).sort((a, b) => (b.streak || 1) - (a.streak || 1) || a.rank - b.rank);
+    const V = VERDICTS[vk] || {s: 'Sans verdict', c: '#64748b', cls: ''};
+    return `<div class="kcol"><div class="kcol-h" style="--vc:${V.c}">${title || V.s} · ${list.length}</div>
+      ${list.map(it => { const evo = coachCaEvolution(it.k, wk), toDecide = vk === 'prog' && (it.streak || 1) >= 3; const n = notesFor(it.k).length;
+        return `<div class="kdec ${toDecide ? 'decide' : ''} ${it.decision ? 'decided' : ''}"><div style="display:flex;align-items:center;gap:6px"><strong>${esc(it.plan || it.name)}</strong> ${it.pid === 'both' ? platBadge('OF') + platBadge('MYM') : platBadge(it.pid === 'of' ? 'OF' : 'MYM')}</div>
+          <div class="sub" style="margin:2px 0">par ${esc(supName(it.sup))} · ${it.streak > 1 ? `${it.streak}e semaine` : '1re semaine'}${evo != null ? ` · CA <span class="${evo >= 0 ? 'sc-hi' : 'sc-lo'}">${evo > 0 ? '+' : ''}${evo} %</span>` : ''} · ${plural(n, 'note', 'notes')}</div>
+          ${toDecide ? '<div class="rtag hot" style="margin:4px 0">3e semaine sans sortir · à décider</div>' : ''}
+          ${it.verdict && it.verdict.reasons && it.verdict.reasons.length ? `<div class="sub" style="margin:2px 0">${it.verdict.reasons.map(esc).join(' · ')}</div>` : ''}
+          <div class="kdec-a">${it.decision ? `<span class="vbadge ${{stop: 'v-stop', cont: 'v-prog', exit: 'v-auto'}[it.decision.d]}">${esc({stop: 'Arrêté', cont: 'On continue', exit: 'Sorti du suivi'}[it.decision.d])}</span><button class="btn ghost small-btn" type="button" data-kdec="${esc(it.k)}|undo" title="Annuler la décision">↺</button>`
+            : `<button class="btn ghost small-btn" type="button" data-kdec="${esc(it.k)}|stop">Arrêter</button><button class="btn ghost small-btn" type="button" data-kdec="${esc(it.k)}|cont">Continuer</button><button class="btn ghost small-btn" type="button" data-kdec="${esc(it.k)}|exit">Sortir</button>`}
+            <button class="btn ghost small-btn" type="button" data-kall="${esc(it.k)}">Fiche</button></div></div>`; }).join('') || '<p class="hint" style="margin:6px 0">—</p>'}</div>`;
+  };
+  const decided = items.filter(it => it.decision).length;
+  return `<div class="stack"><section class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Décisions · ${esc(planWeekLabel(wk))}</h2><span class="hint" style="margin:0">${decided}/${items.length} décisions prises. « Arrêter » retire le chatter des prochaines listes, « Sortir » le retire la semaine suivante, « Continuer » le garde suivi.</span></section>
+    <div class="kcols">${col('stop')}${col('prog')}${col('auto')}${col('unseen')}${col(null, 'Sans verdict')}</div></div>`;
+}
+function coachSupsHTML(wk) {
+  const W = coachState.weeks[wk]; if (!W) return '<div class="panel empty">Pas de liste pour cette semaine.</div>';
+  coachLoadNotes();
+  const items = Object.entries(W.items || {}).map(([k, it]) => ({k, ...it}));
+  const rows = supList().map(s => { const mine = items.filter(it => it.sup === s.id); const notes = coachNotes.list.filter(n => n.week === wk && mine.some(it => it.k === n.chatter_key)).length; const v = mine.filter(it => it.verdict).length; return {s, n: mine.length, notes, v}; }).filter(r => r.n);
+  return `<section class="panel"><h2>Les superviseurs font-ils le suivi ? · ${esc(planWeekLabel(wk))}</h2><p class="hint">Notes prises cette semaine et verdicts donnés. En rouge : aucun suivi ou verdicts manquants.</p>
+    <div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Superviseur</th><th class="num">Chatters</th><th class="num">Notes cette semaine</th><th class="num">Verdicts</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td><span class="g-dot" style="background:${r.s.color};display:inline-block;margin-right:6px"></span><strong>${esc(r.s.name)}</strong>${r.s.email ? '' : ' <span class="rtag hot">compte non relié</span>'}</td><td class="num">${r.n}</td><td class="num ${r.notes ? '' : 'sc-lo'}">${r.notes}</td><td class="num ${r.v === r.n ? 'sc-hi' : 'sc-lo'}">${r.v}/${r.n}${r.v === r.n ? ' donnés' : ' · ' + (r.n - r.v) + ' manquant' + (r.n - r.v > 1 ? 's' : '')}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Aucun superviseur attribué.</td></tr>'}
+    </tbody></table></div>${coachNotes.remote === false && Sync.connected() ? '<p class="hint" style="margin-top:8px">Les notes des superviseurs ne sont visibles qu’après le script SQL « notes ».</p>' : ''}</section>`;
+}
+function bindCoachDecisions(main, wk) {
+  const W = coachState.weeks[wk];
+  main.querySelectorAll('[data-kdec]').forEach(b => b.addEventListener('click', async () => {
+    const [key, d] = b.dataset.kdec.split('|'); const it = W.items[key];
+    coachState.flags ||= {};
+    if (d === 'undo') { delete it.decision; delete coachState.flags[key]; }
+    else {
+      if (d === 'stop' && !(await modal('Arrêter le suivi', `<p>Marquer <strong>${esc(it.plan || it.name)}</strong> comme arrêté ? Il ne sera plus proposé dans les prochaines listes.</p>`, 'Arrêter'))) return;
+      it.decision = {d, by: who(Sync.email()) || 'local', at: new Date().toISOString()};
+      if (d === 'stop') coachState.flags[key] = {state: 'stopped', wk}; else if (d === 'exit') coachState.flags[key] = {state: 'exited', wk}; else delete coachState.flags[key];
+    }
+    saveCoach(); const y = window.scrollY; render(); window.scrollTo(0, y);
+  }));
+  main.querySelectorAll('[data-kall]').forEach(b => b.addEventListener('click', () => coachDetail(b.dataset.kall)));
+}
+
+/* =====================================================================
    PARTAGE DES DONNÉES (Supabase) — tout le monde voit et importe les mêmes données
    Trois blocs sont partagés : « periods » (chatters OF + MYM), « settings » (paramètres de notation), « asv ».
    ===================================================================== */
 const Sync = (() => {
-  const KEYS = ['periods', 'settings', 'asv', 'asvcfg', 'planning', 'plancfg', 'suivi', 'cams'];
-  const OPTIONAL = new Set(['planning', 'plancfg', 'suivi', 'cams']);   // lignes ajoutées par un script SQL plus récent
+  const KEYS = ['periods', 'settings', 'asv', 'asvcfg', 'planning', 'plancfg', 'suivi', 'cams', 'coaching'];
+  const OPTIONAL = new Set(['planning', 'plancfg', 'suivi', 'cams', 'coaching']);   // lignes ajoutées par un script SQL plus récent
   const missing = new Set();
   // Paramètres de notation et réglages ASV : modifiables uniquement par les administrateurs (vérifié aussi côté Supabase)
   const PROTECTED = new Set(['settings', 'asvcfg', 'plancfg']);
-  let isAdmin = true, rolesConfigured = false, admins = [], noCfgRow = false;
+  let isAdmin = true, rolesConfigured = false, admins = [], noCfgRow = false, direction = [], isDirection = false, directionConfigured = false;
   const LS_CFG = 'rca.sync.cfg', LS_SES = 'rca.sync.session', LS_META = 'rca.sync.meta';
-  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: []}, asvcfg: {}, planning: {weeks: {}, chatters: {}}, plancfg: {}, suivi: {weeks: {}}, cams: {items: {}}};
+  const EMPTY = {periods: [], settings: {}, asv: {models: [], entries: []}, asvcfg: {}, planning: {weeks: {}, chatters: {}}, plancfg: {}, suivi: {weeks: {}}, cams: {items: {}}, coaching: {weeks: {}, links: {}}};
   const clone = o => JSON.parse(JSON.stringify(o ?? null));
   const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
   let session = lsGet(LS_SES, null);
@@ -4744,6 +5189,7 @@ const Sync = (() => {
     if (key === 'planning') return clone(planState);
     if (key === 'suivi') return clone(suiviState);
     if (key === 'cams') return clone(camsState);
+    if (key === 'coaching') return clone(coachState);
     if (key === 'plancfg') return clone(planCfgSaved || {});
     return clone({models: asvState.models, entries: asvState.entries});
   }
@@ -4755,6 +5201,8 @@ const Sync = (() => {
     } else if (key === 'settings') {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
+    } else if (key === 'coaching') {
+      coachState = {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}; lsSet(LS_COACH, coachState);
     } else if (key === 'cams') {
       camsState = {items: (data && data.items) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {})}; lsSet(LS_CAMS, camsState);
     } else if (key === 'suivi') {
@@ -4772,8 +5220,8 @@ const Sync = (() => {
     }
   }
   const hasLocal = key => key === 'periods' ? store.periods.length > 0 : key === 'asv' ? asvState.models.length > 0 || asvState.entries.length > 0
-    : key === 'planning' ? Object.keys(planState.weeks).length > 0 : key === 'plancfg' ? !!planCfgSaved : key === 'suivi' ? Object.keys(suiviState.weeks).length > 0 : key === 'cams' ? Object.keys(camsState.items).length > 0 : true;
-  const remoteEmpty = (key, d) => key === 'cams' ? !d || !Object.keys(d.items || {}).length : key === 'suivi' ? !d || !Object.keys(d.weeks || {}).length : key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || !(d.models || []).length : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
+    : key === 'planning' ? Object.keys(planState.weeks).length > 0 : key === 'plancfg' ? !!planCfgSaved : key === 'suivi' ? Object.keys(suiviState.weeks).length > 0 : key === 'cams' ? Object.keys(camsState.items).length > 0 : key === 'coaching' ? Object.keys(coachState.weeks).length > 0 || Object.keys(coachState.links).length > 0 : true;
+  const remoteEmpty = (key, d) => key === 'coaching' ? !d || (!Object.keys(d.weeks || {}).length && !Object.keys(d.links || {}).length) : key === 'cams' ? !d || !Object.keys(d.items || {}).length : key === 'suivi' ? !d || !Object.keys(d.weeks || {}).length : key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || !(d.models || []).length : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
 
   /* ---------- Fusion à trois (base commune, local, distant) ---------- */
   function mergeById(b = [], l = [], r = []) {
@@ -4809,7 +5257,7 @@ const Sync = (() => {
     if (key === 'settings') return preferRemote ? r : {of: pick(b.of, l.of, r.of), mym: pick(b.mym, l.mym, r.mym)};
     if (key === 'asvcfg') return preferRemote ? r : pick(b, l, r);
     if (key === 'plancfg') return preferRemote ? r : pick(b, l, r);
-    if (key === 'planning' || key === 'suivi' || key === 'cams') return deepMerge(b, l, r);
+    if (key === 'planning' || key === 'suivi' || key === 'cams' || key === 'coaching') return deepMerge(b, l, r);
     return {models: mergeById(b.models, l.models, r?.models), entries: mergeById(b.entries, l.entries, r?.entries)};
   }
 
@@ -4854,6 +5302,10 @@ const Sync = (() => {
       admins = (await api('/rest/v1/admins?select=email,added_at&order=added_at.asc')) || [];
       rolesConfigured = true;
       isAdmin = admins.some(a => String(a.email).toLowerCase() === String(session.email || '').toLowerCase());
+      try {
+        direction = (await api('/rest/v1/direction?select=email,added_at&order=added_at.asc')) || []; directionConfigured = true;
+        isDirection = direction.some(a => String(a.email).toLowerCase() === String(session.email || '').toLowerCase());
+      } catch (e2) { if (e2.offline) throw e2; direction = []; directionConfigured = false; isDirection = false; }
     } catch (e) {
       if (e.offline) throw e;
       rolesConfigured = false; admins = []; isAdmin = true;   // table des administrateurs pas encore créée : comportement d'avant
@@ -4861,6 +5313,13 @@ const Sync = (() => {
     return before !== isAdmin;
   }
   const canManage = () => !connected() || isAdmin;
+  const canDirect = () => !connected() || isAdmin || isDirection;   // Direction : voit tous les chatters suivis et toutes les notes
+  // Notes de suivi : table « coach_notes » protégée (lecture réservée à l'auteur et à la Direction)
+  const notesList = since => api(`/rest/v1/coach_notes?select=*&week=gte.${since}&order=created_at.desc`);
+  const notesAdd = n => api('/rest/v1/coach_notes', {method: 'POST', headers: {Prefer: 'return=representation'}, body: JSON.stringify(n)});
+  const notesDelete = id => api(`/rest/v1/coach_notes?id=eq.${encodeURIComponent(id)}`, {method: 'DELETE'});
+  async function addDirection(email) { await api('/rest/v1/direction', {method: 'POST', headers: {Prefer: 'return=representation'}, body: JSON.stringify({email: email.trim().toLowerCase()})}); await refreshRoles(); }
+  async function removeDirection(email) { await api(`/rest/v1/direction?email=eq.${encodeURIComponent(email)}`, {method: 'DELETE'}); await refreshRoles(); }
   async function addAdmin(email) { await api('/rest/v1/admins', {method: 'POST', headers: {Prefer: 'return=representation'}, body: JSON.stringify({email: email.trim().toLowerCase()})}); await refreshRoles(); }
   async function removeAdmin(email) { await api(`/rest/v1/admins?email=eq.${encodeURIComponent(email)}`, {method: 'DELETE'}); await refreshRoles(); }
 
@@ -4970,7 +5429,7 @@ const Sync = (() => {
     const ago = lastSync ? Math.max(0, Math.round((Date.now() - lastSync) / 1000)) : null;
     const label = {sync: 'Synchronisation…', saving: 'Enregistrement…', pending: 'Modifications en attente…', offline: 'Hors ligne · modifications gardées', error: 'Erreur de synchronisation', ok: `Partagé · à jour${ago != null && ago > 20 ? ` (il y a ${ago < 90 ? ago + ' s' : Math.round(ago / 60) + ' min'})` : ''}`, idle: 'Connexion…'}[status];
     el.className = 'sync ' + (status === 'ok' ? 'ok' : status === 'error' || status === 'offline' ? 'bad' : 'wait');
-    el.innerHTML = `<a href="#of/partage" class="sync-link" title="${esc(lastError)}"><span class="dot"></span>${esc(label)}</a><span class="sync-who" title="${esc(session.email || '')}">${esc(session.email || '')}</span>${rolesConfigured ? `<span class="sync-role ${isAdmin ? 'adm' : ''}">${isAdmin ? 'Administrateur' : 'Équipe'}</span>` : ''}`;
+    el.innerHTML = `<a href="#of/partage" class="sync-link" title="${esc(lastError)}"><span class="dot"></span>${esc(label)}</a><span class="sync-who" title="${esc(session.email || '')}">${esc(session.email || '')}</span>${rolesConfigured ? `<span class="sync-role ${isAdmin || isDirection ? 'adm' : ''}">${isAdmin ? 'Administrateur' : isDirection ? 'Direction' : 'Équipe'}</span>` : ''}`;
   }
   setInterval(drawStatus, 30000);
 
@@ -4981,7 +5440,7 @@ const Sync = (() => {
   return {configured, connected, cfg, login, logout, pull, changed, init, drawStatus, status: () => status, lastError: () => lastError,
     saveLocalCfg(url, key) { lsSet(LS_CFG, url ? {url, anonKey: key} : null); session = null; lsSet(LS_SES, null); meta.version = {}; meta.base = {}; saveMeta(); drawStatus(); },
     needsLogin: () => configured() && !session, email: () => session?.email || '', _merge: merge,
-    canManage, isAdmin: () => isAdmin, planningShared: () => connected() && !missing.has('planning'), rolesConfigured: () => rolesConfigured, admins: () => admins.slice(), addAdmin, removeAdmin, refreshRoles};
+    canManage, isAdmin: () => isAdmin, canDirect, notesList, notesAdd, notesDelete, isDirection: () => isDirection, direction: () => direction.slice(), directionConfigured: () => directionConfigured, addDirection, removeDirection, planningShared: () => connected() && !missing.has('planning'), rolesConfigured: () => rolesConfigured, admins: () => admins.slice(), addAdmin, removeAdmin, refreshRoles};
 })();
 
 /* ---------- Écrans : connexion et page « Partage des données » ---------- */
@@ -5016,6 +5475,15 @@ function renderPartage(main) {
            <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="sy-now" type="button">Synchroniser maintenant</button><button class="btn danger" id="sy-out" type="button">Se déconnecter</button></div>
            ${Sync.lastError() ? `<div class="alert err" style="margin-top:12px">${esc(Sync.lastError())}</div>` : ''}`}
     </section>
+    ${Sync.connected() && Sync.rolesConfigured() && Sync.isAdmin() ? `<section class="panel" id="direction"><h2>Direction</h2>
+      ${!Sync.directionConfigured() ? `<p class="hint">Le rôle Direction n'est pas encore activé : exécutez le script SQL « direction » dans Supabase.</p>`
+      : `<p class="hint">La Direction voit tous les chatters suivis, toutes les notes des superviseurs et le tableau des décisions, sans pouvoir modifier les paramètres de notation.</p>
+        <div class="tbl-wrap" style="max-height:none;margin-bottom:12px"><table><thead><tr><th>Membre de la Direction</th><th></th></tr></thead><tbody>
+        ${Sync.direction().map(a => `<tr><td>${esc(a.email)}</td><td class="num"><button class="btn danger" type="button" data-undir="${esc(a.email)}">Retirer</button></td></tr>`).join('') || '<tr><td class="muted" colspan="2">Personne pour l’instant.</td></tr>'}
+        </tbody></table></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"><label style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted);flex:1;min-width:240px">E-mail du compte (il doit déjà exister dans Supabase)<input type="email" id="new-dir" placeholder="billy@exemple.com"></label>
+        <button class="btn primary" id="add-dir" type="button">Ajouter à la Direction</button></div>`}
+    </section>` : ''}
     ${Sync.connected() ? `<section class="panel" id="roles"><h2>Qui peut modifier les paramètres</h2>
       ${!Sync.rolesConfigured() ? `<p class="hint">Les droits ne sont pas encore activés : pour l'instant, toute personne connectée peut modifier les paramètres. Exécutez le script SQL « rôles » dans Supabase pour les activer.</p>`
       : Sync.isAdmin() ? `<p class="hint">Les administrateurs voient et modifient tout, y compris les paramètres de notation et les réglages ASV. Les autres comptes voient les tableaux de bord et importent des données, sans accès aux paramètres.</p>
@@ -5039,6 +5507,16 @@ function renderPartage(main) {
     try { await Sync.addAdmin(email); toast(`${email} peut maintenant modifier les paramètres.`); render(); }
     catch (e) { toast(/duplicate|conflict|23505/i.test(e.message) ? 'Ce compte est déjà administrateur.' : `Impossible d'ajouter : ${e.message}`, true); }
   });
+  document.getElementById('add-dir')?.addEventListener('click', async () => {
+    const email = document.getElementById('new-dir').value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Saisissez une adresse e-mail valide.', true); return; }
+    try { await Sync.addDirection(email); toast(`${email} fait maintenant partie de la Direction.`); render(); }
+    catch (e) { toast(/duplicate|conflict|23505/i.test(e.message) ? 'Ce compte fait déjà partie de la Direction.' : `Impossible d'ajouter : ${e.message}`, true); }
+  });
+  document.querySelectorAll('[data-undir]').forEach(b => b.addEventListener('click', async () => {
+    if (!(await modal('Retirer de la Direction', `<p>Retirer <strong>${esc(b.dataset.undir)}</strong> de la Direction ?</p>`, 'Retirer'))) return;
+    try { await Sync.removeDirection(b.dataset.undir); toast('Retiré de la Direction.'); render(); } catch (e) { toast(`Impossible : ${e.message}`, true); }
+  }));
   document.querySelectorAll('[data-unadmin]').forEach(b => b.addEventListener('click', async () => {
     const email = b.dataset.unadmin;
     if (!(await modal(`Retirer l'accès aux paramètres`, `<p><strong>${esc(email)}</strong> pourra toujours voir les tableaux de bord et importer, mais plus modifier les paramètres.</p>`, 'Retirer'))) return;
