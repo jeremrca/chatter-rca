@@ -5253,7 +5253,9 @@ const Sync = (() => {
   const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
   let session = lsGet(LS_SES, null);
   const meta = Object.assign({version: {}, base: {}}, lsGet(LS_META, {}));
-  const dirty = new Set();
+  const dirty = new Set(meta.dirty || []);   // modifications pas encore envoyées : gardées même si la page est fermée
+  let pendingRender = false;
+  new MutationObserver(() => { if (pendingRender && !document.querySelector('.modal-bg')) { pendingRender = false; const y = window.scrollY; render(); window.scrollTo(0, y); } }).observe(document.body, {childList: true});
   let busy = false, flushTimer = null, pollTimer = null, status = 'idle', lastSync = null, lastError = '', firstDone = false;
 
   const cfg = () => {
@@ -5262,7 +5264,7 @@ const Sync = (() => {
   };
   const configured = () => !!cfg();
   const connected = () => configured() && !!session;
-  const saveMeta = () => lsSet(LS_META, meta);
+  const saveMeta = () => { meta.dirty = [...dirty]; lsSet(LS_META, meta); };
 
   /* ---------- Lecture / écriture de l'état local ---------- */
   function getData(key) {
@@ -5276,6 +5278,13 @@ const Sync = (() => {
     if (key === 'plancfg') return clone(planCfgSaved || {});
     return clone({models: asvState.models, entries: asvState.entries});
   }
+  // Remplace le contenu d'un objet sans changer sa référence : une fenêtre ouverte pendant une mise à jour écrit toujours dans les bonnes données
+  const isObj2 = x => x && typeof x === 'object' && !Array.isArray(x);
+  function syncInPlace(t, s) {
+    for (const k of Object.keys(t)) if (!(k in s)) delete t[k];
+    for (const [k, v] of Object.entries(s)) { if (isObj2(v) && isObj2(t[k])) syncInPlace(t[k], v); else t[k] = v; }
+    return t;
+  }
   function setData(key, data) {
     if (key === 'periods') {
       const arr = Array.isArray(data) ? data : [];
@@ -5285,13 +5294,13 @@ const Sync = (() => {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
     } else if (key === 'coaching') {
-      coachState = {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(data && data.ignore ? {ignore: data.ignore} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}; lsSet(LS_COACH, coachState);
+      syncInPlace(coachState, {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(data && data.ignore ? {ignore: data.ignore} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}); lsSet(LS_COACH, coachState);
     } else if (key === 'cams') {
-      camsState = {items: (data && data.items) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {})}; lsSet(LS_CAMS, camsState);
+      syncInPlace(camsState, {items: (data && data.items) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {})}); lsSet(LS_CAMS, camsState);
     } else if (key === 'suivi') {
-      suiviState = {weeks: (data && data.weeks) || {}}; lsSet(LS_SUIVI, suiviState);
+      syncInPlace(suiviState, {weeks: (data && data.weeks) || {}}); lsSet(LS_SUIVI, suiviState);
     } else if (key === 'planning') {
-      planState = {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {}), ...(data && data.supAssign ? {supAssign: data.supAssign} : {})}; lsSet(LS_PLAN, planState);
+      syncInPlace(planState, {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {}), ...(data && data.supAssign ? {supAssign: data.supAssign} : {})}); lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
       planCfgSaved = data && Array.isArray(data.models) && data.models.length ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
@@ -5361,6 +5370,7 @@ const Sync = (() => {
   function keepSession(b) {
     session = {access_token: b.access_token, refresh_token: b.refresh_token, expires_at: Date.now() + (b.expires_in || 3600) * 1000, email: b.user?.email || session?.email || ''};
     lsSet(LS_SES, session);
+    if (typeof rtSend === 'function') try { rtSend('access_token', {access_token: session.access_token}); } catch (e) {}
   }
   async function refresh() {
     try { keepSession(await api('/auth/v1/token?grant_type=refresh_token', {method: 'POST', body: JSON.stringify({refresh_token: session.refresh_token})}, false)); }
@@ -5454,7 +5464,11 @@ const Sync = (() => {
       setStatus(dirty.size ? 'pending' : 'ok');
     } catch (e) { lastError = e.message; setStatus(e.offline ? 'offline' : 'error'); }
     finally { busy = false; }
-    if (changed) { render(); if (changedBy && !first) toast(`Données mises à jour par ${changedBy}.`); }
+    if (changed) {
+      // On ne redessine pas la page pendant qu'une fenêtre de saisie est ouverte : elle sera mise à jour à sa fermeture
+      if (document.querySelector('.modal-bg')) pendingRender = true; else { const y = window.scrollY; render(); window.scrollTo(0, y); }
+      if (changedBy && !first && Date.now() - lastToastAt > 20000) { lastToastAt = Date.now(); toast(`Mis à jour par ${String(changedBy).split('@')[0]}.`); }
+    }
     if (dirty.size) scheduleFlush(50);
     return changed;
   }
@@ -5464,16 +5478,17 @@ const Sync = (() => {
     const rows = await api(`/rest/v1/app_state?key=eq.${key}&version=eq.${v}`, {method: 'PATCH', headers: {Prefer: 'return=representation'},
       body: JSON.stringify({data: local, version: v + 1, updated_at: new Date().toISOString(), updated_by: session.email || null})});
     if (Array.isArray(rows) && rows.length) {
-      meta.version[key] = v + 1; meta.base[key] = local; saveMeta();
+      meta.version[key] = v + 1; meta.base[key] = local;
       if (same(getData(key), local)) dirty.delete(key);
-      return;
+      saveMeta(); return;
     }
     // Quelqu'un a enregistré entre-temps : on récupère sa version, on fusionne, on réessaie.
     if (PROTECTED.has(key) && attempt >= 1) {
       await refreshRoles();
       if (!isAdmin) { setData(key, meta.base[key]); dirty.delete(key); render(); throw new Error('Seuls les administrateurs peuvent modifier les paramètres.'); }
     }
-    if (attempt >= 4) throw new Error('Trop de modifications simultanées, réessayez dans un instant.');
+    if (attempt >= 8) throw new Error('Trop de modifications simultanées, nouvel essai automatique dans quelques secondes.');
+    await new Promise(r => setTimeout(r, 80 + Math.random() * 320 * (attempt + 1)));
     busy = false; await pull(); busy = true;
     return pushKey(key, attempt + 1);
   }
@@ -5486,20 +5501,55 @@ const Sync = (() => {
     finally { busy = false; }
   }
   function scheduleFlush(ms = 300) { clearTimeout(flushTimer); flushTimer = setTimeout(flush, ms); }
-  function changed(key) { if (!connected() || (PROTECTED.has(key) && !isAdmin)) return; dirty.add(key); setStatus('pending'); scheduleFlush(); }
+  function changed(key) { if (!connected() || (PROTECTED.has(key) && !isAdmin)) return; dirty.add(key); saveMeta(); setStatus('pending'); scheduleFlush(); }
+  /* Temps réel : Supabase prévient dès qu'une donnée change, sans attendre le prochain contrôle */
+  let ws = null, wsHb = null, wsLive = false, wsRetry = 0, wsRef = 0, pullTimer = null, lastPollAt = 0, lastToastAt = 0;
+  const RT_TOPIC = 'realtime:rca-app-state';
+  const rtSend = (event, payload, topic = RT_TOPIC) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify({topic, event, payload, ref: String(++wsRef)})); };
+  function schedulePull() { clearTimeout(pullTimer); pullTimer = setTimeout(() => { if (busy) schedulePull(); else pull(); }, 250); }
+  function rtStart() {
+    rtStop(); const c = cfg(); if (!c || !session || !('WebSocket' in window)) return;
+    try { ws = new WebSocket(`${c.url.replace(/^http/, 'ws')}/realtime/v1/websocket?apikey=${encodeURIComponent(c.anonKey)}&vsn=1.0.0`); } catch (e) { ws = null; return; }
+    ws.onopen = () => {
+      rtSend('phx_join', {config: {broadcast: {self: false}, presence: {key: ''}, postgres_changes: [{event: '*', schema: 'public', table: 'app_state'}]}, access_token: session.access_token});
+      wsHb = setInterval(() => rtSend('heartbeat', {}, 'phoenix'), 25000);
+    };
+    ws.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (m.topic !== RT_TOPIC) return;
+      if (m.event === 'phx_reply' && m.payload && m.payload.status === 'ok') { if (!wsLive) { wsLive = true; wsRetry = 0; drawStatus(); } }
+      else if (m.event === 'phx_reply' && m.payload && m.payload.status === 'error') { wsLive = false; drawStatus(); }
+      if (m.event === 'postgres_changes') {
+        const rec = m.payload && m.payload.data && (m.payload.data.record || m.payload.data.new);
+        if (!rec || rec.version == null || rec.version > (meta.version[rec.key] ?? -1)) schedulePull();
+      }
+    };
+    ws.onclose = () => {
+      wsLive = false; clearInterval(wsHb); drawStatus();
+      if (session) { const d = Math.min(30000, 1000 * 2 ** wsRetry++); setTimeout(() => { if (session && (!ws || ws.readyState > 1)) rtStart(); }, d); }
+    };
+    ws.onerror = () => {};
+  }
+  function rtStop() { if (ws) { ws.onclose = null; try { ws.close(); } catch (e) {} } ws = null; wsLive = false; clearInterval(wsHb); }
   async function poll() {
-    if (!connected() || busy || document.visibilityState === 'hidden') return;
+    if (!connected() || busy) return;
+    // En direct : un contrôle de secours toutes les 30 s. Sinon toutes les 5 s (onglet visible) ou 30 s (arrière-plan).
+    const every = wsLive || document.visibilityState === 'hidden' ? 30000 : 5000;
+    if (Date.now() - lastPollAt < every - 200) return;
+    lastPollAt = Date.now();
     try {
+      if (session.expires_at - Date.now() < 120000) await refresh();
       const rows = await api('/rest/v1/app_state?select=key,version');
       if ((rows || []).some(r => r.version > (meta.version[r.key] ?? -1))) await pull();
       else if (status === 'offline' || status === 'error') { lastError = ''; setStatus(dirty.size ? 'pending' : 'ok'); if (dirty.size) scheduleFlush(50); }
       else { lastSync = Date.now(); drawStatus(); }
     } catch (e) { lastError = e.message; setStatus(e.offline ? 'offline' : 'error'); }
   }
-  function start() { stop(); pollTimer = setInterval(poll, 15000); }
-  function stop() { clearInterval(pollTimer); pollTimer = null; }
-  window.addEventListener('focus', () => poll());
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') poll(); });
+  function start() { stop(); pollTimer = setInterval(poll, 5000); rtStart(); }
+  function stop() { clearInterval(pollTimer); pollTimer = null; rtStop(); }
+  window.addEventListener('focus', () => { lastPollAt = 0; poll(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { lastPollAt = 0; poll(); if (session && (!ws || ws.readyState > 1)) rtStart(); } else if (dirty.size) flush(); });
+  window.addEventListener('pagehide', () => { if (dirty.size) flush(); });
   window.addEventListener('beforeunload', e => { if (connected() && dirty.size) { e.preventDefault(); e.returnValue = ''; } });
 
   /* ---------- Affichage de l'état ---------- */
@@ -5510,7 +5560,7 @@ const Sync = (() => {
     if (!configured()) { el.innerHTML = `<a href="#of/partage" class="sync-link"><span class="dot"></span>Données sur cet appareil uniquement</a>`; el.className = 'sync local'; return; }
     if (!session) { el.innerHTML = `<a href="#of/partage" class="sync-link"><span class="dot"></span>Non connecté</a>`; el.className = 'sync off'; return; }
     const ago = lastSync ? Math.max(0, Math.round((Date.now() - lastSync) / 1000)) : null;
-    const label = {sync: 'Synchronisation…', saving: 'Enregistrement…', pending: 'Modifications en attente…', offline: 'Hors ligne · modifications gardées', error: 'Erreur de synchronisation', ok: `Partagé · à jour${ago != null && ago > 20 ? ` (il y a ${ago < 90 ? ago + ' s' : Math.round(ago / 60) + ' min'})` : ''}`, idle: 'Connexion…'}[status];
+    const label = {sync: 'Synchronisation…', saving: 'Enregistrement…', pending: 'Modifications en attente…', offline: 'Hors ligne · modifications gardées', error: 'Erreur de synchronisation', ok: wsLive ? 'Partagé · en direct' : `Partagé · à jour${ago != null && ago > 20 ? ` (il y a ${ago < 90 ? ago + ' s' : Math.round(ago / 60) + ' min'})` : ''}`, idle: 'Connexion…'}[status];
     el.className = 'sync ' + (status === 'ok' ? 'ok' : status === 'error' || status === 'offline' ? 'bad' : 'wait');
     el.innerHTML = `<a href="#of/partage" class="sync-link" title="${esc(lastError)}"><span class="dot"></span>${esc(label)}</a><span class="sync-who" title="${esc(session.email || '')}">${esc(session.email || '')}</span>${rolesConfigured ? `<span class="sync-role ${isAdmin || isDirection ? 'adm' : ''}">${isAdmin ? 'Administrateur' : isDirection ? 'Direction' : 'Équipe'}</span>` : ''}`;
   }
