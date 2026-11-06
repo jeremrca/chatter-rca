@@ -33,7 +33,7 @@ if (existsSync(dataFile)) {
     'rca.settings.v2': d.settings || {},
     'rca.asv.v1': {models: d.asv?.models || [], entries: d.asv?.entries || [], settings: d.asvcfg || {}},
     'rca.plan.v1': d.planning || {},
-    'rca.plancfg.v1': d.plancfg && (d.plancfg.models || []).length ? d.plancfg : null,
+    'rca.plancfg.v1': d.plancfg && Object.keys(d.plancfg).length ? d.plancfg : null,
     'rca.suivi.v1': d.suivi || {},
     'rca.cams.v1': d.cams || {},
     'rca.coach.v1': d.coaching || {},

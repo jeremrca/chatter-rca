@@ -608,6 +608,11 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .plb{display:block;font-size:11px;font-weight:600;margin-top:2px;opacity:.95}
 .pgrid td.pcell.plaunch-c{background:rgba(238,91,69,.09)}
 .ptl{font-size:11px}
+.launch-banner.promo{background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.4);color:#fed7aa}
+.pgrid th.pm.ppromo{background:rgba(249,115,22,.22);color:#fed7aa;font-weight:700}
+.pgrid td.pcell.ppromo-c{background:rgba(249,115,22,.07)}
+.pgrid th.pm.pbanner{background:#dc2626;color:#fff;font-weight:700}
+.pgrid td.pcell.pbanner-c{background:rgba(239,68,68,.17);box-shadow:inset 0 0 0 1px rgba(239,68,68,.45)}
 .cb-dot{width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef4444;animation:pulse 1.6s infinite}
 @media (max-width:760px){.cam-lv{grid-template-columns:1fr 1fr}}
 .pbadge.coach{background:linear-gradient(135deg,#f59e0b,#ef4444);font-size:16px}
@@ -3434,7 +3439,7 @@ function renderPlanning(main) {
   }
   main.innerHTML = head + `<div class="stack">
     <section class="panel plan-bar">
-      <div class="ptabs" role="tablist">${PLAN_DAYS.map((x, i) => `<button type="button" role="tab" class="ptab ${i === d ? 'on' : ''}" data-day="${i}" aria-selected="${i === d}"><b>${x}${launchesOn(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Lancement ce jour-là">🚀</span>' : ''}</b><span>${parseDate(addDaysIso(wk, i)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</span></button>`).join('')}</div>
+      <div class="ptabs" role="tablist">${PLAN_DAYS.map((x, i) => `<button type="button" role="tab" class="ptab ${i === d ? 'on' : ''}" data-day="${i}" aria-selected="${i === d}"><b>${x}${launchesOn(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Lancement ce jour-là">🚀</span>' : ''}${bannersOnDay(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Bannière ce jour-là">⚡</span>' : ''}</b><span>${parseDate(addDaysIso(wk, i)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</span></button>`).join('')}</div>
       <div class="pactions">
         <input type="search" id="p-q" placeholder="Rechercher un chatter" value="${esc(planUI.q)}" aria-label="Rechercher un chatter">
         <button class="btn" id="p-unav" type="button">Indisponibilité</button>
@@ -3463,18 +3468,21 @@ function renderPlanning(main) {
     <section class="panel" style="padding:12px">
       <div class="tbl-wrap pgrid-wrap" style="max-height:none"><table class="pgrid"><thead>
         <tr><th class="sh"></th>${groupsShown.map(x => `<th colspan="${x.ms.length}" class="pg" style="background:${x.g.color};color:${x.g.ink}">${esc(x.g.label)}</th>`).join('')}</tr>
-        <tr><th class="sh">${PLAN_DAYS_LONG[d]}</th>${groupsShown.map(x => x.ms.map(m => { const la = launchesOn(dayDate).find(L => L.model === m.id); return `<th class="pm${la ? ' plaunch' : ''}" style="box-shadow:inset 0 3px 0 ${x.g.color}"${la ? ` title="Lancement à ${esc(fmtHour(la.time))}"` : ''}>${esc(m.name)}${la ? `<span class="plb">🚀 Lancement ${esc(fmtHour(la.time))}</span>` : ''}</th>`; }).join('')).join('')}</tr>
+        <tr><th class="sh">${PLAN_DAYS_LONG[d]}</th>${groupsShown.map(x => x.ms.map(m => { const la = launchesOn(dayDate).find(L => L.model === m.id), bn = bannersOnDay(dayDate, m.id)[0], wp = weekPromoFor(wk, m.id);
+          const cls = bn ? ' pbanner' : la ? ' plaunch' : wp ? ' ppromo' : '';
+          return `<th class="pm${cls}" style="box-shadow:inset 0 3px 0 ${x.g.color}">${esc(m.name)}${bn ? `<span class="plb">⚡ Bannière ${esc(fmtHour(`${pad2(bn.s.getHours())}:${pad2(bn.s.getMinutes())}`))} → ${esc(fmtHour(`${pad2(bn.e.getHours())}:${pad2(bn.e.getMinutes())}`))}</span>` : ''}${la ? `<span class="plb">🚀 Lancement ${esc(fmtHour(la.time))}</span>` : ''}${wp ? '<span class="plb">🔥 Mise en avant</span>' : ''}</th>`; }).join('')).join('')}</tr>
       </thead><tbody>
         ${PLAN_SHIFTS.map((sh, s) => `<tr><th class="sh">${sh}</th>${groupsShown.map(x => x.ms.map(m => {
           const list = W.cells[cellKey(d, s, m.id)] || [];
-          const la = launchesOn(dayDate).some(L => L.model === m.id);
+          const la = launchesOn(dayDate).some(L => L.model === m.id), bn = bannersOnDay(dayDate, m.id).some(P => bannerHitsShift(P, dayDate, s)), wp = !!weekPromoFor(wk, m.id);
           const hit = q && list.some(e => [e.n, ...(e.r ? e.r.split('/') : [])].some(n => normName(n).includes(q)));
-          return `<td class="pcell ${hit ? 'hit' : ''} ${list.length ? '' : 'empty'}${la ? ' plaunch-c' : ''}" data-cell="${cellKey(d, s, m.id)}" tabindex="0" title="${esc(modelLabel(m))} · ${PLAN_DAYS_LONG[d]} ${sh}">${list.map(e => chipHTML(e, wk, d, s, hl)).join('') || '<span class="plus">+</span>'}</td>`;
+          return `<td class="pcell ${hit ? 'hit' : ''} ${list.length ? '' : 'empty'}${bn ? ' pbanner-c' : la ? ' plaunch-c' : wp ? ' ppromo-c' : ''}" data-cell="${cellKey(d, s, m.id)}" tabindex="0" title="${esc(modelLabel(m))} · ${PLAN_DAYS_LONG[d]} ${sh}">${list.map(e => chipHTML(e, wk, d, s, hl)).join('') || '<span class="plus">+</span>'}</td>`;
         }).join('')).join('')}</tr>`).join('')}
       </tbody></table></div>
     </section>
     <section class="panel"><h2>Notes du ${PLAN_DAYS_LONG[d].toLowerCase()}</h2><textarea id="p-note" rows="4" placeholder="Retards, absences, problèmes de connexion…">${esc(note)}</textarea><p class="hint" style="margin:6px 0 0;font-size:12px">Enregistré automatiquement et visible par toute l'équipe.</p></section>
     ${launchesHTML()}
+    ${promosHTML()}
     ${planModelsHTML(wk, d)}
   </div>`;
   bindPlanningHead(main, wk);
@@ -3498,6 +3506,7 @@ function renderPlanning(main) {
   document.getElementById('p-xls')?.addEventListener('click', () => importExcelModal(wk));
   bindPlanModels(wk, d);
   bindLaunches(main);
+  bindPromos(main);
   document.getElementById('p-addm').addEventListener('click', () => addModelModal(dayDate));
 }
 /* ---------- Import d'un planning Excel (format de l'agence : un onglet par semaine) ---------- */
@@ -4290,16 +4299,27 @@ function launchBanner(main, rt) {
   if (!main) return;
   main.querySelectorAll('.launch-banner').forEach(x => x.remove());
   if (Sync.needsLogin() || rt.page === 'partage') return;
-  const list = upcomingLaunches(); if (!list.length) return;
-  const hot = list.filter(L => L.days <= LAUNCH_SOON), soft = list.filter(L => L.days > LAUNCH_SOON), els = [];
+  const list = upcomingLaunches(), bans = upcomingBanners();
+  const weekP = rt.page === 'planning' ? allPromos().filter(P => P.type === 'week' && P.week === thisMonday()) : [];
+  if (!list.length && !bans.length && !weekP.length) return;
+  const hotBan = bans.filter(P => new Date() >= P.s || daysUntil(P.date) <= LAUNCH_SOON), softBan = bans.filter(P => !hotBan.includes(P));
+  const hot = [...list.filter(L => L.days <= LAUNCH_SOON).map(L => `🚀 ${launchHotText(L)}`), ...hotBan.map(bannerHotText)];
+  const soft = [...list.filter(L => L.days > LAUNCH_SOON).map(L => `lancement <strong>${esc(launchLabel(L))}</strong> le ${esc(fmtLaunchDay(L.date))} à ${esc(fmtHour(L.time))}`),
+    ...softBan.map(P => `bannière <strong>${esc(launchLabel(P))}</strong> ${esc(bannerPeriod(P))}`)];
+  const els = [];
   if (hot.length) {
     const b = document.createElement('div'); b.className = 'launch-banner hot';
-    b.innerHTML = `<span class="cb-dot"></span><span>🚀 ${hot.map(launchHotText).join(' · ')}</span>${rt.page === 'planning' ? '' : `<a class="btn ghost" href="#${rt.pid}/planning">Voir le planning</a>`}`;
+    b.innerHTML = `<span class="cb-dot"></span><span>${hot.join(' · ')}</span>${rt.page === 'planning' ? '' : `<a class="btn ghost" href="#${rt.pid}/planning">Voir le planning</a>`}`;
     els.push(b);
   }
   if (soft.length) {
     const b = document.createElement('div'); b.className = 'launch-banner';
-    b.innerHTML = `<span>Rappel · ${soft.map(L => `lancement <strong>${esc(launchLabel(L))}</strong> le ${esc(fmtLaunchDay(L.date))} à ${esc(fmtHour(L.time))}`).join(' · ')}</span>`;
+    b.innerHTML = `<span>Rappel · ${soft.join(' · ')}</span>`;
+    els.push(b);
+  }
+  if (weekP.length) {
+    const b = document.createElement('div'); b.className = 'launch-banner promo';
+    b.innerHTML = `<span>🔥 Cette semaine : mise en avant ${listFr(weekP.map(P => `<strong>${esc(launchLabel(P))}</strong>`))} · un peu plus de subs que d’habitude</span>`;
     els.push(b);
   }
   main.prepend(...els);
@@ -4376,9 +4396,110 @@ function launchModal(editId) {
     const lid = editId || 'l' + Date.now().toString(36);
     planCfgSaved.launches[lid] = {model: id, name: m.name, group: m.group, date, time, by: Sync.email() || '', at: Date.now()};
     savePlanCfg(); close(); planUI.launchOpen = true;
-    toast(`Lancement de ${modelLabel(m)} programmé le ${fmtLaunchDay(date)} à ${fmtHour(time)}.`); render();
+    toast(`Lancement ${deFr(modelLabel(m))} programmé le ${fmtLaunchDay(date)} à ${fmtHour(time)}.`); render();
   });
   document.body.appendChild(bg); (L ? $('#lm-d') : $('#lm-n')).focus();
+}
+
+/* ---------- Mises en avant (semaine) et bannières (24 h) ----------
+   Programmées par les administrateurs : clé protégée « plancfg » (champ promos).
+   Semaine : colonne de la modèle en orange toute la semaine + petite ligne en haut du planning.
+   Bannière : colonne en rouge et créneaux concernés surlignés ; rappel discret de J-7 à J-4, bandeau rouge de J-3 à la fin. */
+const BANNER_TIME = '12:00', BANNER_HOURS = 24;
+const deFr = n => /^[aeiouyhàâéèêëîïôöùûü]/i.test(n) ? `d’${n}` : `de ${n}`;
+const promosMap = () => (planCfgSaved && planCfgSaved.promos) || {};
+const promoRange = P => {
+  if (P.type === 'week') return {s: new Date(`${P.week}T00:00`), e: new Date(`${addDaysIso(P.week, 7)}T00:00`)};
+  const s = new Date(`${P.date}T${P.time || BANNER_TIME}`); return {s, e: new Date(s.getTime() + (P.hours || BANNER_HOURS) * 3600000)};
+};
+const allPromos = () => Object.entries(promosMap()).map(([id, P]) => ({id, ...P, ...promoRange(P)})).sort((a, b) => a.s - b.s);
+const shiftRange = (date, s) => { const b = new Date(`${date}T00:00`).getTime(); return {s: new Date(b + (4 + 6 * s) * 3600000), e: new Date(b + (10 + 6 * s) * 3600000)}; };
+const bannerHitsShift = (P, date, s) => { const r = shiftRange(date, s); return P.s < r.e && P.e > r.s; };
+const weekPromoFor = (wk, mid) => allPromos().find(P => P.type === 'week' && P.week === wk && P.model === mid);
+const bannersOnDay = (date, mid) => allPromos().filter(P => P.type === 'banner' && (!mid || P.model === mid) && PLAN_SHIFTS.some((_, s) => bannerHitsShift(P, date, s)));
+const fmtWhen = d => `${fmtLaunchDay(isoOf(d))} ${fmtHour(`${pad2(d.getHours())}:${pad2(d.getMinutes())}`)}`;
+const bannerPeriod = P => `${fmtWhen(P.s)} → ${fmtWhen(P.e)}`;
+function bannerHotText(P) {
+  const who = `<strong>${esc(launchLabel(P))}</strong>`;
+  if (new Date() >= P.s) return `⚡ Bannière ${who} en cours jusqu’à ${esc(fmtWhen(P.e))} · équipes renforcées`;
+  const d = daysUntil(P.date), when = d === 0 ? 'aujourd’hui' : d === 1 ? 'demain' : `dans ${d} jours`;
+  return `⚡ Bannière ${who} ${when} · ${esc(bannerPeriod(P))} · prévoir des équipes renforcées, surtout le soir`;
+}
+// Bannières à rappeler : de J-7 jusqu'à la fin de la bannière
+const upcomingBanners = () => allPromos().filter(P => P.type === 'banner' && new Date() < P.e && daysUntil(P.date) <= LAUNCH_NOTICE);
+function promosHTML() {
+  const now = new Date(), list = allPromos().filter(P => P.e > new Date(now.getTime() - 14 * 86400000)), next = list.filter(P => P.e > now).length, admin = Sync.canManage();
+  return `<details class="panel" id="pp-panel" ${planUI.promoOpen ? 'open' : ''}><summary style="cursor:pointer;font-weight:700">🔥 Mises en avant et bannières${next ? ` <span class="sub">· ${next} à venir ou en cours</span>` : ''}</summary>
+    <p class="hint" style="margin-top:10px">🔥 <strong>Mise en avant</strong> : la modèle prend un peu plus de subs toute la semaine (colonne en orange). ⚡ <strong>Bannière</strong> : grosse vague de subs pendant 24 h (colonne en rouge, créneaux concernés surlignés, rappel 3 jours avant).${admin ? '' : ' Programmées par les administrateurs.'}</p>
+    ${list.length ? `<div class="tbl-wrap" style="max-height:none;margin-bottom:12px"><table><thead><tr><th>Type</th><th>Modèle</th><th>Période</th><th>Statut</th>${admin ? '<th></th>' : ''}</tr></thead><tbody>
+      ${list.map(P => `<tr><td>${P.type === 'week' ? '🔥 Mise en avant' : '⚡ Bannière 24 h'}</td><td><strong>${esc(launchLabel(P))}</strong></td>
+        <td>${esc(P.type === 'week' ? weekLabel(P.week) : bannerPeriod(P))}</td>
+        <td>${P.e <= now ? '<span class="pill OnTrack">Terminée</span>' : P.s <= now ? '<span class="pill Critical">En cours</span>' : '<span class="pill Warning">À venir</span>'}</td>
+        ${admin ? `<td class="num" style="white-space:nowrap"><button class="btn ghost" type="button" data-pedit="${esc(P.id)}">Modifier</button> <button class="btn danger" type="button" data-pdel="${esc(P.id)}">Supprimer</button></td>` : ''}</tr>`).join('')}
+    </tbody></table></div>` : '<p class="muted" style="margin:0 0 12px">Aucune mise en avant programmée.</p>'}
+    ${admin ? '<button class="btn primary" id="pp-add" type="button">+ Ajouter une mise en avant</button>' : ''}
+  </details>`;
+}
+function bindPromos(main) {
+  main.querySelector('#pp-panel')?.addEventListener('toggle', e => { planUI.promoOpen = e.target.open; });
+  main.querySelector('#pp-add')?.addEventListener('click', () => promoModal());
+  main.querySelectorAll('[data-pedit]').forEach(b => b.addEventListener('click', () => promoModal(b.dataset.pedit)));
+  main.querySelectorAll('[data-pdel]').forEach(b => b.addEventListener('click', async () => {
+    const P = promosMap()[b.dataset.pdel]; if (!P) return;
+    if (!(await modal('Supprimer la mise en avant', `<p>Supprimer ${P.type === 'week' ? 'la mise en avant' : 'la bannière'} de <strong>${esc(launchLabel(P))}</strong> ? Elle disparaîtra du planning pour toute l’équipe.</p>`, 'Supprimer'))) return;
+    delete planCfgSaved.promos[b.dataset.pdel]; savePlanCfg(); toast('Mise en avant supprimée.'); render();
+  }));
+}
+function promoModal(editId) {
+  if (!Sync.canManage()) { toast('Seuls les administrateurs peuvent programmer une mise en avant.', true); return; }
+  const P = editId ? promosMap()[editId] : null, models = allModels(), field = 'display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)';
+  const mon = thisMonday(), weeks = Array.from({length: 14}, (_, i) => addDaysIso(mon, 7 * (i - 1)));
+  if (P && P.type === 'week' && !weeks.includes(P.week)) weeks.unshift(P.week);
+  const type0 = P ? P.type : 'week';
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:460px"><h3>${P ? 'Modifier la mise en avant' : 'Ajouter une mise en avant'}</h3>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="ptopt" role="radiogroup" style="margin:0"><button type="button" data-pt="week" class="${type0 === 'week' ? 'on' : ''}">🔥 Mise en avant semaine</button><button type="button" data-pt="banner" class="${type0 === 'banner' ? 'on' : ''}">⚡ Bannière 24 h</button></div>
+      <label style="${field}">Modèle<select id="pm-m">${PLAN_GROUPS.map(g => `<optgroup label="${esc(g.label)}">${models.filter(m => m.group === g.id).map(m => `<option value="${esc(m.id)}" ${P && P.model === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</optgroup>`).join('')}</select></label>
+      <label style="${field}" id="pm-wk">Semaine<select id="pm-w">${weeks.map(w => `<option value="${w}" ${(P && P.week === w) || (!P && w === addDaysIso(mon, 7)) ? 'selected' : ''}>${esc(weekLabel(w))}</option>`).join('')}</select></label>
+      <div id="pm-bn" style="display:flex;gap:10px"><label style="${field};flex:1">Début de la bannière<input type="date" id="pm-d" value="${esc(P && P.date ? P.date : addDaysIso(isoOf(new Date()), 3))}"></label>
+        <label style="${field};width:120px">Heure<input type="time" id="pm-t" value="${esc(P && P.time ? P.time : BANNER_TIME)}"></label></div>
+      <p class="hint" style="margin:0" id="pm-h"></p>
+      <div id="pm-err" class="sc-lo" style="min-height:18px;font-size:13px"></div>
+    </div>
+    <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">${P ? 'Enregistrer' : 'Ajouter'}</button></div></div>`;
+  const $ = s => bg.querySelector(s);
+  let type = type0;
+  const sync = () => {
+    bg.querySelectorAll('[data-pt]').forEach(b => b.classList.toggle('on', b.dataset.pt === type));
+    $('#pm-wk').style.display = type === 'week' ? 'flex' : 'none'; $('#pm-bn').style.display = type === 'banner' ? 'flex' : 'none';
+    $('#pm-h').textContent = type === 'week' ? 'Toute la semaine, du lundi au dimanche : la colonne de la modèle passe en orange.' : `Dure ${BANNER_HOURS} h à partir de l’heure choisie (midi par défaut) : les créneaux concernés sont surlignés en rouge et un rappel s’affiche 3 jours avant.`;
+  };
+  bg.querySelectorAll('[data-pt]').forEach(b => b.addEventListener('click', () => { type = b.dataset.pt; sync(); }));
+  sync();
+  const close = () => { bg.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  bg.addEventListener('click', e => {
+    if (e.target === bg) return close();
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a !== '1') return close();
+    const mid = $('#pm-m').value, m = planModelsMap()[mid], err = $('#pm-err');
+    if (!m) { err.textContent = 'Choisissez une modèle.'; return; }
+    const base = {model: mid, name: m.name, group: m.group, type, by: Sync.email() || '', at: Date.now()};
+    let rec;
+    if (type === 'week') rec = {...base, week: $('#pm-w').value};
+    else {
+      const date = $('#pm-d').value; if (!date) { err.textContent = 'Choisissez la date de début de la bannière.'; return; }
+      rec = {...base, date, time: $('#pm-t').value || BANNER_TIME, hours: BANNER_HOURS};
+    }
+    planCfgSaved ||= {}; planCfgSaved.promos ||= {};
+    planCfgSaved.promos[editId || 'p' + Date.now().toString(36)] = rec;
+    savePlanCfg(); close(); planUI.promoOpen = true;
+    const R = promoRange(rec);
+    toast(type === 'week' ? `Mise en avant ${deFr(modelLabel(m))} : ${weekLabel(rec.week)}.` : `Bannière ${modelLabel(m)} : ${fmtWhen(R.s)} → ${fmtWhen(R.e)}.`); render();
+  });
+  document.body.appendChild(bg); $('#pm-m').focus();
 }
 
 /* =====================================================================
@@ -5428,7 +5549,7 @@ const Sync = (() => {
     } else if (key === 'planning') {
       syncInPlace(planState, {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {}), ...(data && data.supAssign ? {supAssign: data.supAssign} : {})}); lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
-      planCfgSaved = data && ((Array.isArray(data.models) && data.models.length) || (data.launches && Object.keys(data.launches).length)) ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
+      planCfgSaved = data && ((Array.isArray(data.models) && data.models.length) || (data.launches && Object.keys(data.launches).length) || (data.promos && Object.keys(data.promos).length)) ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
       if (data && Object.keys(data).length) { asvState.settings = mergeAsvSettings(data); lsSet(LS_ASV, asvState); }
     } else {
@@ -5439,7 +5560,7 @@ const Sync = (() => {
   }
   const hasLocal = key => key === 'periods' ? store.periods.length > 0 : key === 'asv' ? asvState.models.length > 0 || asvState.entries.length > 0
     : key === 'planning' ? Object.keys(planState.weeks).length > 0 : key === 'plancfg' ? !!planCfgSaved : key === 'suivi' ? Object.keys(suiviState.weeks).length > 0 : key === 'cams' ? Object.keys(camsState.items).length > 0 : key === 'coaching' ? Object.keys(coachState.weeks).length > 0 || Object.keys(coachState.links).length > 0 : true;
-  const remoteEmpty = (key, d) => key === 'coaching' ? !d || (!Object.keys(d.weeks || {}).length && !Object.keys(d.links || {}).length) : key === 'cams' ? !d || !Object.keys(d.items || {}).length : key === 'suivi' ? !d || !Object.keys(d.weeks || {}).length : key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || (!(d.models || []).length && !Object.keys(d.launches || {}).length) : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
+  const remoteEmpty = (key, d) => key === 'coaching' ? !d || (!Object.keys(d.weeks || {}).length && !Object.keys(d.links || {}).length) : key === 'cams' ? !d || !Object.keys(d.items || {}).length : key === 'suivi' ? !d || !Object.keys(d.weeks || {}).length : key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || (!(d.models || []).length && !Object.keys(d.launches || {}).length && !Object.keys(d.promos || {}).length) : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
 
   /* ---------- Fusion à trois (base commune, local, distant) ---------- */
   function mergeById(b = [], l = [], r = []) {
