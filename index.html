@@ -4356,7 +4356,7 @@ function launchModal(editId) {
   bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:460px"><h3>${L ? 'Modifier le lancement' : 'Programmer un lancement'}</h3>
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="${field}">Modèle<select id="lm-m"><option value="__new">+ Nouvelle modèle…</option>
-        ${PLAN_GROUPS.map(g => `<optgroup label="${esc(g.label)}">${models.filter(m => m.group === g.id).map(m => `<option value="${esc(m.id)}" ${L && L.model === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</optgroup>`).join('')}</select></label>
+        ${PLAN_GROUPS.map(g => `<optgroup label="${esc(g.label)}">${models.filter(m => m.group === g.id).map(m => `<option value="${esc(m.id)}" ${L && L.model === m.id ? 'selected' : ''}>${esc(modelLabel(m))}</option>`).join('')}</optgroup>`).join('')}</select></label>
       <div id="lm-new" style="display:flex;flex-direction:column;gap:10px">
         <label style="${field}">Nom de la nouvelle modèle<input type="text" id="lm-n" placeholder="ex. Carla"></label>
         <label style="${field}">Plateforme<select id="lm-g">${PLAN_GROUPS.map(g => `<option value="${g.id}">${g.label}</option>`).join('')}</select></label>
@@ -4460,7 +4460,7 @@ function promoModal(editId) {
   bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:460px"><h3>${P ? 'Modifier la mise en avant' : 'Ajouter une mise en avant'}</h3>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div class="ptopt" role="radiogroup" style="margin:0"><button type="button" data-pt="week" class="${type0 === 'week' ? 'on' : ''}">🔥 Mise en avant semaine</button><button type="button" data-pt="banner" class="${type0 === 'banner' ? 'on' : ''}">⚡ Bannière 24 h</button></div>
-      <label style="${field}">Modèle<select id="pm-m">${PLAN_GROUPS.map(g => `<optgroup label="${esc(g.label)}">${models.filter(m => m.group === g.id).map(m => `<option value="${esc(m.id)}" ${P && P.model === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</optgroup>`).join('')}</select></label>
+      <label style="${field}">Modèle<select id="pm-m">${PLAN_GROUPS.map(g => `<optgroup label="${esc(g.label)}">${models.filter(m => m.group === g.id).map(m => `<option value="${esc(m.id)}" ${P && P.model === m.id ? 'selected' : ''}>${esc(modelLabel(m))}</option>`).join('')}</optgroup>`).join('')}</select></label>
       <label style="${field}" id="pm-wk">Semaine<select id="pm-w">${weeks.map(w => `<option value="${w}" ${(P && P.week === w) || (!P && w === addDaysIso(mon, 7)) ? 'selected' : ''}>${esc(weekLabel(w))}</option>`).join('')}</select></label>
       <div id="pm-bn" style="display:flex;gap:10px"><label style="${field};flex:1">Début de la bannière<input type="date" id="pm-d" value="${esc(P && P.date ? P.date : addDaysIso(isoOf(new Date()), 3))}"></label>
         <label style="${field};width:120px">Heure<input type="time" id="pm-t" value="${esc(P && P.time ? P.time : BANNER_TIME)}"></label></div>
