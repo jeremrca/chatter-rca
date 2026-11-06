@@ -601,6 +601,13 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .nbadge.pulse{animation:pulse 1.6s infinite}
 .cam-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:16px;border-radius:var(--r-md);background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.55);color:#fecaca;font-size:13.5px}
 .cam-banner .btn{margin-left:auto}
+.launch-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 14px;margin-bottom:12px;border-radius:var(--r-md);background:rgba(247,160,52,.07);border:1px solid rgba(247,160,52,.32);color:#fde3c0;font-size:13px}
+.launch-banner.hot{padding:10px 14px;margin-bottom:16px;background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.55);color:#fecaca;font-size:13.5px}
+.launch-banner .btn{margin-left:auto}
+.pgrid th.pm.plaunch{background:var(--brand-grad);color:#fff;font-weight:700}
+.plb{display:block;font-size:11px;font-weight:600;margin-top:2px;opacity:.95}
+.pgrid td.pcell.plaunch-c{background:rgba(238,91,69,.09)}
+.ptl{font-size:11px}
 .cb-dot{width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef4444;animation:pulse 1.6s infinite}
 @media (max-width:760px){.cam-lv{grid-template-columns:1fr 1fr}}
 .pbadge.coach{background:linear-gradient(135deg,#f59e0b,#ef4444);font-size:16px}
@@ -1854,6 +1861,7 @@ function render() {
   if (Sync.needsLogin()) { renderLogin(main); return; }
   camsReminder();
   setTimeout(() => camsBanner(main, rt), 0);
+  setTimeout(() => launchBanner(main, rt), 0);
   if (rt.page === 'planning') { renderPlanning(main); return; }
   if (rt.page === 'suivi') { renderSuivi(main); return; }
   if (rt.page === 'cams') { renderCams(main); return; }
@@ -3426,11 +3434,12 @@ function renderPlanning(main) {
   }
   main.innerHTML = head + `<div class="stack">
     <section class="panel plan-bar">
-      <div class="ptabs" role="tablist">${PLAN_DAYS.map((x, i) => `<button type="button" role="tab" class="ptab ${i === d ? 'on' : ''}" data-day="${i}" aria-selected="${i === d}"><b>${x}</b><span>${parseDate(addDaysIso(wk, i)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</span></button>`).join('')}</div>
+      <div class="ptabs" role="tablist">${PLAN_DAYS.map((x, i) => `<button type="button" role="tab" class="ptab ${i === d ? 'on' : ''}" data-day="${i}" aria-selected="${i === d}"><b>${x}${launchesOn(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Lancement ce jour-là">🚀</span>' : ''}</b><span>${parseDate(addDaysIso(wk, i)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</span></button>`).join('')}</div>
       <div class="pactions">
         <input type="search" id="p-q" placeholder="Rechercher un chatter" value="${esc(planUI.q)}" aria-label="Rechercher un chatter">
         <button class="btn" id="p-unav" type="button">Indisponibilité</button>
         <button class="btn" id="p-addm" type="button">+ Ajouter une modèle</button>
+        ${Sync.canManage() ? '<button class="btn" id="p-launch" type="button">🚀 Lancement</button>' : ''}
         ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>`}
         <button class="btn ghost" id="p-xls" type="button">Importer un Excel</button>
       </div>
@@ -3454,16 +3463,18 @@ function renderPlanning(main) {
     <section class="panel" style="padding:12px">
       <div class="tbl-wrap pgrid-wrap" style="max-height:none"><table class="pgrid"><thead>
         <tr><th class="sh"></th>${groupsShown.map(x => `<th colspan="${x.ms.length}" class="pg" style="background:${x.g.color};color:${x.g.ink}">${esc(x.g.label)}</th>`).join('')}</tr>
-        <tr><th class="sh">${PLAN_DAYS_LONG[d]}</th>${groupsShown.map(x => x.ms.map(m => `<th class="pm" style="box-shadow:inset 0 3px 0 ${x.g.color}">${esc(m.name)}</th>`).join('')).join('')}</tr>
+        <tr><th class="sh">${PLAN_DAYS_LONG[d]}</th>${groupsShown.map(x => x.ms.map(m => { const la = launchesOn(dayDate).find(L => L.model === m.id); return `<th class="pm${la ? ' plaunch' : ''}" style="box-shadow:inset 0 3px 0 ${x.g.color}"${la ? ` title="Lancement à ${esc(fmtHour(la.time))}"` : ''}>${esc(m.name)}${la ? `<span class="plb">🚀 Lancement ${esc(fmtHour(la.time))}</span>` : ''}</th>`; }).join('')).join('')}</tr>
       </thead><tbody>
         ${PLAN_SHIFTS.map((sh, s) => `<tr><th class="sh">${sh}</th>${groupsShown.map(x => x.ms.map(m => {
           const list = W.cells[cellKey(d, s, m.id)] || [];
+          const la = launchesOn(dayDate).some(L => L.model === m.id);
           const hit = q && list.some(e => [e.n, ...(e.r ? e.r.split('/') : [])].some(n => normName(n).includes(q)));
-          return `<td class="pcell ${hit ? 'hit' : ''} ${list.length ? '' : 'empty'}" data-cell="${cellKey(d, s, m.id)}" tabindex="0" title="${esc(modelLabel(m))} · ${PLAN_DAYS_LONG[d]} ${sh}">${list.map(e => chipHTML(e, wk, d, s, hl)).join('') || '<span class="plus">+</span>'}</td>`;
+          return `<td class="pcell ${hit ? 'hit' : ''} ${list.length ? '' : 'empty'}${la ? ' plaunch-c' : ''}" data-cell="${cellKey(d, s, m.id)}" tabindex="0" title="${esc(modelLabel(m))} · ${PLAN_DAYS_LONG[d]} ${sh}">${list.map(e => chipHTML(e, wk, d, s, hl)).join('') || '<span class="plus">+</span>'}</td>`;
         }).join('')).join('')}</tr>`).join('')}
       </tbody></table></div>
     </section>
     <section class="panel"><h2>Notes du ${PLAN_DAYS_LONG[d].toLowerCase()}</h2><textarea id="p-note" rows="4" placeholder="Retards, absences, problèmes de connexion…">${esc(note)}</textarea><p class="hint" style="margin:6px 0 0;font-size:12px">Enregistré automatiquement et visible par toute l'équipe.</p></section>
+    ${launchesHTML()}
     ${planModelsHTML(wk, d)}
   </div>`;
   bindPlanningHead(main, wk);
@@ -3486,6 +3497,7 @@ function renderPlanning(main) {
   }));
   document.getElementById('p-xls')?.addEventListener('click', () => importExcelModal(wk));
   bindPlanModels(wk, d);
+  bindLaunches(main);
   document.getElementById('p-addm').addEventListener('click', () => addModelModal(dayDate));
 }
 /* ---------- Import d'un planning Excel (format de l'agence : un onglet par semaine) ---------- */
@@ -4253,6 +4265,120 @@ function bindPlanModels(wk, d) {
   panel.querySelectorAll('[data-mu]').forEach(el => el.addEventListener('click', () => move(el.dataset.mu, -1)));
   panel.querySelectorAll('[data-md]').forEach(el => el.addEventListener('click', () => move(el.dataset.md, 1)));
   document.getElementById('pm-add').addEventListener('click', () => addModelModal(addDaysIso(wk, d)));
+}
+
+/* ---------- Lancements de modèles ----------
+   Programmés par les administrateurs uniquement : enregistrés dans la clé protégée « plancfg » (champ launches).
+   Rappel discret de J-7 à J-4, puis bandeau rouge qui clignote de J-3 jusqu'à la fin du jour J, sur toutes les pages. */
+const LAUNCH_SOON = 3, LAUNCH_NOTICE = 7, LAUNCH_TIME = '16:00';
+const launchesMap = () => (planCfgSaved && planCfgSaved.launches) || {};
+const fmtHour = t => { const [h, m] = String(t || LAUNCH_TIME).split(':'); return `${+h}h${m && m !== '00' ? m : ''}`; };
+const fmtLaunchDay = iso => parseDate(iso).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+const launchModel = L => (planState.models && planState.models[L.model]) || {name: L.name, group: L.group};
+const launchLabel = L => modelLabel(launchModel(L));
+const daysUntil = iso => Math.round((parseDate(iso) - parseDate(isoOf(new Date()))) / 86400000);
+const allLaunches = () => Object.entries(launchesMap()).map(([id, L]) => ({id, ...L, days: daysUntil(L.date)})).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+const upcomingLaunches = () => allLaunches().filter(L => L.date && L.days >= 0 && L.days <= LAUNCH_NOTICE);
+const launchesOn = date => allLaunches().filter(L => L.date === date);
+function launchHotText(L) {
+  const at = `à ${fmtHour(L.time)}`, who = `<strong>${esc(launchLabel(L))}</strong>`;
+  if (L.days === 0) return new Date() >= new Date(`${L.date}T${L.time || LAUNCH_TIME}`) ? `${who} lancée aujourd’hui ${at}` : `Lancement ${who} aujourd’hui ${at}`;
+  if (L.days === 1) return `Lancement ${who} demain ${at}`;
+  return `Lancement ${who} dans ${L.days} jours · ${esc(fmtLaunchDay(L.date))} ${at}`;
+}
+function launchBanner(main, rt) {
+  if (!main) return;
+  main.querySelectorAll('.launch-banner').forEach(x => x.remove());
+  if (Sync.needsLogin() || rt.page === 'partage') return;
+  const list = upcomingLaunches(); if (!list.length) return;
+  const hot = list.filter(L => L.days <= LAUNCH_SOON), soft = list.filter(L => L.days > LAUNCH_SOON), els = [];
+  if (hot.length) {
+    const b = document.createElement('div'); b.className = 'launch-banner hot';
+    b.innerHTML = `<span class="cb-dot"></span><span>🚀 ${hot.map(launchHotText).join(' · ')}</span>${rt.page === 'planning' ? '' : `<a class="btn ghost" href="#${rt.pid}/planning">Voir le planning</a>`}`;
+    els.push(b);
+  }
+  if (soft.length) {
+    const b = document.createElement('div'); b.className = 'launch-banner';
+    b.innerHTML = `<span>Rappel · ${soft.map(L => `lancement <strong>${esc(launchLabel(L))}</strong> le ${esc(fmtLaunchDay(L.date))} à ${esc(fmtHour(L.time))}`).join(' · ')}</span>`;
+    els.push(b);
+  }
+  main.prepend(...els);
+}
+setInterval(() => { if (!document.querySelector('.modal-bg')) launchBanner(document.getElementById('main'), route()); }, 10 * 60 * 1000);
+function launchesHTML() {
+  const list = allLaunches().filter(L => L.days >= -30), next = list.filter(L => L.days >= 0).length, admin = Sync.canManage();
+  return `<details class="panel" id="pl-panel" ${planUI.launchOpen ? 'open' : ''}><summary style="cursor:pointer;font-weight:700">🚀 Lancements de modèles${next ? ` <span class="sub">· ${next} à venir</span>` : ''}</summary>
+    <p class="hint" style="margin-top:10px">${admin ? 'Toute l’équipe voit un rappel une semaine avant, puis un bandeau rouge à partir de 3 jours avant. Le jour J, la modèle est mise en couleur dans le planning.' : 'Les lancements sont programmés par les administrateurs. Un rappel apparaît une semaine avant, puis un bandeau rouge à partir de 3 jours avant.'}</p>
+    ${list.length ? `<div class="tbl-wrap" style="max-height:none;margin-bottom:12px"><table><thead><tr><th>Modèle</th><th>Date</th><th>Heure</th><th>Statut</th>${admin ? '<th></th>' : ''}</tr></thead><tbody>
+      ${list.map(L => `<tr><td><strong>${esc(launchLabel(L))}</strong></td><td>${esc(fmtLaunchDay(L.date))}</td><td>${esc(fmtHour(L.time))}</td>
+        <td>${L.days < 0 ? '<span class="pill OnTrack">Lancée</span>' : L.days === 0 ? '<span class="pill Critical">Aujourd’hui</span>' : L.days <= LAUNCH_SOON ? `<span class="pill Critical">Dans ${plural(L.days, 'jour', 'jours')}</span>` : `<span class="pill Warning">Dans ${L.days} jours</span>`}</td>
+        ${admin ? `<td class="num" style="white-space:nowrap"><button class="btn ghost" type="button" data-ledit="${esc(L.id)}">Modifier</button> <button class="btn danger" type="button" data-ldel="${esc(L.id)}">Supprimer</button></td>` : ''}</tr>`).join('')}
+    </tbody></table></div>` : '<p class="muted" style="margin:0 0 12px">Aucun lancement programmé.</p>'}
+    ${admin ? '<button class="btn primary" id="pl-add" type="button">+ Programmer un lancement</button>' : ''}
+  </details>`;
+}
+function bindLaunches(main) {
+  main.querySelector('#pl-panel')?.addEventListener('toggle', e => { planUI.launchOpen = e.target.open; });
+  main.querySelector('#pl-add')?.addEventListener('click', () => launchModal());
+  main.querySelector('#p-launch')?.addEventListener('click', () => launchModal());
+  main.querySelectorAll('[data-ledit]').forEach(b => b.addEventListener('click', () => launchModal(b.dataset.ledit)));
+  main.querySelectorAll('[data-ldel]').forEach(b => b.addEventListener('click', async () => {
+    const L = launchesMap()[b.dataset.ldel]; if (!L) return;
+    if (!(await modal('Supprimer le lancement', `<p>Supprimer le lancement de <strong>${esc(launchLabel(L))}</strong> du ${esc(fmtLaunchDay(L.date))} ? Les rappels disparaîtront pour toute l’équipe. La modèle reste dans le planning.</p>`, 'Supprimer'))) return;
+    delete planCfgSaved.launches[b.dataset.ldel]; savePlanCfg(); toast('Lancement supprimé.'); render();
+  }));
+}
+function launchModal(editId) {
+  if (!Sync.canManage()) { toast('Seuls les administrateurs peuvent programmer un lancement.', true); return; }
+  const L = editId ? launchesMap()[editId] : null;
+  const models = allModels(), field = 'display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)';
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:460px"><h3>${L ? 'Modifier le lancement' : 'Programmer un lancement'}</h3>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <label style="${field}">Modèle<select id="lm-m"><option value="__new">+ Nouvelle modèle…</option>
+        ${PLAN_GROUPS.map(g => `<optgroup label="${esc(g.label)}">${models.filter(m => m.group === g.id).map(m => `<option value="${esc(m.id)}" ${L && L.model === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</optgroup>`).join('')}</select></label>
+      <div id="lm-new" style="display:flex;flex-direction:column;gap:10px">
+        <label style="${field}">Nom de la nouvelle modèle<input type="text" id="lm-n" placeholder="ex. Carla"></label>
+        <label style="${field}">Plateforme<select id="lm-g">${PLAN_GROUPS.map(g => `<option value="${g.id}">${g.label}</option>`).join('')}</select></label>
+      </div>
+      <div style="display:flex;gap:10px"><label style="${field};flex:1">Date du lancement<input type="date" id="lm-d" value="${esc(L ? L.date : addDaysIso(isoOf(new Date()), 7))}"></label>
+        <label style="${field};width:120px">Heure<input type="time" id="lm-t" value="${esc(L ? L.time || LAUNCH_TIME : LAUNCH_TIME)}"></label></div>
+      <p class="hint" style="margin:0">Une nouvelle modèle est ajoutée au planning à partir du jour du lancement.</p>
+      <div id="lm-err" class="sc-lo" style="min-height:18px;font-size:13px"></div>
+    </div>
+    <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">${L ? 'Enregistrer' : 'Programmer'}</button></div></div>`;
+  const $ = s => bg.querySelector(s);
+  const sync = () => { $('#lm-new').style.display = $('#lm-m').value === '__new' ? 'flex' : 'none'; };
+  if (!L && models.length) $('#lm-m').value = '__new';
+  sync(); $('#lm-m').addEventListener('change', sync);
+  const close = () => { bg.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  bg.addEventListener('click', e => {
+    if (e.target === bg) return close();
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a !== '1') return close();
+    const date = $('#lm-d').value, time = $('#lm-t').value || LAUNCH_TIME, err = $('#lm-err');
+    if (!date) { err.textContent = 'Choisissez la date du lancement.'; return; }
+    const map = planModelsMap();
+    let id = $('#lm-m').value;
+    if (id === '__new') {
+      const name = $('#lm-n').value.trim(), g = $('#lm-g').value;
+      if (!name) { err.textContent = 'Indiquez le nom de la modèle.'; $('#lm-n').focus(); return; }
+      id = `${g}-${normName(name).replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36).slice(-5)}`;
+      map[id] = {name, group: g, order: Math.max(0, ...Object.values(map).filter(m => m.group === g).map(m => (m.order ?? 0) + 1)), start: date};
+      savePlan();
+    } else if (map[id] && map[id].start && map[id].start > isoOf(new Date()) && map[id].start !== date) {
+      map[id].start = date; savePlan();   // modèle pas encore lancée : elle apparaît à la nouvelle date
+    }
+    const m = map[id];
+    planCfgSaved ||= {}; planCfgSaved.launches ||= {};
+    const lid = editId || 'l' + Date.now().toString(36);
+    planCfgSaved.launches[lid] = {model: id, name: m.name, group: m.group, date, time, by: Sync.email() || '', at: Date.now()};
+    savePlanCfg(); close(); planUI.launchOpen = true;
+    toast(`Lancement de ${modelLabel(m)} programmé le ${fmtLaunchDay(date)} à ${fmtHour(time)}.`); render();
+  });
+  document.body.appendChild(bg); (L ? $('#lm-d') : $('#lm-n')).focus();
 }
 
 /* =====================================================================
@@ -5302,7 +5428,7 @@ const Sync = (() => {
     } else if (key === 'planning') {
       syncInPlace(planState, {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {}), ...(data && data.supAssign ? {supAssign: data.supAssign} : {})}); lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
-      planCfgSaved = data && Array.isArray(data.models) && data.models.length ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
+      planCfgSaved = data && ((Array.isArray(data.models) && data.models.length) || (data.launches && Object.keys(data.launches).length)) ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
       if (data && Object.keys(data).length) { asvState.settings = mergeAsvSettings(data); lsSet(LS_ASV, asvState); }
     } else {
@@ -5313,7 +5439,7 @@ const Sync = (() => {
   }
   const hasLocal = key => key === 'periods' ? store.periods.length > 0 : key === 'asv' ? asvState.models.length > 0 || asvState.entries.length > 0
     : key === 'planning' ? Object.keys(planState.weeks).length > 0 : key === 'plancfg' ? !!planCfgSaved : key === 'suivi' ? Object.keys(suiviState.weeks).length > 0 : key === 'cams' ? Object.keys(camsState.items).length > 0 : key === 'coaching' ? Object.keys(coachState.weeks).length > 0 || Object.keys(coachState.links).length > 0 : true;
-  const remoteEmpty = (key, d) => key === 'coaching' ? !d || (!Object.keys(d.weeks || {}).length && !Object.keys(d.links || {}).length) : key === 'cams' ? !d || !Object.keys(d.items || {}).length : key === 'suivi' ? !d || !Object.keys(d.weeks || {}).length : key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || !(d.models || []).length : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
+  const remoteEmpty = (key, d) => key === 'coaching' ? !d || (!Object.keys(d.weeks || {}).length && !Object.keys(d.links || {}).length) : key === 'cams' ? !d || !Object.keys(d.items || {}).length : key === 'suivi' ? !d || !Object.keys(d.weeks || {}).length : key === 'planning' ? !d || !Object.keys(d.weeks || {}).length : key === 'plancfg' ? !d || (!(d.models || []).length && !Object.keys(d.launches || {}).length) : key === 'periods' ? !Array.isArray(d) || !d.length : key === 'asv' ? !d || (!(d.models || []).length && !(d.entries || []).length) : key === 'asvcfg' ? !d || !Object.keys(d).length : !d || !d.of;
 
   /* ---------- Fusion à trois (base commune, local, distant) ---------- */
   function mergeById(b = [], l = [], r = []) {
