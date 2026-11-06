@@ -5731,6 +5731,9 @@ const Sync = (() => {
           else setData(key, row.data);
           meta.version[key] = row.version; meta.base[key] = clone(row.data);
           changed = true; if (row.updated_by && row.updated_by !== session.email) changedBy = row.updated_by;
+        } else if (key === 'plancfg' && !dirty.has(key) && !remoteEmpty(key, row.data) && !same(getData(key), row.data)) {
+          // Rattrapage : une ancienne version du site jetait les lancements et mises en avant reçus sans liste de modèles
+          setData(key, row.data); meta.base[key] = clone(row.data); changed = true;
         }
       }
       saveMeta(); lastSync = Date.now(); lastError = ''; firstDone = true;
