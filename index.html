@@ -222,6 +222,7 @@ tr.issue-error .issues{color:var(--red)}
 /* Toast + modal */
 .toast{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--raised);border:1px solid var(--line);border-left:3px solid var(--green);padding:11px 16px;border-radius:var(--r-md);max-width:380px;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4)}
 .toast.err{border-left-color:var(--red)}
+.update-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;background:var(--raised);border:1px solid var(--line);border-left:3px solid var(--flame);padding:10px 12px 10px 16px;border-radius:var(--r-md);z-index:55;box-shadow:0 10px 30px rgba(0,0,0,.45);max-width:calc(100vw - 32px);font-size:13.5px}
 .modal-bg{position:fixed;inset:0;background:rgba(10,7,22,.72);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
 .modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px;max-width:560px;width:100%;max-height:85vh;overflow:auto}
 .modal h3{margin:0 0 10px;font-size:16px}
@@ -4325,6 +4326,31 @@ function launchBanner(main, rt) {
   main.prepend(...els);
 }
 setInterval(() => { if (!document.querySelector('.modal-bg')) launchBanner(document.getElementById('main'), route()); }, 10 * 60 * 1000);
+
+/* ---------- Nouvelle version du site ----------
+   Toutes les 5 minutes (et au retour sur l'onglet), on relit index.html en ligne et on compare son code (blocs <script> et <style>)
+   avec celui de la page ouverte. S'il a changé : bandeau « Recharger ». Les modifications pas encore envoyées sont gardées au rechargement. */
+const codeSig = doc => { const t = [...doc.querySelectorAll('script:not([src]),style')].map(e => e.textContent).join('\u0000');
+  let h = 2166136261; for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 16777619); return (h >>> 0).toString(36) + '.' + t.length; };
+const PAGE_SIG = codeSig(document);
+let verCheckAt = 0, verNew = false;
+async function checkNewVersion() {
+  if (verNew || !/^https?:$/.test(location.protocol) || Date.now() - verCheckAt < 60000) return;
+  verCheckAt = Date.now();
+  try {
+    const res = await fetch(location.pathname + '?v=' + Date.now(), {cache: 'no-store'});
+    if (!res.ok) return;
+    const sig = codeSig(new DOMParser().parseFromString(await res.text(), 'text/html'));
+    if (sig === PAGE_SIG) return;
+    verNew = true;
+    const bar = document.createElement('div'); bar.className = 'update-bar'; bar.setAttribute('role', 'status');
+    bar.innerHTML = '<span>✨ Une nouvelle version du site est disponible.</span><button class="btn primary" type="button">Recharger</button>';
+    bar.querySelector('button').onclick = () => location.reload();
+    document.body.append(bar);
+  } catch (e) { /* pas de connexion : on réessaiera plus tard */ }
+}
+setInterval(checkNewVersion, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkNewVersion(); });
 function launchesHTML() {
   const list = allLaunches().filter(L => L.days >= -30), next = list.filter(L => L.days >= 0).length, admin = Sync.canManage();
   return `<details class="panel" id="pl-panel" ${planUI.launchOpen ? 'open' : ''}><summary style="cursor:pointer;font-weight:700">🚀 Lancements de modèles${next ? ` <span class="sub">· ${next} à venir</span>` : ''}</summary>
