@@ -5526,6 +5526,7 @@ const Sync = (() => {
   const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
   let session = lsGet(LS_SES, null);
   const meta = Object.assign({version: {}, base: {}}, lsGet(LS_META, {}));
+  const checked = new Set();   // données déjà comparées avec la base depuis l'ouverture de la page
   const dirty = new Set(meta.dirty || []);   // modifications pas encore envoyées : gardées même si la page est fermée
   let pendingRender = false;
   new MutationObserver(() => { if (pendingRender && !document.querySelector('.modal-bg')) { pendingRender = false; const y = window.scrollY; render(); window.scrollTo(0, y); } }).observe(document.body, {childList: true});
@@ -5713,6 +5714,7 @@ const Sync = (() => {
         }
         if (key === 'asv' && row.data && row.data.settings) legacyAsvCfg = row.data.settings;
         const known = meta.version[key];
+        const firstCheck = !checked.has(key); checked.add(key);
         if (key === 'asvcfg' && remoteEmpty(key, row.data) && legacyAsvCfg && known === undefined) {
           setData('asvcfg', legacyAsvCfg); changed = true;   // reprise des réglages ASV enregistrés avec l'ancienne version
           meta.version[key] = row.version; meta.base[key] = clone(row.data); if (isAdmin) dirty.add(key); continue;
@@ -5731,8 +5733,9 @@ const Sync = (() => {
           else setData(key, row.data);
           meta.version[key] = row.version; meta.base[key] = clone(row.data);
           changed = true; if (row.updated_by && row.updated_by !== session.email) changedBy = row.updated_by;
-        } else if (key === 'plancfg' && !dirty.has(key) && !remoteEmpty(key, row.data) && !same(getData(key), row.data)) {
-          // Rattrapage : une ancienne version du site jetait les lancements et mises en avant reçus sans liste de modèles
+        } else if ((firstCheck || key === 'plancfg') && !dirty.has(key) && !remoteEmpty(key, row.data) && !same(getData(key), row.data)) {
+          // Même version que la base mais contenu différent : la copie gardée dans ce navigateur est incomplète
+          // (ancien onglet ou ancienne version du site). On reprend celle de la base, vérifiée à chaque ouverture de la page.
           setData(key, row.data); meta.base[key] = clone(row.data); changed = true;
         }
       }
