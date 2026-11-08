@@ -612,6 +612,8 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .launch-banner.promo{background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.4);color:#fed7aa}
 .pgrid th.pm.ppromo{background:rgba(249,115,22,.22);color:#fed7aa;font-weight:700}
 .pgrid td.pcell.ppromo-c{background:rgba(249,115,22,.07)}
+.pgrid th.pm.pbackup{background:linear-gradient(135deg,#0891b2,#14b8a6);color:#fff;font-weight:800;letter-spacing:.6px}
+.pgrid td.pcell.pbackup-c{background:rgba(34,211,238,.09);box-shadow:inset 2px 0 0 rgba(34,211,238,.35)}
 .pgrid th.pm.pbanner{background:#dc2626;color:#fff;font-weight:700}
 .pgrid td.pcell.pbanner-c{background:rgba(239,68,68,.17);box-shadow:inset 0 0 0 1px rgba(239,68,68,.45)}
 .cb-dot{width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef4444;animation:pulse 1.6s infinite}
@@ -3305,7 +3307,10 @@ function planModelsMap() {
     planState.models = Object.fromEntries(planCfg().models.map((m, i) => [m.id, {name: m.name, group: m.group, order: m.order ?? i, ...(m.archived ? {end: '2000-01-01'} : {})}]));
   return planState.models;
 }
-const allModels = () => sortModels(Object.entries(planModelsMap()).map(([id, m]) => ({id, ...m})));
+// Colonnes BACKUP : toujours présentes, en dernier dans les groupes MYM et OnlyFans (pas enregistrées dans la liste des modèles)
+const PLAN_BACKUPS = [{id: 'mym-backup', name: 'BACKUP', group: 'mym', order: 1e6, backup: true}, {id: 'of-backup', name: 'BACKUP', group: 'of', order: 1e6, backup: true}];
+const storedModels = () => sortModels(Object.entries(planModelsMap()).map(([id, m]) => ({id, ...m})));
+const allModels = () => sortModels([...storedModels(), ...PLAN_BACKUPS.map(b => ({...b}))]);
 const modelActiveOn = (m, date) => (!m.start || date >= m.start) && (!m.end || date <= m.end);
 const activeModels = () => allModels();
 const modelLabel = m => m.group === 'mym' ? `${m.name} MYM` : m.group === 'of' ? `${m.name} OF` : m.name;
@@ -3470,14 +3475,14 @@ function renderPlanning(main) {
       <div class="tbl-wrap pgrid-wrap" style="max-height:none"><table class="pgrid"><thead>
         <tr><th class="sh"></th>${groupsShown.map(x => `<th colspan="${x.ms.length}" class="pg" style="background:${x.g.color};color:${x.g.ink}">${esc(x.g.label)}</th>`).join('')}</tr>
         <tr><th class="sh">${PLAN_DAYS_LONG[d]}</th>${groupsShown.map(x => x.ms.map(m => { const la = launchesOn(dayDate).find(L => L.model === m.id), bn = bannersOnDay(dayDate, m.id)[0], wp = weekPromoFor(wk, m.id);
-          const cls = bn ? ' pbanner' : la ? ' plaunch' : wp ? ' ppromo' : '';
-          return `<th class="pm${cls}" style="box-shadow:inset 0 3px 0 ${x.g.color}">${esc(m.name)}${bn ? `<span class="plb">⚡ Bannière ${esc(fmtHour(`${pad2(bn.s.getHours())}:${pad2(bn.s.getMinutes())}`))} → ${esc(fmtHour(`${pad2(bn.e.getHours())}:${pad2(bn.e.getMinutes())}`))}</span>` : ''}${la ? `<span class="plb">🚀 Lancement ${esc(fmtHour(la.time))}</span>` : ''}${wp ? '<span class="plb">🔥 Mise en avant</span>' : ''}</th>`; }).join('')).join('')}</tr>
+          const cls = m.backup ? ' pbackup' : bn ? ' pbanner' : la ? ' plaunch' : wp ? ' ppromo' : '';
+          return `<th class="pm${cls}" style="box-shadow:inset 0 3px 0 ${x.g.color}">${esc(m.backup ? modelLabel(m) : m.name)}${bn ? `<span class="plb">⚡ Bannière ${esc(fmtHour(`${pad2(bn.s.getHours())}:${pad2(bn.s.getMinutes())}`))} → ${esc(fmtHour(`${pad2(bn.e.getHours())}:${pad2(bn.e.getMinutes())}`))}</span>` : ''}${la ? `<span class="plb">🚀 Lancement ${esc(fmtHour(la.time))}</span>` : ''}${wp ? '<span class="plb">🔥 Mise en avant</span>' : ''}</th>`; }).join('')).join('')}</tr>
       </thead><tbody>
         ${PLAN_SHIFTS.map((sh, s) => `<tr><th class="sh">${sh}</th>${groupsShown.map(x => x.ms.map(m => {
           const list = W.cells[cellKey(d, s, m.id)] || [];
           const la = launchesOn(dayDate).some(L => L.model === m.id), bn = bannersOnDay(dayDate, m.id).some(P => bannerHitsShift(P, dayDate, s)), wp = !!weekPromoFor(wk, m.id);
           const hit = q && list.some(e => [e.n, ...(e.r ? e.r.split('/') : [])].some(n => normName(n).includes(q)));
-          return `<td class="pcell ${hit ? 'hit' : ''} ${list.length ? '' : 'empty'}${bn ? ' pbanner-c' : la ? ' plaunch-c' : wp ? ' ppromo-c' : ''}" data-cell="${cellKey(d, s, m.id)}" tabindex="0" title="${esc(modelLabel(m))} · ${PLAN_DAYS_LONG[d]} ${sh}">${list.map(e => chipHTML(e, wk, d, s, hl)).join('') || '<span class="plus">+</span>'}</td>`;
+          return `<td class="pcell ${hit ? 'hit' : ''} ${list.length ? '' : 'empty'}${m.backup ? ' pbackup-c' : bn ? ' pbanner-c' : la ? ' plaunch-c' : wp ? ' ppromo-c' : ''}" data-cell="${cellKey(d, s, m.id)}" tabindex="0" title="${esc(modelLabel(m))} · ${PLAN_DAYS_LONG[d]} ${sh}">${list.map(e => chipHTML(e, wk, d, s, hl)).join('') || '<span class="plus">+</span>'}</td>`;
         }).join('')).join('')}</tr>`).join('')}
       </tbody></table></div>
     </section>
@@ -3645,7 +3650,7 @@ function importExcelModal(defaultWk) {
   const bg = document.createElement('div'); bg.className = 'modal-bg';
   const draw = () => {
     const r = st.res, exists = st.wk && planState.weeks[st.wk] && Object.keys(planState.weeks[st.wk].cells || {}).length;
-    const known = r && !r.error && r.models ? r.models.filter(m => !allModels().some(x => x.group === m.group && normName(x.name).replace(/\s/g, '') === normName(m.name).replace(/\s/g, ''))) : [];
+    const known = r && !r.error && r.models ? r.models.filter(m => !storedModels().some(x => x.group === m.group && normName(x.name).replace(/\s/g, '') === normName(m.name).replace(/\s/g, ''))) : [];
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:620px"><h3>Importer un planning depuis Excel</h3>
       <p class="hint" style="margin-top:0">Le fichier doit suivre votre format habituel : un onglet par semaine, les jours en colonne A, les shifts (04 - 10…) et les modèles en en-tête. Les prénoms en rouge sont importés comme absents, en orange comme retards, en violet comme coupure de courant, en bleu comme nouveaux, et « Prévu (Remplaçant) » comme remplacement.</p>
       <label class="btn" for="xl-file" style="cursor:pointer">${icon('import')}${st.fileName ? esc(st.fileName) : 'Choisir le fichier Excel (.xlsx)'}</label><input type="file" id="xl-file" accept=".xlsx,.xlsm,.xls" hidden>
@@ -3706,7 +3711,7 @@ function importExcelModal(defaultWk) {
       const map = planModelsMap(), idFor = {}; let added = 0;
       const norm2 = s => normName(s).replace(/\s/g, '');
       for (const m of r.models) {
-        const ex = allModels().find(x => x.group === m.group && norm2(x.name) === norm2(m.name));
+        const ex = storedModels().find(x => x.group === m.group && norm2(x.name) === norm2(m.name));
         if (ex) { idFor[m.key] = ex.id; continue; }
         const name = m.name === m.name.toUpperCase() && m.name.length > 2 ? m.name.charAt(0) + m.name.slice(1).toLowerCase() : m.name;
         const id = `${m.group}-${normName(name).replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36).slice(-4)}${added}`;
@@ -3866,7 +3871,7 @@ function bindSupPlan(main) {
 /* ---------- Modèles attribuées à chaque superviseur (cases à cocher, MYM et OF séparés) ---------- */
 function supAssignHTML() {
   const sups = supList(), today = isoOf(new Date());
-  const models = allModels().filter(m => !m.end || m.end >= today);
+  const models = storedModels().filter(m => !m.end || m.end >= today);
   const groups = PLAN_GROUPS.map(g => ({g, ms: models.filter(m => m.group === g.id)})).filter(x => x.ms.length);
   const A = planState.supAssign || {};
   const has = (sid, mid) => !!(A[sid] && A[sid][mid]);
@@ -4231,7 +4236,7 @@ function planModelsHTML(wk, d) {
   return `<details class="panel" id="pm-panel" ${planUI.modelsOpen ? 'open' : ''}><summary style="cursor:pointer;font-weight:700">Modèles du planning</summary>
     <p class="hint" style="margin-top:10px">Chaque modèle apparaît entre sa date de lancement et sa date d'arrêt (vides = toujours). Pour arrêter une modèle, indiquez son dernier jour : elle disparaît ensuite du planning, et les semaines passées restent intactes.</p>
     <div class="tbl-wrap" style="max-height:440px"><table><thead><tr><th>Plateforme</th><th>Nom</th><th>Lancée le</th><th>Dernier jour</th><th>Ordre</th><th>Statut ${esc(fmtDayFr(date))}</th>${Sync.canManage() ? '<th></th>' : ''}</tr></thead><tbody>
-    ${allModels().map(m => `<tr><td><select data-mg="${m.id}">${PLAN_GROUPS.map(g => `<option value="${g.id}" ${g.id === m.group ? 'selected' : ''}>${g.label}</option>`).join('')}</select></td>
+    ${storedModels().map(m => `<tr><td><select data-mg="${m.id}">${PLAN_GROUPS.map(g => `<option value="${g.id}" ${g.id === m.group ? 'selected' : ''}>${g.label}</option>`).join('')}</select></td>
       <td><input type="text" data-mn="${m.id}" value="${esc(m.name)}" style="min-width:140px"></td>
       <td><input type="date" data-ms="${m.id}" value="${esc(m.start || '')}"></td>
       <td><input type="date" data-me="${m.id}" value="${esc(m.end && m.end > '2000-01-01' ? m.end : (m.end ? '2000-01-01' : ''))}"></td>
@@ -4271,7 +4276,7 @@ function bindPlanModels(wk, d) {
     if (removed) toast(`${m.name} : dernier jour le ${fmtDayFr(m.end)}, ${plural(removed, 'case vidée', 'cases vidées')} après cette date.`);
     done();
   }));
-  const move = (id, dir) => { const same = allModels().filter(x => x.group === map[id].group); same.forEach((x, i) => { map[x.id].order = i; }); const i = same.findIndex(x => x.id === id), j = i + dir; if (j < 0 || j >= same.length) return; map[same[i].id].order = j; map[same[j].id].order = i; done(); };
+  const move = (id, dir) => { const same = storedModels().filter(x => x.group === map[id].group); same.forEach((x, i) => { map[x.id].order = i; }); const i = same.findIndex(x => x.id === id), j = i + dir; if (j < 0 || j >= same.length) return; map[same[i].id].order = j; map[same[j].id].order = i; done(); };
   panel.querySelectorAll('[data-mu]').forEach(el => el.addEventListener('click', () => move(el.dataset.mu, -1)));
   panel.querySelectorAll('[data-md]').forEach(el => el.addEventListener('click', () => move(el.dataset.md, 1)));
   document.getElementById('pm-add').addEventListener('click', () => addModelModal(addDaysIso(wk, d)));
@@ -4377,7 +4382,7 @@ function bindLaunches(main) {
 function launchModal(editId) {
   if (!Sync.canManage()) { toast('Seuls les administrateurs peuvent programmer un lancement.', true); return; }
   const L = editId ? launchesMap()[editId] : null;
-  const models = allModels(), field = 'display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)';
+  const models = storedModels(), field = 'display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)';
   const bg = document.createElement('div'); bg.className = 'modal-bg';
   bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:460px"><h3>${L ? 'Modifier le lancement' : 'Programmer un lancement'}</h3>
     <div style="display:flex;flex-direction:column;gap:10px">
@@ -4478,7 +4483,7 @@ function bindPromos(main) {
 }
 function promoModal(editId) {
   if (!Sync.canManage()) { toast('Seuls les administrateurs peuvent programmer une mise en avant.', true); return; }
-  const P = editId ? promosMap()[editId] : null, models = allModels(), field = 'display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)';
+  const P = editId ? promosMap()[editId] : null, models = storedModels(), field = 'display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)';
   const mon = thisMonday(), weeks = Array.from({length: 14}, (_, i) => addDaysIso(mon, 7 * (i - 1)));
   if (P && P.type === 'week' && !weeks.includes(P.week)) weeks.unshift(P.week);
   const type0 = P ? P.type : 'week';
@@ -4560,7 +4565,7 @@ function suiviSuggestions() {
     add(s.chatter, e.chatter); add(s.sup, e.sup); add(s.comment, e.comment); add(s.model, e.model); add(s.type, e.type);
   }
   for (const n of knownChatters()) add(s.chatter, n);
-  for (const m of allModels()) add(s.model, modelLabel(m));
+  for (const m of storedModels()) add(s.model, modelLabel(m));
   ['Média', 'Tips', 'Média + tips', 'Custom', 'Sextape'].forEach(t => add(s.type, t));
   ['Prime CUSTOM', 'Prime CAM'].forEach(t => add(s.comment, t));
   const sorted = m => [...m.values()].sort((a, b) => a.localeCompare(b, 'fr'));
@@ -4765,7 +4770,7 @@ function camsSuggest() {
   const add = (map, v) => { const t = String(v || '').trim(); if (t) map.set(t.toLowerCase(), t); };
   for (const e of camList()) { add(m.chatter, e.chatter); add(m.model, modelBase(e)); }
   for (const n of knownChatters()) add(m.chatter, n);
-  for (const x of allModels()) add(m.model, x.name);
+  for (const x of storedModels()) add(m.model, x.name);
   const s = map => [...map.values()].sort((a, b) => a.localeCompare(b, 'fr'));
   return {chatter: s(m.chatter), model: s(m.model)};
 }
