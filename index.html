@@ -476,6 +476,8 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .age{font-size:12px;font-weight:700;color:var(--muted)}
 .age.warm{color:#fbbf24}.age.hot{color:#f87171}
 .pc.late{color:#fb923c;font-weight:700}
+.pc.renf{color:#f472b6;font-weight:700}
+.rftag{font-size:9.5px;font-weight:800;color:#fff;background:#db2777;border-radius:4px;padding:0 4px;line-height:14px}
 .ptsb.late{color:#fdba74;background:rgba(251,146,60,.15)}
 .platb{display:inline-block;font-size:11px;font-weight:800;padding:1px 7px;border-radius:6px;color:var(--tc);border:1px solid color-mix(in srgb,var(--tc) 55%,transparent);background:color-mix(in srgb,var(--tc) 12%,transparent);white-space:nowrap}
 .unplan{padding:10px 12px;border-radius:var(--r-md);border:1px solid rgba(242,164,60,.45);background:rgba(242,164,60,.08)}
@@ -632,6 +634,10 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .kcard.again{border-color:rgba(239,68,68,.6);box-shadow:inset 4px 0 0 #ef4444}
 .kcard-h{display:flex;align-items:center;gap:6px;font-size:15px}
 .kshifts{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.kperf{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-top:10px}
+.kp{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-sm);padding:7px 10px}
+.kp-h{font-size:11.5px;color:var(--muted);font-weight:600}.kp-h span{color:var(--faint);font-weight:400}
+.kp-v{font-size:14px;margin-top:2px}.kp-v span{color:var(--muted);font-size:12px}
 .shc.mine{background:rgba(69,208,143,.2);color:#86efac}
 .shc.other{background:var(--raised);color:var(--muted)}
 .linkbtn{background:none;border:0;padding:0;color:var(--text);cursor:pointer;text-align:left}.linkbtn:hover strong{text-decoration:underline}
@@ -3387,6 +3393,7 @@ function chipHTML(e, wk, d, s, hl) {
   if (e.a) return `<span class="pchip"><span class="pc abs" title="Absent(e)">${esc(e.n)}</span></span>`;
   if (e.c) return `<span class="pchip"><span class="pc cut ${offOn(e.n, d) ? 'offc' : ''}" title="Coupure de courant">${esc(e.n)}</span></span>`;
   if (e.l) return `<span class="pchip"><span class="pc late ${offOn(e.n, d) ? 'offc' : ''}" title="En retard">${esc(e.n)}</span></span>`;
+  if (e.rf) return `<span class="pchip"><span class="offwrap" title="Renfort sur ce shift"><span class="pc renf">${esc(e.n)}</span><b class="rftag">RENFORT</b></span></span>`;
   const ar = absReqFor(e.n, addDaysIso(wk, +d), s);
   if (ar) return `<span class="pchip"><span class="offwrap" title="Demande d'absence (${esc(ABS_STATUS[ar.status][0].toLowerCase())})${ar.note ? ' : ' + esc(ar.note) : ''}">${nm(e.n)}<b class="abstag">ABS</b></span></span>`;
   return `<span class="pchip">${offOn(e.n, d) ? `<span class="offwrap" title="${esc(e.n)} est planifié(e) sur son jour OFF">${nm(e.n)}<b class="offtag">OFF</b></span>` : nm(e.n)}</span>`;
@@ -3454,7 +3461,7 @@ function renderPlanning(main) {
         ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>`}
         <button class="btn ghost" id="p-xls" type="button">Importer un Excel</button>
       </div>
-      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="pc late">Prénom</span> retard</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
+      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="pc late">Prénom</span> retard</span><span><span class="offwrap"><span class="pc renf">Prénom</span><b class="rftag">RENFORT</b></span> renfort</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
     </section>
     ${q ? `<section class="panel"><h2>Planning de « ${esc(planUI.q)} » · ${esc(planWeekLabel(wk))}</h2>${found.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Jour</th><th>Shift</th><th>Modèle</th><th>Statut</th></tr></thead><tbody>${found.map(x => `<tr><td>${PLAN_DAYS_LONG[x.dd]} ${parseDate(addDaysIso(wk, x.dd)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</td><td>${PLAN_SHIFTS[x.s]}</td><td>${esc(modelLabel(x.m))}</td><td>${x.e.r ? `remplacé(e) par ${esc(x.e.r)}` : x.e.a ? '<span class="sc-lo">absent</span>' : x.e.c ? '<span class="pc cut">coupure de courant</span>' : x.e.l ? '<span class="pc late">retard</span>' : 'prévu'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Aucun shift trouvé cette semaine.</p>'}</section>` : ''}
     ${(() => {
@@ -4114,6 +4121,7 @@ function editCell(wk, key) {
         <label class="check"><input type="checkbox" data-abs="${i}" ${e.a ? 'checked' : ''}> Absent</label>
         <label class="check" title="Coupure de courant"><input type="checkbox" data-cut="${i}" ${e.c ? 'checked' : ''}> Coupure</label>
         <label class="check" title="Arrivé(e) en retard"><input type="checkbox" data-late="${i}" ${e.l ? 'checked' : ''}> Retard</label>
+        <label class="check" title="Vient en renfort sur ce shift"><input type="checkbox" data-rf="${i}" ${e.rf ? 'checked' : ''}> Renfort</label>
         <input type="text" list="pl-names" data-rep="${i}" value="${esc(e.r || '')}" placeholder="Remplaçant (facultatif)">
         <label class="check" title="Mis en couleur sur ses ${NEW_SHIFTS} premiers shifts travaillés"><input type="checkbox" data-new="${i}" ${isFlaggedNew(e.n) ? 'checked' : ''}> Nouveau</label>
         <button class="btn ghost" type="button" data-del="${i}" aria-label="Retirer ${esc(e.n)}">×</button></div>`).join('')}</div>` : '<p class="hint">Personne sur ce shift.</p>'}
@@ -4126,6 +4134,7 @@ function editCell(wk, key) {
     bg.querySelectorAll('[data-abs]').forEach(c => { list[+c.dataset.abs].a = c.checked ? 1 : 0; });
     bg.querySelectorAll('[data-cut]').forEach(c => { list[+c.dataset.cut].c = c.checked ? 1 : 0; });
     bg.querySelectorAll('[data-late]').forEach(c => { list[+c.dataset.late].l = c.checked ? 1 : 0; });
+    bg.querySelectorAll('[data-rf]').forEach(c => { list[+c.dataset.rf].rf = c.checked ? 1 : 0; });
     bg.querySelectorAll('[data-rep]').forEach(c => { const v = c.value.trim(); list[+c.dataset.rep].r = v || undefined; });
   };
   const add = () => { sync(); const v = bg.querySelector('#pe-add').value; for (const n of v.split('/').map(x => x.trim()).filter(Boolean)) if (!list.some(e => normName(e.n) === normName(n))) list.push({n}); draw(); };
@@ -4140,7 +4149,7 @@ function editCell(wk, key) {
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a === '1') {
       sync(); if (bg.querySelector('#pe-add').value.trim()) add();
-      const clean = list.map(e => { const o = {n: e.n}; if (e.a) o.a = 1; if (e.c) o.c = 1; if (e.l) o.l = 1; if (e.r) o.r = e.r; return o; });
+      const clean = list.map(e => { const o = {n: e.n}; if (e.a) o.a = 1; if (e.c) o.c = 1; if (e.l) o.l = 1; if (e.rf) o.rf = 1; if (e.r) o.r = e.r; return o; });
       if (clean.length) W.cells[key] = clean; else delete W.cells[key];
       for (const [k, f] of Object.entries(newFlags)) { if (f.on) planState.chatters[k] = {...(planState.chatters[k] || {}), name: f.name, isNew: true}; else if (planState.chatters[k]) planState.chatters[k].isNew = false; }
       savePlan(); render();
@@ -5397,6 +5406,22 @@ function coachSupView(wk) {
     ${mine.map(it => coachCardHTML(it, wk, curWk, me, true)).join('') || '<div class="panel empty">Aucun chatter ne vous est attribué cette semaine.</div>'}
     ${others.length ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Chatters suivis par les autres superviseurs · ${others.length}</summary><div class="unplan-l" style="margin-top:10px">${others.map(it => `<span class="unchip" style="padding-right:10px">${esc(it.plan || it.name)} <span class="muted">· ${esc((supList().find(s => s.id === it.sup) || {}).name || '')}</span></span>`).join('')}</div></details>` : ''}</div>`;
 }
+// CA et unlock ratio des deux semaines qui ont servi à faire la liste (semaine passée et semaine d'avant), par plateforme
+function coachPerfHTML(it, wk) {
+  const roster = coachRoster(wk), keys = new Set([rosterKey(it.plan || it.name), rosterKey(it.name)]);
+  const pids = it.pid === 'both' ? ['of', 'mym'] : [it.pid];
+  const weeks = [[addDaysIso(wk, -7), 'Semaine passée'], [addDaysIso(wk, -14), 'Semaine d’avant']];
+  const blocks = pids.flatMap(pid => { const P = PLATFORMS[pid], uk = pid === 'mym' ? 'conv' : 'unlock', K = P.kpis.find(k => k.key === uk);
+    return weeks.map(([st, lab]) => {
+      const en = addDaysIso(st, 6), d = coachPeriod(pid, st, en);
+      const r = d && d.res.results.find(x => keys.has(rosterKey(x.name)) || keys.has(rosterKey(coachMatch(x.name, roster) || '')));
+      const ca = r ? (r.row.revenue ?? r.row.total ?? null) : null, un = r ? r.row[uk] : null;
+      return `<div class="kp"><div class="kp-h">${pids.length > 1 ? `${pid.toUpperCase()} · ` : ''}${lab} <span>${esc(fmtRange(st, en))}</span></div>
+        ${!d ? '<div class="kp-v muted">pas d’import</div>' : !r ? '<div class="kp-v muted">pas dans l’import</div>'
+          : `<div class="kp-v"><b>${esc(moneyP(P, ca))}</b> <span>CA</span> · <b>${esc(K ? fmtK(P, K, un) : un == null ? '—' : nf(un, 0, 1) + ' %')}</b> <span>unlock</span></div>`}</div>`;
+    }); });
+  return `<div class="kperf">${blocks.join('')}</div>`;
+}
 function coachCardHTML(it, wk, curWk, me, editable) {
   const sh = it.plan ? coachShifts(it.plan, [curWk]).filter(x => !x.dup) : [];
   const notes = notesFor(it.k);
@@ -5406,6 +5431,7 @@ function coachCardHTML(it, wk, curWk, me, editable) {
     <div class="kcard-h"><strong style="font-size:17px">${esc(it.plan || it.name)}</strong> ${it.pid === 'both' ? platBadge('OF') + platBadge('MYM') : platBadge(it.pid === 'of' ? 'OF' : 'MYM')}
       ${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag warm">Nouveau · à vérifier</span>' : ''}
       <span class="sub" style="margin:0 0 0 auto">Rang ${it.rank}/${it.of} · score ${nf(it.score, 0, 1)} · grade ${it.grade}</span></div>
+    ${coachPerfHTML(it, wk)}
     <div class="kshifts">${sh.length ? sh.sort((a, b) => a.d - b.d || a.s - b.s).map(x => { const m = allModels().find(mm => mm.id === x.mid); const mine2 = me && coachOverlap(me, [x]) > 0; return `<span class="shc ${mine2 ? 'mine' : 'other'}" title="${mine2 ? 'Pendant vos heures' : ''}">${PLAN_DAYS[x.d]} ${PLAN_SHIFTS[x.s]}${m ? ` · ${esc(m.name)}` : ''}</span>`; }).join('') : '<span class="muted">Pas de shift trouvé au planning cette semaine</span>'}</div>
     ${editable ? `<div class="kcompose"><div class="ktags">${NOTE_TAGS.map(([k, l, c]) => `<button type="button" class="ktag sel ${c}" data-ktag="${k}">${esc(l)}</button>`).join('')}</div>
       <div style="display:flex;gap:8px;margin-top:8px"><input type="text" data-knote="${esc(it.k)}" placeholder="Une phrase sur ce que vous avez observé (facultatif)" style="flex:1"><button class="btn" type="button" data-kadd="${esc(it.k)}">Ajouter la note</button></div></div>` : ''}
