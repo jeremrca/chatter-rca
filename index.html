@@ -421,8 +421,9 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .pchip.rep s{color:#f87171;opacity:.85}
 .pchip .arr{color:var(--faint);margin:0 3px}
 .pe-list{display:flex;flex-direction:column;gap:8px}
-.pe-row{display:grid;grid-template-columns:minmax(90px,1fr) auto auto auto minmax(120px,1.2fr) auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line-soft);border-radius:var(--r-sm);background:var(--bg)}
+.pe-row{display:grid;grid-template-columns:minmax(90px,1fr) auto auto auto auto auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line-soft);border-radius:var(--r-sm);background:var(--bg)}
 .un-days{display:flex;gap:10px;flex-wrap:wrap}
+.pe-row input[data-rep]{grid-column:1/-1}
 @media (max-width:620px){.pe-row{grid-template-columns:1fr 1fr}.ptab{min-width:56px}}
 .pc.cut{color:#c084fc;font-weight:700}
 .offwrap{display:inline-flex;align-items:center;gap:4px}
@@ -4122,9 +4123,10 @@ function editCell(wk, key) {
         <label class="check" title="Coupure de courant"><input type="checkbox" data-cut="${i}" ${e.c ? 'checked' : ''}> Coupure</label>
         <label class="check" title="Arrivé(e) en retard"><input type="checkbox" data-late="${i}" ${e.l ? 'checked' : ''}> Retard</label>
         <label class="check" title="Vient en renfort sur ce shift"><input type="checkbox" data-rf="${i}" ${e.rf ? 'checked' : ''}> Renfort</label>
-        <input type="text" list="pl-names" data-rep="${i}" value="${esc(e.r || '')}" placeholder="Remplaçant (facultatif)">
         <label class="check" title="Mis en couleur sur ses ${NEW_SHIFTS} premiers shifts travaillés"><input type="checkbox" data-new="${i}" ${isFlaggedNew(e.n) ? 'checked' : ''}> Nouveau</label>
-        <button class="btn ghost" type="button" data-del="${i}" aria-label="Retirer ${esc(e.n)}">×</button></div>`).join('')}</div>` : '<p class="hint">Personne sur ce shift.</p>'}
+        <button class="btn ghost" type="button" data-del="${i}" aria-label="Retirer ${esc(e.n)}">×</button>
+        <input type="text" list="pl-names" data-rep="${i}" value="${esc(e.r || '')}" placeholder="Remplaçant (facultatif)">
+        </div>`).join('')}</div>` : '<p class="hint">Personne sur ce shift.</p>'}
       ${(() => { const rq = absReqsOnDate(addDaysIso(wk, +d)).filter(r => (r.shifts || []).includes(+s)); return rq.length ? `<div class="absbox" style="margin-top:12px"><div class="absbox-h">Demandes d’absence sur ce shift</div><div style="font-size:13px">${rq.map(r => `<strong>${esc(r.name)}</strong>${r.status === 'wait' ? ' (en attente)' : ''}${r.note ? ` — ${esc(r.note)}` : ''}`).join(' · ')}</div></div>` : ''; })()}
       <div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="pe-add" list="pl-names" placeholder="Ajouter un ou plusieurs chatters (séparés par /)" style="flex:1"><button class="btn" id="pe-addb" type="button">Ajouter</button></div>
       <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
