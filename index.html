@@ -567,6 +567,42 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .as-n{display:inline-block;min-width:22px;font-weight:800;font-size:12px;color:var(--muted)}
 .as-n.zero{color:#fff;background:#ef4444;border-radius:6px;padding:1px 6px}
 .assign tfoot th,.assign tfoot td{background:var(--raised)}
+.org{display:grid;justify-items:center;max-width:1100px;margin:0 auto}
+.org-lv{display:grid;justify-items:center;gap:8px}
+.org-tier{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.org-ln{width:2px;height:26px;background:linear-gradient(var(--line),var(--flame) 60%,var(--line))}
+.org-boss{display:grid;justify-items:center;gap:2px;min-width:230px;padding:16px 24px;border-radius:var(--r-lg);border:1px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--brand-grad) border-box}
+.org-boss.alt{background:var(--brand-grad);color:#1a0d16;box-shadow:0 12px 30px -14px rgba(224,51,106,.7)}
+.org-boss.alt .org-r{color:#1a0d16;opacity:.75}
+.org-n{font-family:var(--display);font-size:24px;font-weight:600;line-height:1.1}
+.org-r{font-size:13px;color:var(--muted)}
+.org-poles{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:1280px){.org-poles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.org-poles{grid-template-columns:1fr}.org-boss{min-width:0;width:100%}}
+.org-pole{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:16px;min-width:0}
+.org-pole h2{margin:0 0 12px;font-family:var(--display);font-weight:600;font-size:18px;color:var(--flame)}
+.org-ppl{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.org-ppl li{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:center}
+.org-ppl strong{display:block;line-height:1.2}
+.org-ppl span{display:block;font-size:12.5px;color:var(--muted);line-height:1.35}
+.org-av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:13px;background:var(--raised);border:1px solid var(--line)}
+.org-note{margin:12px 0 0;font-size:12px;color:var(--faint)}
+.org-note a{color:var(--purple-soft)}
+.org-sups{width:100%;background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:18px}
+.org-sups-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 14px;margin-bottom:12px}
+.org-sups-h h2{margin:0;font-family:var(--display);font-weight:600;font-size:18px;color:var(--flame)}
+.org-sups-h span{font-size:13px;color:var(--muted)}
+.org-grps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.org-grp{background:var(--bg);border:1px solid var(--line-soft);border-top:3px solid var(--gc);border-radius:var(--r-md);padding:12px}
+.org-grp h3{margin:0 0 10px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.org-grp h3>span{width:9px;height:9px;border-radius:50%;background:var(--gc)}
+.org-grp h3 small{margin-left:auto;color:var(--faint);font-size:12px;letter-spacing:0}
+.org-chips{display:flex;flex-wrap:wrap;gap:6px}
+.org-chips span{padding:4px 10px;border-radius:99px;background:var(--raised);border:1px solid var(--line);font-weight:600;font-size:13px}
+.org-base{width:100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 12px;padding:16px;border-radius:var(--r-lg);background:var(--raised);border:1px solid var(--line)}
+.org-base b{font-family:var(--display);font-size:30px;font-weight:700;line-height:1;background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.org-base span{font-weight:600}
+.org-base small{color:var(--muted)}
 .frs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
 .frs-card{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;display:grid;gap:12px;align-content:start}
 .frs-card header{display:flex;align-items:center;gap:8px}
@@ -1761,6 +1797,7 @@ const ICONS = {
   import:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
   settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   download:'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+  org:'<rect x="9" y="2.5" width="6" height="5" rx="1"/><rect x="2.5" y="16.5" width="6" height="5" rx="1"/><rect x="15.5" y="16.5" width="6" height="5" rx="1"/><path d="M12 7.5v4.5M5.5 16.5V12h13v4.5"/>',
   coach:'<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/>',
   cams:'<rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/>',
   suivi:'<path d="M12 3v18M6 21h12M4 8h16M4 8l-2.5 6a3 3 0 0 0 5 0L4 8zM20 8l-2.5 6a3 3 0 0 0 5 0L20 8z"/>',
@@ -1784,6 +1821,7 @@ function route() {
   if (rest === 'suivi') return {pid, page:'suivi'};
   if (rest === 'cams') return {pid, page:'cams'};
   if (rest === 'coaching') return {pid, page:'coaching'};
+  if (rest === 'organigramme') return {pid, page:'org'};
   if (rest === 'asv' || rest.startsWith('asv/')) return {pid, page:'asv', sub: rest.split('/')[1] || 'dashboard'};
   return {pid, page: PAGE_LABEL[rest] ? rest : 'dashboard'};
 }
@@ -1820,21 +1858,21 @@ function renderNav(rt) {
   navRt = rt;
   // La rubrique de la page ouverte est toujours dépliée
   for (const s of NAV_SECTIONS) if (s.pages && s.pages.some(([k]) => k === rt.page)) { const key = `${rt.pid}-${s.id}`; if (!ui.navOpen[key]) { ui.navOpen[key] = true; saveUI(); } }
-  const planOn = rt.page === 'planning', suiOn = rt.page === 'suivi', camOn = rt.page === 'cams', coOn = rt.page === 'coaching';
+  const planOn = rt.page === 'planning', suiOn = rt.page === 'suivi', camOn = rt.page === 'cams', coOn = rt.page === 'coaching', orgOn = rt.page === 'org';
   const pend = camsPending();
   document.getElementById('nav').innerHTML = `<div class="nav-group"><a href="#${rt.pid}/planning" class="nav-top ${planOn ? 'on' : ''}" ${planOn ? 'aria-current="page"' : ''} title="Planning de l'équipe">${icon('planning')}<span>Planning</span></a>
     <a href="#${rt.pid}/suivi" class="nav-top ${suiOn ? 'on' : ''}" ${suiOn ? 'aria-current="page"' : ''} title="Pénalités, réattributions et primes">${icon('suivi')}<span>Primes & Pénalités</span></a>
     <a href="#${rt.pid}/cams" class="nav-top ${camOn ? 'on' : ''}" ${camOn ? 'aria-current="page"' : ''} title="Gestion des cams et customs${pend.all.length ? ` · ${pend.all.length} en attente` : ''}">${icon('cams')}<span>Cam / Custom</span>${pend.all.length ? `<span class="nbadge ${pend.worst === 3 ? 'hot pulse' : pend.worst === 2 ? 'hot' : ''}">${pend.all.length}</span>` : ''}</a>
     <a href="#${rt.pid}/coaching" class="nav-top ${coOn ? 'on' : ''}" ${coOn ? 'aria-current="page"' : ''} title="Chatters à accompagner cette semaine">${icon('coach')}<span>Suivi des chatters</span></a></div>` + PIDS.map(pid => {
     const P = PLATFORMS[pid];
-    return `<div class="nav-group ${rt.pid === pid && !planOn && !suiOn && !camOn && !coOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
+    return `<div class="nav-group ${rt.pid === pid && !planOn && !suiOn && !camOn && !coOn && !orgOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
       ${NAV_SECTIONS.map(s => {
         if (s.link) { const on = rt.pid === pid && rt.page === s.link; return `<a href="#${pid}/${s.link}" class="nav-top ${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span></a>`; }
         const key = `${pid}-${s.id}`, open = !!ui.navOpen[key], inside = rt.pid === pid && s.pages.some(([k]) => k === rt.page);
         return `<button type="button" class="nav-sec ${inside ? 'has-on' : ''}" data-sec="${key}" aria-expanded="${open}" title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
           <div class="nav-sub" ${open ? '' : 'hidden'}>${s.pages.filter(([k]) => k !== 'settings' || Sync.canManage()).map(([k, l]) => { const on = rt.pid === pid && rt.page === k; return `<a href="#${pid}/${k}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(l)} ${P.name}">${icon(k)}<span>${esc(l)}</span></a>`; }).join('')}</div>`;
       }).join('')}</div>`;
-  }).join('');
+  }).join('') + `<div class="nav-group"><a href="#${rt.pid}/organigramme" class="nav-top ${orgOn ? 'on' : ''}" ${orgOn ? 'aria-current="page"' : ''} title="Qui fait quoi dans l’agence">${icon('org')}<span>Organigramme</span></a></div>`;
 }
 document.getElementById('nav').addEventListener('click', e => {
   const b = e.target.closest('.nav-sec');
@@ -1894,6 +1932,7 @@ function render() {
   if (rt.page === 'suivi') { renderSuivi(main); return; }
   if (rt.page === 'cams') { renderCams(main); return; }
   if (rt.page === 'coaching') { renderCoaching(main); return; }
+  if (rt.page === 'org') { renderOrg(main); return; }
   if (rt.page === 'asv') renderASV(main, P, rt.sub);
   else if (rt.page === 'dashboard') renderDashboard(main, P);
   else if (rt.page === 'chatters') rt.chatter != null ? renderDetail(main, P, rt.chatter) : renderChatters(main, P);
@@ -3890,6 +3929,65 @@ function bindSupPlan(main) {
 }
 
 
+/* ---------- Organigramme ---------- */
+// Partie fixe (modifiable par l'administration et la Direction). Les superviseurs et les managers / upsell sont lus en direct
+// dans le planning des superviseurs et la section « Superviseurs français ».
+const ORG_DEF = {dir: 'Jérémy', codir: 'Clément', supLead: 'Billy', chatters: 160, poles: [
+  {t: 'Management et recrutement', p: 'Michael · Manager principal\nTiana · Recrutement\nAïcha · Recrutement, épaule Tiana sur les entretiens'},
+  {t: 'Stratégie chatting', p: 'Denis · Scripts, Discord'}]};
+const orgData = () => ({...ORG_DEF, ...(planState.org || {})});
+const orgPeople = txt => String(txt || '').split('\n').map(l => l.trim()).filter(Boolean).map(l => { const i = l.indexOf('·'); return i < 0 ? [l, ''] : [l.slice(0, i).trim(), l.slice(i + 1).trim()]; });
+function renderOrg(main) {
+  const o = orgData(), mm = planModelsMap(), today = isoOf(new Date());
+  const av = (n, c) => `<i class="org-av" ${c ? `style="border-color:${c}"` : ''}>${esc((n || '?').trim().charAt(0).toUpperCase())}</i>`;
+  const li = (n, r, c) => `<li>${av(n, c)}<div><strong>${esc(n)}</strong>${r ? `<span>${esc(r)}</span>` : ''}</div></li>`;
+  const fr = frList().map(f => { const ids = Object.keys(f.models || {}).filter(id => mm[id] && (!mm[id].end || mm[id].end >= today));
+    const n = g => ids.filter(id => mm[id].group === g).length;
+    const parts = [n('of') ? `OnlyFans (${n('of')})` : '', n('mym') ? `MYM (${n('mym')})` : ''].filter(Boolean);
+    return {name: f.name, role: parts.join(' · ') || 'aucune modèle', c: n('of') && n('mym') ? '#a08cff' : n('of') ? '#eab308' : '#22c55e'}; });
+  const sups = supList(), groups = [
+    {k: 'OF', label: 'OnlyFans', c: '#eab308'}, {k: 'MYM', label: 'MYM', c: '#22c55e'}, {k: '', label: 'OnlyFans et MYM', c: '#a08cff'}]
+    .map(g => ({...g, l: sups.filter(s => (supFocus(s) || '') === g.k)})).filter(g => g.l.length);
+  const others = sups.filter(s => supFocus(s) && !['OF', 'MYM'].includes(supFocus(s)));
+  if (others.length) groups.push({k: 'x', label: 'Autre', c: '#94a3b8', l: others});
+  main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">${icon('org')}</span><span>Organigramme</span></h1>
+    ${Sync.canDirect() ? '<button class="btn ghost" id="org-edit" type="button" style="margin-left:auto">Modifier</button>' : ''}</div>
+  <div class="org">
+    <div class="org-lv"><div class="org-tier">Direction</div><div class="org-boss"><span class="org-n">${esc(o.dir)}</span><span class="org-r">Directeur</span></div></div>
+    <div class="org-ln"></div>
+    <div class="org-lv"><div class="org-boss alt"><span class="org-n">${esc(o.codir)}</span><span class="org-r">Codirecteur</span></div></div>
+    <div class="org-ln"></div>
+    <div class="org-poles">
+      ${(o.poles || []).map(p => `<section class="org-pole"><h2>${esc(p.t)}</h2><ul class="org-ppl">${orgPeople(p.p).map(([n, r]) => li(n, r)).join('')}</ul></section>`).join('')}
+      <section class="org-pole"><h2>Supervision</h2><ul class="org-ppl">${li(o.supLead, 'Responsable supervision')}</ul><p class="org-note">Encadre les ${sups.length} superviseurs ci-dessous.</p></section>
+      <section class="org-pole"><h2>Manager / upsell</h2><ul class="org-ppl">${fr.map(x => li(x.name, x.role, x.c)).join('') || '<li class="muted">Personne</li>'}</ul><p class="org-note">Le détail des modèles est dans <a href="#${route().pid}/planning">Planning · Planning superviseurs</a>.</p></section>
+    </div>
+    <div class="org-ln"></div>
+    <section class="org-sups"><div class="org-sups-h"><h2>Superviseurs</h2><span>${plural(sups.length, 'superviseur', 'superviseurs')} · par spécialité</span></div>
+      <div class="org-grps">${groups.map(g => `<div class="org-grp" style="--gc:${g.c}"><h3><span></span>${esc(g.label)} <small>${g.l.length}</small></h3><div class="org-chips">${g.l.map(s => `<span>${esc(s.name)}</span>`).join('')}</div></div>`).join('')}</div></section>
+    <div class="org-ln"></div>
+    <div class="org-base"><b>${esc(String(o.chatters))}</b><span>chatters</span><small>OnlyFans et MYM</small></div>
+  </div>`;
+  document.getElementById('org-edit')?.addEventListener('click', () => {
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:560px"><h3>Modifier l’organigramme</h3>
+      <p class="hint" style="margin-top:0">Les superviseurs et les managers / upsell se mettent à jour tout seuls depuis le planning des superviseurs. Une personne par ligne, sous la forme « Prénom · rôle ».</p>
+      <div class="set-grid" style="grid-template-columns:1fr 1fr"><label>Directeur<input type="text" id="og-dir" value="${esc(o.dir)}"></label><label>Codirecteur<input type="text" id="og-codir" value="${esc(o.codir)}"></label>
+      <label>Responsable supervision<input type="text" id="og-sup" value="${esc(o.supLead)}"></label><label>Nombre de chatters<input type="number" min="0" id="og-ch" value="${esc(String(o.chatters))}"></label></div>
+      ${(o.poles || []).map((p, i) => `<label class="sf" style="margin-top:10px"><span>${esc(p.t)}</span><textarea id="og-p${i}" rows="3">${esc(p.p)}</textarea></label>`).join('')}
+      <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
+    bg.addEventListener('click', e => {
+      if (e.target === bg) return bg.remove();
+      const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === '0') return bg.remove();
+      const v = id => bg.querySelector(id).value.trim();
+      planState.org = {dir: v('#og-dir') || ORG_DEF.dir, codir: v('#og-codir') || ORG_DEF.codir, supLead: v('#og-sup') || ORG_DEF.supLead, chatters: Math.max(0, +v('#og-ch') || 0),
+        poles: (o.poles || []).map((p, i) => ({t: p.t, p: bg.querySelector(`#og-p${i}`).value.trim()}))};
+      savePlan(); bg.remove(); toast('Organigramme enregistré.'); render();
+    });
+    document.body.appendChild(bg);
+  });
+}
+
 /* ---------- Superviseurs français : ils ne suivent que certaines modèles (OF et MYM séparés) ---------- */
 // Liste de départ (Redes Compta, validée le 12/11/2026) : utilisée tant que personne ne l'a modifiée sur le site
 const FR_SEED = [
@@ -5729,7 +5827,7 @@ const Sync = (() => {
     } else if (key === 'suivi') {
       syncInPlace(suiviState, {weeks: (data && data.weeks) || {}}); lsSet(LS_SUIVI, suiviState);
     } else if (key === 'planning') {
-      syncInPlace(planState, {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {}), ...(data && data.supAssign ? {supAssign: data.supAssign} : {}), ...(data && data.frSups ? {frSups: data.frSups} : {})}); lsSet(LS_PLAN, planState);
+      syncInPlace(planState, {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {}), ...(data && data.supAssign ? {supAssign: data.supAssign} : {}), ...(data && data.frSups ? {frSups: data.frSups} : {}), ...(data && data.org ? {org: data.org} : {})}); lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
       planCfgSaved = data && ((Array.isArray(data.models) && data.models.length) || (data.launches && Object.keys(data.launches).length) || (data.promos && Object.keys(data.promos).length)) ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
