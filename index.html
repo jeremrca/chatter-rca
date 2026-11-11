@@ -567,6 +567,18 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .as-n{display:inline-block;min-width:22px;font-weight:800;font-size:12px;color:var(--muted)}
 .as-n.zero{color:#fff;background:#ef4444;border-radius:6px;padding:1px 6px}
 .assign tfoot th,.assign tfoot td{background:var(--raised)}
+.frs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.frs-card{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;display:grid;gap:12px;align-content:start}
+.frs-card header{display:flex;align-items:center;gap:8px}
+.frs-card header strong{font-size:16px}
+.frs-card header .btn{margin-left:auto}
+.frs-g{display:grid;gap:6px}
+.frs-gh{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.frs-gh>span{width:10px;height:10px;border-radius:3px;background:var(--gc)}
+.frs-gh b{color:var(--text)}
+.frs-chips{display:flex;flex-wrap:wrap;gap:6px}
+.frs-chip{padding:3px 10px;border-radius:99px;font-size:13px;font-weight:600;background:color-mix(in srgb,var(--gc) 16%,transparent);border:1px solid color-mix(in srgb,var(--gc) 55%,transparent)}
+.frs-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:4px 12px;margin-bottom:6px}
 .as-h{display:flex;align-items:center;gap:8px;font-size:15px;margin:14px 0 8px}
 .as-h>span:first-child{width:12px;height:12px;border-radius:3px;background:var(--gc);box-shadow:0 0 8px var(--gc)}
 .cam-lv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
@@ -3414,7 +3426,7 @@ function renderPlanning(main) {
   }
   if (planUI.tab === 'sups') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning des superviseurs</span></h1></div>` + tabs + supPlanHTML() + supAssignHTML();
-    bindPlanTabs(main); bindSupPlan(main); bindSupAssign(main); return;
+    bindPlanTabs(main); bindSupPlan(main); bindFrSup(main); bindSupAssign(main); return;
   }
   if (planUI.tab === 'bilan') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1>
@@ -3808,6 +3820,7 @@ function supPlanHTML() {
       </div>
       <p class="hint" style="margin:10px 0 0;font-size:12px">Les shifts de nuit (22h-8h, 16h-2h) se prolongent sur le lendemain, en barre hachurée. ${d === today ? 'Le trait vertical indique l’heure actuelle.' : ''} Survolez « Présents » pour voir qui est là à chaque heure.</p>
     </section>
+    ${frSupHTML()}
     <section class="panel"><h2>Couverture de la semaine</h2><p class="hint">Nombre de superviseurs présents par heure. ${holes.length ? `<strong class="sc-lo">Créneaux sans superviseur : ${holes.map(esc).join(' · ')}</strong>` : '<span class="sc-hi">Chaque heure de la semaine est couverte.</span>'}</p>
       <div class="cov-wrap"><table class="cov"><thead><tr><th></th>${Array.from({length: 24}, (_, h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>
       ${grid.map((row, dd) => `<tr><th>${PLAN_DAYS[dd]}</th>${row.map((n, h) => `<td class="c${Math.min(n, 4)}" title="${PLAN_DAYS_LONG[dd]} ${h}h-${h + 1}h : ${n ? esc(who[dd][h].join(', ')) : 'personne'}">${n || ''}</td>`).join('')}</tr>`).join('')}
@@ -3876,6 +3889,54 @@ function bindSupPlan(main) {
   });
 }
 
+
+/* ---------- Superviseurs français : ils ne suivent que certaines modèles (OF et MYM séparés) ---------- */
+// Liste de départ (Redes Compta, validée le 12/11/2026) : utilisée tant que personne ne l'a modifiée sur le site
+const FR_SEED = [
+  {id: 'fr-carel', name: 'Carel', of: ['Carla Baby', 'Eden', 'Flavie', 'Marie', 'Steffy', 'Thaïs'], mym: ['Tia']},
+  {id: 'fr-iliane', name: 'Iliane', mym: ['Carla', 'Carla Baby', 'Charlotte', 'Chloe', 'Eden', 'Flavie', 'Marie']},
+  {id: 'fr-kenzo', name: 'Kenzo', mym: ['Amandine', 'Candice', 'Steffy', 'Thais']}
+];
+function frSups() {
+  if (planState.frSups) return planState.frSups;
+  const byName = {}; for (const m of storedModels()) byName[`${m.group}|${normName(m.name)}`] = m.id;
+  return Object.fromEntries(FR_SEED.map((f, i) => [f.id, {name: f.name, order: i, models: Object.fromEntries(['of', 'mym'].flatMap(g => (f[g] || []).map(n => byName[`${g}|${normName(n)}`]).filter(Boolean)).map(id => [id, true]))}]));
+}
+const frList = () => Object.entries(frSups()).map(([id, f]) => ({id, ...f})).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+function frSupHTML() {
+  const today = isoOf(new Date()), mm = planModelsMap();
+  const live = id => mm[id] && (!mm[id].end || mm[id].end >= today);
+  const grp = id => PLAN_GROUPS.find(g => g.id === mm[id].group) || PLAN_GROUPS[0];
+  const edit = Sync.canDirect();
+  return `<section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px"><h2 style="margin:0">Superviseurs français · leurs modèles</h2>
+      <span class="hint" style="margin:0">Ils ne suivent que ces modèles. OnlyFans et MYM sont séparés.</span></div>
+    <div class="frs">${frList().map(f => { const ids = Object.keys(f.models || {}).filter(live);
+      const block = gid => { const g = PLAN_GROUPS.find(x => x.id === gid), l = ids.filter(id => mm[id].group === gid).sort((a, b) => mm[a].name.localeCompare(mm[b].name, 'fr'));
+        return l.length ? `<div class="frs-g"><div class="frs-gh" style="--gc:${g.color}"><span></span>${gid === 'of' ? 'OnlyFans' : gid === 'mym' ? 'MYM' : 'Reveal'} <b>${l.length}</b></div><div class="frs-chips">${l.map(id => `<span class="frs-chip" style="--gc:${grp(id).color}">${esc(mm[id].name)}</span>`).join('')}</div></div>` : ''; };
+      return `<article class="frs-card"><header><strong>${esc(f.name)}</strong><span class="muted">${plural(ids.length, 'modèle', 'modèles')}</span>${edit ? `<button class="btn ghost small-btn" type="button" data-fredit="${esc(f.id)}">Modifier</button>` : ''}</header>
+        ${['of', 'mym', 'other'].map(block).join('') || '<p class="hint" style="margin:0">Aucune modèle.</p>'}</article>`; }).join('')}</div></section>`;
+}
+function bindFrSup(main) {
+  main.querySelectorAll('[data-fredit]').forEach(b => b.addEventListener('click', () => {
+    const all = JSON.parse(JSON.stringify(frSups())), f = all[b.dataset.fredit], today = isoOf(new Date());
+    const models = storedModels().filter(m => !m.end || m.end >= today);
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:620px"><h3>Modèles de ${esc(f.name)}</h3>
+      <p class="hint" style="margin-top:0">Cochez les modèles que ${esc(f.name)} suit. Attention : la même modèle existe souvent en OnlyFans et en MYM.</p>
+      ${['of', 'mym', 'other'].map(gid => { const g = PLAN_GROUPS.find(x => x.id === gid), l = models.filter(m => m.group === gid); return l.length ? `<h3 class="as-h" style="--gc:${g.color}"><span></span>${gid === 'of' ? 'OnlyFans' : gid === 'mym' ? 'MYM' : 'Reveal / Telegram'}</h3>
+        <div class="frs-pick">${l.map(m => `<label class="check"><input type="checkbox" data-frm="${esc(m.id)}" ${f.models && f.models[m.id] ? 'checked' : ''}> ${esc(m.name)}</label>`).join('')}</div>` : ''; }).join('')}
+      <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
+    bg.addEventListener('click', e => {
+      if (e.target === bg) return bg.remove();
+      const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === '0') return bg.remove();
+      const keep = Object.fromEntries(Object.keys(f.models || {}).filter(id => !models.some(m => m.id === id)).map(id => [id, true]));   // modèles terminées : gardées telles quelles
+      bg.querySelectorAll('[data-frm]').forEach(c => { if (c.checked) keep[c.dataset.frm] = true; });
+      f.models = keep; planState.frSups = all; savePlan(); bg.remove(); toast(`Modèles de ${f.name} enregistrées.`);
+      const y = window.scrollY; render(); window.scrollTo(0, y);
+    });
+    document.body.appendChild(bg);
+  }));
+}
 
 /* ---------- Modèles attribuées à chaque superviseur (cases à cocher, MYM et OF séparés) ---------- */
 function supAssignHTML() {
@@ -5668,7 +5729,7 @@ const Sync = (() => {
     } else if (key === 'suivi') {
       syncInPlace(suiviState, {weeks: (data && data.weeks) || {}}); lsSet(LS_SUIVI, suiviState);
     } else if (key === 'planning') {
-      syncInPlace(planState, {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {}), ...(data && data.supAssign ? {supAssign: data.supAssign} : {})}); lsSet(LS_PLAN, planState);
+      syncInPlace(planState, {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {}), ...(data && data.supAssign ? {supAssign: data.supAssign} : {}), ...(data && data.frSups ? {frSups: data.frSups} : {})}); lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
       planCfgSaved = data && ((Array.isArray(data.models) && data.models.length) || (data.launches && Object.keys(data.launches).length) || (data.promos && Object.keys(data.promos).length)) ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
