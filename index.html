@@ -5206,7 +5206,7 @@ function coachBuild(wk, keepFrom, opt = {}) {
   }
   const ctx = {wk, cands, prev, curShiftWeek, isIn: !!(keepFrom && keepFrom.items)};
   out.replaced = opt.replaceFor ? coachFill(out.items, ctx, {only: opt.replaceFor, count: 1, why: opt.replaceWhy}).added : [];
-  out.fill = coachFill(out.items, ctx, {});
+  out.fill = opt.noFill ? {added: [], short: [], min: 0} : coachFill(out.items, ctx, {});
   return out;
 }
 // Complète les superviseurs : on remonte le classement (les plus faibles d'abord, OF et MYM mêlés au prorata du rang)
@@ -5263,7 +5263,7 @@ function renderCoaching(main) {
   const byPid = pid => items.filter(i => i.pid === pid || (pid === 'of' && i.pid === 'both')).sort((a, b) => a.rank - b.rank);
   const row = it => {
     const elig = sups.filter(s => it.pid === 'both' ? supEligible(s, 'of') || supEligible(s, 'mym') : supEligible(s, it.pid));
-    return `<tr class="${it.sup ? '' : 'nosup'} ${it.isIn ? 'newin' : ''}"><td class="num"><span class="rnum">${it.rank}</span><button type="button" class="krm" data-krm="${esc(it.k)}" title="Retirer de la liste (superviseur, manager…) : le suivant au classement prendra sa place" aria-label="Retirer ${esc(it.plan || it.name)}">×</button></td>
+    return `<tr class="${it.sup ? '' : 'nosup'} ${it.isIn ? 'newin' : ''}"><td class="num"><span class="rnum">${it.rank}</span><button type="button" class="krm" data-krm="${esc(it.k)}" title="Retirer ou remplacer ce chatter" aria-label="Retirer ${esc(it.plan || it.name)}">×</button></td>
       <td><button type="button" class="linkbtn" data-kall="${esc(it.k)}" title="Voir la fiche"><strong>${esc(it.plan || it.name)}</strong></button>${it.verdict ? ' ' + verdictBadge(it.verdict) : ''}${it.plan && rosterKey(it.plan) !== rosterKey(it.name) ? `<div class="sub" style="margin:0">import : ${esc(it.name)}</div>` : ''}
         <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag warm">Nouveau · à vérifier</span>' : ''}${it.pid === 'both' ? `<span class="rtag">aussi ${esc(it.alsoRank || '')}</span>` : ''}${!it.plan ? '<span class="rtag hot">introuvable au planning</span>' : ''}</div></td>
       <td>${it.pid === 'both' ? platBadge('OF') + ' ' + platBadge('MYM') : platBadge(it.pid === 'of' ? 'OF' : 'MYM')}</td>
@@ -5311,14 +5311,14 @@ function renderCoaching(main) {
     const sup = supList().find(x => x.id === it.sup), back = addDaysIso(isoOf(new Date()), 14);
     const bg = document.createElement('div'); bg.className = 'modal-bg';
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:520px"><h3>Retirer ${esc(it.plan || it.name)} de la liste</h3>
-      <p class="hint" style="margin-top:0">${sup ? `<strong>${esc(sup.name)}</strong> recevra à la place le chatter le plus faible du classement qui n’est pas encore suivi, sur sa plateforme et pendant ses horaires.` : 'Ce chatter n’a pas de superviseur : il est simplement retiré.'} Le reste de la répartition ne bouge pas.</p>
+      <p class="hint" style="margin-top:0">${sup ? `<strong>Retirer et remplacer</strong> : ${esc(sup.name)} reçoit à la place le chatter le plus faible du classement qui n’est pas encore suivi, sur sa plateforme et pendant ses horaires. <strong>Retirer sans remplacer</strong> : ${esc(sup.name)} garde un chatter de moins.` : 'Ce chatter n’a pas de superviseur : il est simplement retiré.'} Le reste de la répartition ne bouge pas.</p>
       <label class="check" style="margin:8px 0"><input type="radio" name="krm" value="left"> A quitté l’agence ou a été renvoyé : ne plus jamais le proposer</label>
       <label class="check" style="margin:8px 0"><input type="radio" name="krm" value="away"> Indisponible (santé, congé…) jusqu’au</label>
       <div class="krm-away" style="display:flex;gap:8px;margin:0 0 8px 26px;flex-wrap:wrap"><input type="date" id="krm-until" value="${back}" min="${isoOf(new Date())}"><input type="text" id="krm-note" placeholder="Motif (facultatif)" style="flex:1;min-width:150px"></div>
       <label class="check" style="margin:8px 0"><input type="radio" name="krm" value="week" checked> Juste cette semaine</label>
       <label class="check" style="margin:8px 0"><input type="radio" name="krm" value="always"> Ce n’est pas un chatter (superviseur, manager…)</label>
       <div id="krm-err" class="sc-lo" style="min-height:18px;font-size:13px"></div>
-      <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Retirer</button></div></div>`;
+      <div class="acts" style="flex-wrap:wrap"><button class="btn ghost" data-a="0" type="button">Annuler</button>${sup ? `<button class="btn" data-a="1" type="button">Retirer sans remplacer</button><button class="btn primary" data-a="2" type="button">Retirer et remplacer</button>` : '<button class="btn primary" data-a="1" type="button">Retirer</button>'}</div></div>`;
     bg.querySelectorAll('#krm-until,#krm-note').forEach(x => x.addEventListener('focus', () => { bg.querySelector('input[name="krm"][value="away"]').checked = true; }));
     bg.addEventListener('click', e => {
       if (e.target === bg) return bg.remove();
@@ -5331,10 +5331,11 @@ function renderCoaching(main) {
       } else if (mode === 'left' || mode === 'always') (coachState.ignore ||= {})[rk] = {name: it.name, at: Date.now(), why: mode === 'left' ? 'left' : 'notchatter', wkey: key};
       (W.removed ||= {})[key] = true;
       delete W.items[key];
-      const r = coachBuild(wk, W, {noNew: true, replaceFor: it.sup || null, replaceWhy: `remplace ${it.plan || it.name}`});
+      const swap = a.dataset.a === '2' && !!it.sup;
+      const r = coachBuild(wk, W, swap ? {noNew: true, replaceFor: it.sup, replaceWhy: `remplace ${it.plan || it.name}`} : {noNew: true, noFill: true});
       W.items = r.items; W.excluded = r.excluded; W.info = r.info; saveCoach(); bg.remove();
       const rp = r.replaced[0];
-      toast(`${it.plan || it.name} retiré${rp ? ` · ${rp.name} le remplace chez ${rp.sup}` : sup ? ` · aucun remplaçant compatible trouvé pour ${sup.name}` : ''}.`, !rp && !!sup); render();
+      toast(`${it.plan || it.name} retiré${rp ? ` · ${rp.name} le remplace chez ${rp.sup}` : swap ? ` · aucun remplaçant compatible trouvé pour ${sup.name}` : ''}.`, swap && !rp); render();
     });
     document.body.appendChild(bg);
   }));
