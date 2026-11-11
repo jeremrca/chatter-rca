@@ -626,6 +626,7 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .kl{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line);font-size:12.5px}
 .kl b{font-size:13px}.kl small{color:var(--faint);font-weight:700}
 .kl.over{border-color:#ef4444;color:#fecaca}
+.kl.under{border-color:#f59e0b;color:#fde68a}
 .rank-table tr.nosup td{background:rgba(239,68,68,.08)}
 .klinks{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
 .klinks label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
@@ -5059,7 +5060,7 @@ function camEdit(id) {
 const LS_COACH = 'rca.coach.v1';
 let coachState = (() => { const s = lsGet(LS_COACH, null) || {}; s.weeks ||= {}; s.links ||= {}; return s; })();
 const saveCoach = () => { lsSet(LS_COACH, coachState); Sync.changed('coaching'); };
-const COACH_DEF = {n: 20, cap: 6, minShifts: 2, span: 2};
+const COACH_DEF = {n: 20, cap: 6, min: 4, minShifts: 2, span: 2};
 const coachCfg = () => ({...COACH_DEF, ...(coachState.cfg || {})});
 const coachUI = {week: null};
 const BAD_NAME = /acc[eè]s\s+r[eé]voqu|superviseu?r|\bsup\b|\bmanager\b|@/i;
@@ -5131,7 +5132,12 @@ function coachPeriod(pid, start, end) {
 }
 // Construit la liste de la semaine wk à partir des performances des semaines précédentes
 // keepFrom : liste déjà préparée dont on garde la répartition (retrait d'une personne → le suivant entre, le reste ne bouge pas)
-function coachBuild(wk, keepFrom) {
+// Retrait d'un chatter encore actif ? (« indisponible jusqu'au… » expire tout seul)
+const coachIgn = (rk, wk) => { const g = (coachState.ignore || {})[rk]; return g && !(g.until && g.until < wk) ? g : null; };
+const coachIgnWhy = g => g.until ? `indisponible jusqu’au ${fmtDayFr(g.until)}${g.note ? ` · ${g.note}` : ''}` : g.why === 'left' ? 'a quitté l’agence' : 'retiré définitivement (pas un chatter)';
+// opt.noNew : garde seulement les chatters déjà dans la liste (pas de nouvel entrant par le classement)
+// opt.replaceFor : superviseur qui doit recevoir un remplaçant compatible
+function coachBuild(wk, keepFrom, opt = {}) {
   const supKeys = supList().map(s => rosterKey(s.name)).filter(k => k.length >= 3);
   const removed = (keepFrom && keepFrom.removed) || {};
   const cfg = coachCfg(), end = addDaysIso(wk, -1), start = addDaysIso(wk, -7 * cfg.span);
@@ -5139,6 +5145,7 @@ function coachBuild(wk, keepFrom) {
   const prevWk = addDaysIso(wk, -7), prev = coachState.weeks[prevWk] && coachState.weeks[prevWk].status === 'validated' ? coachState.weeks[prevWk] : null;   // un brouillon (test) ne compte jamais
   const planWeeks = [...Array(cfg.span)].map((_, i) => addDaysIso(wk, -7 * (i + 1)));
   const curShiftWeek = planState.weeks[wk] ? wk : prevWk;
+  const cands = {};
   const out = {items: {}, excluded: [], info: {noPlan: !planState.weeks[wk] && !planState.weeks[prevWk], planWeek: planState.weeks[wk] ? wk : planState.weeks[prevWk] ? prevWk : null}, start, end};
   for (const pid of ['of', 'mym']) {
     const d = coachPeriod(pid, start, end);
@@ -5149,8 +5156,8 @@ function coachBuild(wk, keepFrom) {
       if (BAD_NAME.test(r.name)) { out.excluded.push({name: r.name, pid, why: 'accès révoqué / superviseur'}); continue; }
       const rk = rosterKey(r.name);
       if (supKeys.includes(rk)) { out.excluded.push({name: r.name, pid, why: 'superviseur (planning des superviseurs)'}); continue; }
-      const ign = (coachState.ignore || {})[rk];
-      if (ign) { out.excluded.push({name: r.name, pid, why: 'retiré définitivement (pas un chatter)', key: rk, restore: true}); continue; }
+      const ign = coachIgn(rk, wk);
+      if (ign) { out.excluded.push({name: r.name, pid, why: coachIgnWhy(ign), key: rk, restore: true}); continue; }
       const plan = coachMatch(r.name, roster);
       if (removed[rosterKey(plan || r.name)]) { out.excluded.push({name: r.name, pid, why: 'retiré à la main cette semaine', key: rosterKey(plan || r.name), restoreWeek: true}); continue; }
       const fl = (coachState.flags || {})[rosterKey(plan || r.name)];
@@ -5161,8 +5168,11 @@ function coachBuild(wk, keepFrom) {
       cand.push({r, plan, shifts: shifts.length});
     }
     cand.sort((a, b) => a.r.final - b.r.final);
-    cand.slice(0, cfg.n).forEach((c, i) => {
+    cands[pid] = cand;
+    const kept = keepFrom && keepFrom.items || {};
+    cand.forEach((c, i) => {
       const key = rosterKey(c.plan || c.r.name);
+      if (opt.noNew || i >= cfg.n ? !kept[key] : false) return;   // au-delà du classement : seulement ceux déjà suivis (ajoutés pour compléter)
       const ex = out.items[key];
       const item = {name: c.r.name, plan: c.plan || '', pid, rank: i + 1, of: cand.length, score: Math.round(c.r.final * 10) / 10, grade: c.r.grade, ca: c.r.row.revenue ?? c.r.row.total ?? null, shifts: c.shifts,
         isNew: c.plan ? isFlaggedNew(c.plan) : false, streak: prev && prev.items && prev.items[key] ? (prev.items[key].streak || 1) + 1 : 1};
@@ -5194,7 +5204,39 @@ function coachBuild(wk, keepFrom) {
     if (best) { x.it.sup = best.s.id; x.it.why = (keepFrom && keepFrom.items ? 'entré dans la liste · ' : '') + (keep ? 'même superviseur que la semaine dernière' : best.ov ? `${best.ov} h communes${best.mod ? ` · ${plural(best.mod, 'modèle attribuée', 'modèles attribuées')}` : ''}` : 'aucune heure commune trouvée'); x.it.isIn = !!(keepFrom && keepFrom.items); load[best.s.id]++; }
     else { x.it.sup = ''; x.it.why = 'aucun superviseur disponible (plafond atteint ou focus incompatible)'; }
   }
+  const ctx = {wk, cands, prev, curShiftWeek, isIn: !!(keepFrom && keepFrom.items)};
+  out.replaced = opt.replaceFor ? coachFill(out.items, ctx, {only: opt.replaceFor, count: 1, why: opt.replaceWhy}).added : [];
+  out.fill = coachFill(out.items, ctx, {});
   return out;
+}
+// Complète les superviseurs : on remonte le classement (les plus faibles d'abord, OF et MYM mêlés au prorata du rang)
+// jusqu'à trouver un chatter pas encore suivi, de la bonne plateforme, qui travaille pendant les heures du superviseur.
+// Sans opts.only : chaque superviseur sous le minimum est complété jusqu'au minimum. Avec opts.only : opts.count chatters pour ce superviseur.
+function coachFill(items, ctx, opts) {
+  const cfg = coachCfg(), min = Math.min(cfg.min ?? 4, cfg.cap), sups = supList();
+  const load = Object.fromEntries(sups.map(s => [s.id, 0]));
+  for (const it of Object.values(items)) if (it.sup && load[it.sup] != null) load[it.sup]++;
+  const pool = [];
+  for (const pid of ['of', 'mym']) (ctx.cands[pid] || []).forEach((c, i, a) => { if (c.plan) pool.push({c, pid, rank: i + 1, total: a.length, key: rosterKey(c.plan), pos: (i + 1) / a.length}); });
+  pool.sort((a, b) => a.pos - b.pos || a.c.r.final - b.c.r.final);
+  const shiftCache = {}, shifts = x => shiftCache[x.key] ||= coachShifts(x.c.plan, [ctx.curShiftWeek]);
+  const need = {};
+  for (const s of sups) need[s.id] = opts.only ? (s.id === opts.only ? Math.min(opts.count || 1, cfg.cap - load[s.id]) : 0) : Math.max(0, min - load[s.id]);
+  const added = [], done = new Set();
+  for (;;) {
+    const s = sups.filter(x => need[x.id] > 0 && !done.has(x.id)).sort((a, b) => load[a.id] - load[b.id])[0];
+    if (!s) break;
+    let pick = null;
+    for (const x of pool) { if (items[x.key] || !supEligible(s, x.pid)) continue; const ov = coachOverlap(s, shifts(x)); if (ov > 0) { pick = {x, ov}; break; } }
+    if (!pick) { done.add(s.id); continue; }
+    const {x, ov} = pick, prev = ctx.prev;
+    items[x.key] = {name: x.c.r.name, plan: x.c.plan, pid: x.pid, rank: x.rank, of: x.total, score: Math.round(x.c.r.final * 10) / 10, grade: x.c.r.grade, ca: x.c.r.row.revenue ?? x.c.r.row.total ?? null, shifts: x.c.shifts,
+      isNew: isFlaggedNew(x.c.plan), streak: prev && prev.items && prev.items[x.key] ? (prev.items[x.key].streak || 1) + 1 : 1,
+      sup: s.id, why: `${opts.only ? opts.why || 'remplaçant' : `ajouté pour compléter ${s.name} à ${min}`} · ${ov} h communes`, ...(ctx.isIn ? {isIn: true} : {})};
+    load[s.id]++; need[s.id]--; added.push({name: x.c.plan, sup: s.name});
+  }
+  const short = opts.only ? [] : sups.filter(s => load[s.id] < min).map(s => ({sup: s.name, n: load[s.id], focus: supFocus(s)}));
+  return {added, short, min};
 }
 
 /* ---------- Page ---------- */
@@ -5234,13 +5276,13 @@ function renderCoaching(main) {
   const tbl = pid => { const l = byPid(pid); return l.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table rank-table"><thead><tr><th class="num">#</th><th>Chatter</th><th>Plateforme</th><th class="num">Score 2 sem.</th><th class="num">CA</th><th class="num">Shifts</th><th>Superviseur</th></tr></thead><tbody>${l.map(row).join('')}</tbody></table></div>` : '<div class="empty" style="padding:20px">Aucun chatter.</div>'; };
   main.innerHTML = head + tabsD + `<div class="stack">
     ${!W ? `<section class="panel empty"><h2 style="font-size:18px;margin-bottom:6px">Liste de la ${esc(planWeekLabel(wk))} pas encore préparée</h2>
-      <p class="hint" style="margin:0 auto 14px;max-width:560px">Le site prend les ${cfg.n} chatters les moins performants sur OF et sur MYM, calculés sur les ${plural(cfg.span, 'semaine', 'semaines')} précédentes (du ${fmtDayFr(addDaysIso(wk, -7 * cfg.span))} au ${fmtDayFr(addDaysIso(wk, -1))}), puis les répartit entre superviseurs (${cfg.cap} maximum chacun) selon leurs horaires, leur focus et leurs modèles.</p>
+      <p class="hint" style="margin:0 auto 14px;max-width:560px">Le site prend les ${cfg.n} chatters les moins performants sur OF et sur MYM, calculés sur les ${plural(cfg.span, 'semaine', 'semaines')} précédentes (du ${fmtDayFr(addDaysIso(wk, -7 * cfg.span))} au ${fmtDayFr(addDaysIso(wk, -1))}), puis les répartit entre superviseurs (${cfg.min} minimum, ${cfg.cap} maximum chacun) selon leurs horaires, leur focus et leurs modèles. Un superviseur sous le minimum reçoit les chatters suivants du classement qui travaillent pendant ses horaires.</p>
       <button class="btn primary" id="k-build" type="button">Préparer la liste de la semaine</button></section>`
     : `<section class="panel"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="pill ${W.status === 'validated' ? 'Strong' : 'Warning'}">${W.status === 'validated' ? `Validée${W.validatedBy ? ` par ${esc(W.validatedBy)}` : ''} · visible par les superviseurs` : 'Brouillon · pas encore visible par les superviseurs'}</span>
         <span class="hint" style="margin:0">Performances du ${esc(fmtDayFr(W.start))} au ${esc(fmtDayFr(W.end))} · OF : ${W.info && W.info.of ? plural(W.info.of.imports, 'import', 'imports') : '<strong class="sc-lo">aucun import</strong>'} · MYM : ${W.info && W.info.mym ? plural(W.info.mym.imports, 'import', 'imports') : '<strong class="sc-lo">aucun import</strong>'}</span>
-        <div style="margin-left:auto;display:flex;gap:8px"><button class="btn ghost" id="k-give" type="button" title="Donner quelques chatters à un superviseur sans refaire toute la répartition">+ Superviseur en cours de semaine</button>${W.status !== 'validated' ? `<button class="btn ghost" id="k-del" type="button">Supprimer le brouillon</button><button class="btn ghost" id="k-rebuild" type="button">Recalculer</button><button class="btn primary" id="k-validate" type="button">Valider et envoyer aux superviseurs</button>` : '<button class="btn ghost" id="k-unvalidate" type="button">Repasser en brouillon</button>'}</div></div>
-        <div class="kload">${loads.map(l => `<span class="kl ${l.n > cfg.cap ? 'over' : ''}" style="--sc:${l.s.color}"><span class="g-dot" style="background:${l.s.color}"></span>${esc(l.s.name)} <b>${l.n}</b>${supFocus(l.s) ? ` <small>${supFocus(l.s)}</small>` : ''}</span>`).join('')}${items.filter(i => !i.sup).length ? `<span class="kl over">Non attribués <b>${items.filter(i => !i.sup).length}</b></span>` : ''}${items.filter(i => i.sup && /aucune heure commune/.test(i.why || '')).length ? `<span class="kl over" title="Ces chatters ne travaillent jamais pendant les heures de leur superviseur : pas assez de superviseurs sur leurs shifts">Sans heure commune <b>${items.filter(i => i.sup && /aucune heure commune/.test(i.why || '')).length}</b></span>` : ''}</div></section>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${loads.some(l => l.n < Math.min(cfg.min, cfg.cap)) ? `<button class="btn ghost" id="k-fill" type="button" title="Ajoute aux superviseurs qui en ont moins de ${cfg.min} les chatters les plus faibles du classement compatibles avec leur plateforme et leurs horaires">Compléter les superviseurs à ${cfg.min}</button>` : ''}<button class="btn ghost" id="k-give" type="button" title="Donner quelques chatters à un superviseur sans refaire toute la répartition">+ Superviseur en cours de semaine</button>${W.status !== 'validated' ? `<button class="btn ghost" id="k-del" type="button">Supprimer le brouillon</button><button class="btn ghost" id="k-rebuild" type="button">Recalculer</button><button class="btn primary" id="k-validate" type="button">Valider et envoyer aux superviseurs</button>` : '<button class="btn ghost" id="k-unvalidate" type="button">Repasser en brouillon</button>'}</div></div>
+        <div class="kload">${loads.map(l => `<span class="kl ${l.n > cfg.cap ? 'over' : l.n < Math.min(cfg.min, cfg.cap) ? 'under' : ''}" style="--sc:${l.s.color}" title="${l.n < Math.min(cfg.min, cfg.cap) ? `Moins de ${cfg.min} chatters` : ''}"><span class="g-dot" style="background:${l.s.color}"></span>${esc(l.s.name)} <b>${l.n}</b>${supFocus(l.s) ? ` <small>${supFocus(l.s)}</small>` : ''}</span>`).join('')}${items.filter(i => !i.sup).length ? `<span class="kl over">Non attribués <b>${items.filter(i => !i.sup).length}</b></span>` : ''}${items.filter(i => i.sup && /aucune heure commune/.test(i.why || '')).length ? `<span class="kl over" title="Ces chatters ne travaillent jamais pendant les heures de leur superviseur : pas assez de superviseurs sur leurs shifts">Sans heure commune <b>${items.filter(i => i.sup && /aucune heure commune/.test(i.why || '')).length}</b></span>` : ''}</div></section>
       ${W.info && W.info.noPlan ? `<div class="alert err">Aucun planning trouvé pour la ${esc(planWeekLabel(wk))} ni la semaine d’avant : le site ne sait pas quand les chatters travaillent, la répartition par horaires est donc impossible. Préparez le planning de la semaine, puis cliquez sur « Recalculer ».</div>`
         : W.info && W.info.planWeek && W.info.planWeek !== wk ? `<div class="alert warn">Le planning de la ${esc(planWeekLabel(wk))} n’existe pas encore : la répartition s’appuie sur celui de la ${esc(planWeekLabel(W.info.planWeek))}. Recalculez une fois le planning de la semaine prêt.</div>` : ''}
       ${unmatched.length ? `<section class="panel"><h2>Noms à relier au planning · ${unmatched.length}</h2><p class="hint">Ces noms d'import n'ont pas été reconnus dans le planning. Choisissez le bon prénom : le site s'en souviendra pour les prochaines semaines.</p>
@@ -5251,8 +5293,9 @@ function renderCoaching(main) {
       <section class="panel"><h2>${platBadge('MYM')} Les ${byPid('mym').length} moins performants sur MYM</h2>${tbl('mym')}</section>
       ${(W.excluded || []).length ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Exclus de la liste · ${W.excluded.length}</summary><div class="tbl-wrap" style="max-height:320px;margin-top:10px"><table><tbody>${W.excluded.map(x => `<tr><td>${esc(x.name)}</td><td>${platBadge(x.pid === 'of' ? 'OF' : 'MYM')}</td><td class="muted">${esc(x.why)}</td><td class="num">${x.restore || x.restoreWeek ? `<button class="btn ghost small-btn" type="button" data-krest="${esc(x.key)}|${x.restore ? 'all' : 'week'}">Remettre</button>` : ''}</td></tr>`).join('')}</tbody></table></div></details>` : ''}`}
     ${Sync.canManage() ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Réglages du suivi (administrateurs)</summary>
-      <div class="set-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-top:12px">
+      <div class="set-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:12px">
         <label>Chatters par plateforme<input type="number" min="1" id="kc-n" value="${cfg.n}"></label>
+        <label>Minimum par superviseur<input type="number" min="0" id="kc-mn" value="${cfg.min}"></label>
         <label>Maximum par superviseur<input type="number" min="1" id="kc-cap" value="${cfg.cap}"></label>
         <label>Shifts minimum sur la période<input type="number" min="0" id="kc-min" value="${cfg.minShifts}"></label>
         <label>Semaines de performances<select id="kc-span"><option value="1" ${cfg.span === 1 ? 'selected' : ''}>1 semaine</option><option value="2" ${cfg.span === 2 ? 'selected' : ''}>2 semaines</option></select></label></div>
@@ -5265,27 +5308,39 @@ function renderCoaching(main) {
   const refill = () => { const before = new Set(Object.keys(W.items || {})); const r = coachBuild(wk, W); W.items = r.items; W.excluded = r.excluded; W.info = r.info; saveCoach(); return Object.entries(r.items).filter(([k]) => !before.has(k)).map(([, it]) => it.plan || it.name); };
   main.querySelectorAll('[data-krm]').forEach(b => b.addEventListener('click', async () => {
     const key = b.dataset.krm, it = W.items[key];
+    const sup = supList().find(x => x.id === it.sup), back = addDaysIso(isoOf(new Date()), 14);
     const bg = document.createElement('div'); bg.className = 'modal-bg';
-    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:480px"><h3>Retirer ${esc(it.plan || it.name)} de la liste</h3>
-      <p class="hint" style="margin-top:0">Le suivant au classement ${it.pid === 'mym' ? 'MYM' : 'OF'} prendra sa place. Le reste de la répartition ne bouge pas.</p>
-      <label class="check" style="margin:6px 0"><input type="radio" name="krm" value="always" checked> Toujours : ce n'est pas un chatter (superviseur, manager…), ne plus jamais le proposer</label>
-      <label class="check" style="margin:6px 0"><input type="radio" name="krm" value="week"> Juste cette semaine</label>
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:520px"><h3>Retirer ${esc(it.plan || it.name)} de la liste</h3>
+      <p class="hint" style="margin-top:0">${sup ? `<strong>${esc(sup.name)}</strong> recevra à la place le chatter le plus faible du classement qui n’est pas encore suivi, sur sa plateforme et pendant ses horaires.` : 'Ce chatter n’a pas de superviseur : il est simplement retiré.'} Le reste de la répartition ne bouge pas.</p>
+      <label class="check" style="margin:8px 0"><input type="radio" name="krm" value="left"> A quitté l’agence ou a été renvoyé : ne plus jamais le proposer</label>
+      <label class="check" style="margin:8px 0"><input type="radio" name="krm" value="away"> Indisponible (santé, congé…) jusqu’au</label>
+      <div class="krm-away" style="display:flex;gap:8px;margin:0 0 8px 26px;flex-wrap:wrap"><input type="date" id="krm-until" value="${back}" min="${isoOf(new Date())}"><input type="text" id="krm-note" placeholder="Motif (facultatif)" style="flex:1;min-width:150px"></div>
+      <label class="check" style="margin:8px 0"><input type="radio" name="krm" value="week" checked> Juste cette semaine</label>
+      <label class="check" style="margin:8px 0"><input type="radio" name="krm" value="always"> Ce n’est pas un chatter (superviseur, manager…)</label>
+      <div id="krm-err" class="sc-lo" style="min-height:18px;font-size:13px"></div>
       <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Retirer</button></div></div>`;
+    bg.querySelectorAll('#krm-until,#krm-note').forEach(x => x.addEventListener('focus', () => { bg.querySelector('input[name="krm"][value="away"]').checked = true; }));
     bg.addEventListener('click', e => {
       if (e.target === bg) return bg.remove();
       const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === '0') return bg.remove();
-      const mode = bg.querySelector('input[name="krm"]:checked').value;
-      if (mode === 'always') (coachState.ignore ||= {})[rosterKey(it.name)] = {name: it.name, at: Date.now()};
+      const mode = bg.querySelector('input[name="krm"]:checked').value, rk = rosterKey(it.name);
+      if (mode === 'away') {
+        const until = bg.querySelector('#krm-until').value;
+        if (!until || until < isoOf(new Date())) { bg.querySelector('#krm-err').textContent = 'Choisissez la date de retour prévue.'; return; }
+        (coachState.ignore ||= {})[rk] = {name: it.name, at: Date.now(), why: 'away', until, wkey: key, ...(bg.querySelector('#krm-note').value.trim() ? {note: bg.querySelector('#krm-note').value.trim()} : {})};
+      } else if (mode === 'left' || mode === 'always') (coachState.ignore ||= {})[rk] = {name: it.name, at: Date.now(), why: mode === 'left' ? 'left' : 'notchatter', wkey: key};
       (W.removed ||= {})[key] = true;
       delete W.items[key];
-      const ins = refill(); bg.remove();
-      toast(`${it.plan || it.name} retiré${ins.length ? ` · ${ins.join(', ')} entre dans la liste` : ''}.`); render();
+      const r = coachBuild(wk, W, {noNew: true, replaceFor: it.sup || null, replaceWhy: `remplace ${it.plan || it.name}`});
+      W.items = r.items; W.excluded = r.excluded; W.info = r.info; saveCoach(); bg.remove();
+      const rp = r.replaced[0];
+      toast(`${it.plan || it.name} retiré${rp ? ` · ${rp.name} le remplace chez ${rp.sup}` : sup ? ` · aucun remplaçant compatible trouvé pour ${sup.name}` : ''}.`, !rp && !!sup); render();
     });
     document.body.appendChild(bg);
   }));
   main.querySelectorAll('[data-krest]').forEach(b => b.addEventListener('click', () => {
     const [key, mode] = b.dataset.krest.split('|');
-    if (mode === 'all') delete (coachState.ignore || {})[key]; else delete (W.removed || {})[key];
+    if (mode === 'all') { const g = (coachState.ignore || {})[key]; if (g && g.wkey) delete (W.removed || {})[g.wkey]; delete (coachState.ignore || {})[key]; } else delete (W.removed || {})[key];
     refill(); toast('Remis dans le classement : la liste est mise à jour.'); render();
   }));
   document.getElementById('k-build')?.addEventListener('click', () => { build(); toast('Liste préparée : vérifiez la répartition, puis validez.'); });
@@ -5301,6 +5356,11 @@ function renderCoaching(main) {
     delete coachState.weeks[wk]; saveCoach(); toast('Brouillon supprimé.'); render();
   });
   // Arrivée d'un superviseur en cours de semaine : on lui confie quelques chatters pris chez les plus chargés, sans toucher au reste
+  document.getElementById('k-fill')?.addEventListener('click', () => {
+    const r = coachBuild(wk, W, {noNew: true}); W.items = r.items; W.excluded = r.excluded; W.info = r.info; saveCoach();
+    const f = r.fill, msg = f.added.length ? `${plural(f.added.length, 'chatter ajouté', 'chatters ajoutés')} : ${f.added.map(x => `${x.name} → ${x.sup}`).join(', ')}.` : 'Aucun chatter compatible à ajouter.';
+    toast(msg + (f.short.length ? ` Toujours sous ${f.min} : ${f.short.map(x => `${x.sup} (${x.n})`).join(', ')}, aucun chatter compatible (plateforme et horaires) dans le classement.` : ''), !f.added.length); render();
+  });
   document.getElementById('k-give')?.addEventListener('click', () => {
     const all = Object.entries(W.items || {}).map(([k, it]) => ({k, ...it}));
     const load = id => all.filter(i => i.sup === id).length;
@@ -5341,7 +5401,7 @@ function renderCoaching(main) {
     saveCoach(); build(); toast(`${plural(n, 'nom relié', 'noms reliés')}, liste recalculée.`);
   });
   document.getElementById('kc-save')?.addEventListener('click', () => {
-    const c = {n: +document.getElementById('kc-n').value || 20, cap: +document.getElementById('kc-cap').value || 6, minShifts: Math.max(0, +document.getElementById('kc-min').value), span: +document.getElementById('kc-span').value};
+    const c = {n: +document.getElementById('kc-n').value || 20, cap: +document.getElementById('kc-cap').value || 6, min: Math.max(0, +document.getElementById('kc-mn').value), minShifts: Math.max(0, +document.getElementById('kc-min').value), span: +document.getElementById('kc-span').value};
     coachState.cfg = c; saveCoach(); toast('Réglages enregistrés : recalculez la liste pour les appliquer.'); render();
   });
 }
