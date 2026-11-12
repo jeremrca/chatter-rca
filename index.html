@@ -421,6 +421,7 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .pchip.rep s{color:#f87171;opacity:.85}
 .pchip .arr{color:var(--faint);margin:0 3px}
 .pe-list{display:flex;flex-direction:column;gap:8px}
+.lv-opts{display:grid;gap:8px;margin:6px 0 4px}.lv-o{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer}.lv-o:has(input:checked){border-color:var(--flame);background:color-mix(in srgb,var(--flame) 8%,transparent)}.lv-o input[type=radio]{margin-top:3px}.lv-o small{display:block;color:var(--muted);font-size:12.5px;line-height:1.5;margin-top:2px}.lv-o b{color:var(--text)}.unchip small{color:var(--muted);font-size:11px;margin-left:4px}.offmiss{margin-top:14px;padding:10px 12px;border:1px dashed #f59e0b;border-radius:10px}
 .pe-row{display:grid;grid-template-columns:minmax(90px,1fr) auto auto auto auto auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line-soft);border-radius:var(--r-sm);background:var(--bg)}
 .un-days{display:flex;gap:10px;flex-wrap:wrap}
 .pe-row input[data-rep]{grid-column:1/-1}
@@ -3317,21 +3318,100 @@ function nearKey(a, b) {
   return diff + (a.length - i) + (b.length - j) <= 1;
 }
 const hasNear = (keys, k) => { for (const x of keys) if (nearKey(x, k)) return true; return false; };
-function teamRoster(wk) {
-  const ign = planState.ignored || {}, roster = new Map();
-  const ignKeys = Object.keys(ign);
-  const add = n => { const t = String(n || '').trim(); const k = rosterKey(t); if (t && k && !hasNear(ignKeys, k) && !hasNear(roster.keys(), k)) roster.set(k, t.replace(/\s+(mym|of)$/i, '').trim() || t); };
+// Les chatters de la liste « Jours OFF » sont des personnes distinctes : deux prénoms proches de cette liste
+// (Fitia / Mitia, Tahiana / Tatiana) ne sont jamais confondus. Un prénom du planning absent de la liste est rattaché
+// au chatter de la liste dont il ne diffère que d'une lettre (faute de frappe), seulement s'il n'y en a qu'un.
+function nameResolver() {
+  const known = new Set(Object.values(planState.dayoff || {}).map(o => rosterKey(o.name)).filter(Boolean)), memo = new Map();
+  const res = k => {
+    if (!k || known.has(k)) return k;
+    if (memo.has(k)) return memo.get(k);
+    let hit = null; for (const x of known) if (nearKey(x, k)) { if (hit) { hit = null; break; } hit = x; }
+    memo.set(k, hit || k); return hit || k;
+  };
+  return {known, res, key: n => res(rosterKey(n))};
+}
+function teamRoster(wk, R = nameResolver()) {
+  const ign = planState.ignored || {}, roster = new Map(), extra = [];
+  const ignKeys = Object.keys(ign), ignRes = new Set(ignKeys.map(R.res));
+  const add = n => {
+    const t = String(n || '').trim(), k = R.key(t); if (!t || !k || roster.has(k)) return;
+    if (R.known.has(k)) { if (ignRes.has(k)) return; }
+    else if (hasNear(ignKeys, k) || hasNear(R.known, k) || hasNear(extra, k)) return;   // prénom hors liste : on garde l'ancienne tolérance
+    else extra.push(k);
+    roster.set(k, t.replace(/\s+(mym|of)$/i, '').trim() || t);
+  };
   for (const o of Object.values(planState.dayoff || {})) add(o.name);
   for (const w of [wk, addDaysIso(wk, -7), addDaysIso(wk, -14)]) { const W = planState.weeks[w]; if (!W) continue; for (const list of Object.values(W.cells || {})) for (const e of list) [e.n, ...(e.r ? e.r.split('/') : [])].forEach(add); }
   return roster;
 }
 function unplannedOn(wk, d) {
   const W = planState.weeks[wk]; if (!W) return [];
-  const planned = new Set();
-  for (const [k, list] of Object.entries(W.cells || {})) { if (k.split('|')[0] !== String(d)) continue; for (const e of list) [e.n, ...(e.r ? e.r.split('/') : [])].forEach(n => { if (n) planned.add(rosterKey(n)); }); }
+  const R = nameResolver(), planned = new Set();
+  for (const [k, list] of Object.entries(W.cells || {})) { if (k.split('|')[0] !== String(d)) continue; for (const e of list) [e.n, ...(e.r ? e.r.split('/') : [])].forEach(n => { if (n && n.trim()) planned.add(R.key(n)); }); }
   const offDay = new Set(Object.values(planState.dayoff || {}).filter(o => (o.days || []).includes(+d)).map(o => rosterKey(o.name)));
-  for (const r of absReqsOnDate(addDaysIso(wk, +d))) if ((r.shifts || []).length === PLAN_SHIFTS.length) offDay.add(rosterKey(r.name));   // absent toute la journée
-  return [...teamRoster(wk)].filter(([k]) => !hasNear(planned, k) && !hasNear(offDay, k)).map(([k, n]) => ({k, n})).sort((a, b) => a.n.localeCompare(b.n, 'fr'));
+  for (const r of absReqsOnDate(addDaysIso(wk, +d))) if ((r.shifts || []).length === PLAN_SHIFTS.length) offDay.add(R.key(r.name));   // absent toute la journée
+  const has = (set, k) => set.has(k) || (!R.known.has(k) && hasNear(set, k));
+  return [...teamRoster(wk, R)].filter(([k]) => !has(planned, k) && !has(offDay, k)).map(([k, n]) => ({k, n})).sort((a, b) => a.n.localeCompare(b.n, 'fr'));
+}
+/* ---------- Départ d'un chatter : retiré de la liste Jours OFF, du rappel et des shifts à venir ---------- */
+// Shifts où il figure à partir d'une date (prévu sans remplaçant, ou remplaçant)
+function leaveScan(k, from, apply) {
+  let n = 0;
+  for (const [wk, W] of Object.entries(planState.weeks || {})) {
+    if (addDaysIso(wk, 6) < from) continue;
+    for (const [ck, list] of Object.entries(W.cells || {})) {
+      if (addDaysIso(wk, +ck.split('|')[0]) < from) continue;
+      const out = [];
+      for (const e0 of list) {
+        const e = apply ? e0 : {...e0}, rs = (e.r || '').split('/').map(x => x.trim()).filter(Boolean), keep = rs.filter(x => rosterKey(x) !== k);
+        let hit = keep.length !== rs.length;
+        if (hit) { if (keep.length) e.r = keep.join('/'); else delete e.r; }
+        if (rosterKey(e.n) === k && !e.r) { n++; continue; }
+        if (hit) n++;
+        out.push(e);
+      }
+      if (apply && out.length !== list.length) W.cells[ck] = out;
+    }
+  }
+  return n;
+}
+function chatterLeave(name, k, origin) {
+  const today = isoOf(new Date()), inList = Object.entries(planState.dayoff || {}).find(([, o]) => rosterKey(o.name) === k);
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:560px"><h3>Retirer ${esc(name)}</h3>
+    <div class="lv-opts">
+      <label class="lv-o"><input type="radio" name="lv" value="left" checked><span><strong>A quitté l’agence</strong><small>Supprimé(e) définitivement : retiré(e) de la liste Jours OFF, du rappel « Reste à planifier », du suivi des chatters et de tous ses shifts à partir du
+        <input type="date" id="lv-from" value="${today}" style="width:auto;display:inline-block;padding:2px 6px">. Les semaines passées ne changent pas. <b id="lv-n"></b></small></span></label>
+      ${origin === 'off'
+        ? `<label class="lv-o"><input type="radio" name="lv" value="list"><span><strong>Erreur ou doublon dans la liste</strong><small>Retiré(e) seulement de la liste Jours OFF. Le planning ne change pas.</small></span></label>`
+        : `<label class="lv-o"><input type="radio" name="lv" value="mute"><span><strong>Ne plus le rappeler</strong><small>N’apparaît plus dans « Reste à planifier ». Le planning ne change pas.</small></span></label>`}
+    </div>
+    <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Retirer</button></div></div>`;
+  document.body.appendChild(bg);
+  const cnt = () => { const f = bg.querySelector('#lv-from').value || today, n = leaveScan(k, f, false); bg.querySelector('#lv-n').textContent = n ? `${plural(n, 'shift à enlever', 'shifts à enlever')}.` : 'Aucun shift à venir.'; };
+  cnt(); bg.querySelector('#lv-from').addEventListener('input', () => { bg.querySelector('input[value="left"]').checked = true; cnt(); });
+  bg.addEventListener('click', e => {
+    if (e.target === bg) return bg.remove();
+    const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === '0') return bg.remove();
+    const mode = bg.querySelector('input[name="lv"]:checked').value;
+    if (mode === 'list') { if (inList) delete planState.dayoff[inList[0]]; savePlan(); bg.remove(); toast(`${name} retiré(e) de la liste Jours OFF.`); return render(); }
+    if (mode === 'mute') { (planState.ignored ||= {})[k] = {name, at: Date.now()}; savePlan(); bg.remove(); toast(`${name} n’est plus rappelé(e). Réactivable dans l’onglet Jours OFF.`); return render(); }
+    const from = bg.querySelector('#lv-from').value || today, n = leaveScan(k, from, true);
+    (planState.ignored ||= {})[k] = {name, at: Date.now(), left: from, ...(inList ? {off: inList[1]} : {})};
+    if (inList) delete planState.dayoff[inList[0]];
+    savePlan();
+    if (!(coachState.ignore || {})[k]) { (coachState.ignore ||= {})[k] = {name, at: Date.now(), why: 'left', plan: 1}; saveCoach(); }
+    bg.remove(); toast(`${name} supprimé(e) du planning${n ? ` · ${plural(n, 'shift enlevé', 'shifts enlevés')}` : ''}.`); render();
+  });
+  bg.querySelector('[data-a="1"]').focus();
+}
+// Retour d'un chatter retiré : remis dans la liste Jours OFF (avec ses jours) et dans le suivi
+function chatterBack(k) {
+  const g = (planState.ignored || {})[k]; if (!g) return;
+  if (g.off && !Object.values(planState.dayoff || {}).some(o => rosterKey(o.name) === k)) dayOff()[offKey(g.off.name || g.name)] = g.off;
+  delete planState.ignored[k]; savePlan();
+  const c = (coachState.ignore || {})[k]; if (c && c.plan) { delete coachState.ignore[k]; saveCoach(); }
 }
 function offOn(name, d) { if (!planState.dayoff) return false; return String(name).split('/').some(x => { const o = planState.dayoff[offKey(x.trim())]; return o && (o.days || []).includes(+d); }); }
 function parseDays(txt) {
@@ -3527,7 +3607,7 @@ function renderPlanning(main) {
       for (let s = 0; s < PLAN_SHIFTS.length; s++) for (const m of dayModels) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) { const w = workerOf(e); if (w && !e.a && absReqFor(w, date, s)) reqClash.push(`${w} (${modelLabel(m)} ${PLAN_SHIFTS[s]})`); }
       const reqHTML = reqs.length ? `<div class="absbox"><div class="absbox-h">Absences demandées ce ${PLAN_DAYS_LONG[d].toLowerCase()} · ${reqs.length}</div><div class="absbox-l">${reqs.map(r => `<button type="button" class="abschip" data-arid="${r.id}" title="Modifier la demande"><strong>${esc(r.name)}</strong> <span>${esc(shiftsLabel(r.shifts))}</span>${r.status === 'wait' ? ' <span class="pill Warning">en attente</span>' : ''}${r.note ? `<em>${esc(r.note)}</em>` : ''}</button>`).join('')}</div>
         ${reqClash.length ? `<div class="absbox-w">⚠ Planifié(e)s malgré leur demande : ${reqClash.map(esc).join(' · ')}</div>` : ''}</div>` : '';
-      const unHTML = un.length ? `<div class="unplan"><div class="unplan-h">⚠ Reste à planifier · ${plural(un.length, 'chatter', 'chatters')} pas OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} et sur aucun shift</div><div class="unplan-l">${un.map(x => `<span class="unchip">${esc(x.n)}<button type="button" data-ign="${esc(x.k)}" data-ignn="${esc(x.n)}" title="Ne plus suivre ce chatter (il a quitté l'équipe, par exemple)" aria-label="Ne plus suivre ${esc(x.n)}">×</button></span>`).join('')}</div></div>`
+      const unHTML = un.length ? `<div class="unplan"><div class="unplan-h">⚠ Reste à planifier · ${plural(un.length, 'chatter', 'chatters')} pas OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} et sur aucun shift</div><div class="unplan-l">${un.map(x => `<span class="unchip">${esc(x.n)}<button type="button" data-ign="${esc(x.k)}" data-ignn="${esc(x.n)}" title="A quitté l’agence ou ne plus le rappeler" aria-label="Retirer ${esc(x.n)}">×</button></span>`).join('')}</div></div>`
         : `<div class="unplan ok"><span>✓ Tous les chatters de l'équipe sont planifiés ou OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()}.</span>${noRoster ? ' <span class="muted">Remplissez l’onglet « Jours OFF » pour que toute l’équipe soit vérifiée.</span>' : ''}</div>`;
       return `<section class="panel offbar">${reqHTML}${unHTML}${clash.length ? `<div class="alert warn" style="margin:10px 0 ${offs.length ? '10px' : '0'}"><strong>${plural(clash.length, 'créneau', 'créneaux')} sur un jour OFF :</strong> ${clash.map(esc).join(' · ')}</div>` : ''}${offs.length ? `<div class="muted" style="font-size:13px;margin-top:10px"><strong style="color:var(--text)">OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} (${offs.length}) :</strong> ${offs.map(esc).join(', ')}</div>` : ''}</section>`;
     })()}
@@ -3565,10 +3645,7 @@ function renderPlanning(main) {
   document.getElementById('p-gonext')?.addEventListener('click', () => { planUI.week = nextWk; planUI.day = 0; render(); });
   document.getElementById('p-unav').addEventListener('click', () => unavailability(wk));
   main.querySelectorAll('.offbar [data-arid]').forEach(b => b.addEventListener('click', () => absReqEdit(b.dataset.arid)));
-  main.querySelectorAll('[data-ign]').forEach(b => b.addEventListener('click', () => {
-    (planState.ignored ||= {})[b.dataset.ign] = {name: b.dataset.ignn, at: Date.now()};
-    savePlan(); toast(`${b.dataset.ignn} n'est plus suivi(e). Réactivable dans l'onglet Jours OFF.`); render();
-  }));
+  main.querySelectorAll('[data-ign]').forEach(b => b.addEventListener('click', () => chatterLeave(b.dataset.ignn, b.dataset.ign, 'remind')));
   document.getElementById('p-xls')?.addEventListener('click', () => importExcelModal(wk));
   bindPlanModels(wk, d);
   bindLaunches(main);
@@ -4227,14 +4304,26 @@ function offViewHTML() {
       ${list.filter(o => !planUI.offq || normName(o.name).includes(normName(planUI.offq))).map(o => `<tr><td><strong>${esc(o.name)}</strong>${!(o.days || []).length ? ' <span class="sub">pas de OFF</span>' : ''}</td>
         ${PLAN_DAYS.map((_, i) => `<td style="text-align:center"><input type="checkbox" data-offd="${esc(o.k)}|${i}" ${(o.days || []).includes(i) ? 'checked' : ''} aria-label="${esc(o.name)} OFF ${PLAN_DAYS_LONG[i]}"></td>`).join('')}
         <td><input type="text" data-offn="${esc(o.k)}" value="${esc(o.note || '')}" placeholder="—" style="min-width:180px"></td>
-        <td class="num"><button class="btn ghost" data-offx="${esc(o.k)}" type="button" aria-label="Retirer ${esc(o.name)}">×</button></td></tr>`).join('')}
+        <td class="num"><button class="btn ghost" data-offx="${esc(o.k)}" type="button" title="A quitté l’agence, ou erreur dans la liste" aria-label="Retirer ${esc(o.name)}">Retirer</button></td></tr>`).join('')}
       </tbody></table></div>` : '<p class="hint" style="margin:0">Aucun jour OFF enregistré : collez votre liste ci-dessus.</p>'}
-      ${Object.keys(planState.ignored || {}).length ? `<div style="margin-top:14px"><strong style="font-size:13px">Chatters non suivis</strong> <span class="hint" style="font-size:12px">(exclus de « Reste à planifier »)</span><div class="unplan-l" style="margin-top:6px">${Object.entries(planState.ignored).map(([k, o]) => `<span class="unchip off">${esc(o.name || k)}<button type="button" data-unign="${esc(k)}" title="Suivre à nouveau">↺</button></span>`).join('')}</div></div>` : ''}
+      ${(() => {
+        const R = nameResolver(), ignKeys = Object.keys(planState.ignored || {}), wk = planUI.week || thisMonday(), seen = new Map();
+        for (const w of [wk, addDaysIso(wk, -7), addDaysIso(wk, -14)]) for (const list of Object.values((planState.weeks[w] || {}).cells || {})) for (const e of list)
+          [e.n, ...(e.r ? e.r.split('/') : [])].forEach(n => { const t = String(n || '').trim(), k = R.key(t); if (t && k && !R.known.has(k) && !hasNear(R.known, k) && !hasNear(ignKeys, k) && !seen.has(k)) seen.set(k, t.replace(/\s+(mym|of)$/i, '').trim() || t); });
+        const miss = [...seen.values()].sort((a, b) => a.localeCompare(b, 'fr'));
+        return miss.length ? `<div class="offmiss"><strong style="font-size:13px">Dans le planning mais pas dans cette liste · ${miss.length}</strong> <span class="hint" style="font-size:12px">Ajoutez-les et cochez leur jour OFF : le rappel « Reste à planifier » les suivra chaque jour.</span><div class="unplan-l" style="margin-top:6px">${miss.map(n => `<span class="unchip">${esc(n)}<button type="button" data-offadd="${esc(n)}" title="Ajouter à la liste Jours OFF" aria-label="Ajouter ${esc(n)}">+</button></span>`).join('')}</div></div>` : '';
+      })()}
+      ${(() => {
+        const g = Object.entries(planState.ignored || {}).sort((a, b) => (b[1].at || 0) - (a[1].at || 0)), left = g.filter(([, o]) => o.left), mute = g.filter(([, o]) => !o.left);
+        const chip = ([k, o]) => `<span class="unchip off">${esc(o.name || k)}${o.left ? ` <small>parti(e) le ${esc(fmtDayFr(o.left))}</small>` : ''}<button type="button" data-unign="${esc(k)}" title="Remettre dans l’équipe" aria-label="Remettre ${esc(o.name || k)}">↺</button></span>`;
+        return (left.length ? `<div style="margin-top:14px"><strong style="font-size:13px">Ont quitté l’agence · ${left.length}</strong> <span class="hint" style="font-size:12px">(supprimés du planning)</span><div class="unplan-l" style="margin-top:6px">${left.map(chip).join('')}</div></div>` : '')
+          + (mute.length ? `<details style="margin-top:12px"><summary class="hint" style="cursor:pointer;font-size:12.5px">Chatters non rappelés · ${mute.length} <span>(exclus de « Reste à planifier »)</span></summary><div class="unplan-l" style="margin-top:6px">${mute.map(chip).join('')}</div></details>` : '');
+      })()}
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><input type="text" id="off-new" placeholder="Ajouter un chatter" list="pl-names3"><datalist id="pl-names3">${knownChatters().map(n => `<option value="${esc(n)}">`).join('')}</datalist><button class="btn" id="off-add" type="button">Ajouter</button></div>
     </section></div>`;
 }
 function bindOffView() {
-  document.querySelectorAll('[data-unign]').forEach(b => b.addEventListener('click', () => { delete (planState.ignored || {})[b.dataset.unign]; savePlan(); toast('Chatter de nouveau suivi.'); render(); }));
+  document.querySelectorAll('[data-unign]').forEach(b => b.addEventListener('click', () => { chatterBack(b.dataset.unign); toast('Chatter de nouveau suivi.'); render(); }));
   const ta = document.getElementById('off-paste'), prev = document.getElementById('off-prev'), go = document.getElementById('off-apply');
   let parsed = [];
   const show = () => {
@@ -4256,7 +4345,8 @@ function bindOffView() {
     cb.checked ? set.add(+i) : set.delete(+i); o.days = [...set].sort(); savePlan();
   }));
   document.querySelectorAll('[data-offn]').forEach(inp => inp.addEventListener('change', () => { const o = dayOff()[inp.dataset.offn]; if (inp.value.trim()) o.note = inp.value.trim(); else delete o.note; savePlan(); }));
-  document.querySelectorAll('[data-offx]').forEach(b => b.addEventListener('click', () => { delete dayOff()[b.dataset.offx]; savePlan(); render(); }));
+  document.querySelectorAll('[data-offx]').forEach(b => b.addEventListener('click', () => { const o = dayOff()[b.dataset.offx]; if (o) chatterLeave(o.name, rosterKey(o.name), 'off'); }));
+  document.querySelectorAll('[data-offadd]').forEach(b => b.addEventListener('click', () => { const n = b.dataset.offadd, k = offKey(n); if (!dayOff()[k]) dayOff()[k] = {name: n, days: []}; savePlan(); toast(`${n} ajouté(e) : cochez son jour OFF.`); planUI.offq = n; render(); }));
   document.getElementById('off-add').addEventListener('click', () => { const n = document.getElementById('off-new').value.trim(); if (!n) return; const k = offKey(n); if (!dayOff()[k]) dayOff()[k] = {name: n, days: []}; savePlan(); render(); });
 }
 function bindPlanningHead(main, wk) {
