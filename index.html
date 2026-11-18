@@ -318,6 +318,21 @@ tr.issue-error .issues{color:var(--red)}
 .fx-sl{display:flex;justify-content:space-between;font-size:11px;color:#a1a1aa;margin-top:4px}
 .glc-f{margin-left:6px;font-size:10px;font-weight:800;padding:0 5px;border-radius:5px;border:1px solid var(--line);color:var(--muted);cursor:pointer;vertical-align:middle}.glc-f:hover{color:var(--text);border-color:var(--text)}
 @media (max-width:900px){.fx-app{grid-template-columns:1fr}.fx-side{position:static;max-height:none}.fx-app.has-sel .fx-side{display:none}.fx-back{display:inline-flex}.fx-rings{grid-template-columns:repeat(2,1fr)}.fx-duo{grid-template-columns:1fr}}
+.kmode{grid-template-columns:repeat(3,minmax(0,1fr))!important;max-width:980px!important}
+.psw.fr:hover{border-color:rgba(96,165,250,.6)}
+.psw.fr .psw-b{font-size:14px;background:linear-gradient(90deg,#2563eb 0 33%,#f8fafc 33% 66%,#ef4444 66%);color:#0b0b0f}
+.psw.fr.on{color:#fff;border-color:#60a5fa;background:linear-gradient(135deg,rgba(37,99,235,.3),rgba(239,68,68,.16));box-shadow:0 0 22px rgba(96,165,250,.45),inset 0 0 14px rgba(96,165,250,.2)}
+@media (max-width:760px){.kmode{grid-template-columns:1fr!important}}
+.frhead{border-top:3px solid #60a5fa}
+.frgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.frc{background:var(--surface);border:1px solid var(--line-soft);border-top:3px solid #60a5fa;border-radius:14px;padding:12px}
+.frc header{display:flex;align-items:center;gap:10px}.frc header strong{font-size:16px}
+.frc-av{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-weight:900;background:linear-gradient(90deg,#2563eb,#60a5fa);flex:none}
+.frc-it{border-left:3px solid var(--pc);padding:6px 8px;margin:6px 0;border-radius:0 8px 8px 0;background:var(--bg)}
+.frc-l{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.frc-n{font-weight:800;font-size:14px;color:var(--text);text-decoration:none}
+.frc-slot{font-size:11px;font-weight:900;padding:0 7px;border-radius:6px;background:rgba(96,165,250,.2);color:#bfdbfe}.frc-wk{font-size:11px;color:var(--muted)}
+.frc-why{font-size:12px;color:var(--muted);margin-top:2px}
+.glc.fr{border-color:rgba(96,165,250,.45)}
 .kas{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin:-4px 0 8px;font-size:13px;color:var(--muted)}
 .kas.on{justify-content:flex-start;padding:10px 14px;border-radius:12px;border:1px solid var(--sc);background:linear-gradient(90deg,color-mix(in srgb,var(--sc) 22%,transparent),transparent);color:var(--text);font-size:14px}
 .kas.on select{margin-left:auto}
@@ -4408,7 +4423,7 @@ function frSupHTML() {
     <div class="frs">${frList().map(f => { const ids = Object.keys(f.models || {}).filter(live);
       const block = gid => { const g = PLAN_GROUPS.find(x => x.id === gid), l = ids.filter(id => mm[id].group === gid).sort((a, b) => mm[a].name.localeCompare(mm[b].name, 'fr'));
         return l.length ? `<div class="frs-g"><div class="frs-gh" style="--gc:${g.color}"><span></span>${gid === 'of' ? 'OnlyFans' : gid === 'mym' ? 'MYM' : 'Reveal'} <b>${l.length}</b></div><div class="frs-chips">${l.map(id => `<span class="frs-chip" style="--gc:${grp(id).color}">${esc(mm[id].name)}</span>`).join('')}</div></div>` : ''; };
-      return `<article class="frs-card"><header><strong>${esc(f.name)}</strong><span class="muted">${plural(ids.length, 'modèle', 'modèles')}</span>${edit ? `<button class="btn ghost small-btn" type="button" data-fredit="${esc(f.id)}">Modifier</button>` : ''}</header>
+      return `<article class="frs-card"><header><strong>${esc(f.name)}</strong><span class="muted">${plural(ids.length, 'modèle', 'modèles')}${f.email ? ` · ${esc(f.email)}` : ' · compte non relié'}</span>${edit ? `<button class="btn ghost small-btn" type="button" data-fredit="${esc(f.id)}">Modifier</button>` : ''}</header>
         ${['mym', 'of', 'other'].map(block).join('') || '<p class="hint" style="margin:0">Aucune modèle.</p>'}</article>`; }).join('')}</div></section>`;
 }
 function bindFrSup(main) {
@@ -4417,6 +4432,7 @@ function bindFrSup(main) {
     const models = storedModels().filter(m => !m.end || m.end >= today);
     const bg = document.createElement('div'); bg.className = 'modal-bg';
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:620px"><h3>Modèles de ${esc(f.name)}</h3>
+      <label class="sf" style="margin-bottom:12px"><span>Compte de connexion (e-mail)</span><input type="email" id="fr-email" value="${esc(f.email || '')}" placeholder="e-mail de connexion au site"></label>
       <p class="hint" style="margin-top:0">Cochez les modèles que ${esc(f.name)} suit. Attention : la même modèle existe souvent en OnlyFans et en MYM.</p>
       ${['mym', 'of', 'other'].map(gid => { const g = PLAN_GROUPS.find(x => x.id === gid), l = models.filter(m => m.group === gid); return l.length ? `<h3 class="as-h" style="--gc:${g.color}"><span></span>${gid === 'of' ? 'OnlyFans' : gid === 'mym' ? 'MYM' : 'Reveal / Telegram'}</h3>
         <div class="frs-pick">${l.map(m => `<label class="check"><input type="checkbox" data-frm="${esc(m.id)}" ${f.models && f.models[m.id] ? 'checked' : ''}> ${esc(m.name)}</label>`).join('')}</div>` : ''; }).join('')}
@@ -4426,7 +4442,8 @@ function bindFrSup(main) {
       const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === '0') return bg.remove();
       const keep = Object.fromEntries(Object.keys(f.models || {}).filter(id => !models.some(m => m.id === id)).map(id => [id, true]));   // modèles terminées : gardées telles quelles
       bg.querySelectorAll('[data-frm]').forEach(c => { if (c.checked) keep[c.dataset.frm] = true; });
-      f.models = keep; planState.frSups = all; savePlan(); bg.remove(); toast(`Modèles de ${f.name} enregistrées.`);
+      f.models = keep; const em = bg.querySelector('#fr-email').value.trim().toLowerCase(); if (em) f.email = em; else delete f.email;
+      planState.frSups = all; savePlan(); bg.remove(); toast(`${f.name} enregistré.`);
       const y = window.scrollY; render(); window.scrollTo(0, y);
     });
     document.body.appendChild(bg);
@@ -5644,7 +5661,7 @@ const mySupReal = () => { const e = String(Sync.email() || '').toLowerCase(); re
 // « Voir comme un superviseur » (Direction) : la page Suivi des chatters s'affiche exactement comme pour lui, en lecture seule
 const coachAs = () => Sync.canDirect() && coachUI.asSup ? supList().find(s => s.id === coachUI.asSup) || null : null;
 const mySup = () => coachAs() || mySupReal();
-const coachDir = () => Sync.canDirect() && !coachAs();
+const coachDir = () => Sync.canDirect() && !(coachAs() || (Sync.canDirect() && String(coachUI.asSup || '').startsWith('fr-')));
 
 // Nom d'un import (« rocharlotrakotoson », « Vonjy Mym ») → prénom du planning (« Rocharlot », « Vonjy »)
 // Toute l'équipe connue : tous les plannings enregistrés + Jours OFF (pas seulement les 3 dernières semaines)
@@ -5944,7 +5961,7 @@ function glAgenda(wk, sup) {
     return [...new Set([0, Math.floor((list.length - 1) / 2), list.length - 1])].map(i => list[i]);
   };
   const weak = Object.entries(glWeak(wk)).filter(([, it]) => it.sup === sup.id);
-  const weakKeys = new Set(Object.keys(glWeakByGlobal(wk)));   // maillons faibles de tous les superviseurs
+  const weakKeys = new Set([...Object.keys(glWeakByGlobal(wk)), ...Object.keys(frActive(wk))]);   // maillons faibles et suivis français : feedbacks faits par eux
   for (const [k, it] of weak.sort((a, b) => (a[1].plan || a[1].name).localeCompare(b[1].plan || b[1].name, 'fr'))) {
     const shifts = it.plan ? glShifts(it.plan, [sw]) : [];
     const picks = pickDay(shifts, GL_WEAK_FB, coachState.globalStart || '');
@@ -6041,7 +6058,7 @@ function glBoardHTML(wk) {
       ${dry.none.length ? `<p class="hint">Sans superviseur pour l’instant (pas de shift au planning ces 2 dernières semaines) : ${dry.none.map(x => esc(x.name)).join(', ')}.</p>` : ''}
       ${dir ? '<button class="btn primary" id="gl-init" type="button">Valider cette répartition</button>' : '<p class="hint">La Direction doit valider la répartition.</p>'}</section>`;
   }
-  const ctx = glContext(), rev = dir ? glReview(ctx) : [], weak = glWeakByGlobal(wk), q = normName(coachUI.glq || '');
+  const ctx = glContext(), rev = dir ? glReview(ctx) : [], weak = glWeakByGlobal(wk), frAct = frActive(wk), q = normName(coachUI.glq || '');
   const none = [...ctx.team.keys()].filter(k => !G[k]);
   const ent = Object.entries(G);
   const card = s => { const l = ent.filter(([, g]) => g.sup === s.id).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'));
@@ -6050,7 +6067,7 @@ function glBoardHTML(wk) {
     return `<article class="glcard" style="--sc:${s.color}"><header><span class="g-dot" style="background:${s.color}"></span><strong>${esc(s.name)}</strong>${pf.map(p => p ? `<span class="glpf" style="--pc:${SUP_PF[p].color}">${p === 'OF' ? 'OF' : SUP_PF[p].label}</span>` : '').join('')}${supAlso(s) && !pf.includes(supAlso(s)) ? `<span class="glpf also" style="--pc:${SUP_PF[supAlso(s)].color}" title="Peut aussi suivre quelques chatters ${SUP_PF[supAlso(s)].label} (${GL_ALSO_MAX} au plus)">+${supAlso(s) === 'OF' ? 'OF' : 'MYM'}</span>` : ''}<span class="glcount">${l.length}</span></header>
       <div class="glbar" title="Feedbacks faits cette semaine"><span style="width:${st.n ? Math.round(st.done / st.n * 100) : 0}%"></span></div><div class="sub" style="margin:2px 0 8px">${st.done}/${st.n} feedbacks faits${st.late ? ` · <span class="sc-lo">${st.late} en retard</span>` : ''}</div>
       <ul class="gllist">${l.map(([k, g]) => { const sh = ctx.sh(k), hit = q && normName(g.name).includes(q);
-        return `<li class="${hit ? 'hit' : ''} ${q && !hit ? 'dim' : ''}" data-fxopen="${esc(k)}" tabindex="0" role="button" title="Ouvrir la fiche"><span class="gln">${esc(g.name)}</span>${pfBadge(glPid(sh))}${weak[k] ? (weak[k].sup === s.id ? '<span class="rtag hot">faible</span>' : `<span class="rtag hot" title="Maillon faible cette semaine : c’est ${esc((sups.find(x => x.id === weak[k].sup) || {}).name || 'un autre superviseur')} qui fait ses feedbacks cette semaine">faible · ${esc((sups.find(x => x.id === weak[k].sup) || {}).name || '?')}</span>`) : ''}${g.since > (coachState.globalStart || '') && g.since >= addDaysIso(isoOf(new Date()), -7) ? '<span class="rtag ok">nouveau</span>' : ''}<span class="gls">${glWeeksSince(g.since)}</span></li>`; }).join('') || '<li class="muted">Aucun chatter</li>'}</ul></article>`; };
+        return `<li class="${hit ? 'hit' : ''} ${q && !hit ? 'dim' : ''}" data-fxopen="${esc(k)}" tabindex="0" role="button" title="Ouvrir la fiche"><span class="gln">${esc(g.name)}</span>${pfBadge(glPid(sh))}${weak[k] ? (weak[k].sup === s.id ? '<span class="rtag hot">faible</span>' : `<span class="rtag hot" title="Maillon faible cette semaine : c’est ${esc((sups.find(x => x.id === weak[k].sup) || {}).name || 'un autre superviseur')} qui fait ses feedbacks cette semaine">faible · ${esc((sups.find(x => x.id === weak[k].sup) || {}).name || '?')}</span>`) : ''}${frAct[k] ? `<span class="rtag ok" title="Suivi français : c’est ${esc((frList().find(f => f.id === frAct[k].sup) || {}).name || '')} qui fait ses feedbacks">FR · ${esc((frList().find(f => f.id === frAct[k].sup) || {}).name || '')}</span>` : ''}${g.since > (coachState.globalStart || '') && g.since >= addDaysIso(isoOf(new Date()), -7) ? '<span class="rtag ok">nouveau</span>' : ''}<span class="gls">${glWeeksSince(g.since)}</span></li>`; }).join('') || '<li class="muted">Aucun chatter</li>'}</ul></article>`; };
   return `<div class="stack">
     <section class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Qui suit qui · ${ent.length} chatters</h2>
       <input type="search" id="gl-q" value="${esc(coachUI.glq || '')}" placeholder="Rechercher un chatter…" style="margin-left:auto;width:240px">
@@ -6255,7 +6272,7 @@ function fxCardHTML(d, editable) {
     <div class="fx-top"><div class="fx-ava">${esc(fxInit(d.name))}</div>
       <div style="min-width:0"><div class="fx-nm">${esc(d.name)}</div>
         <div class="fx-sub">${d.both.length > 1 ? `<span class="fx-pill" style="--pc:${SUP_PF.MYM.color}">MYM</span><span class="fx-pill" style="--pc:${SUP_PF.OF.color}">OF</span>` : `<span class="fx-pill">${d.pid === 'of' ? 'OF' : 'MYM'}</span>`}${first ? `Chez Redes ${fxSeniority(first, fs.bound)}` : 'Pas encore au planning'}${sup ? ` · suivi par ${esc(sup.name)}` : ''}</div>
-        ${d.weak ? `<div class="fx-weak">Maillon faible cette semaine${wsup ? ` · avec ${esc(wsup.name)}` : ''}</div>` : d.isNew ? '<div class="fx-weak new">Nouveau chatter</div>' : ''}</div>
+        ${d.weak ? `<div class="fx-weak">Maillon faible cette semaine${wsup ? ` · avec ${esc(wsup.name)}` : ''}</div>` : frActive()[d.k] ? `<div class="fx-weak new">Suivi français · avec ${esc((frList().find(f => f.id === frActive()[d.k].sup) || {}).name || '')}</div>` : d.isNew ? '<div class="fx-weak new">Nouveau chatter</div>' : ''}</div>
       <div class="fx-grade">${M ? `<b>${esc(M.r.grade)}</b><span>${M.rank}e / ${M.of}</span>` : '<b class="muted">—</b><span>pas sur cette période</span>'}</div></div>
     ${ranges.length ? `<div class="fx-per">${ranges.map(x => `<button type="button" class="${x === rg ? 'on' : ''}" data-fper="${x.id}">${esc(x.label)}</button>`).join('')}</div>` : ''}
     <div class="fx-rings">
@@ -6335,6 +6352,152 @@ document.addEventListener('keydown', e => {
 // Ouvre la fiche d'un chatter depuis n'importe où dans le suivi
 function fxOpen(k) { coachUI.mode = 'global'; coachUI.gtab = 'fiches'; coachUI.fsel = k; coachUI.fq = ''; coachUI.fscope = 'all'; coachUI.fpf = ''; render(); window.scrollTo(0, 0); }
 
+/* =====================================================================
+   SUIVI FRANÇAIS — Carel, Iliane, Kenzo suivent quelques chatters « à potentiel » de leurs modèles, 4 semaines
+   coachState.fr = {items: {[clé]: {sup, name, slot, since, until, why, pid}}, draft: {...même forme} | null, hist: [...]}
+   Feedbacks : coachState.fb[semaine][clé|fr|jour]
+   ===================================================================== */
+const FR_WEEKS = 4, FR_MAX = 6, FR_FB = 2;
+// Créneaux du planning : 0 = 04-10, 1 = 10-16, 2 = 16-22, 3 = 22-04
+const FR_RULES = {'fr-carel': {slots: [1, 2, 3], cap: {1: 3}}, 'fr-iliane': {slots: [2, 3]}, 'fr-kenzo': {slots: [2, 3]}};
+const frRule = id => FR_RULES[id] || {slots: [2, 3]};
+const frState = () => (coachState.fr ||= {items: {}, draft: null, hist: []});
+const myFrReal = () => { const e = String(Sync.email() || '').toLowerCase(); return e ? frList().find(f => String(f.email || '').toLowerCase() === e) || null : null; };
+const myFr = () => coachUI.asSup && coachUI.asSup.startsWith('fr-') && Sync.canDirect() ? frList().find(f => f.id === coachUI.asSup) || null : myFrReal();
+const frLive = id => { const mm = planModelsMap(), today = isoOf(new Date()); return mm[id] && (!mm[id].end || mm[id].end >= today); };
+// Suivis en cours cette semaine (les suivis terminés passent dans l'historique)
+function frActive(wk = glWeekNow()) {
+  const S = frState(); let moved = false;
+  for (const [k, it] of Object.entries(S.items)) if (it.until < wk) { (S.hist ||= []).unshift({k, ...it, ended: wk}); delete S.items[k]; moved = true; }
+  if (moved && glCanSync()) saveCoach();
+  return S.items;
+}
+// Proposition : pour chaque sub français, des chatters de ses modèles sur ses créneaux, au profil « à potentiel »
+function frPropose() {
+  const ctx = glContext(), X = fxIndex(), act = frActive(), weak = glWeakByGlobal(glWeekNow()), out = {}, taken = new Set(Object.keys(act));
+  const wk = glWeekNow(), until = addDaysIso(wk, 7 * (FR_WEEKS - 1));
+  const cands = [];
+  for (const [k, name] of ctx.team) {
+    if (taken.has(k) || weak[k] || isFlaggedNew(name)) continue;
+    const sh = ctx.sh(k); if (!sh.length) continue;
+    const d = fxData(k, name); if (!d.main) continue;
+    const pos = 1 - (d.main.rank - 1) / d.main.of, up = d.main.upct, late = d.lt.late + d.lt.abs;
+    let why = '', w = 0;
+    if (pos >= 0.5 && up != null && up < 0.35) { w = 3; why = `Vend bien (${d.main.rank}e / ${d.main.of}) mais ${d.pid === 'mym' ? 'conversion' : 'unlock'} trop bas (${nf(d.un, 0, 0)} %, agence ${nf(d.unAvg || 0, 0, 0)} %)`; }
+    else if (pos >= 0.4 && late >= 2) { w = 2.5; why = `Du potentiel (${d.main.rank}e / ${d.main.of}) mais ${late} retards / absences en 4 semaines`; }
+    else if (pos >= 0.4 && d.h.length >= 3 && d.trend < -5) { w = 2; why = `Bon chatter en baisse (${d.main.rank}e / ${d.main.of}, score en baisse)`; }
+    if (!w) continue;
+    cands.push({k, name, sh, w: w + pos, why, pid: d.pid});
+  }
+  cands.sort((a, b) => b.w - a.w);
+  const sups = frList().filter(f => FR_RULES[f.id] || f.models);
+  const load = Object.fromEntries(sups.map(f => [f.id, Object.values(act).filter(it => it.sup === f.id).length]));
+  const loadSlot = Object.fromEntries(sups.map(f => [f.id, {}])); for (const it of Object.values(act)) if (loadSlot[it.sup]) loadSlot[it.sup][it.slot] = (loadSlot[it.sup][it.slot] || 0) + 1;
+  // Créneau d'un candidat pour un sub français : celui où il fait le plus de shifts sur ses modèles
+  const slotFor = (c, f) => { const R = frRule(f.id), mods = f.models || {}, n = {};
+    for (const x of c.sh) if (mods[x.mid] && frLive(x.mid) && R.slots.includes(x.s)) n[x.s] = (n[x.s] || 0) + 1;
+    const ok = Object.entries(n).filter(([s]) => !R.cap || R.cap[s] == null || (loadSlot[f.id][s] || 0) < R.cap[s]).sort((a, b) => b[1] - a[1] || (loadSlot[f.id][a[0]] || 0) - (loadSlot[f.id][b[0]] || 0));
+    return ok.length ? {slot: +ok[0][0], n: ok[0][1]} : null; };
+  // Les subs qui ont le moins de candidats choisissent en premier ; on alterne les créneaux pour équilibrer
+  for (let round = 0; round < FR_MAX; round++) {
+    for (const f of sups.slice().sort((a, b) => cands.filter(c => slotFor(c, a)).length - cands.filter(c => slotFor(c, b)).length)) {
+      if (load[f.id] >= FR_MAX) continue;
+      const pick = cands.map(c => ({c, s: slotFor(c, f)})).filter(x => x.s && !taken.has(x.c.k))
+        .sort((a, b) => (loadSlot[f.id][a.s.slot] || 0) - (loadSlot[f.id][b.s.slot] || 0) || b.c.w - a.c.w)[0];
+      if (!pick) continue;
+      taken.add(pick.c.k); load[f.id]++; loadSlot[f.id][pick.s.slot] = (loadSlot[f.id][pick.s.slot] || 0) + 1;
+      out[pick.c.k] = {sup: f.id, name: pick.c.name, slot: pick.s.slot, since: wk, until, why: pick.c.why, pid: pick.c.pid, start: isoOf(new Date())};
+    }
+  }
+  return out;
+}
+// Agenda d'un sub français : 2 feedbacks par semaine, sur des jours où le chatter travaille sur ses modèles pendant son créneau
+function frAgenda(wk, f) {
+  const sw = glShiftWeek(wk), days = Array.from({length: 7}, () => []), none = [], weak = glWeakByGlobal(wk), mods = f.models || {};
+  const load = Array(7).fill(0);
+  for (const [k, it] of Object.entries(frActive(wk)).filter(([, it]) => it.sup === f.id).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'))) {
+    if (weak[k]) { none.push({k, name: it.name, why: 'maillon faible cette semaine : suivi par son superviseur maillon faible'}); continue; }
+    let sh = glShifts(it.name, [sw]); const best = sh.filter(x => x.s === it.slot && mods[x.mid]); if (best.length) sh = best; else sh = sh.filter(x => x.s === it.slot).length ? sh.filter(x => x.s === it.slot) : sh;
+    // Pas de feedback avant le jour où le suivi a commencé
+    const from = [coachState.globalStart || '', it.start || ''].sort().pop();
+    sh = sh.filter(x => addDaysIso(wk, x.d) >= from);
+    const byDay = new Map(); for (const x of sh.sort((a, b) => a.d - b.d)) if (!byDay.has(x.d)) byDay.set(x.d, x);
+    let list = [...byDay.values()];
+    if (!list.length) { none.push({k, name: it.name, why: it.start && addDaysIso(wk, 6) >= it.start && it.start > wk ? 'plus de shift d’ici dimanche : feedbacks dès la semaine prochaine' : 'pas de shift cette semaine'}); continue; }
+    if (list.length > FR_FB) { list.sort((a, b) => load[a.d] - load[b.d] || a.d - b.d); const first = list[0]; const far = list.filter(x => Math.abs(x.d - first.d) >= 2).sort((a, b) => load[a.d] - load[b.d])[0] || list[1]; list = [first, far].sort((a, b) => a.d - b.d); }
+    for (const x of list) { const m = allModels().find(mm => mm.id === x.mid);
+      days[x.d].push({k, name: it.name, type: 'fr', d: x.d, fbk: `${k}|fr|${x.d}`, label: `${PLAN_SHIFTS[x.s].replace(/\s/g, '')}${m ? ` · ${modelLabel(m)}` : ''}`, g: x.g}); load[x.d]++; }
+  }
+  return {days, none, estimated: sw !== wk};
+}
+const FR_COLOR = '#60a5fa';
+function frCardHTML(f, wk, opts = {}) {
+  const act = Object.entries(opts.items || frActive(wk)).filter(([, it]) => it.sup === f.id);
+  const ag = opts.items ? null : frAgenda(wk, f), st = ag ? glAgendaStats(wk, ag) : null;
+  const mods = Object.keys(f.models || {}).filter(frLive).map(id => planModelsMap()[id]).filter(Boolean);
+  const R = frRule(f.id), slotTxt = R.slots.map(s => PLAN_SHIFTS[s].replace(/\s/g, '')).join(', ');
+  return `<article class="frc">
+    <header><span class="frc-av">${esc(fxInit(f.name))}</span><div><strong>${esc(f.name)}</strong><div class="sub" style="margin:2px 0 0">${f.email ? '' : '<span class="rtag hot">compte non relié</span> '}${mods.map(m => `<span class="glpf" style="--pc:${m.group === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}">${esc(m.name)}</span>`).join('')}</div></div><span class="glcount">${act.length}/${FR_MAX}</span></header>
+    <p class="sub" style="margin:6px 0 10px">Créneaux : ${slotTxt}${R.cap && R.cap[1] ? ` (10-16 : ${R.cap[1]} au plus)` : ''}${st ? ` · feedbacks ${st.done}/${st.n} cette semaine` : ''}</p>
+    ${act.length ? act.sort((a, b) => a[1].slot - b[1].slot || a[1].name.localeCompare(b[1].name, 'fr')).map(([k, it]) => { const n = Math.min(FR_WEEKS, Math.round((parseDate(wk) - parseDate(it.since)) / (7 * 864e5)) + 1);
+      return `<div class="frc-it" style="--pc:${it.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}"><div class="frc-l"><button type="button" class="linkbtn frc-n" data-fxopen="${esc(k)}">${esc(it.name)}</button><span class="frc-slot">${PLAN_SHIFTS[it.slot].replace(/\s/g, '')}</span>${opts.items ? '' : `<span class="frc-wk">semaine ${n}/${FR_WEEKS}</span>`}${opts.edit ? `<button class="btn ghost small-btn" type="button" data-frrm="${esc(k)}" aria-label="Retirer ${esc(it.name)}" style="margin-left:auto">×</button>` : ''}</div><div class="frc-why">${esc(it.why)}</div></div>`; }).join('') : '<p class="hint" style="margin:0">Aucun chatter pour l’instant.</p>'}
+  </article>`;
+}
+function frPageHTML(wk) {
+  const dir = coachDir(), me = myFr(), S = frState(), act = frActive(wk);
+  const fl = frList().filter(f => FR_RULES[f.id] || Object.keys(f.models || {}).length);
+  if (me && !dir) return frCalendarHTML(wk, me);
+  const draft = S.draft && Object.keys(S.draft).length ? S.draft : null;
+  const free = fl.reduce((n, f) => n + Math.max(0, FR_MAX - Object.values(act).filter(it => it.sup === f.id).length), 0);
+  return `<div class="stack">
+    <section class="panel frhead"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Suivi français</h2>
+      ${dir && !draft && free ? `<button class="btn primary" type="button" id="fr-propose" style="margin-left:auto">Proposer des chatters (${free} place${free > 1 ? 's' : ''} libre${free > 1 ? 's' : ''})</button>` : ''}
+      ${dir ? `<select id="fr-cal" style="width:auto;${dir && !draft && free ? '' : 'margin-left:auto'}"><option value="">Voir le calendrier de…</option>${fl.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('')}</select>` : ''}</div>
+      <p class="hint" style="margin:8px 0 0">Carel, Iliane et Kenzo suivent chacun jusqu’à ${FR_MAX} chatters de leurs modèles pendant ${FR_WEEKS} semaines, avec ${FR_FB} feedbacks par semaine. Le site choisit des chatters à potentiel : ils vendent bien mais ont un unlock trop bas, sont souvent en retard ou sont en baisse. Pendant ce suivi, c’est le sub français qui fait leurs feedbacks, pas leur superviseur attitré.</p></section>
+    ${draft ? `<section class="panel alert warn"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0;font-size:16px">Proposition · ${Object.keys(draft).length} chatters</h2><span class="hint" style="margin:0">Retirez ceux qui ne conviennent pas, puis validez.</span>
+      <button class="btn ghost" type="button" id="fr-cancel" style="margin-left:auto">Annuler</button><button class="btn primary" type="button" id="fr-validate">Valider la proposition</button></div>
+      <div class="frgrid" style="margin-top:12px">${fl.map(f => frCardHTML(f, wk, {items: draft, edit: true})).join('')}</div></section>` : ''}
+    <div class="frgrid">${fl.map(f => frCardHTML(f, wk, {edit: dir})).join('')}</div>
+    ${S.hist && S.hist.length ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Suivis terminés · ${S.hist.length}</summary><div class="unplan-l" style="margin-top:10px">${S.hist.slice(0, 60).map(h => `<span class="unchip" style="padding-right:10px">${esc(h.name)} <span class="muted">· ${esc((frList().find(f => f.id === h.sup) || {}).name || '')} · jusqu’au ${esc(fmtDayFr(addDaysIso(h.until, 6)))}</span></span>`).join('')}</div></details>` : ''}
+  </div>`;
+}
+function frCalendarHTML(wk, f) {
+  const ag = frAgenda(wk, f), st = glAgendaStats(wk, ag), today = isoOf(new Date()), canMark = !coachAs() && !(coachUI.asSup || '').startsWith('fr-');
+  const chip = it => { const s = glState(wk, it);
+    return `<button type="button" class="glc fr ${s}" data-frfb="${esc(it.fbk)}" ${canMark ? '' : 'disabled'} style="--pc:${SUP_PF[it.g === 'of' ? 'OF' : 'MYM'].color}"><span class="glc-n">${s === 'done' ? '✓ ' : ''}${esc(it.name)}<span class="glc-f" data-fxopen="${esc(it.k)}">fiche</span></span><span class="glc-s">${esc(it.label)}</span>${s === 'very' ? '<span class="glc-l">en retard</span>' : s === 'late' ? '<span class="glc-l">d’hier</span>' : ''}</button>`; };
+  const ti = PLAN_DAYS.findIndex((_, d) => addDaysIso(wk, d) === today), todo = ti >= 0 ? ag.days[ti].filter(x => glState(wk, x) !== 'done') : [];
+  return `<div class="stack">${frCardHTML(f, wk)}
+    <section class="panel glhead" style="--sc:${FR_COLOR}"><h2 style="margin:0">${myFrReal() && myFrReal().id === f.id ? 'Mes feedbacks' : `Feedbacks de ${esc(f.name)}`} · ${esc(planWeekLabel(wk).toLowerCase())}</h2>
+      <div class="glstats"><div><b>${st.done}/${st.n}</b><span>feedbacks faits</span></div><div class="${st.late ? 'bad' : ''}"><b>${st.late}</b><span>en retard</span></div></div>
+      ${ti >= 0 ? `<div class="gltoday ${todo.length ? '' : 'ok'}">${todo.length ? `<strong>Aujourd’hui, feedback à faire :</strong> ${todo.map(x => esc(x.name)).join(', ')}` : '<strong>Rien à faire aujourd’hui.</strong>'}</div>` : ''}</section>
+    <div class="glcal">${PLAN_DAYS_LONG.map((dn, d) => { const date = addDaysIso(wk, d), list = ag.days[d];
+      return `<div class="glday ${date === today ? 'now' : ''}"><div class="glday-h"><b>${dn}</b><span>${esc(fmtDayFr(date))}</span></div>${list.map(chip).join('') || '<p class="hint" style="margin:6px 2px;font-size:12px">—</p>'}</div>`; }).join('')}</div>
+    ${ag.none.length ? `<p class="hint">Sans feedback cette semaine : ${ag.none.map(x => `${esc(x.name)} (${esc(x.why)})`).join(' · ')}</p>` : ''}</div>`;
+}
+function bindFr(main, wk) {
+  const S = frState(), rr = msg => { saveCoach(); if (msg) toast(msg); const y = window.scrollY; render(); window.scrollTo(0, y); };
+  main.querySelector('#fr-propose')?.addEventListener('click', () => { const d = frPropose(); if (!Object.keys(d).length) { toast('Aucun chatter ne correspond aux critères en ce moment.', true); return; } S.draft = d; rr(); });
+  main.querySelector('#fr-cancel')?.addEventListener('click', () => { S.draft = null; rr(); });
+  main.querySelector('#fr-validate')?.addEventListener('click', () => { const n = Object.keys(S.draft || {}).length, today = isoOf(new Date()); for (const it of Object.values(S.draft || {})) it.start = today; Object.assign(S.items, S.draft || {}); S.draft = null; rr(`${plural(n, 'chatter confié', 'chatters confiés')} aux subs français.`); });
+  main.querySelectorAll('[data-frrm]').forEach(b => b.addEventListener('click', async () => {
+    const k = b.dataset.frrm;
+    if (S.draft && S.draft[k] && b.closest('.alert')) { delete S.draft[k]; return rr(); }
+    const it = S.items[k]; if (!it || !(await modal('Retirer du suivi français', `<p>Retirer <strong>${esc(it.name)}</strong> du suivi de ${esc((frList().find(f => f.id === it.sup) || {}).name || '')} ? Il retrouve son superviseur attitré pour les feedbacks.</p>`, 'Retirer'))) return;
+    (S.hist ||= []).unshift({k, ...it, ended: wk, removed: true}); delete S.items[k]; rr();
+  }));
+  main.querySelector('#fr-cal')?.addEventListener('change', e => { if (e.target.value) { coachUI.asSup = e.target.value; render(); window.scrollTo(0, 0); } });
+  main.querySelectorAll('[data-fxopen]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); fxOpen(x.dataset.fxopen); }));
+  main.querySelectorAll('[data-frfb]').forEach(b => b.addEventListener('click', async () => {
+    const fbk = b.dataset.frfb, F = glFb(wk), k = fbk.split('|')[0], name = (S.items[k] || {}).name || k;
+    if (F[fbk]) { if (!(await modal('Annuler le feedback', `<p>Marquer le feedback de <strong>${esc(name)}</strong> comme non fait ?</p>`, 'Oui, annuler'))) return; delete F[fbk]; return rr(); }
+    const note = await promptModal(`Feedback fait · ${name}`, 'Ce que vous lui avez dit (facultatif)', '');
+    if (note === null) return;
+    F[fbk] = {at: new Date().toISOString(), by: who(Sync.email()) || 'local'};
+    if (note && note.trim()) { try { await coachAddNote({week: wk, chatter_key: k, chatter_name: name, sup_id: (S.items[k] || {}).sup || '', tags: ['fb'], body: note.trim()}); } catch (err) { toast(`Feedback noté, mais la note n’a pas été enregistrée : ${err.message}`, true); } }
+    rr('Feedback noté.');
+  }));
+}
+
 function renderGlobal(main, wk, head) {
   // Mise à jour automatique (nouveaux / départs), seulement une fois les données partagées chargées
   if (Object.keys(coachGlobal()).length && glCanSync()) { const r = glSync(); if (r.add.length || r.rm.length || r.fix.length) saveCoach(); }
@@ -6351,21 +6514,23 @@ function renderGlobal(main, wk, head) {
 // Bandeau « Voir comme un superviseur » (Direction seulement)
 function coachAsHTML() {
   if (!Sync.canDirect()) return '';
-  const as = coachAs(), sel = `<select id="k-as" style="width:auto">${['<option value="">Vue Direction</option>', ...supList().map(s => `<option value="${s.id}" ${as && as.id === s.id ? 'selected' : ''}>Voir comme ${esc(s.name)}</option>`)].join('')}</select>`;
+  const asFr = String(coachUI.asSup || '').startsWith('fr-') ? frList().find(f => f.id === coachUI.asSup) : null;
+  const as = coachAs() || (asFr ? {id: asFr.id, name: asFr.name, color: FR_COLOR} : null), sel = `<select id="k-as" style="width:auto">${['<option value="">Vue Direction</option>', ...supList().map(s => `<option value="${s.id}" ${as && as.id === s.id ? 'selected' : ''}>Voir comme ${esc(s.name)}</option>`), ...frList().map(f => `<option value="${f.id}" ${as && as.id === f.id ? 'selected' : ''}>Voir comme ${esc(f.name)} (sub français)</option>`)].join('')}</select>`;
   return as ? `<div class="kas on" style="--sc:${as.color}"><span class="g-dot" style="background:${as.color}"></span><span>Vous voyez la page <strong>exactement comme ${esc(as.name)}</strong> (lecture seule : rien n’est modifié).</span>${sel}<button class="btn small-btn" type="button" id="k-as-off">Revenir à la vue Direction</button></div>`
     : `<div class="kas"><span>Vue superviseur :</span>${sel}</div>`;
 }
 // Deux grands boutons : Suivi global (tous les chatters) / Maillons faibles (rouge-orange)
 function coachModeHTML(wk) {
-  const m = coachUI.mode || 'global', nWeak = Object.keys(glWeak(wk)).length, me = mySup();
+  const m = coachUI.mode || (myFrReal() && !mySupReal() && !Sync.canDirect() ? 'fr' : 'global'), nWeak = Object.keys(glWeak(wk)).length, me = mySup();
   const mineWeak = me ? Object.values(glWeak(wk)).filter(it => it.sup === me.id).length : 0;
   return `<nav class="pswitch kmode" aria-label="Partie du suivi">
     <button type="button" class="psw gl ${m === 'global' ? 'on' : ''}" data-kmode="global"><span class="psw-b">★</span><span class="psw-t">Suivi global<small>${Object.keys(coachState.global || {}).length} chatters</small></span></button>
+    <button type="button" class="psw fr ${m === 'fr' ? 'on' : ''}" data-kmode="fr"><span class="psw-b">FR</span><span class="psw-t">Suivi français<small>${Object.keys(frActive(wk)).length} chatters</small></span></button>
     <button type="button" class="psw weak ${m === 'weak' ? 'on' : ''}" data-kmode="weak"><span class="psw-b">!</span><span class="psw-t">Maillons faibles<small>${nWeak ? `${nWeak} cette semaine${mineWeak ? ` · ${mineWeak} pour vous` : ''}` : 'liste pas encore validée'}</small></span></button></nav>`;
 }
 function bindCoachMode(main) {
   main.querySelectorAll('[data-kmode]').forEach(b => b.addEventListener('click', () => { coachUI.mode = b.dataset.kmode; render(); }));
-  const set = v => { coachUI.asSup = v || null; coachUI.gtab = null; coachUI.calSup = null; coachUI.tab = null; render(); window.scrollTo(0, 0); };
+  const set = v => { coachUI.asSup = v || null; coachUI.gtab = null; coachUI.calSup = null; coachUI.tab = null; if (String(v || '').startsWith('fr-')) coachUI.mode = 'fr'; else if (coachUI.mode === 'fr' && v) coachUI.mode = 'global'; render(); window.scrollTo(0, 0); };
   main.querySelector('#k-as')?.addEventListener('change', e => set(e.target.value));
   main.querySelector('#k-as-off')?.addEventListener('click', () => set(''));
 }
@@ -6377,7 +6542,9 @@ function renderCoaching(main) {
       <select id="kw-sel">${[...new Set([...Object.keys(coachState.weeks), mondayOf(isoOf(new Date())), wk])].sort().reverse().map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}</option>`).join('')}</select>
       <button class="btn ghost small-btn" id="kw-next" type="button" aria-label="Semaine suivante">›</button></div></div>`
     + coachAsHTML() + coachModeHTML(wk);
-  if ((coachUI.mode || 'global') === 'global') { renderGlobal(main, wk, head); bindCoachMode(main); return; }
+  const mode = coachUI.mode || (myFrReal() && !mySupReal() && !Sync.canDirect() ? 'fr' : 'global');
+  if (mode === 'fr') { main.innerHTML = head + frPageHTML(wk); bindCoachHead(wk); bindCoachMode(main); bindFr(main, wk); return; }
+  if (mode === 'global') { renderGlobal(main, wk, head); bindCoachMode(main); return; }
   setTimeout(() => bindCoachMode(main));
   if (!coachDir()) { main.innerHTML = head + coachSupView(wk); bindCoachHead(wk); bindCoachCards(main, wk); return; }
   const meSup = mySup();
@@ -6794,7 +6961,7 @@ const Sync = (() => {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
     } else if (key === 'coaching') {
-      syncInPlace(coachState, {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(data && data.ignore ? {ignore: data.ignore} : {}), ...(data && data.global ? {global: data.global} : {}), ...(data && data.fb ? {fb: data.fb} : {}), ...(data && data.globalStart ? {globalStart: data.globalStart} : {}), ...(data && data.goals ? {goals: data.goals} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}); lsSet(LS_COACH, coachState);
+      syncInPlace(coachState, {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(data && data.ignore ? {ignore: data.ignore} : {}), ...(data && data.global ? {global: data.global} : {}), ...(data && data.fb ? {fb: data.fb} : {}), ...(data && data.globalStart ? {globalStart: data.globalStart} : {}), ...(data && data.goals ? {goals: data.goals} : {}), ...(data && data.fr ? {fr: data.fr} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}); lsSet(LS_COACH, coachState);
     } else if (key === 'cams') {
       syncInPlace(camsState, {items: (data && data.items) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {})}); lsSet(LS_CAMS, camsState);
     } else if (key === 'suivi') {
