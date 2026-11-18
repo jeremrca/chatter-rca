@@ -5807,19 +5807,28 @@ function glContext() {
   const shCache = new Map(), sh = k => { if (!shCache.has(k)) shCache.set(k, glShifts(team.get(k) || (coachGlobal()[k] || {}).name || k, weeks)); return shCache.get(k); };
   return {wk, sw, weeks, team, sups, sh};
 }
-// Candidats pour un chatter : superviseurs qui ont des heures communes sur la bonne plateforme
+// Un superviseur n'a accès qu'aux comptes de sa plateforme : un chatter MYM ne peut aller que chez un superviseur MYM
+// (ou polyvalent qui est sur MYM au moins un jour), un chatter OF chez un superviseur OF. Chatter sur les deux : l'une ou l'autre.
+const supOnPf = (s, P) => s.days.some((t, d) => parseShift(t) && (supDayFocus(s, d) || '') === P) || s.days.some((t, d) => parseShift(t) && !supDayFocus(s, d));
+function glFits(s, pid) { if (pid === 'of') return supOnPf(s, 'OF'); if (pid === 'mym') return supOnPf(s, 'MYM'); return true; }
+// Candidats pour un chatter : superviseurs de sa plateforme principale, avec des heures communes sur les shifts de cette plateforme
 function glOptions(ctx, k) {
-  const shifts = ctx.sh(k), mids = new Set(shifts.map(x => x.mid)), A = planState.supAssign || {};
-  return ctx.sups.map(s => ({s, ov: glOverlap(s, shifts), mod: [...mids].filter(m => A[s.id] && A[s.id][m]).length})).filter(o => o.ov > 0);
+  const all = ctx.sh(k), pid = glPid(all), A = planState.supAssign || {};
+  const shifts = pid === 'of' || pid === 'mym' ? all.filter(x => x.g === pid) : all.filter(x => x.g !== 'other').length ? all.filter(x => x.g !== 'other') : all;
+  const mids = new Set(shifts.map(x => x.mid));
+  return ctx.sups.filter(s => glFits(s, pid)).map(s => ({s, ov: glOverlap(s, shifts), mod: [...mids].filter(m => A[s.id] && A[s.id][m]).length})).filter(o => o.ov > 0);
 }
 // Mise à jour : retire les départs, attribue les nouveaux. Les chatters déjà attribués ne changent jamais de superviseur ici.
 // opt.dry : calcule sans rien modifier. Retourne {add:[], rm:[], none:[], blocked}
 function glSync(opt = {}) {
   const ctx = glContext(), G = coachGlobal(), supIds = new Set(ctx.sups.map(s => s.id));
-  const res = {add: [], rm: [], none: [], blocked: false};
+  const res = {add: [], rm: [], none: [], fix: [], blocked: false};
   if (!ctx.team.size) return res;
   // 1. Départs : plus dans l'équipe (a quitté l'agence, retiré de Jours OFF et absent du planning depuis 3 semaines) ou superviseur supprimé
-  const gone = Object.keys(G).filter(k => !ctx.team.has(k)), orphan = Object.keys(G).filter(k => ctx.team.has(k) && !supIds.has(G[k].sup));
+  const gone = Object.keys(G).filter(k => !ctx.team.has(k));
+  // À réattribuer : superviseur supprimé, ou superviseur d'une autre plateforme que le chatter (pas d'accès à ses comptes)
+  const orphan = Object.keys(G).filter(k => ctx.team.has(k) && (!supIds.has(G[k].sup) || !glFits(ctx.sups.find(s => s.id === G[k].sup), glPid(ctx.sh(k)))));
+  res.fix = orphan.filter(k => supIds.has(G[k].sup)).map(k => ({k, name: G[k].name, from: G[k].sup}));
   if (gone.length > Math.max(8, Object.keys(G).length * 0.15)) res.blocked = true;   // sécurité : planning pas encore chargé
   else for (const k of gone) { res.rm.push({k, name: G[k].name}); if (!opt.dry) delete G[k]; }
   // 2. Nouveaux (et chatters dont le superviseur a été supprimé)
@@ -5837,7 +5846,7 @@ function glSync(opt = {}) {
     const best = x.opts.slice().sort((a, b) => (load[a.s.id] >= target[a.s.id]) - (load[b.s.id] >= target[b.s.id]) || (b.ov + 4 * b.mod) - (a.ov + 4 * a.mod) || load[a.s.id] - load[b.s.id])[0];
     load[best.s.id]++;
     res.add.push({k: x.k, name: ctx.team.get(x.k), sup: best.s.id, ov: best.ov});
-    if (!opt.dry) G[x.k] = {sup: best.s.id, name: ctx.team.get(x.k), since: (G[x.k] && G[x.k].since) || today};
+    if (!opt.dry) G[x.k] = {sup: best.s.id, name: ctx.team.get(x.k), since: G[x.k] && G[x.k].sup === best.s.id ? G[x.k].since : today};
   }
   if (!opt.dry) for (const [k, g] of Object.entries(G)) if (ctx.team.has(k) && g.name !== ctx.team.get(k)) g.name = ctx.team.get(k);
   return res;
@@ -5993,7 +6002,7 @@ function bindGlBoard(main, wk) {
   main.querySelectorAll('[data-glset]').forEach(b => b.addEventListener('click', () => { const [k, sid] = b.dataset.glset.split('|'); const G = coachGlobal(); G[k] = {...G[k], sup: sid, since: isoOf(new Date()), by: who(Sync.email()) || 'manuel'}; done('Superviseur changé.'); }));
   const move = k => {
     const ctx = glContext(), G = coachGlobal(), cur = G[k], name = cur ? cur.name : ctx.team.get(k), shifts = ctx.sh(k);
-    const opts = ctx.sups.map(s => ({s, ov: glOverlap(s, shifts)})).sort((a, b) => b.ov - a.ov);
+    const pid = glPid(shifts), opts = ctx.sups.filter(s => glFits(s, pid)).map(s => ({s, ov: glOverlap(s, shifts.filter(x => !(pid === 'of' || pid === 'mym') || x.g === pid))})).sort((a, b) => b.ov - a.ov);
     const bg = document.createElement('div'); bg.className = 'modal-bg';
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:480px"><h3>Superviseur de ${esc(name)}</h3>
       <p class="hint" style="margin-top:0">Heures communes sur ses shifts des 2 dernières semaines (même plateforme). ${cur ? `Suivi par ${esc((ctx.sups.find(s => s.id === cur.sup) || {}).name || '—')} depuis le ${esc(fmtDayFr(cur.since))}.` : ''}</p>
@@ -6013,7 +6022,7 @@ function bindGlBoard(main, wk) {
 }
 function renderGlobal(main, wk, head) {
   // Mise à jour automatique (nouveaux / départs), seulement une fois les données partagées chargées
-  if (Object.keys(coachGlobal()).length && glCanSync()) { const r = glSync(); if (r.add.length || r.rm.length) saveCoach(); }
+  if (Object.keys(coachGlobal()).length && glCanSync()) { const r = glSync(); if (r.add.length || r.rm.length || r.fix.length) saveCoach(); }
   const me = mySup(), dir = coachDir();
   const tab = coachUI.gtab || (me || !dir ? 'cal' : 'board');
   const tabs = `<div class="ptopt" role="tablist">${[['cal', me ? 'Mon calendrier' : 'Calendrier des feedbacks'], ['board', 'Tous les chatters']].map(([k, l]) => `<button type="button" class="${tab === k ? 'on' : ''}" data-gtab="${k}">${l}</button>`).join('')}</div>`;
