@@ -573,6 +573,25 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .sup-cell.empty{background:transparent;color:var(--faint);border:1px dashed var(--line-soft)}
 .sup-cell.bad{outline:2px solid #ef4444}
 .sup-pal{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.g-sec{display:flex;align-items:center;gap:8px;margin:8px 0 0;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--pc);background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 18%,transparent),transparent 70%);border-left:3px solid var(--pc)}
+.g-sec small{font-size:11px;padding:0 7px;border-radius:999px;background:color-mix(in srgb,var(--pc) 25%,transparent);color:var(--text)}
+.g-row[style*="--pc"] .g-name{border-left:3px solid var(--pc);padding-left:8px}
+.g-bar[style*="--bc"]{border-left:4px solid var(--bc)}
+.sfx{font-size:10.5px;font-weight:700;padding:0 6px;border-radius:5px;background:var(--raised);color:var(--muted);border:1px dashed var(--line);text-transform:none;letter-spacing:0}
+.pfcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:16px}
+.pfc{border:1px solid color-mix(in srgb,var(--pc) 45%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--pc) 16%,transparent),color-mix(in srgb,var(--pc) 4%,transparent));border-radius:14px;padding:12px 14px;box-shadow:0 0 18px color-mix(in srgb,var(--pc) 12%,transparent)}
+.pfc-h{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+.pfc-t{font-size:17px;font-weight:900;color:var(--pc);margin-right:auto}
+.pfc-h b{font-size:22px;color:var(--text)}
+.pfc-h .muted{font-size:12px}
+.pfc-l{display:flex;flex-wrap:wrap;gap:6px}
+.pfc-p{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:9px;background:var(--bg);border:1px solid color-mix(in srgb,var(--pc) 30%,var(--line-soft));font-size:13px}
+.pfc-h2{font-size:12px;color:var(--muted);font-weight:700}
+.pfsw{display:inline-flex;gap:6px;flex-wrap:wrap}
+.pfsw button{padding:5px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--pc) 50%,transparent);background:transparent;color:var(--pc);font-weight:800;font-size:12.5px;cursor:pointer}
+.pfsw button.on{background:var(--pc);color:#0b0b0f}
+.sup-pf{display:block;margin:4px auto 0;width:fit-content;font-size:10px;font-weight:900;padding:0 6px;border-radius:5px;background:var(--pc);color:#0b0b0f;letter-spacing:.3px}
+.sup-pf.ex{outline:2px dashed var(--pc);outline-offset:1px}
 .sup-pal button{height:34px;border-radius:8px;border:2px solid transparent;cursor:pointer}
 .sup-pal button.on{border-color:#fff}
 .abstag{font-size:9.5px;font-weight:800;color:#fff;background:#ef4444;border-radius:4px;padding:0 4px;line-height:14px}
@@ -4054,15 +4073,20 @@ const isOff = t => /^\s*off\s*$/i.test(String(t || ''));
 const textOn = c => { const h = c.replace('#', ''); const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? '#111' : '#fff'; };
 const fmtH = h => { const x = ((h % 24) + 24) % 24; const hh = Math.floor(x), mm = Math.round((x - hh) * 60); return `${hh}h${mm ? String(mm).padStart(2, '0') : ''}`; };
 // Plages réellement couvertes un jour donné : son propre shift + la fin du shift de nuit de la veille
+// Focus du jour : exception du jour (focusDays[d]) sinon focus habituel. Un shift de nuit garde le focus du jour où il commence.
+const SUP_PF = {MYM: {label: 'MYM', color: '#f472b6'}, OF: {label: 'OnlyFans', color: '#38bdf8'}, REVEAL: {label: 'Reveal', color: '#a855f7'}, '': {label: 'Sans focus', color: '#94a3b8'}};
+const focusKey = f => /mym/i.test(f || '') ? 'MYM' : /only|^\s*of\s*$/i.test(f || '') ? 'OF' : /reveal/i.test(f || '') ? 'REVEAL' : '';
+const supDayFocus = (s, d) => focusKey((s.focusDays && s.focusDays[d]) || s.focus);
 function supBlocks(s, d) {
   const out = [];
-  const own = parseShift(s.days[d]); if (own) out.push({start: own.start, end: Math.min(24, own.end), label: s.days[d]});
-  const prev = parseShift(s.days[(d + 6) % 7]); if (prev && prev.end > 24) out.push({start: 0, end: prev.end - 24, label: `${s.days[(d + 6) % 7]} (depuis la veille)`, carry: true});
+  const own = parseShift(s.days[d]); if (own) out.push({start: own.start, end: Math.min(24, own.end), label: s.days[d], pf: supDayFocus(s, d)});
+  const pd = (d + 6) % 7, prev = parseShift(s.days[pd]); if (prev && prev.end > 24) out.push({start: 0, end: prev.end - 24, label: `${s.days[pd]} (depuis la veille)`, carry: true, pf: supDayFocus(s, pd)});
   return out;
 }
-function supCoverage() {
+// pf : '' = tous les superviseurs, 'MYM' ou 'OF' = seulement ceux qui sont sur cette plateforme à cette heure-là
+function supCoverage(pf = '') {
   const grid = Array.from({length: 7}, () => Array(24).fill(0)), who = Array.from({length: 7}, () => Array.from({length: 24}, () => []));
-  for (const s of supList()) for (let d = 0; d < 7; d++) for (const b of supBlocks(s, d)) for (let h = 0; h < 24; h++) if (h + 0.5 > b.start && h + 0.5 < b.end) { grid[d][h]++; who[d][h].push(s.name); }
+  for (const s of supList()) for (let d = 0; d < 7; d++) for (const b of supBlocks(s, d)) if (!pf || b.pf === pf) for (let h = 0; h < 24; h++) if (h + 0.5 > b.start && h + 0.5 < b.end) { grid[d][h]++; who[d][h].push(s.name); }
   return {grid, who};
 }
 function supPlanHTML() {
@@ -4070,35 +4094,56 @@ function supPlanHTML() {
   const today = (new Date().getDay() + 6) % 7;
   const d = planUI.supDay ?? today;
   const nowH = new Date().getHours() + new Date().getMinutes() / 60;
-  const {grid, who} = supCoverage();
+  const covPf = planUI.supCovPf || '';
+  const {grid, who} = supCoverage(covPf);
   const holes = [];
   for (let dd = 0; dd < 7; dd++) { let h = 0; while (h < 24) { if (!grid[dd][h]) { const s = h; while (h < 24 && !grid[dd][h]) h++; holes.push(`${PLAN_DAYS[dd]} ${s}h-${h}h`); } else h++; } }
   const ticks = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24];
+  // Rangement du jour : chacun dans la plateforme de son shift du jour ; un superviseur OFF qui finit sa nuit de la veille suit le focus de la veille
+  const rowOf = s => { const blocks = supBlocks(s, d), own = blocks.find(b => !b.carry), carry = blocks.find(b => b.carry);
+    return {s, blocks, own, off: isOff(s.days[d]), key: own ? own.pf : carry ? carry.pf : 'OFF'}; };
+  const rows = list.map(rowOf);
+  const order = ['MYM', 'OF', 'REVEAL', '', 'OFF'];
+  const groups = order.map(k => ({k, rows: rows.filter(r => r.key === k)})).filter(g => g.rows.length);
+  const pfOf = k => SUP_PF[k] || {label: 'OFF ce jour', color: '#52525b'};
+  const pM = supCoverage('MYM').grid[d], pO = supCoverage('OF').grid[d], all = supCoverage().grid[d], allWho = supCoverage().who[d];
+  const ganttRow = r => { const {s, blocks, off} = r;
+    return `<div class="g-row" style="--pc:${pfOf(r.key).color}"><div class="g-name"><span class="g-dot" style="background:${s.color}"></span>${esc(s.name)}${r.own && s.focusDays && s.focusDays[d] ? ' <span class="sfx" title="Focus différent de son focus habituel ce jour-là">ce jour</span>' : ''}</div>
+      <div class="g-track">${ticks.map(t => `<span class="g-grid" style="left:${t / 24 * 100}%"></span>`).join('')}
+        ${blocks.map(b => `<div class="g-bar ${b.carry ? 'carry' : ''}" style="left:${b.start / 24 * 100}%;width:${(b.end - b.start) / 24 * 100}%;background:${s.color};color:${textOn(s.color)};--bc:${SUP_PF[b.pf].color}" title="${esc(s.name)} · ${esc(b.label)} · ${SUP_PF[b.pf].label}">${b.end - b.start >= 2.5 ? esc(b.carry ? `→ ${fmtH(b.end)}` : s.days[d]) : ''}</div>`).join('')}
+        ${off && !blocks.length ? '<span class="g-off">OFF</span>' : off ? '<span class="g-off right">OFF</span>' : ''}
+        ${d === today ? `<span class="g-now" style="left:${nowH / 24 * 100}%"></span>` : ''}</div></div>`; };
+  const covRow = (label, arr, color, names) => `<div class="g-row"><div class="g-name" style="color:${color}">${label}</div><div class="g-track g-cov">${arr.map((n, h) => `<span class="g-cell c${Math.min(n, 4)}" style="left:${h / 24 * 100}%;width:${100 / 24}%" title="${h}h-${h + 1}h : ${n} ${label}${names ? ` · ${esc(names[h].join(', ') || 'personne')}` : ''}">${n}</span>`).join('')}</div></div>`;
+  // Cartes « qui est sur quoi » du jour choisi (shifts qui commencent ce jour-là)
+  const card = k => { const l = rows.filter(r => r.own && r.own.pf === k).sort((a, b) => parseShift(a.s.days[d]).start - parseShift(b.s.days[d]).start);
+    return `<div class="pfc" style="--pc:${SUP_PF[k].color}"><div class="pfc-h"><span class="pfc-t">${SUP_PF[k].label}</span><b>${l.length}</b><span class="muted">${l.length > 1 ? 'superviseurs' : 'superviseur'}</span></div>
+      <div class="pfc-l">${l.length ? l.map(r => `<span class="pfc-p"><span class="g-dot" style="background:${r.s.color}"></span><strong>${esc(r.s.name)}</strong><span class="pfc-h2">${esc(r.s.days[d])}</span>${r.s.focusDays && r.s.focusDays[d] ? '<span class="sfx">ce jour</span>' : ''}</span>`).join('') : '<span class="muted">Personne</span>'}</div></div>`; };
+  const extra = ['REVEAL', ''].filter(k => rows.some(r => r.own && r.own.pf === k));
   return `<div class="stack">
     <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px"><h2 style="margin:0">Qui supervise, heure par heure</h2>
       <div class="ptabs" style="margin-left:auto">${PLAN_DAYS.map((x, i) => `<button type="button" class="ptab ${i === d ? 'on' : ''}" data-sd="${i}" style="min-width:58px;padding:5px 8px"><b>${x}</b>${i === today ? '<span>aujourd’hui</span>' : ''}</button>`).join('')}</div></div>
+      <div class="pfcs">${card('MYM')}${card('OF')}${extra.map(card).join('')}</div>
       <div class="gantt">
         <div class="g-row g-axis"><div class="g-name"></div><div class="g-track">${ticks.map(t => `<span class="g-tick" style="left:${t / 24 * 100}%">${t}h</span>`).join('')}</div></div>
-        ${list.map(s => { const blocks = supBlocks(s, d); const off = isOff(s.days[d]);
-          return `<div class="g-row"><div class="g-name"><span class="g-dot" style="background:${s.color}"></span>${esc(s.name)}${s.focus ? ` <span class="platb" style="--tc:${platColor(s.focus)}">${esc(s.focus)}</span>` : ''}</div>
-          <div class="g-track">${ticks.map(t => `<span class="g-grid" style="left:${t / 24 * 100}%"></span>`).join('')}
-            ${blocks.map(b => `<div class="g-bar ${b.carry ? 'carry' : ''}" style="left:${b.start / 24 * 100}%;width:${(b.end - b.start) / 24 * 100}%;background:${s.color};color:${textOn(s.color)}" title="${esc(s.name)} · ${esc(b.label)}">${b.end - b.start >= 2.5 ? esc(b.carry ? `→ ${fmtH(b.end)}` : s.days[d]) : ''}</div>`).join('')}
-            ${off && !blocks.length ? '<span class="g-off">OFF</span>' : off ? '<span class="g-off right">OFF</span>' : ''}
-            ${d === today ? `<span class="g-now" style="left:${nowH / 24 * 100}%"></span>` : ''}</div></div>`; }).join('')}
-        <div class="g-row"><div class="g-name muted">Présents</div><div class="g-track g-cov">${grid[d].map((n, h) => `<span class="g-cell c${Math.min(n, 4)}" style="left:${h / 24 * 100}%;width:${100 / 24}%" title="${h}h-${h + 1}h : ${n ? esc(who[d][h].join(', ')) : 'personne'}">${n}</span>`).join('')}</div></div>
+        ${groups.map(g => `<div class="g-sec" style="--pc:${pfOf(g.k).color}"><span>${pfOf(g.k).label}</span><small>${g.rows.length}</small></div>${g.rows.map(ganttRow).join('')}`).join('')}
+        <div class="g-sec" style="--pc:#71717a"><span>Présents par heure</span></div>
+        ${covRow('MYM', pM, SUP_PF.MYM.color)}${covRow('OnlyFans', pO, SUP_PF.OF.color)}${covRow('Total', all, 'var(--muted)', allWho)}
       </div>
-      <p class="hint" style="margin:10px 0 0;font-size:12px">Les shifts de nuit (22h-8h, 16h-2h) se prolongent sur le lendemain, en barre hachurée. ${d === today ? 'Le trait vertical indique l’heure actuelle.' : ''} Survolez « Présents » pour voir qui est là à chaque heure.</p>
+      <p class="hint" style="margin:10px 0 0;font-size:12px">Chaque superviseur est rangé dans la plateforme de son shift du jour (rose : MYM, bleu : OnlyFans) ; le liseré coloré de la barre rappelle la plateforme. Les shifts de nuit (22h-8h, 16h-2h) se prolongent sur le lendemain, en barre hachurée, avec le focus du jour où ils commencent. ${d === today ? 'Le trait rouge indique l’heure actuelle.' : ''}</p>
     </section>
     ${frSupHTML()}
-    <section class="panel"><h2>Couverture de la semaine</h2><p class="hint">Nombre de superviseurs présents par heure. ${holes.length ? `<strong class="sc-lo">Créneaux sans superviseur : ${holes.map(esc).join(' · ')}</strong>` : '<span class="sc-hi">Chaque heure de la semaine est couverte.</span>'}</p>
+    <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Couverture de la semaine</h2>
+      <div class="pfsw" style="margin-left:auto">${[['', 'Tous'], ['MYM', 'MYM'], ['OF', 'OnlyFans']].map(([k, l]) => `<button type="button" class="${k === covPf ? 'on' : ''}" data-covpf="${k}" style="--pc:${k ? SUP_PF[k].color : '#a1a1aa'}">${l}</button>`).join('')}</div></div>
+      <p class="hint">Nombre de superviseurs ${covPf ? `<strong style="color:${SUP_PF[covPf].color}">${SUP_PF[covPf].label}</strong> ` : ''}présents par heure. ${holes.length ? `<strong class="sc-lo">Créneaux sans superviseur${covPf ? ` ${SUP_PF[covPf].label}` : ''} : ${holes.map(esc).join(' · ')}</strong>` : '<span class="sc-hi">Chaque heure de la semaine est couverte.</span>'}</p>
       <div class="cov-wrap"><table class="cov"><thead><tr><th></th>${Array.from({length: 24}, (_, h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>
       ${grid.map((row, dd) => `<tr><th>${PLAN_DAYS[dd]}</th>${row.map((n, h) => `<td class="c${Math.min(n, 4)}" title="${PLAN_DAYS_LONG[dd]} ${h}h-${h + 1}h : ${n ? esc(who[dd][h].join(', ')) : 'personne'}">${n || ''}</td>`).join('')}</tr>`).join('')}
       </tbody></table></div></section>
     <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">Planning des superviseurs</h2><span class="hint" style="margin:0">Planning fixe : il s'applique à toutes les semaines. Cliquez sur une case pour changer l'horaire.</span>
       <button class="btn primary" id="sup-add" type="button" style="margin-left:auto">+ Ajouter un superviseur</button></div>
-      <div class="tbl-wrap" style="max-height:none"><table class="sup-table"><thead><tr><th>Superviseur</th>${PLAN_DAYS_LONG.map(x => `<th>${x}</th>`).join('')}<th>Focus projet</th><th>Compte (e-mail)</th><th></th></tr></thead><tbody>
+      <div class="tbl-wrap" style="max-height:none"><table class="sup-table"><thead><tr><th>Superviseur</th>${PLAN_DAYS_LONG.map(x => `<th>${x}</th>`).join('')}<th title="Plateforme de ses shifts, sauf exception sur un jour (cliquez sur la case du jour)">Focus habituel</th><th>Compte (e-mail)</th><th></th></tr></thead><tbody>
       ${list.map((s, i) => `<tr style="--sc:${s.color};--st:${textOn(s.color)}"><td class="sup-name"><button type="button" class="sup-sw" data-scol="${s.id}" title="Changer la couleur" style="background:${s.color}"></button><input type="text" data-sname="${s.id}" value="${esc(s.name)}"></td>
-        ${s.days.map((t, dd) => `<td><button type="button" class="sup-cell ${isOff(t) ? 'off' : !t ? 'empty' : !parseShift(t) ? 'bad' : ''}" data-scell="${s.id}|${dd}" title="${isOff(t) ? 'OFF' : t ? esc(t) : 'Non renseigné'}">${isOff(t) ? 'OFF' : t ? esc(t) : '—'}</button></td>`).join('')}
+        ${s.days.map((t, dd) => { const work = !!parseShift(t), pf = supDayFocus(s, dd), ex = !!(s.focusDays && s.focusDays[dd]);
+          return `<td><button type="button" class="sup-cell ${isOff(t) ? 'off' : !t ? 'empty' : !parseShift(t) ? 'bad' : ''}" data-scell="${s.id}|${dd}" title="${isOff(t) ? 'OFF' : t ? `${esc(t)}${work ? ` · ${SUP_PF[pf].label}${ex ? ' (ce jour seulement)' : ''}` : ''}` : 'Non renseigné'}">${isOff(t) ? 'OFF' : t ? esc(t) : '—'}${work && pf ? `<span class="sup-pf ${ex ? 'ex' : ''}" style="--pc:${SUP_PF[pf].color}">${pf === 'OF' ? 'OF' : SUP_PF[pf].label}</span>` : ''}</button></td>`; }).join('')}
         <td><input type="text" data-sfocus="${s.id}" value="${esc(s.focus || '')}" list="sup-focus" placeholder="—" style="width:110px"></td>
         <td><input type="email" data-semail="${s.id}" value="${esc(s.email || '')}" placeholder="e-mail de connexion" style="width:190px" ${Sync.canManage() ? '' : 'disabled'}></td>
         <td class="num" style="white-space:nowrap"><button class="btn ghost small-btn" data-sup-up="${s.id}" type="button" aria-label="Monter" ${i ? '' : 'disabled'}>↑</button> <button class="btn ghost small-btn" data-sup-dn="${s.id}" type="button" aria-label="Descendre" ${i < list.length - 1 ? '' : 'disabled'}>↓</button> <button class="btn ghost small-btn" data-sup-del="${s.id}" type="button" aria-label="Supprimer ${esc(s.name)}">×</button></td></tr>`).join('')}
@@ -4107,6 +4152,7 @@ function supPlanHTML() {
 function bindSupPlan(main) {
   const map = supsMap(), done = () => { savePlan(); render(); };
   main.querySelectorAll('[data-sd]').forEach(b => b.addEventListener('click', () => { planUI.supDay = +b.dataset.sd; render(); }));
+  main.querySelectorAll('[data-covpf]').forEach(b => b.addEventListener('click', () => { planUI.supCovPf = b.dataset.covpf; const y = window.scrollY; render(); window.scrollTo(0, y); }));
   main.querySelectorAll('[data-sname]').forEach(i => i.addEventListener('change', () => { if (i.value.trim()) { map[i.dataset.sname].name = i.value.trim(); done(); } }));
   main.querySelectorAll('[data-sfocus]').forEach(i => i.addEventListener('change', () => { map[i.dataset.sfocus].focus = i.value.trim(); done(); }));
   main.querySelectorAll('[data-semail]').forEach(i => i.addEventListener('change', () => { const v = i.value.trim().toLowerCase(); if (v) map[i.dataset.semail].email = v; else delete map[i.dataset.semail].email; done(); }));
@@ -4128,14 +4174,28 @@ function bindSupPlan(main) {
   }));
   main.querySelectorAll('[data-scell]').forEach(b => b.addEventListener('click', () => {
     const [id, dd] = b.dataset.scell.split('|'); const s = map[id];
+    let pf = (s.focusDays && s.focusDays[dd]) || '';
+    const usual = focusKey(s.focus);
     const bg = document.createElement('div'); bg.className = 'modal-bg';
-    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:420px"><h3>${esc(s.name)} · ${PLAN_DAYS_LONG[dd]}</h3>
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:440px"><h3>${esc(s.name)} · ${PLAN_DAYS_LONG[dd]}</h3>
+      <div class="sf" style="margin-bottom:12px"><span>Focus ce jour-là</span><div class="pfsw" style="margin-top:6px">
+        <button type="button" data-pf="" class="${pf ? '' : 'on'}" style="--pc:${SUP_PF[usual].color}">Habituel${usual ? ` (${SUP_PF[usual].label})` : ''}</button>
+        <button type="button" data-pf="MYM" class="${pf === 'MYM' ? 'on' : ''}" style="--pc:${SUP_PF.MYM.color}">MYM</button>
+        <button type="button" data-pf="OnlyFans" class="${pf === 'OnlyFans' ? 'on' : ''}" style="--pc:${SUP_PF.OF.color}">OnlyFans</button></div></div>
       <div class="qrow">${SUP_PRESETS.map(p => `<button type="button" class="qpt ${normName(p) === normName(s.days[dd]) ? 'on' : ''}" data-ps="${p}" style="--tc:${s.color}">${p}</button>`).join('')}</div>
       <label class="sf" style="margin-top:12px"><span>Autre horaire (ex. 10h-20h, 23h30-7h)</span><input type="text" id="ps-free" value="${esc(isOff(s.days[dd]) ? '' : s.days[dd] || '')}" placeholder="10h-20h"></label>
       <div id="ps-err" class="sc-lo" style="min-height:18px;font-size:13px;margin-top:6px"></div>
       <div class="acts"><button class="btn ghost" data-a="clear" type="button" style="margin-right:auto">Vider</button><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
-    const set = v => { s.days[dd] = v; bg.remove(); done(); };
+    const set = v => {
+      s.days[dd] = v;
+      // Exception de focus : seulement si elle diffère du focus habituel
+      const fd = s.focusDays ? [...s.focusDays] : Array(7).fill('');
+      fd[dd] = pf && focusKey(pf) !== usual ? pf : '';
+      if (fd.some(Boolean)) s.focusDays = fd; else delete s.focusDays;
+      bg.remove(); done();
+    };
     bg.addEventListener('click', e => {
+      const f = e.target.closest('[data-pf]'); if (f) { pf = f.dataset.pf; bg.querySelectorAll('[data-pf]').forEach(x => x.classList.toggle('on', x === f)); return; }
       const p = e.target.closest('[data-ps]'); if (p) return set(p.dataset.ps);
       if (e.target === bg) return bg.remove();
       const a = e.target.closest('[data-a]'); if (!a) return;
@@ -4273,18 +4333,19 @@ function supAssignHTML() {
   const groups = PLAN_GROUPS.map(g => ({g, ms: models.filter(m => m.group === g.id)})).filter(x => x.ms.length);
   const A = planState.supAssign || {};
   // Un superviseur OnlyFans n'apparaît pas sur les modèles MYM, ni un superviseur MYM sur les modèles OF (champ « focus » des horaires)
-  const fits = (s, g) => g === 'other' || supEligible(s, g);
+  // Un superviseur polyvalent (ex. MYM en semaine, OF le samedi) apparaît sur les deux plateformes
+  const fits = (s, g) => g === 'other' || supEligible(s, g) || s.days.some((t, d) => parseShift(t) && supDayFocus(s, d) === (g === 'of' ? 'OF' : 'MYM'));
   const mGroup = mid => (models.find(m => m.id === mid) || {}).group;
   const has = (sid, mid) => !!(A[sid] && A[sid][mid]) && fits(sups.find(s => s.id === sid) || {}, mGroup(mid));
   const colN = mid => sups.filter(s => has(s.id, mid)).length;
   const orphans = models.filter(m => !colN(m.id));
   const short = g => g.id === 'mym' ? 'MYM' : g.id === 'of' ? 'OF' : 'Reveal';
   return `<section class="panel" style="margin-top:16px"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 style="margin:0">Modèles par superviseur</h2>
-      <span class="hint" style="margin:0">Cochez les modèles dont chaque superviseur s’occupe. Les superviseurs OnlyFans n’apparaissent que sur les modèles OF, les superviseurs MYM que sur les modèles MYM ; les autres peuvent avoir des modèles sur les deux.</span></div>
+      <span class="hint" style="margin:0">Cochez les modèles dont chaque superviseur s’occupe. Les superviseurs OnlyFans n’apparaissent que sur les modèles OF, les superviseurs MYM que sur les modèles MYM. Un superviseur polyvalent (MYM certains jours, OnlyFans d’autres) apparaît sur les deux, avec ses jours indiqués.</span></div>
     ${orphans.length ? `<div class="alert warn" style="margin:10px 0">${plural(orphans.length, 'modèle sans superviseur', 'modèles sans superviseur')} : ${orphans.map(m => `<strong>${esc(modelLabel(m))}</strong>`).join(', ')}</div>` : models.length ? '<div class="unplan ok" style="margin:10px 0">✓ Chaque modèle a au moins un superviseur.</div>' : ''}
     ${models.length && sups.length ? groups.map(x => `<h3 class="as-h" style="--gc:${x.g.color}"><span></span>Modèles ${short(x.g)} <span class="muted" style="font-weight:600;font-size:12.5px">· ${plural(x.ms.length, 'modèle', 'modèles')}</span></h3>
       <div class="tbl-wrap" style="max-height:none;margin-bottom:18px"><table class="assign"><thead><tr><th class="as-name">Superviseur</th>${x.ms.map(m => `<th class="as-m" style="box-shadow:inset 0 3px 0 ${x.g.color}" title="${esc(modelLabel(m))}">${esc(m.name)}</th>`).join('')}<th class="as-tot">Total ${short(x.g)}</th></tr></thead><tbody>
-      ${sups.filter(s => fits(s, x.g.id)).map(s => { const n = x.ms.filter(m => has(s.id, m.id)).length; return `<tr style="--sc:${s.color};--st:${textOn(s.color)}"><td class="as-name"><span class="g-dot" style="background:${s.color};width:12px;height:12px"></span><strong>${esc(s.name)}</strong>${s.focus ? ` <span class="platb" style="--tc:${platColor(s.focus)}">${esc(s.focus)}</span>` : ''}</td>
+      ${sups.filter(s => fits(s, x.g.id)).map(s => { const n = x.ms.filter(m => has(s.id, m.id)).length; return `<tr style="--sc:${s.color};--st:${textOn(s.color)}"><td class="as-name"><span class="g-dot" style="background:${s.color};width:12px;height:12px"></span><strong>${esc(s.name)}</strong>${focusKey(s.focus) ? ` <span class="platb" style="--tc:${SUP_PF[focusKey(s.focus)].color}">${SUP_PF[focusKey(s.focus)].label}</span>` : ''}${x.g.id !== 'other' && !supEligible(s, x.g.id) ? ` <span class="sfx" title="Sur ${x.g.id === 'of' ? 'OnlyFans' : 'MYM'} certains jours seulement">${s.days.map((t, d) => parseShift(t) && supDayFocus(s, d) === (x.g.id === 'of' ? 'OF' : 'MYM') ? PLAN_DAYS[d].toLowerCase() : '').filter(Boolean).join(', ')}</span>` : ''}</td>
         ${x.ms.map(m => `<td class="as-c"><label class="as-box ${has(s.id, m.id) ? 'on' : ''}" title="${esc(s.name)} · ${esc(modelLabel(m))}"><input type="checkbox" data-as="${s.id}|${m.id}" ${has(s.id, m.id) ? 'checked' : ''} aria-label="${esc(s.name)} s'occupe de ${esc(modelLabel(m))}"><span>✓</span></label></td>`).join('')}
         <td class="as-tot">${n ? `<strong>${plural(n, 'modèle', 'modèles')}</strong>` : '<span class="muted">—</span>'}</td></tr>`; }).join('')}
       </tbody><tfoot><tr><th class="as-name">Superviseurs</th>${x.ms.map(m => { const n = colN(m.id); return `<td class="as-c"><span class="as-n ${n ? '' : 'zero'}">${n}</span></td>`; }).join('')}<td></td></tr></tfoot></table></div>`).join('')
