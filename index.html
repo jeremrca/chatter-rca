@@ -274,6 +274,21 @@ tr.issue-error .issues{color:var(--red)}
 .ntabs a.on{color:#fff;border-color:var(--core);box-shadow:0 0 12px rgba(var(--g1-rgb),.5),inset 0 0 8px rgba(var(--g1-rgb),.25)}
 .nstack{display:flex;flex-direction:column;gap:14px}
 .nperiod{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.pswitch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:620px;margin:0 auto 22px}
+.psw{display:flex;align-items:center;justify-content:center;gap:14px;padding:18px 20px;border-radius:18px;text-decoration:none;color:rgba(255,255,255,.7);background:rgba(12,10,18,.7);border:2px solid rgba(255,255,255,.12);transition:transform .15s,box-shadow .2s,border-color .2s,color .2s,background .2s}
+.psw:hover{transform:translateY(-2px);color:#fff}
+.psw-b{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;font-weight:800;font-size:17px;color:#fff;background:rgba(255,255,255,.08)}
+.psw-t{font-size:22px;font-weight:800;letter-spacing:.02em}
+.psw.of:hover{border-color:rgba(56,189,248,.6)}
+.psw.mym:hover{border-color:rgba(244,114,182,.6)}
+.psw.of.on{color:#fff;border-color:#38bdf8;background:linear-gradient(135deg,rgba(56,189,248,.28),rgba(37,99,235,.22));box-shadow:0 0 22px rgba(56,189,248,.55),inset 0 0 14px rgba(56,189,248,.25)}
+.psw.of.on .psw-b{background:linear-gradient(135deg,#38bdf8,#2563eb);box-shadow:0 0 14px rgba(56,189,248,.7)}
+.psw.mym.on{color:#fff;border-color:#f472b6;background:linear-gradient(135deg,rgba(244,114,182,.28),rgba(219,39,119,.22));box-shadow:0 0 22px rgba(244,114,182,.55),inset 0 0 14px rgba(244,114,182,.25)}
+.psw.mym.on .psw-b{background:linear-gradient(135deg,#f472b6,#db2777);box-shadow:0 0 14px rgba(244,114,182,.7)}
+.psw.on .psw-t{text-shadow:0 0 10px currentColor}
+.neon .live-c.of.cur{border-color:#38bdf8}
+.neon .live-c.mym.cur{border-color:#f472b6}
+@media (max-width:560px){.pswitch{gap:10px}.psw{padding:14px 10px;gap:10px}.psw-b{width:38px;height:38px;font-size:15px}.psw-t{font-size:18px}}
 .pbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px}
 .pb-seg{display:flex;align-items:center;gap:2px;padding:5px;border-radius:14px;background:rgba(10,8,14,.72);border:1px solid rgba(255,255,255,.1);overflow-x:auto;max-width:100%}
 .pb-seg button{border:0;background:none;color:rgba(255,255,255,.62);font:inherit;font-weight:600;font-size:14px;padding:7px 13px;border-radius:10px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
@@ -351,7 +366,7 @@ tr.issue-error .issues{color:var(--red)}
 
 .nh-period.gold{color:#ffd23f}
 .nh-brand b{letter-spacing:.3px}
-.neon-hero.center{flex-direction:column;justify-content:center;text-align:center;gap:10px;margin:26px 0 30px}
+.neon-hero.center{flex-direction:column;justify-content:center;text-align:center;gap:10px;margin:18px 0 22px}
 .neon-hero.center .neon-title{font-size:44px}
 .neon-title.big{font-size:40px!important;letter-spacing:.5px;text-shadow:0 0 6px rgba(var(--g1-rgb),.6),0 0 22px rgba(var(--g1-rgb),.45)}
 .hero-sub{margin:0;color:rgba(255,255,255,.6);font-size:14px}
@@ -1885,22 +1900,23 @@ document.addEventListener('click', e => {
 // Pour ajouter une rubrique plus tard (ex. Planning), ajoutez-la à NAV_SECTIONS.
 const CHAT_PAGES = [['dashboard','Tableau de bord'],['chatters','Chatters'],['analytics',`Analyse d'équipe`],['history','Historique'],['import','Import'],['settings','Paramètres']];
 const NAV_SECTIONS = [
-  {id:'chat', label:'Analyse chatter', icon:'chatters', pages: CHAT_PAGES},
-  {id:'asv', label:'Analyse ASV', icon:'asv', link:'asv'}
+  {id:'chat', label:'Analyse chatter', icon:'chatters', pages: CHAT_PAGES}
 ];
 let navRt = null;
 function renderNav(rt) {
   navRt = rt;
   // La rubrique de la page ouverte est toujours dépliée
   for (const s of NAV_SECTIONS) if (s.pages && s.pages.some(([k]) => k === rt.page)) { const key = `${rt.pid}-${s.id}`; if (!ui.navOpen[key]) { ui.navOpen[key] = true; saveUI(); } }
-  const planOn = rt.page === 'planning', suiOn = rt.page === 'suivi', camOn = rt.page === 'cams', coOn = rt.page === 'coaching', orgOn = rt.page === 'org';
+  const planOn = rt.page === 'planning', suiOn = rt.page === 'suivi', camOn = rt.page === 'cams', coOn = rt.page === 'coaching', orgOn = rt.page === 'org', asvOn = rt.page === 'asv';
+  const asvPid = asvOn ? rt.pid : (asvUI.lastPid || 'mym');
   const pend = camsPending();
   document.getElementById('nav').innerHTML = `<div class="nav-group"><a href="#${rt.pid}/planning" class="nav-top ${planOn ? 'on' : ''}" ${planOn ? 'aria-current="page"' : ''} title="Planning de l'équipe">${icon('planning')}<span>Planning</span></a>
     <a href="#${rt.pid}/suivi" class="nav-top ${suiOn ? 'on' : ''}" ${suiOn ? 'aria-current="page"' : ''} title="Pénalités, réattributions et primes">${icon('suivi')}<span>Primes & Pénalités</span></a>
     <a href="#${rt.pid}/cams" class="nav-top ${camOn ? 'on' : ''}" ${camOn ? 'aria-current="page"' : ''} title="Gestion des cams et customs${pend.all.length ? ` · ${pend.all.length} en attente` : ''}">${icon('cams')}<span>Cam / Custom</span>${pend.all.length ? `<span class="nbadge ${pend.worst === 3 ? 'hot pulse' : pend.worst === 2 ? 'hot' : ''}">${pend.all.length}</span>` : ''}</a>
-    <a href="#${rt.pid}/coaching" class="nav-top ${coOn ? 'on' : ''}" ${coOn ? 'aria-current="page"' : ''} title="Chatters à accompagner cette semaine">${icon('coach')}<span>Suivi des chatters</span></a></div>` + PIDS.map(pid => {
+    <a href="#${rt.pid}/coaching" class="nav-top ${coOn ? 'on' : ''}" ${coOn ? 'aria-current="page"' : ''} title="Chatters à accompagner cette semaine">${icon('coach')}<span>Suivi des chatters</span></a>
+    <a href="#${asvPid}/asv/dashboard" class="nav-top ${asvOn ? 'on' : ''}" ${asvOn ? 'aria-current="page"' : ''} title="ASV OnlyFans et MYM">${icon('asv')}<span>ASV global</span></a></div>` + PIDS.map(pid => {
     const P = PLATFORMS[pid];
-    return `<div class="nav-group ${rt.pid === pid && !planOn && !suiOn && !camOn && !coOn && !orgOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
+    return `<div class="nav-group ${rt.pid === pid && !planOn && !suiOn && !camOn && !coOn && !orgOn && !asvOn ? 'cur' : ''}"><div class="nav-head">${pbadge(P)}<span>${P.name}</span></div>
       ${NAV_SECTIONS.map(s => {
         if (s.link) { const on = rt.pid === pid && rt.page === s.link; return `<a href="#${pid}/${s.link}" class="nav-top ${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''} title="${esc(s.label)} ${P.name}">${icon(s.icon)}<span>${esc(s.label)}</span></a>`; }
         const key = `${pid}-${s.id}`, open = !!ui.navOpen[key], inside = rt.pid === pid && s.pages.some(([k]) => k === rt.page);
@@ -2686,7 +2702,7 @@ const monthLabel = ym => { const [y, m] = ym.split('-').map(Number); return new 
 
 /* ---------- Fond néon-brique généré (spécification §6) ---------- */
 const NEON = {
-  of: {core:'#22d3ee', g1:'#38bdf8', g2:'#7c3aed', seed:11},
+  of: {core:'#38bdf8', g1:'#3b82f6', g2:'#1e3a8a', seed:11},
   mym: {core:'#f472b6', g1:'#ec4899', g2:'#7c3aed', seed:23},
   rank: {core:'#a78bfa', g1:'#a78bfa', g2:'#38bdf8', seed:37},
   priority: {core:'#fb923c', g1:'#f97316', g2:'#7c3aed', seed:41}
@@ -2759,7 +2775,8 @@ function defaultPeriod(pid) {
   if (last.start === `${ym}-16` && last.end === full.end) return {type:'half', a:ym, b:'2'};
   return {type:'custom', a:last.start, b:last.end};
 }
-const periodOf = pid => asvUI.period[pid] ||= defaultPeriod(pid);
+// OnlyFans et MYM partagent la période choisie : passer de l'un à l'autre garde les mêmes dates
+const periodOf = pid => { const o = asvUI.period[pid === 'of' ? 'mym' : 'of']; return asvUI.period[pid] ||= (o ? {...o} : defaultPeriod(pid)); };
 function rangeOf(pid) { const p = periodOf(pid); const r = ASVE.rangeFor(p.type, p.a, p.b); return r.start && r.end && r.end >= r.start ? r : null; }
 function monthOptions(pid, selected) {
   const set = new Set(ASVE.months(asvState.entries).concat(entriesOf(pid).map(e => e.start.slice(0, 7))));
@@ -2842,7 +2859,7 @@ function periodFromRange(a, b) {
 }
 let calDocBound = false;
 function bindPeriodBar(main, pid) {
-  const pres = asvPresets(), set = p => { asvUI.period[pid] = p; render(); };
+  const pres = asvPresets(), set = p => { for (const x of PIDS) asvUI.period[x] = {...p}; render(); };
   main.querySelectorAll('[data-pp]').forEach(b => b.addEventListener('click', () => set({...pres[+b.dataset.pp].p})));
   const open = main.querySelector('#pb-open'), pop = main.querySelector('#pb-pop'); if (!open) return;
   let view = (rangeOf(pid) || {start: isoOf(new Date())}).start.slice(0, 7), pick = null;
@@ -2861,27 +2878,30 @@ function bindPeriodBar(main, pid) {
   if (!calDocBound) { calDocBound = true; document.addEventListener('click', e => { const p = document.getElementById('pb-pop'); if (p && !p.hidden && !e.target.closest('.pb-date')) { p.hidden = true; document.getElementById('pb-open')?.setAttribute('aria-expanded', 'false'); } }); }
 }
 
-/* ---------- ASV moyen du mois en cours, OnlyFans et MYM (se met à jour à chaque import) ---------- */
-function asvMonthStats(pid, ym) {
-  const E = entriesOf(pid), mr = ASVE.monthRange(ym);
+/* ---------- ASV moyen OnlyFans et MYM sur la période choisie (suit la barre de période) ---------- */
+function asvRangeStats(pid, start, end) {
+  const E = entriesOf(pid);
   let f = 0, rv = 0, n = 0; const vals = [];
   for (const m of modelsOf(pid)) {
-    const a = ASVE.aggregate(E, m.id, mr.start, mr.end); if (!a || a.asv == null) continue;
+    const a = ASVE.aggregate(E, m.id, start, end); if (!a || a.asv == null) continue;
     n++; vals.push(a.asv); if (a.fans > 0 && a.revenue != null) { f += a.fans; rv += a.revenue; }
   }
-  const upTo = E.filter(e => e.start >= mr.start && e.end <= mr.end).reduce((x, e) => e.end > x ? e.end : x, '');
-  return n ? {n, asv: f > 0 ? rv / f : vals.reduce((a, x) => a + x, 0) / n, weighted: f > 0, mean: vals.reduce((a, x) => a + x, 0) / n, fans: f, upTo} : null;
+  const upTo = E.filter(e => e.start >= start && e.end <= end).reduce((x, e) => e.end > x ? e.end : x, '');
+  const mean = n ? vals.reduce((a, x) => a + x, 0) / n : null;
+  return n ? {n, asv: f > 0 ? rv / f : mean, weighted: f > 0, mean, upTo} : null;
 }
-function asvLiveHTML(curPid) {
-  const ym = isoOf(new Date()).slice(0, 7), pym = ymShift(ym, -1), mName = x => new Date(+x.slice(0, 4), +x.slice(5, 7) - 1, 1).toLocaleDateString('fr-FR', {month:'long'});
+function asvLiveHTML(curPid, r) {
+  if (!r) return '';
+  const pv = ASVE.previousRange(r.start, r.end), lbl = periodUpper(r).toLowerCase(), plbl = periodUpper(pv).toLowerCase();
   const card = pid => {
-    const P = PLATFORMS[pid], cur = asvMonthStats(pid, ym), prev = asvMonthStats(pid, pym), d = cur && prev ? ASVE.delta(cur.asv, prev.asv) : null;
-    return `<a class="nc live-c ${pid}${pid === curPid ? ' cur' : ''}" href="#${pid}/asv/dashboard" data-live="${pid}" title="Voir le classement ${P.name} de ${mName(ym)}">
-      <div class="live-h">${pbadge(P)}<span>ASV moyen ${P.name}</span><em>${esc(mName(ym))} en cours</em></div>
+    const P = PLATFORMS[pid], cur = asvRangeStats(pid, r.start, r.end), prev = asvRangeStats(pid, pv.start, pv.end), d = cur && prev ? ASVE.delta(cur.asv, prev.asv) : null;
+    const open = r.end >= isoOf(new Date()) && r.start <= isoOf(new Date());
+    return `<a class="nc live-c ${pid}${pid === curPid ? ' cur' : ''}" href="#${pid}/asv/dashboard" data-live="${pid}" title="Voir le classement ${P.name}">
+      <div class="live-h">${pbadge(P)}<span>ASV moyen ${P.name}</span><em>${esc(lbl)}${open ? ' · en cours' : ''}</em></div>
       ${cur ? `<div class="live-v">${fa(pid, cur.asv)}</div>
-        <div class="live-s">${deltaBadge(d)} <span class="muted">vs ${esc(mName(pym))}${prev ? ` (${fa(pid, prev.asv)})` : ''}</span></div>
+        <div class="live-s">${deltaBadge(d)} <span class="muted">vs ${esc(plbl)}${prev ? ` (${fa(pid, prev.asv)})` : ''}</span></div>
         <div class="live-f muted">${cur.weighted ? 'Pondéré par les nouveaux fans' : 'Moyenne des modèles'} · ${plural(cur.n, 'modèle', 'modèles')} · chiffres jusqu’au ${esc(fmtDayFr(cur.upTo))}${cur.weighted ? ` · moyenne simple ${fa(pid, cur.mean)}` : ''}</div>`
-      : `<div class="live-v muted" style="font-size:20px">Pas encore de chiffres</div><div class="live-f muted">${prev ? `${esc(mName(pym))} : ${fa(pid, prev.asv)} · ` : ''}importez la première quinzaine de ${esc(mName(ym))}.</div>`}
+      : `<div class="live-v muted" style="font-size:20px">Pas de chiffres sur cette période</div><div class="live-f muted">${prev ? `${esc(plbl)} : ${fa(pid, prev.asv)}` : 'Importez les chiffres dans « Saisie & import ».'}</div>`}
     </a>`;
   };
   return `<section class="live">${PIDS.map(card).join('')}</section>`;
@@ -2904,14 +2924,15 @@ function periodRows(pid, r) {
 const ASV_TABS = [['dashboard','Tableau de bord'],['objectifs','Objectifs'],['priorites','À prioriser'],['general','Classement général'],['modeles','Détail par modèle'],['saisie','Saisie & import'],['reglages','Réglages']];
 function neonShell(P, sub, body, withPeriod) {
   const r = rangeOf(P.id), global = sub === 'general' || sub === 'priorites';
-  const caption = sub === 'general' ? 'Suivi ASV · classement toutes plateformes' : sub === 'priorites' ? 'Suivi ASV · modèles à prioriser' : `Suivi ASV · ${P.name}`;
+  const caption = sub === 'general' ? 'ASV global · classement toutes plateformes' : sub === 'priorites' ? 'ASV global · modèles à prioriser' : `ASV global · ${P.name}`;
   const hero = sub === 'general' ? `<div class="neon-hero center"><h1 class="neon-title big">CLASSEMENT GÉNÉRAL</h1><p class="hero-sub">OnlyFans + MYM · meilleur au moins bon ASV</p></div>`
     : sub === 'priorites' ? `<div class="neon-hero center"><h1 class="neon-title big">MODÈLES À PRIORISER</h1><p class="hero-sub">OnlyFans + MYM · les plus loin de leur objectif en premier</p></div>`
-    : `<div class="neon-hero center">${pbadge(P, true)}<h1 class="neon-title">Analyse ASV <span>${P.name}</span></h1></div>`;
+    : `<div class="neon-hero center"><h1 class="neon-title">ASV <span>global</span></h1></div>`;
   return `<header class="nh"><div class="nh-brand"><b>REDES CONTENT AGENCY</b><span>${caption}</span></div>
       <div class="nh-period ${global ? 'gold' : ''}">${r ? esc(periodUpper(r)) : ''}</div></header>
-    <nav class="ntabs" aria-label="Sections ASV">${ASV_TABS.filter(t => t[0] !== 'reglages' || Sync.canManage()).map(([k, l]) => `<a href="#${P.id}/asv/${k}" class="${k === sub ? 'on' : ''}" ${k === sub ? 'aria-current="page"' : ''}>${l}</a>`).join('')}</nav>
     ${hero}
+    <div class="pswitch" role="group" aria-label="Plateforme">${PIDS.map(pid => `<a href="#${pid}/asv/${sub}" class="psw ${pid}${pid === P.id ? ' on' : ''}" data-psw="${pid}" ${pid === P.id ? 'aria-current="true"' : ''}><span class="psw-b">${PLATFORMS[pid].short}</span><span class="psw-t">${pid === 'of' ? 'OnlyFans' : 'MYM'}</span></a>`).join('')}</div>
+    <nav class="ntabs" aria-label="Sections ASV">${ASV_TABS.filter(t => t[0] !== 'reglages' || Sync.canManage()).map(([k, l]) => `<a href="#${P.id}/asv/${k}" class="${k === sub ? 'on' : ''}" ${k === sub ? 'aria-current="page"' : ''}>${l}</a>`).join('')}</nav>
     ${withPeriod ? periodBar(P.id) : ''}
     <div class="nstack">${body}</div>
     <footer class="nfoot">Suivi ASV — rapport généré automatiquement</footer>`;
@@ -2923,8 +2944,8 @@ function renderASV(main, P, sub) {
   const r = rangeOf(P.id);
   const needsData = ['dashboard','objectifs'].includes(sub);
   let body;
-  if (needsData && !hasData) body = (sub === 'dashboard' ? asvLiveHTML(P.id) : '') + `<section class="nc" style="text-align:center;padding:40px 20px"><h2 style="font-size:19px">Aucune donnée ASV ${P.name} pour l'instant</h2><p class="muted">Importez un tableau avec une colonne Modèle et une colonne ASV (les abonnés sont facultatifs), ou saisissez des chiffres à la main.</p><a class="btn primary" href="#${P.id}/asv/saisie">Importer des données</a></section>`;
-  else if (sub === 'dashboard') body = asvLiveHTML(P.id) + (r ? asvDashboard(P, r) : '');
+  if (needsData && !hasData) body = (sub === 'dashboard' ? asvLiveHTML(P.id, r) : '') + `<section class="nc" style="text-align:center;padding:40px 20px"><h2 style="font-size:19px">Aucune donnée ASV ${P.name} pour l'instant</h2><p class="muted">Importez un tableau avec une colonne Modèle et une colonne ASV (les abonnés sont facultatifs), ou saisissez des chiffres à la main.</p><a class="btn primary" href="#${P.id}/asv/saisie">Importer des données</a></section>`;
+  else if (sub === 'dashboard') body = asvLiveHTML(P.id, r) + (r ? asvDashboard(P, r) : '');
   else if (sub === 'objectifs') body = r ? asvObjectifs(P, r) : '';
   else if (sub === 'priorites') body = r ? asvPriorites(P, r) : '';
   else if (sub === 'general') body = r ? asvGeneral(P, r) : '';
@@ -2933,7 +2954,8 @@ function renderASV(main, P, sub) {
   else body = asvReglages(P);
   main.innerHTML = neonShell(P, sub, body, ['dashboard','objectifs','priorites','general'].includes(sub));
   bindPeriodBar(main, P.id);
-  main.querySelectorAll('[data-live]').forEach(a => a.addEventListener('click', () => { asvUI.period[a.dataset.live] = {type:'month', a:isoOf(new Date()).slice(0, 7), b:''}; }));
+  asvUI.lastPid = P.id;
+  main.querySelectorAll('[data-live],[data-psw]').forEach(a => a.addEventListener('click', () => { const to = a.dataset.live || a.dataset.psw; if (to !== P.id) asvUI.period[to] = {...periodOf(P.id)}; }));
   ({dashboard:bindAsvDashboard, modeles:bindAsvModeles, saisie:bindAsvSaisie, reglages:bindAsvReglages}[sub] || (() => {}))(main, P, r);
 }
 
