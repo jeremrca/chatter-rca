@@ -274,6 +274,45 @@ tr.issue-error .issues{color:var(--red)}
 .ntabs a.on{color:#fff;border-color:var(--core);box-shadow:0 0 12px rgba(var(--g1-rgb),.5),inset 0 0 8px rgba(var(--g1-rgb),.25)}
 .nstack{display:flex;flex-direction:column;gap:14px}
 .nperiod{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.fx-app{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+.fx-side{position:sticky;top:12px;display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 40px);background:var(--surface);border:1px solid var(--line-soft);border-radius:18px;padding:12px}
+.fx-search{width:100%;padding:10px 14px;border-radius:12px}
+.fx-seg{display:flex;gap:6px}.fx-seg button{flex:1;padding:7px 4px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
+.fx-seg button.on{background:var(--text);color:var(--bg);border-color:var(--text)}.fx-seg button.mym{color:#f472b6}.fx-seg button.of{color:#38bdf8}
+.fx-seg button.mym.on{background:#f472b6;color:#1a0612;border-color:#f472b6}.fx-seg button.of.on{background:#38bdf8;color:#04131d;border-color:#38bdf8}
+.fx-sort{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)}.fx-sort b{color:var(--text)}
+.linkbtn{background:none;border:0;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline}
+.fx-list{overflow:auto;flex:1;min-height:200px;margin:0 -4px;padding:0 4px}
+.fx-grp{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 6px 6px}
+.fx-it{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:12px;border:0;background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;margin-bottom:2px}
+.fx-it:hover{background:var(--raised)}.fx-it.sel{background:color-mix(in srgb,var(--pc) 16%,transparent);outline:1.5px solid color-mix(in srgb,var(--pc) 60%,transparent)}
+.fx-st{width:9px;height:9px;border-radius:50%;flex:none}.fx-st.r{background:#ef4444;box-shadow:0 0 8px #ef4444}.fx-st.a{background:#f59e0b}.fx-st.g{background:#22c55e}
+.fx-av{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:12.5px;flex:none;background:color-mix(in srgb,var(--pc) 20%,transparent);color:var(--pc)}
+.fx-tx{display:flex;flex-direction:column;min-width:0}.fx-tx .n{font-weight:800;font-size:14px}.fx-tx .d{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fx-gr{margin-left:auto;font-weight:900;font-size:16px}
+.fx-main{min-width:0}.fx-back{display:none;margin-bottom:10px}
+.fx-keys{font-size:12px;color:var(--muted);margin:10px 0 0}.fx-keys kbd{background:var(--raised);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11px}
+.fx-card{position:relative;max-width:560px;border-radius:26px;padding:22px;background:radial-gradient(120% 80% at 50% 0%,color-mix(in srgb,var(--pc) 26%,transparent),transparent 60%),linear-gradient(180deg,#1b1424,#0f0d15);border:1.5px solid color-mix(in srgb,var(--pc) 55%,transparent);box-shadow:0 0 40px color-mix(in srgb,var(--pc) 18%,transparent);color:#fff}
+.fx-top{display:flex;align-items:center;gap:16px}
+.fx-ava{width:76px;height:76px;border-radius:22px;display:grid;place-items:center;font-size:26px;font-weight:900;flex:none;background:linear-gradient(135deg,var(--pc),#a855f7);box-shadow:0 0 24px color-mix(in srgb,var(--pc) 55%,transparent)}
+.fx-nm{font-size:25px;font-weight:900;line-height:1.1}.fx-sub{color:#a1a1aa;font-size:13px;margin-top:5px}
+.fx-pill{display:inline-block;font-size:11px;font-weight:900;padding:1px 9px;border-radius:99px;background:var(--pc);color:#0b0b0f;margin-right:6px;letter-spacing:.04em}
+.fx-weak{display:inline-block;margin-top:6px;font-size:11px;font-weight:900;padding:2px 9px;border-radius:7px;background:linear-gradient(90deg,#ef4444,#f97316);text-transform:uppercase;letter-spacing:.04em}.fx-weak.new{background:#38bdf8;color:#04131d}
+.fx-grade{margin-left:auto;text-align:center;flex:none}.fx-grade b{display:block;font-size:46px;font-weight:900;line-height:1;color:#facc15;text-shadow:0 0 18px rgba(250,204,21,.6)}.fx-grade span{font-size:11px;color:#a1a1aa;font-weight:700}
+.fx-rings{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:20px 0 6px}
+.fx-ring{text-align:center}.fx-ring svg{width:84px;height:84px;max-width:100%}.fx-ring text{font-size:17px;font-weight:900;fill:#fff}.fx-ring p{margin:2px 0 0;font-size:12px;color:#a1a1aa;font-weight:700}
+.fx-note{font-size:11.5px;color:#8b8b95;text-align:center;margin:0 0 14px}
+.fx-pens{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.fx-pens span{font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fecaca}
+.fx-duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fx-box{border-radius:16px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.fx-box h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.fx-box.g h4{color:#22c55e}.fx-box.r h4{color:#fb7185}
+.fx-box span{display:block;font-size:13.5px;font-weight:700;margin:5px 0}
+.fx-goal{margin-top:12px;border-radius:16px;padding:12px 14px;background:linear-gradient(90deg,rgba(250,204,21,.16),rgba(250,204,21,.03));border:1px solid rgba(250,204,21,.4);font-size:14px}
+.fx-goal b{color:#facc15;display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}.fx-goal input{width:100%;background:rgba(0,0,0,.25)}.fx-goal small{display:block;margin-top:4px;color:#a1a1aa;font-size:11px}
+.fx-spark{display:flex;align-items:flex-end;gap:5px;height:46px;margin-top:16px}.fx-spark i{flex:1;border-radius:4px 4px 0 0;background:color-mix(in srgb,var(--pc) 35%,transparent)}.fx-spark i.last{background:var(--pc);box-shadow:0 0 12px var(--pc)}
+.fx-sl{display:flex;justify-content:space-between;font-size:11px;color:#a1a1aa;margin-top:4px}
+.glc-f{margin-left:6px;font-size:10px;font-weight:800;padding:0 5px;border-radius:5px;border:1px solid var(--line);color:var(--muted);cursor:pointer;vertical-align:middle}.glc-f:hover{color:var(--text);border-color:var(--text)}
+@media (max-width:900px){.fx-app{grid-template-columns:1fr}.fx-side{position:static;max-height:none}.fx-app.has-sel .fx-side{display:none}.fx-back{display:inline-flex}.fx-rings{grid-template-columns:repeat(2,1fr)}.fx-duo{grid-template-columns:1fr}}
 .kas{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin:-4px 0 8px;font-size:13px;color:var(--muted)}
 .kas.on{justify-content:flex-start;padding:10px 14px;border-radius:12px;border:1px solid var(--sc);background:linear-gradient(90deg,color-mix(in srgb,var(--sc) 22%,transparent),transparent);color:var(--text);font-size:14px}
 .kas.on select{margin-left:auto}
@@ -5079,7 +5118,7 @@ function promoModal(editId) {
    Partagé avec toute l'équipe (clé « suivi »). Les semaines de plus de 5 semaines sont supprimées automatiquement.
    ===================================================================== */
 const LS_SUIVI = 'rca.suivi.v1', LS_SUIVI_SUP = 'rca.suivi.sup';
-const SUIVI_KEEP_WEEKS = 5;
+const SUIVI_KEEP_WEEKS = 26;   // 6 mois : les fiches chatters affichent l'historique des pénalités
 let suiviState = (() => { const s = lsGet(LS_SUIVI, null) || {}; s.weeks ||= {}; return s; })();
 const saveSuivi = () => { lsSet(LS_SUIVI, suiviState); Sync.changed('suivi'); };
 const suiviUI = {week:null, tab:'pen', q:''};
@@ -5093,7 +5132,7 @@ const suiviList = (wk, kind) => Object.entries((suiviState.weeks[wk] || {})[kind
 const fmtDateFr = iso => iso ? parseDate(iso).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'}) : '';
 const saleAmount = s => { const nums = String(s || '').replace(/(\d)\s+(?=\d{3}\b)/g, '$1').match(/\d+(?:[.,]\d+)?/g); return nums ? nums.reduce((a, n) => a + parseFloat(n.replace(',', '.')), 0) : 0; };
 
-// Suppression automatique : on garde la semaine en cours et les 5 précédentes
+// Suppression automatique : on garde la semaine en cours et les 26 précédentes (6 mois)
 function purgeSuivi() {
   const cutoff = addDaysIso(mondayOf(isoOf(new Date())), -7 * SUIVI_KEEP_WEEKS);
   const old = Object.keys(suiviState.weeks).filter(k => k < cutoff);
@@ -5941,7 +5980,7 @@ function glCalendarHTML(wk) {
   const canMark = !coachAs() && (dir || (me && me.id === sup.id));
   const chip = it => { const s = glState(wk, it);
     return `<button type="button" class="glc ${it.type} ${s}" data-glfb="${esc(it.fbk)}" data-gld="${it.d}" ${canMark ? '' : 'disabled'} style="--pc:${SUP_PF[it.g === 'of' ? 'OF' : it.g === 'mym' ? 'MYM' : ''].color}" title="${s === 'done' ? 'Feedback fait · cliquez pour annuler' : canMark ? 'Cliquez quand le feedback est fait' : ''}">
-      <span class="glc-n">${s === 'done' ? '✓ ' : ''}${esc(it.name)}</span>${it.type === 'weak' ? '<span class="glc-w">Maillon faible</span>' : ''}<span class="glc-s">${esc(it.label)}</span>${s === 'very' ? '<span class="glc-l">en retard</span>' : s === 'late' ? '<span class="glc-l">d’hier</span>' : ''}</button>`; };
+      <span class="glc-n">${s === 'done' ? '✓ ' : ''}${esc(it.name)}<span class="glc-f" data-fxopen="${esc(it.type === 'weak' ? glKeyOfWeak(it.k, glWeak(wk)[it.k] || {}) || it.k : it.k)}" title="Ouvrir sa fiche">fiche</span></span>${it.type === 'weak' ? '<span class="glc-w">Maillon faible</span>' : ''}<span class="glc-s">${esc(it.label)}</span>${s === 'very' ? '<span class="glc-l">en retard</span>' : s === 'late' ? '<span class="glc-l">d’hier</span>' : ''}</button>`; };
   const todayIdx = PLAN_DAYS.findIndex((_, d) => addDaysIso(wk, d) === today);
   const todays = todayIdx >= 0 ? ag.days[todayIdx] : [], todo = todays.filter(x => glState(wk, x) !== 'done'), late = ag.days.flat().filter(x => ['late', 'very'].includes(glState(wk, x)));
   return `<div class="stack">
@@ -5960,6 +5999,7 @@ function glCalendarHTML(wk) {
 }
 function bindGlCalendar(main, wk) {
   main.querySelector('#gl-calsup')?.addEventListener('change', e => { coachUI.calSup = e.target.value; render(); });
+  main.querySelectorAll('.glc-f[data-fxopen]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); fxOpen(x.dataset.fxopen); }));
   main.querySelectorAll('[data-glfb]').forEach(b => b.addEventListener('click', async () => {
     const fbk = b.dataset.glfb, F = glFb(wk), k = fbk.split('|')[0];
     const sid = coachUI.calSup || (mySup() || {}).id, it = glAgenda(wk, supList().find(s => s.id === sid) || mySup()).days.flat().find(x => x.fbk === fbk);
@@ -6005,15 +6045,15 @@ function glBoardHTML(wk) {
     return `<article class="glcard" style="--sc:${s.color}"><header><span class="g-dot" style="background:${s.color}"></span><strong>${esc(s.name)}</strong>${pf.map(p => p ? `<span class="glpf" style="--pc:${SUP_PF[p].color}">${p === 'OF' ? 'OF' : SUP_PF[p].label}</span>` : '').join('')}${supAlso(s) && !pf.includes(supAlso(s)) ? `<span class="glpf also" style="--pc:${SUP_PF[supAlso(s)].color}" title="Peut aussi suivre quelques chatters ${SUP_PF[supAlso(s)].label} (${GL_ALSO_MAX} au plus)">+${supAlso(s) === 'OF' ? 'OF' : 'MYM'}</span>` : ''}<span class="glcount">${l.length}</span></header>
       <div class="glbar" title="Feedbacks faits cette semaine"><span style="width:${st.n ? Math.round(st.done / st.n * 100) : 0}%"></span></div><div class="sub" style="margin:2px 0 8px">${st.done}/${st.n} feedbacks faits${st.late ? ` · <span class="sc-lo">${st.late} en retard</span>` : ''}</div>
       <ul class="gllist">${l.map(([k, g]) => { const sh = ctx.sh(k), hit = q && normName(g.name).includes(q);
-        return `<li class="${hit ? 'hit' : ''} ${q && !hit ? 'dim' : ''}" ${dir ? `data-glmove="${esc(k)}" tabindex="0" role="button"` : ''}><span class="gln">${esc(g.name)}</span>${pfBadge(glPid(sh))}${weak[k] ? (weak[k].sup === s.id ? '<span class="rtag hot">faible</span>' : `<span class="rtag hot" title="Maillon faible cette semaine : c’est ${esc((sups.find(x => x.id === weak[k].sup) || {}).name || 'un autre superviseur')} qui fait ses feedbacks cette semaine">faible · ${esc((sups.find(x => x.id === weak[k].sup) || {}).name || '?')}</span>`) : ''}${g.since > (coachState.globalStart || '') && g.since >= addDaysIso(isoOf(new Date()), -7) ? '<span class="rtag ok">nouveau</span>' : ''}<span class="gls">${glWeeksSince(g.since)}</span></li>`; }).join('') || '<li class="muted">Aucun chatter</li>'}</ul></article>`; };
+        return `<li class="${hit ? 'hit' : ''} ${q && !hit ? 'dim' : ''}" data-fxopen="${esc(k)}" tabindex="0" role="button" title="Ouvrir la fiche"><span class="gln">${esc(g.name)}</span>${pfBadge(glPid(sh))}${weak[k] ? (weak[k].sup === s.id ? '<span class="rtag hot">faible</span>' : `<span class="rtag hot" title="Maillon faible cette semaine : c’est ${esc((sups.find(x => x.id === weak[k].sup) || {}).name || 'un autre superviseur')} qui fait ses feedbacks cette semaine">faible · ${esc((sups.find(x => x.id === weak[k].sup) || {}).name || '?')}</span>`) : ''}${g.since > (coachState.globalStart || '') && g.since >= addDaysIso(isoOf(new Date()), -7) ? '<span class="rtag ok">nouveau</span>' : ''}<span class="gls">${glWeeksSince(g.since)}</span></li>`; }).join('') || '<li class="muted">Aucun chatter</li>'}</ul></article>`; };
   return `<div class="stack">
     <section class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Qui suit qui · ${ent.length} chatters</h2>
       <input type="search" id="gl-q" value="${esc(coachUI.glq || '')}" placeholder="Rechercher un chatter…" style="margin-left:auto;width:240px">
-      <p class="hint" style="width:100%;margin:0">Chaque chatter garde son superviseur de semaine en semaine. Les nouveaux sont attribués automatiquement, les départs (« A quitté l’agence » dans Jours OFF) retirés. ${dir ? 'Cliquez sur un chatter pour changer son superviseur.' : ''}</p></section>
+      <p class="hint" style="width:100%;margin:0">Chaque chatter garde son superviseur de semaine en semaine. Les nouveaux sont attribués automatiquement, les départs (« A quitté l’agence » dans Jours OFF) retirés. Cliquez sur un chatter pour ouvrir sa fiche${dir ? ' (et changer son superviseur)' : ''}.</p></section>
     ${rev.length ? `<section class="panel alert warn"><h2 style="font-size:15px;margin:0 0 6px">À revoir · ${rev.length}</h2><p class="hint" style="margin:0 0 8px">Plus aucune heure en commun avec leur superviseur ces 2 dernières semaines (horaires ou plateforme changés).</p>
       ${rev.map(r => `<div class="glrev"><strong>${esc(r.name)}</strong> <span class="muted">suivi par ${esc(r.sup.name)}</span>${r.best ? ` → proposé : <strong>${esc(r.best.s.name)}</strong> <span class="muted">(${r.best.ov} h communes)</span> <button class="btn small-btn" type="button" data-glset="${esc(r.k)}|${r.best.s.id}">Changer</button>` : ' <span class="muted">· aucun superviseur sur ses horaires</span>'}</div>`).join('')}</section>` : ''}
     <div class="glgrid">${sups.map(card).join('')}
-      ${none.length ? `<article class="glcard none"><header><strong>Sans superviseur</strong><span class="glcount">${none.length}</span></header><p class="sub">Pas de shift au planning ces 2 dernières semaines : attribués dès qu’ils sont planifiés.</p><ul class="gllist">${none.map(k => `<li ${dir ? `data-glmove="${esc(k)}" tabindex="0" role="button"` : ''}><span class="gln">${esc(ctx.team.get(k))}</span></li>`).join('')}</ul></article>` : ''}</div></div>`;
+      ${none.length ? `<article class="glcard none"><header><strong>Sans superviseur</strong><span class="glcount">${none.length}</span></header><p class="sub">Pas de shift au planning ces 2 dernières semaines : attribués dès qu’ils sont planifiés.</p><ul class="gllist">${none.map(k => `<li data-fxopen="${esc(k)}" tabindex="0" role="button"><span class="gln">${esc(ctx.team.get(k))}</span></li>`).join('')}</ul></article>` : ''}</div></div>`;
 }
 function bindGlBoard(main, wk) {
   const done = msg => { saveCoach(); if (msg) toast(msg); const y = window.scrollY; render(); window.scrollTo(0, y); };
@@ -6021,7 +6061,10 @@ function bindGlBoard(main, wk) {
   const qi = main.querySelector('#gl-q'); let t;
   qi?.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { coachUI.glq = qi.value; render(); const n = document.getElementById('gl-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
   main.querySelectorAll('[data-glset]').forEach(b => b.addEventListener('click', () => { const [k, sid] = b.dataset.glset.split('|'); const G = coachGlobal(); G[k] = {...G[k], sup: sid, since: isoOf(new Date()), by: who(Sync.email()) || 'manuel'}; done('Superviseur changé.'); }));
-  const move = k => {
+  main.querySelectorAll('[data-fxopen]').forEach(li => { li.addEventListener('click', () => fxOpen(li.dataset.fxopen)); li.addEventListener('keydown', e => { if (e.key === 'Enter') fxOpen(li.dataset.fxopen); }); });
+}
+function glMoveModal(k) {
+  const done = msg => { saveCoach(); if (msg) toast(msg); const y = window.scrollY; render(); window.scrollTo(0, y); };
     const ctx = glContext(), G = coachGlobal(), cur = G[k], name = cur ? cur.name : ctx.team.get(k), shifts = ctx.sh(k);
     const pid = glPid(shifts), opts = ctx.sups.filter(s => glFits(s, pid)).map(s => ({s, ov: glOverlap(s, shifts.filter(x => !(pid === 'of' || pid === 'mym') || x.g === pid))})).sort((a, b) => b.ov - a.ov);
     const bg = document.createElement('div'); bg.className = 'modal-bg';
@@ -6038,19 +6081,203 @@ function bindGlBoard(main, wk) {
       bg.remove();
     });
     document.body.appendChild(bg);
-  };
-  main.querySelectorAll('[data-glmove]').forEach(li => { li.addEventListener('click', () => move(li.dataset.glmove)); li.addEventListener('keydown', e => { if (e.key === 'Enter') move(li.dataset.glmove); }); });
+  }
+/* =====================================================================
+   FICHES CHATTERS — liste à gauche, « carte joueur » à droite
+   Données : imports OF / MYM, planning (retards, ancienneté), Primes & pénalités, feedbacks, suivi global.
+   Objectif de la semaine : coachState.goals[clé] = {text, by, at, wk}
+   ===================================================================== */
+const FX_UK = {of: 'unlock', mym: 'conv'};
+let fxCache = null;
+// Index commun (recalculé au plus toutes les 20 s ou quand les données changent) : dernier résultat par chatter et plateforme, retards et pénalités des 4 dernières semaines
+function fxIndex() {
+  const stamp = [chronoPeriods('of').length, chronoPeriods('mym').length, Object.keys(planState.weeks).length, JSON.stringify(Object.keys(suiviState.weeks)).length, Object.values(suiviState.weeks).reduce((n, w) => n + Object.keys(w.pen || {}).length, 0)].join('|');
+  if (fxCache && fxCache.stamp === stamp && Date.now() - fxCache.at < 20000) return fxCache;
+  const R = nameResolver(), wk = glWeekNow(), roster = coachRoster(wk);
+  const keyOf = n => R.key(coachMatch(n, roster) || n);
+  const perf = {of: new Map(), mym: new Map()}, hist = {of: new Map(), mym: new Map()};
+  for (const pid of ['of', 'mym']) {
+    for (const p of chronoPeriods(pid)) {
+      const res = store.resultsFor(p); if (!res) continue;
+      const uv = res.results.map(r => r.row[FX_UK[pid]]).filter(v => v != null).sort((a, b) => a - b);
+      res.results.forEach((r, i) => {
+        const k = keyOf(r.name); if (!k) return;
+        const u = r.row[FX_UK[pid]], upct = u == null || !uv.length ? null : uv.filter(v => v < u).length / uv.length;   // part des chatters avec un unlock plus bas
+        perf[pid].set(k, {r, rank: i + 1, of: res.results.length, avg: res.stats.avg || {}, p, res, upct});
+        const h = hist[pid].get(k) || []; h.push({final: r.final, start: p.start, end: p.end}); hist[pid].set(k, h);
+      });
+    }
+  }
+  const late = new Map(), since = addDaysIso(wk, -28);
+  for (let i = 0; i < 4; i++) for (const [, r] of planIncidents(addDaysIso(wk, -7 * i))) { const k = R.key(r.name); const x = late.get(k) || {late: 0, abs: 0}; x.late += r.late; x.abs += r.abs; late.set(k, x); }
+  const pens = new Map();
+  for (const [w, W] of Object.entries(suiviState.weeks)) for (const [kind, map] of [['pen', W.pen || {}], ['pri', W.pri || {}]]) for (const e of Object.values(map)) {
+    const k = R.key(e.chatter || ''); if (!k) continue; const x = pens.get(k) || {pen: [], pri: []}; x[kind].push({...e, wk: w}); pens.set(k, x);
+  }
+  for (const x of pens.values()) for (const l of [x.pen, x.pri]) l.sort((a, b) => String(b.date || b.wk).localeCompare(String(a.date || a.wk)));
+  fxCache = {stamp, at: Date.now(), perf, hist, late, pens, since, R};
+  return fxCache;
 }
+// Ancienneté lisible : « depuis 5 jours », « depuis 1 mois », « depuis plus de 3 mois », « depuis plus d'un an »
+// bound : la date est le tout début de l'historique du site (planning ou imports) : le chatter est peut-être là depuis plus longtemps
+function fxSeniority(first, bound) {
+  if (!first) return '';
+  const days = Math.max(0, Math.round((parseDate(isoOf(new Date())) - parseDate(first)) / 864e5));
+  if (days >= 365) return 'depuis plus d’un an';
+  if (days < 30) return bound ? `depuis plus de ${plural(Math.max(1, days), 'jour', 'jours')}` : `depuis ${plural(Math.max(1, days), 'jour', 'jours')}`;
+  const m = Math.floor(days / 30.4);
+  return m < 2 ? (bound ? 'depuis plus d’un mois' : 'depuis 1 mois') : `depuis plus de ${m} mois`;
+}
+// Première trace du chatter : premier shift au planning ou premier import, le plus ancien des deux
+function fxFirstSeen(k, name) {
+  const weeks = Object.keys(planState.weeks).sort(), X = fxIndex();
+  let shift = null; for (const wk of weeks) { const sh = coachShifts(name, [wk]).filter(x => !x.dup); if (sh.length) { shift = addDaysIso(wk, Math.min(...sh.map(x => x.d))); break; } }
+  const imp = ['of', 'mym'].map(pid => (X.hist[pid].get(k) || [])[0]).filter(Boolean).map(h => h.start).filter(Boolean).sort()[0] || null;
+  const first = [shift, imp].filter(Boolean).sort()[0] || null;
+  const oldest = [weeks[0], ...['of', 'mym'].map(pid => (chronoPeriods(pid)[0] || {}).start)].filter(Boolean).sort();
+  const bound = !!first && !!oldest[0] && first <= addDaysIso(oldest[0], 6);   // première trace dans la 1re semaine d'historique
+  return {first, bound};
+}
+// Tout ce qu'il faut pour une fiche (et pour la pastille de la liste)
+function fxData(k, name) {
+  const X = fxIndex(), G = coachGlobal()[k], weak = glWeakByGlobal(glWeekNow())[k];
+  const both = ['of', 'mym'].filter(pid => X.perf[pid].has(k));
+  const latest = both.map(pid => ({pid, ...X.perf[pid].get(k)})).sort((a, b) => String(b.p.end || '').localeCompare(String(a.p.end || '')));
+  const main = latest[0] || null, pid = main ? main.pid : (glPid(glShifts(name, [glShiftWeek(glWeekNow())])) === 'of' ? 'of' : 'mym');
+  const P = PLATFORMS[pid], uk = FX_UK[pid];
+  const ca = main ? (main.r.row.revenue ?? main.r.row.total ?? null) : null;
+  const un = main ? main.r.row[uk] : null, unAvg = main ? main.avg[uk] : null;
+  const lt = X.late.get(k) || {late: 0, abs: 0}, pz = X.pens.get(k) || {pen: [], pri: []};
+  const pen4 = pz.pen.filter(e => (e.date || e.wk) >= X.since);
+  const tags = {}; for (const n of notesFor(k)) for (const t of n.tags || []) if (t !== 'fb') tags[t] = (tags[t] || 0) + 1;
+  const good = [], bad = [];
+  if (main && main.rank <= Math.ceil(main.of * 0.3)) good.push('💪 Gros vendeur');
+  if (main && main.upct != null && main.upct >= 0.7) good.push(pid === 'mym' ? '🔓 Bonne conversion' : '🔓 Bon unlock');
+  const upct = main ? main.upct : null;
+  if (upct != null && upct < 0.3) bad.push(pid === 'mym' ? '🔒 Conversion trop basse' : '🔒 Unlock trop bas');
+  if (lt.late + lt.abs >= 2) bad.push('⏰ Ponctualité');
+  if (pen4.length >= 3) bad.push('⚠️ Pénalités répétées');
+  if (main && main.rank > Math.floor(main.of * 0.8)) bad.push('📉 Ventes faibles');
+  for (const [t, n] of Object.entries(tags).sort((a, b) => b[1] - a[1])) { const [, l, c] = tagInfo(t); (c === 'good' ? good : bad).push(`${c === 'good' ? '✓' : '✗'} ${l}${n > 1 ? ` · ${n}` : ''}`); }
+  const h = (X.hist[pid].get(k) || []).slice(-8);
+  const trend = h.length >= 3 ? h[h.length - 1].final - (h[0].final + h[1].final) / 2 : 0;
+  // Pastille de la liste : rouge / orange / vert, avec la raison principale
+  let st = 'g', why = '';
+  if (pen4.length >= 3) { st = 'r'; why = `${pen4.length} pénalités en 4 semaines`; }
+  else if (upct != null && upct < 0.15) { st = 'r'; why = pid === 'mym' ? 'conversion trop basse' : 'unlock trop bas'; }
+  else if (weak) { st = 'r'; why = 'maillon faible cette semaine'; }
+  else if (lt.late + lt.abs >= 2) { st = 'a'; why = `${lt.late + lt.abs} retards / absences`; }
+  else if (pen4.length) { st = 'a'; why = pen4.length > 1 ? `${pen4.length} pénalités récentes` : '1 pénalité récente'; }
+  else if (upct != null && upct < 0.3) { st = 'a'; why = pid === 'mym' ? 'conversion un peu basse' : 'unlock un peu bas'; }
+  else if (trend > 5) why = 'en hausse ↗';
+  else if (trend < -5) { st = 'a'; why = 'en baisse ↘'; }
+  return {k, name, pid, both, P, main, ca, un, unAvg, uk, lt, pen4, pens: pz.pen, pri: pz.pri, good: good.slice(0, 3), bad: bad.slice(0, 3), h, trend, st, why, G, weak, isNew: isFlaggedNew(name)};
+}
+const fxInit = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+function fxRing(val, ratio, color, label) {
+  const c = 2 * Math.PI * 40, off = c * (1 - Math.max(0.04, Math.min(1, ratio)));
+  return `<div class="fx-ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9"/><circle cx="50" cy="50" r="40" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 50 50)"/><text x="50" y="57" text-anchor="middle">${esc(val)}</text></svg><p>${label}</p></div>`;
+}
+const FX_C = {g: '#22c55e', a: '#f59e0b', r: '#ef4444'};
+const fxShortMoney = (P, v) => v == null ? '—' : v >= 1000 ? `${nf(v / 1000, 0, 1)}k${P.currency}` : moneyP(P, v);
+function fxCardHTML(d, editable) {
+  const pc = d.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color, sup = d.G && supList().find(s => s.id === d.G.sup);
+  const wsup = d.weak && supList().find(s => s.id === d.weak.sup);
+  const fs = fxFirstSeen(d.k, d.name), first = fs.first, goal = (coachState.goals || {})[d.k];
+  const caRatio = d.main ? 1 - (d.main.rank - 1) / d.main.of : 0, caCol = !d.main ? '#52525b' : caRatio >= 0.6 ? FX_C.g : caRatio >= 0.3 ? FX_C.a : FX_C.r;
+  const up = d.main ? d.main.upct : null, unCol = up == null ? '#52525b' : up >= 0.5 ? FX_C.g : up >= 0.3 ? FX_C.a : FX_C.r;
+  const K = d.P.kpis.find(x => x.key === d.uk), unTxt = d.un == null ? '—' : `${nf(d.un, 0, 0)} %`;
+  const nl = d.lt.late + d.lt.abs, np = d.pen4.length;
+  const max = Math.max(1, ...d.h.map(x => x.final));
+  return `<article class="fx-card" style="--pc:${pc}">
+    <div class="fx-top"><div class="fx-ava">${esc(fxInit(d.name))}</div>
+      <div style="min-width:0"><div class="fx-nm">${esc(d.name)}</div>
+        <div class="fx-sub">${d.both.length > 1 ? `<span class="fx-pill" style="--pc:${SUP_PF.MYM.color}">MYM</span><span class="fx-pill" style="--pc:${SUP_PF.OF.color}">OF</span>` : `<span class="fx-pill">${d.pid === 'of' ? 'OF' : 'MYM'}</span>`}${first ? `Chez Redes ${fxSeniority(first, fs.bound)}` : 'Pas encore au planning'}${sup ? ` · suivi par ${esc(sup.name)}` : ''}</div>
+        ${d.weak ? `<div class="fx-weak">Maillon faible cette semaine${wsup ? ` · avec ${esc(wsup.name)}` : ''}</div>` : d.isNew ? '<div class="fx-weak new">Nouveau chatter</div>' : ''}</div>
+      <div class="fx-grade">${d.main ? `<b>${esc(d.main.r.grade)}</b><span>${d.main.rank}e / ${d.main.of}</span>` : '<b class="muted">—</b><span>pas d’import</span>'}</div></div>
+    <div class="fx-rings">
+      ${fxRing(fxShortMoney(d.P, d.ca), caRatio, caCol, 'Ventes')}
+      ${fxRing(unTxt, up == null ? 0 : Math.max(0.05, up), unCol, d.pid === 'mym' ? 'Conversion' : 'Unlock')}
+      ${fxRing(String(nl), nl / 5, nl === 0 ? FX_C.g : nl === 1 ? FX_C.a : FX_C.r, 'Retards')}
+      ${fxRing(String(np), np / 5, np === 0 ? FX_C.g : np <= 2 ? FX_C.a : FX_C.r, 'Pénalités')}</div>
+    <p class="fx-note">${d.main ? `Dernier import ${esc(fmtRange(d.main.p.start, d.main.p.end))}${d.unAvg ? ` · moyenne agence ${d.pid === 'mym' ? 'conversion' : 'unlock'} ${nf(d.unAvg, 0, 0)} %` : ''}` : 'Aucun import ne contient ce chatter.'} · retards et pénalités sur 4 semaines</p>
+    ${d.pens.length ? `<div class="fx-pens">${d.pens.slice(0, 2).map(e => `<span>${e.pts ? `−${nf(e.pts, 0, 1)} pts · ` : ''}${esc(fmtDayFr(e.date || e.wk))}${e.comment ? ` · ${esc(e.comment)}` : ''}</span>`).join('')}</div>` : ''}
+    <div class="fx-duo"><div class="fx-box g"><h4>Ses forces</h4>${d.good.map(x => `<span>${esc(x)}</span>`).join('') || '<span class="muted">Pas encore assez d’informations</span>'}</div>
+      <div class="fx-box r"><h4>À travailler</h4>${d.bad.map(x => `<span>${esc(x)}</span>`).join('') || '<span class="muted">Rien de particulier</span>'}</div></div>
+    <div class="fx-goal"><b>Objectif de la semaine</b>${editable ? `<input type="text" id="fx-goal" value="${esc(goal && goal.wk === glWeekNow() ? goal.text : '')}" placeholder="${goal && goal.wk !== glWeekNow() && goal.text ? esc(`Semaine dernière : ${goal.text}`) : 'Ex. passer l’unlock de 22 % à 28 % en relançant chaque PPV sous 10 min'}">` : `<span>${goal && goal.wk === glWeekNow() && goal.text ? esc(goal.text) : '<span class="muted">Pas encore fixé par le superviseur</span>'}</span>`}
+      ${goal && goal.wk === glWeekNow() && goal.text ? `<small>par ${esc(goal.by || '')}</small>` : ''}</div>
+    ${d.h.length >= 3 ? `<div class="fx-spark">${d.h.map((x, i) => `<i style="height:${Math.max(8, Math.round(x.final / max * 100))}%" title="${esc(fmtRange(x.start, x.end))} · score ${nf(x.final, 0, 1)}" class="${i === d.h.length - 1 ? 'last' : ''}"></i>`).join('')}</div>
+      <div class="fx-sl"><span>${plural(d.h.length, 'import', 'imports')}</span><span>${d.h.length < 3 ? 'score' : d.trend > 5 ? 'score en hausse ↗' : d.trend < -5 ? 'score en baisse ↘' : 'score stable'}</span></div>` : ''}
+    ${Sync.canDirect() && !coachAs() ? `<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small-btn" type="button" data-glmove="${esc(d.k)}">Changer de superviseur</button>${coachHistory(d.k).length ? `<button class="btn ghost small-btn" type="button" data-kall="${esc(d.k)}">Historique maillon faible</button>` : ''}</div>` : ''}
+  </article>`;
+}
+function fxPageHTML() {
+  coachLoadNotes();
+  const ctx = glContext(), me = mySup(), weakG = glWeakByGlobal(glWeekNow()), G = coachGlobal();
+  const mineKeys = me ? new Set([...Object.entries(G).filter(([, g]) => g.sup === me.id).map(([k]) => k), ...Object.entries(weakG).filter(([, w]) => w.sup === me.id).map(([k]) => k)]) : null;
+  const scope = coachUI.fscope || (mineKeys ? 'mine' : 'all'), pf = coachUI.fpf || '', q = normName(coachUI.fq || '');
+  let rows = [...ctx.team].map(([k, name]) => fxData(k, name));
+  const nMine = mineKeys ? rows.filter(d => mineKeys.has(d.k)).length : 0;
+  if (scope === 'mine' && mineKeys) rows = rows.filter(d => mineKeys.has(d.k));
+  if (pf) rows = rows.filter(d => d.pid === pf || d.both.includes(pf));
+  if (q) rows = rows.filter(d => normName(d.name).includes(q));
+  const order = {r: 0, a: 1, g: 2};
+  rows.sort(coachUI.fsort === 'az' ? (a, b) => a.name.localeCompare(b.name, 'fr') : (a, b) => order[a.st] - order[b.st] || a.name.localeCompare(b.name, 'fr'));
+  const sel = rows.find(d => d.k === coachUI.fsel) || (window.innerWidth > 900 ? rows[0] : null);
+  coachUI.fsel = sel ? sel.k : null; coachUI.fkeys = rows.map(d => d.k);
+  const item = d => `<button type="button" class="fx-it ${sel && sel.k === d.k ? 'sel' : ''}" data-fx="${esc(d.k)}" style="--pc:${d.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}"><span class="fx-st ${d.st}"></span><span class="fx-av">${esc(fxInit(d.name))}</span><span class="fx-tx"><span class="n">${esc(d.name)}</span><span class="d">${d.both.length > 1 ? 'MYM + OF' : d.pid === 'of' ? 'OF' : 'MYM'}${d.why ? ` · ${esc(d.why)}` : ''}</span></span><span class="fx-gr">${d.main ? esc(d.main.r.grade) : '—'}</span></button>`;
+  const grp = (st, label) => { const l = rows.filter(d => d.st === st); return l.length ? `<div class="fx-grp">${label} · ${l.length}</div>${l.map(item).join('')}` : ''; };
+  const editable = sel && !coachAs() && (Sync.canDirect() || (me && ((sel.G && sel.G.sup === me.id) || (sel.weak && sel.weak.sup === me.id))));
+  return `<div class="fx-app ${sel ? 'has-sel' : ''}">
+    <aside class="fx-side"><input type="search" id="fx-q" class="fx-search" value="${esc(coachUI.fq || '')}" placeholder="Rechercher un chatter… (2 lettres suffisent)">
+      <div class="fx-seg">${mineKeys ? `<button type="button" class="${scope === 'mine' ? 'on' : ''}" data-fscope="mine">Mes chatters · ${nMine}</button>` : ''}<button type="button" class="${scope === 'all' ? 'on' : ''}" data-fscope="all">Tous · ${ctx.team.size}</button></div>
+      <div class="fx-seg">${[['', 'MYM + OF'], ['mym', 'MYM'], ['of', 'OF']].map(([v, l]) => `<button type="button" class="${pf === v ? 'on' : ''} ${v}" data-fpf="${v}">${l}</button>`).join('')}</div>
+      <div class="fx-sort"><span>Trié par : <b>${coachUI.fsort === 'az' ? 'ordre alphabétique' : 'à surveiller d’abord'}</b></span><button type="button" class="linkbtn" data-fsort="${coachUI.fsort === 'az' ? '' : 'az'}">${coachUI.fsort === 'az' ? 'À surveiller d’abord' : 'A → Z'}</button></div>
+      <div class="fx-list">${coachUI.fsort === 'az' ? rows.map(item).join('') : grp('r', '🔴 À surveiller') + grp('a', '🟠 À garder à l’œil') + grp('g', '🟢 Tout va bien')}${rows.length ? '' : '<p class="hint" style="padding:10px">Aucun chatter.</p>'}</div></aside>
+    <section class="fx-main">${sel ? `<button type="button" class="btn ghost small-btn fx-back" data-fxback>← Liste</button>${fxCardHTML(sel, editable)}<p class="fx-keys"><kbd>↑</kbd> <kbd>↓</kbd> chatter précédent / suivant</p>` : '<div class="panel empty">Choisissez un chatter dans la liste.</div>'}</section></div>`;
+}
+function bindFx(main) {
+  const rr = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
+  main.querySelectorAll('[data-fx]').forEach(b => b.addEventListener('click', () => { coachUI.fsel = b.dataset.fx; rr(); if (window.innerWidth <= 900) window.scrollTo(0, 0); }));
+  main.querySelector('[data-fxback]')?.addEventListener('click', () => { coachUI.fsel = null; coachUI.fback = true; rr(); });
+  main.querySelectorAll('[data-fscope]').forEach(b => b.addEventListener('click', () => { coachUI.fscope = b.dataset.fscope; coachUI.fsel = null; rr(); }));
+  main.querySelectorAll('[data-fpf]').forEach(b => b.addEventListener('click', () => { coachUI.fpf = b.dataset.fpf; coachUI.fsel = null; rr(); }));
+  main.querySelectorAll('[data-fsort]').forEach(b => b.addEventListener('click', () => { coachUI.fsort = b.dataset.fsort; rr(); }));
+  const qi = main.querySelector('#fx-q'); let t;
+  qi?.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { coachUI.fq = qi.value; coachUI.fsel = null; render(); const n = document.getElementById('fx-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 200); });
+  const gi = main.querySelector('#fx-goal');
+  const saveGoal = () => { const k = coachUI.fsel, v = gi.value.trim(), cur = (coachState.goals || {})[k];
+    if (!v && !(cur && cur.wk === glWeekNow())) return;
+    if (v) (coachState.goals ||= {})[k] = {text: v, by: who(Sync.email()) || 'local', at: new Date().toISOString(), wk: glWeekNow()}; else delete coachState.goals[k];
+    saveCoach(); toast(v ? 'Objectif enregistré.' : 'Objectif effacé.'); };
+  gi?.addEventListener('change', saveGoal);
+  gi?.addEventListener('keydown', e => { if (e.key === 'Enter') gi.blur(); });
+  main.querySelectorAll('[data-kall]').forEach(b => b.addEventListener('click', () => coachDetail(b.dataset.kall)));
+  main.querySelectorAll('.fx-main [data-glmove]').forEach(b => b.addEventListener('click', () => glMoveModal(b.dataset.glmove)));
+}
+// Flèches ↑ ↓ : chatter précédent / suivant (seulement sur l'onglet Fiches, hors champ de saisie)
+document.addEventListener('keydown', e => {
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  if (route().page !== 'coaching' || coachUI.gtab !== 'fiches' || (coachUI.mode || 'global') !== 'global') return;
+  if (/input|textarea|select/i.test((document.activeElement || {}).tagName || '') || document.querySelector('.modal-bg')) return;
+  const l = coachUI.fkeys || [], i = l.indexOf(coachUI.fsel); if (!l.length) return;
+  const j = Math.max(0, Math.min(l.length - 1, (i < 0 ? 0 : i) + (e.key === 'ArrowDown' ? 1 : -1))); if (j === i) return;
+  e.preventDefault(); coachUI.fsel = l[j]; render();
+  document.querySelector('.fx-it.sel')?.scrollIntoView({block: 'nearest'});
+});
+// Ouvre la fiche d'un chatter depuis n'importe où dans le suivi
+function fxOpen(k) { coachUI.mode = 'global'; coachUI.gtab = 'fiches'; coachUI.fsel = k; coachUI.fq = ''; coachUI.fscope = 'all'; coachUI.fpf = ''; render(); window.scrollTo(0, 0); }
+
 function renderGlobal(main, wk, head) {
   // Mise à jour automatique (nouveaux / départs), seulement une fois les données partagées chargées
   if (Object.keys(coachGlobal()).length && glCanSync()) { const r = glSync(); if (r.add.length || r.rm.length || r.fix.length) saveCoach(); }
   const me = mySup(), dir = coachDir();
   const tab = coachUI.gtab || (me || !dir ? 'cal' : 'board');
-  const tabs = `<div class="ptopt" role="tablist">${[['cal', me ? 'Mon calendrier' : 'Calendrier des feedbacks'], ['board', 'Tous les chatters']].map(([k, l]) => `<button type="button" class="${tab === k ? 'on' : ''}" data-gtab="${k}">${l}</button>`).join('')}</div>`;
-  main.innerHTML = head + tabs + (tab === 'cal' ? glCalendarHTML(wk) : glBoardHTML(wk));
+  const tabs = `<div class="ptopt" role="tablist">${[['cal', me ? 'Mon calendrier' : 'Calendrier des feedbacks'], ['fiches', 'Fiches chatters'], ['board', 'Tous les chatters']].map(([k, l]) => `<button type="button" class="${tab === k ? 'on' : ''}" data-gtab="${k}">${l}</button>`).join('')}</div>`;
+  main.innerHTML = head + tabs + (tab === 'cal' ? glCalendarHTML(wk) : tab === 'fiches' ? fxPageHTML() : glBoardHTML(wk));
   bindCoachHead(wk);
   main.querySelectorAll('[data-gtab]').forEach(b => b.addEventListener('click', () => { coachUI.gtab = b.dataset.gtab; render(); }));
-  if (tab === 'cal') bindGlCalendar(main, wk); else bindGlBoard(main, wk);
+  if (tab === 'cal') bindGlCalendar(main, wk); else if (tab === 'fiches') bindFx(main); else bindGlBoard(main, wk);
 }
 
 /* ---------- Page ---------- */
@@ -6500,7 +6727,7 @@ const Sync = (() => {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
     } else if (key === 'coaching') {
-      syncInPlace(coachState, {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(data && data.ignore ? {ignore: data.ignore} : {}), ...(data && data.global ? {global: data.global} : {}), ...(data && data.fb ? {fb: data.fb} : {}), ...(data && data.globalStart ? {globalStart: data.globalStart} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}); lsSet(LS_COACH, coachState);
+      syncInPlace(coachState, {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(data && data.ignore ? {ignore: data.ignore} : {}), ...(data && data.global ? {global: data.global} : {}), ...(data && data.fb ? {fb: data.fb} : {}), ...(data && data.globalStart ? {globalStart: data.globalStart} : {}), ...(data && data.goals ? {goals: data.goals} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}); lsSet(LS_COACH, coachState);
     } else if (key === 'cams') {
       syncInPlace(camsState, {items: (data && data.items) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {})}); lsSet(LS_CAMS, camsState);
     } else if (key === 'suivi') {
