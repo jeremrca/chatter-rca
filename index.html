@@ -302,6 +302,11 @@ tr.issue-error .issues{color:var(--red)}
 .fx-rings{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:20px 0 6px}
 .fx-ring{text-align:center}.fx-ring svg{width:84px;height:84px;max-width:100%}.fx-ring text{font-size:17px;font-weight:900;fill:#fff}.fx-ring p{margin:2px 0 0;font-size:12px;color:#a1a1aa;font-weight:700}
 .fx-note{font-size:11.5px;color:#8b8b95;text-align:center;margin:0 0 14px}
+.fx-per{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 0}
+.fx-per button{padding:5px 11px;border-radius:99px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#d4d4d8;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.fx-per button.on{background:var(--pc);border-color:var(--pc);color:#0b0b0f}
+.fx-expl{display:flex;flex-direction:column;gap:3px;margin:2px 0 14px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-size:12.5px;color:#d4d4d8}
+.fx-expl b{color:#fff}.fx-expl strong{color:#fff}.fx-expl .sc-hi{color:#4ade80}.fx-expl .sc-lo{color:#f87171}
 .fx-pens{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.fx-pens span{font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fecaca}
 .fx-duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fx-box{border-radius:16px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
@@ -6094,7 +6099,7 @@ function fxIndex() {
   const stamp = [chronoPeriods('of').length, chronoPeriods('mym').length, Object.keys(planState.weeks).length, JSON.stringify(Object.keys(suiviState.weeks)).length, Object.values(suiviState.weeks).reduce((n, w) => n + Object.keys(w.pen || {}).length, 0)].join('|');
   if (fxCache && fxCache.stamp === stamp && Date.now() - fxCache.at < 20000) return fxCache;
   const R = nameResolver(), wk = glWeekNow(), roster = coachRoster(wk);
-  const keyOf = n => R.key(coachMatch(n, roster) || n);
+  const km = new Map(), keyOf = n => { if (!km.has(n)) km.set(n, R.key(coachMatch(n, roster) || n)); return km.get(n); };
   const perf = {of: new Map(), mym: new Map()}, hist = {of: new Map(), mym: new Map()};
   for (const pid of ['of', 'mym']) {
     for (const p of chronoPeriods(pid)) {
@@ -6115,10 +6120,52 @@ function fxIndex() {
     const k = R.key(e.chatter || ''); if (!k) continue; const x = pens.get(k) || {pen: [], pri: []}; x[kind].push({...e, wk: w}); pens.set(k, x);
   }
   for (const x of pens.values()) for (const l of [x.pen, x.pri]) l.sort((a, b) => String(b.date || b.wk).localeCompare(String(a.date || a.wk)));
-  fxCache = {stamp, at: Date.now(), perf, hist, late, pens, since, R};
+  fxCache = {stamp, at: Date.now(), perf, hist, late, pens, since, R, keyOf, ranges: new Map()};
   return fxCache;
 }
 // Ancienneté lisible : « depuis 5 jours », « depuis 1 mois », « depuis plus de 3 mois », « depuis plus d'un an »
+/* ---------- Période choisie sur la fiche : semaine dernière, 4 semaines, un mois, tout l'historique ---------- */
+// Imports hebdomadaires sans doublon (un même import chargé plusieurs fois ne compte qu'une fois ; les imports longs qui chevauchent des semaines sont écartés)
+function fxWeeks(pid) {
+  const all = chronoPeriods(pid).filter(p => p.start && p.end), byKey = new Map();
+  for (const p of all) { const k = `${p.start}|${p.end}`, cur = byKey.get(k); if (!cur || (p.createdAt || 0) > (cur.createdAt || 0)) byKey.set(k, p); }
+  const list = [...byKey.values()].sort((a, b) => a.start.localeCompare(b.start)), dur = p => Math.round((parseDate(p.end) - parseDate(p.start)) / 864e5) + 1;
+  const weekly = list.filter(p => dur(p) <= 8);
+  return weekly.filter(p => !weekly.some(q => q !== p && q.start < p.end && q.end > p.start && dur(q) < dur(p)));
+}
+const fxMonthOf = p => addDaysIso(p.start, 3).slice(0, 7);   // une semaine compte dans le mois qui contient son jeudi
+const FX_MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const fxMonthName = ym => FX_MONTHS[+ym.slice(5, 7) - 1];
+// Choix proposés : [{id, label, weeks:[périodes], prev:[périodes de comparaison], prevLabel}]
+function fxRanges(pid) {
+  const W = fxWeeks(pid), out = [];
+  if (!W.length) return out;
+  out.push({id: 'w1', label: 'Semaine dernière', weeks: W.slice(-1), prev: W.slice(-2, -1), prevLabel: 'la semaine d’avant'});
+  if (W.length >= 2) out.push({id: 'w4', label: '4 dernières semaines', weeks: W.slice(-4), prev: W.slice(-8, -4), prevLabel: 'les 4 semaines d’avant'});
+  const months = [...new Set(W.map(fxMonthOf))].sort().reverse().slice(0, 4), cur = isoOf(new Date()).slice(0, 7);
+  months.forEach((ym, i) => { const prevYm = months[i + 1];
+    out.push({id: `m${ym}`, label: `${fxMonthName(ym).replace(/^./, c => c.toUpperCase())}${ym === cur ? ' (en cours)' : ''}`, weeks: W.filter(p => fxMonthOf(p) === ym), prev: prevYm ? W.filter(p => fxMonthOf(p) === prevYm) : [], prevLabel: prevYm ? fxMonthName(prevYm) : ''}); });
+  if (W.length > 4) out.push({id: 'all', label: 'Tout l’historique', weeks: W, prev: [], prevLabel: ''});
+  return out;
+}
+// Résultats combinés d'un ensemble de semaines (mis en cache)
+function fxCombined(pid, weeks) {
+  if (!weeks.length) return null;
+  const X = fxIndex(), key = `${pid}|${weeks.map(p => p.id).join(',')}`;
+  if (X.ranges.has(key)) return X.ranges.get(key);
+  const p = weeks.length === 1 ? weeks[0] : RCA.combinePeriods(pid, weeks, {id: `fx:${key}`, name: fmtRange(weeks[0].start, weeks[weeks.length - 1].end), start: weeks[0].start, end: weeks[weeks.length - 1].end});
+  const res = store.resultsFor(p); if (!res) return null;
+  const uk = FX_UK[pid], uv = res.results.map(r => r.row[uk]).filter(v => v != null).sort((a, b) => a - b);
+  const idx = new Map(); res.results.forEach((r, i) => { const k = X.keyOf(r.name); if (k && !idx.has(k)) idx.set(k, {r, rank: i + 1}); });
+  const out = {p, res, idx, uv, n: weeks.length}; X.ranges.set(key, out); return out;
+}
+function fxPerfIn(k, pid, weeks) {
+  const c = fxCombined(pid, weeks); if (!c) return null;
+  const x = c.idx.get(k); if (!x) return {p: c.p, n: c.n, missing: true};
+  const u = x.r.row[FX_UK[pid]];
+  return {r: x.r, rank: x.rank, of: c.res.results.length, avg: c.res.stats.avg || {}, p: c.p, n: c.n, upct: u == null || !c.uv.length ? null : c.uv.filter(v => v < u).length / c.uv.length,
+    weeksIn: weeks.filter(w => { const one = fxCombined(pid, [w]); return one && one.idx.has(k); }).length};
+}
 // bound : la date est le tout début de l'historique du site (planning ou imports) : le chatter est peut-être là depuis plus longtemps
 function fxSeniority(first, bound) {
   if (!first) return '';
@@ -6151,13 +6198,9 @@ function fxData(k, name) {
   const pen4 = pz.pen.filter(e => (e.date || e.wk) >= X.since);
   const tags = {}; for (const n of notesFor(k)) for (const t of n.tags || []) if (t !== 'fb') tags[t] = (tags[t] || 0) + 1;
   const good = [], bad = [];
-  if (main && main.rank <= Math.ceil(main.of * 0.3)) good.push('💪 Gros vendeur');
-  if (main && main.upct != null && main.upct >= 0.7) good.push(pid === 'mym' ? '🔓 Bonne conversion' : '🔓 Bon unlock');
   const upct = main ? main.upct : null;
-  if (upct != null && upct < 0.3) bad.push(pid === 'mym' ? '🔒 Conversion trop basse' : '🔒 Unlock trop bas');
   if (lt.late + lt.abs >= 2) bad.push('⏰ Ponctualité');
   if (pen4.length >= 3) bad.push('⚠️ Pénalités répétées');
-  if (main && main.rank > Math.floor(main.of * 0.8)) bad.push('📉 Ventes faibles');
   for (const [t, n] of Object.entries(tags).sort((a, b) => b[1] - a[1])) { const [, l, c] = tagInfo(t); (c === 'good' ? good : bad).push(`${c === 'good' ? '✓' : '✗'} ${l}${n > 1 ? ` · ${n}` : ''}`); }
   const h = (X.hist[pid].get(k) || []).slice(-8);
   const trend = h.length >= 3 ? h[h.length - 1].final - (h[0].final + h[1].final) / 2 : 0;
@@ -6173,6 +6216,15 @@ function fxData(k, name) {
   else if (trend < -5) { st = 'a'; why = 'en baisse ↘'; }
   return {k, name, pid, both, P, main, ca, un, unAvg, uk, lt, pen4, pens: pz.pen, pri: pz.pri, good: good.slice(0, 3), bad: bad.slice(0, 3), h, trend, st, why, G, weak, isNew: isFlaggedNew(name)};
 }
+// Forces et points à travailler tirés des chiffres de la période choisie
+function fxPerfTags(M, pid) {
+  const good = [], bad = []; if (!M) return {good, bad};
+  if (M.rank <= Math.ceil(M.of * 0.3)) good.push('💪 Gros vendeur');
+  if (M.upct != null && M.upct >= 0.7) good.push(pid === 'mym' ? '🔓 Bonne conversion' : '🔓 Bon unlock');
+  if (M.upct != null && M.upct < 0.3) bad.push(pid === 'mym' ? '🔒 Conversion trop basse' : '🔒 Unlock trop bas');
+  if (M.rank > Math.floor(M.of * 0.8)) bad.push('📉 Ventes faibles');
+  return {good, bad};
+}
 const fxInit = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
 function fxRing(val, ratio, color, label) {
   const c = 2 * Math.PI * 40, off = c * (1 - Math.max(0.04, Math.min(1, ratio)));
@@ -6184,9 +6236,19 @@ function fxCardHTML(d, editable) {
   const pc = d.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color, sup = d.G && supList().find(s => s.id === d.G.sup);
   const wsup = d.weak && supList().find(s => s.id === d.weak.sup);
   const fs = fxFirstSeen(d.k, d.name), first = fs.first, goal = (coachState.goals || {})[d.k];
-  const caRatio = d.main ? 1 - (d.main.rank - 1) / d.main.of : 0, caCol = !d.main ? '#52525b' : caRatio >= 0.6 ? FX_C.g : caRatio >= 0.3 ? FX_C.a : FX_C.r;
-  const up = d.main ? d.main.upct : null, unCol = up == null ? '#52525b' : up >= 0.5 ? FX_C.g : up >= 0.3 ? FX_C.a : FX_C.r;
-  const K = d.P.kpis.find(x => x.key === d.uk), unTxt = d.un == null ? '—' : `${nf(d.un, 0, 0)} %`;
+  // Période choisie (gardée d'un chatter à l'autre) : ventes, unlock, note et rang sont calculés sur ces semaines d'import
+  const ranges = fxRanges(d.pid), rg = ranges.find(x => x.id === coachUI.fper) || ranges[0];
+  const pf = rg ? fxPerfIn(d.k, d.pid, rg.weeks) : null, M = pf && !pf.missing ? pf : null;
+  const pv = rg && rg.prev.length ? fxPerfIn(d.k, d.pid, rg.prev) : null, MV = pv && !pv.missing ? pv : null;
+  const caOf = x => x ? (x.r.row.revenue ?? x.r.row.total ?? null) : null, ca = caOf(M), caPrev = caOf(MV);
+  // Périodes de longueurs différentes (mois en cours, absences) : on compare le CA moyen par semaine travaillée
+  const perWeek = !!(M && MV) && (M.weeksIn !== MV.weeksIn || rg.weeks.length !== rg.prev.length);
+  const cmpA = perWeek ? ca / Math.max(1, M.weeksIn) : ca, cmpB = perWeek ? caPrev / Math.max(1, MV.weeksIn) : caPrev;
+  const evo = ca != null && cmpB ? Math.round((cmpA - cmpB) / cmpB * 100) : null;
+  const un = M ? M.r.row[d.uk] : null, unAvg = M ? M.avg[d.uk] : null;
+  const caRatio = M ? 1 - (M.rank - 1) / M.of : 0, caCol = !M ? '#52525b' : caRatio >= 0.6 ? FX_C.g : caRatio >= 0.3 ? FX_C.a : FX_C.r;
+  const up = M ? M.upct : null, unCol = up == null ? '#52525b' : up >= 0.5 ? FX_C.g : up >= 0.3 ? FX_C.a : FX_C.r;
+  const unTxt = un == null ? '—' : `${nf(un, 0, 0)} %`;
   const nl = d.lt.late + d.lt.abs, np = d.pen4.length;
   const max = Math.max(1, ...d.h.map(x => x.final));
   return `<article class="fx-card" style="--pc:${pc}">
@@ -6194,16 +6256,20 @@ function fxCardHTML(d, editable) {
       <div style="min-width:0"><div class="fx-nm">${esc(d.name)}</div>
         <div class="fx-sub">${d.both.length > 1 ? `<span class="fx-pill" style="--pc:${SUP_PF.MYM.color}">MYM</span><span class="fx-pill" style="--pc:${SUP_PF.OF.color}">OF</span>` : `<span class="fx-pill">${d.pid === 'of' ? 'OF' : 'MYM'}</span>`}${first ? `Chez Redes ${fxSeniority(first, fs.bound)}` : 'Pas encore au planning'}${sup ? ` · suivi par ${esc(sup.name)}` : ''}</div>
         ${d.weak ? `<div class="fx-weak">Maillon faible cette semaine${wsup ? ` · avec ${esc(wsup.name)}` : ''}</div>` : d.isNew ? '<div class="fx-weak new">Nouveau chatter</div>' : ''}</div>
-      <div class="fx-grade">${d.main ? `<b>${esc(d.main.r.grade)}</b><span>${d.main.rank}e / ${d.main.of}</span>` : '<b class="muted">—</b><span>pas d’import</span>'}</div></div>
+      <div class="fx-grade">${M ? `<b>${esc(M.r.grade)}</b><span>${M.rank}e / ${M.of}</span>` : '<b class="muted">—</b><span>pas sur cette période</span>'}</div></div>
+    ${ranges.length ? `<div class="fx-per">${ranges.map(x => `<button type="button" class="${x === rg ? 'on' : ''}" data-fper="${x.id}">${esc(x.label)}</button>`).join('')}</div>` : ''}
     <div class="fx-rings">
-      ${fxRing(fxShortMoney(d.P, d.ca), caRatio, caCol, 'Ventes')}
+      ${fxRing(fxShortMoney(d.P, ca), caRatio, caCol, 'Ventes')}
       ${fxRing(unTxt, up == null ? 0 : Math.max(0.05, up), unCol, d.pid === 'mym' ? 'Conversion' : 'Unlock')}
       ${fxRing(String(nl), nl / 5, nl === 0 ? FX_C.g : nl === 1 ? FX_C.a : FX_C.r, 'Retards')}
       ${fxRing(String(np), np / 5, np === 0 ? FX_C.g : np <= 2 ? FX_C.a : FX_C.r, 'Pénalités')}</div>
-    <p class="fx-note">${d.main ? `Dernier import ${esc(fmtRange(d.main.p.start, d.main.p.end))}${d.unAvg ? ` · moyenne agence ${d.pid === 'mym' ? 'conversion' : 'unlock'} ${nf(d.unAvg, 0, 0)} %` : ''}` : 'Aucun import ne contient ce chatter.'} · retards et pénalités sur 4 semaines</p>
+    <div class="fx-expl">${rg ? `<b>${esc(rg.label)}</b> · ${esc(fmtRange(rg.weeks[0].start, rg.weeks[rg.weeks.length - 1].end))} · ${plural(rg.weeks.length, 'semaine d’import', 'semaines d’import')}${M && M.weeksIn < rg.weeks.length ? ` <span class="muted">(présent ${M.weeksIn} sur ${rg.weeks.length})</span>` : ''}` : 'Aucun import'}
+      ${M ? `<span>Ventes : <strong>${esc(moneyP(d.P, ca))}</strong> de CA total sur la période${M.weeksIn > 1 ? ` (${esc(moneyP(d.P, ca / M.weeksIn))} par semaine)` : ''}${evo != null ? ` · <strong class="${evo >= 0 ? 'sc-hi' : 'sc-lo'}">${evo > 0 ? '+' : ''}${evo} %</strong> vs ${esc(rg.prevLabel)}${perWeek ? ' (en moyenne par semaine travaillée)' : ''}` : ''}</span>
+        <span>${d.pid === 'mym' ? 'Conversion' : 'Unlock'} : <strong>${unTxt}</strong>${unAvg ? ` · moyenne de l’agence ${nf(unAvg, 0, 0)} %` : ''} · note ${esc(M.r.grade)}, ${M.rank}e sur ${M.of} chatters</span>` : `<span class="muted">${esc(d.name)} n’apparaît dans aucun import de cette période.</span>`}
+      <span class="muted">Retards et pénalités : 4 dernières semaines.</span></div>
     ${d.pens.length ? `<div class="fx-pens">${d.pens.slice(0, 2).map(e => `<span>${e.pts ? `−${nf(e.pts, 0, 1)} pts · ` : ''}${esc(fmtDayFr(e.date || e.wk))}${e.comment ? ` · ${esc(e.comment)}` : ''}</span>`).join('')}</div>` : ''}
-    <div class="fx-duo"><div class="fx-box g"><h4>Ses forces</h4>${d.good.map(x => `<span>${esc(x)}</span>`).join('') || '<span class="muted">Pas encore assez d’informations</span>'}</div>
-      <div class="fx-box r"><h4>À travailler</h4>${d.bad.map(x => `<span>${esc(x)}</span>`).join('') || '<span class="muted">Rien de particulier</span>'}</div></div>
+    <div class="fx-duo"><div class="fx-box g"><h4>Ses forces</h4>${[...fxPerfTags(M, d.pid).good, ...d.good].slice(0, 3).map(x => `<span>${esc(x)}</span>`).join('') || '<span class="muted">Pas encore assez d’informations</span>'}</div>
+      <div class="fx-box r"><h4>À travailler</h4>${[...fxPerfTags(M, d.pid).bad, ...d.bad].slice(0, 3).map(x => `<span>${esc(x)}</span>`).join('') || '<span class="muted">Rien de particulier</span>'}</div></div>
     <div class="fx-goal"><b>Objectif de la semaine</b>${editable ? `<input type="text" id="fx-goal" value="${esc(goal && goal.wk === glWeekNow() ? goal.text : '')}" placeholder="${goal && goal.wk !== glWeekNow() && goal.text ? esc(`Semaine dernière : ${goal.text}`) : 'Ex. passer l’unlock de 22 % à 28 % en relançant chaque PPV sous 10 min'}">` : `<span>${goal && goal.wk === glWeekNow() && goal.text ? esc(goal.text) : '<span class="muted">Pas encore fixé par le superviseur</span>'}</span>`}
       ${goal && goal.wk === glWeekNow() && goal.text ? `<small>par ${esc(goal.by || '')}</small>` : ''}</div>
     ${d.h.length >= 3 ? `<div class="fx-spark">${d.h.map((x, i) => `<i style="height:${Math.max(8, Math.round(x.final / max * 100))}%" title="${esc(fmtRange(x.start, x.end))} · score ${nf(x.final, 0, 1)}" class="${i === d.h.length - 1 ? 'last' : ''}"></i>`).join('')}</div>
@@ -6252,6 +6318,7 @@ function bindFx(main) {
     saveCoach(); toast(v ? 'Objectif enregistré.' : 'Objectif effacé.'); };
   gi?.addEventListener('change', saveGoal);
   gi?.addEventListener('keydown', e => { if (e.key === 'Enter') gi.blur(); });
+  main.querySelectorAll('[data-fper]').forEach(b => b.addEventListener('click', () => { coachUI.fper = b.dataset.fper; rr(); }));
   main.querySelectorAll('[data-kall]').forEach(b => b.addEventListener('click', () => coachDetail(b.dataset.kall)));
   main.querySelectorAll('.fx-main [data-glmove]').forEach(b => b.addEventListener('click', () => glMoveModal(b.dataset.glmove)));
 }
