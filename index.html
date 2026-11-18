@@ -3284,8 +3284,8 @@ function bindAsvReglages(main, P) {
 const PLAN_SEED = {"week":"2026-09-28","models":[{"id":"mym-naya","name":"Naya","group":"mym"},{"id":"mym-thais","name":"Thais","group":"mym"},{"id":"mym-carla","name":"Carla","group":"mym"},{"id":"mym-ava-paid-subs","name":"Ava Paid Subs","group":"mym"},{"id":"mym-marie","name":"Marie","group":"mym"},{"id":"mym-flavie","name":"Flavie","group":"mym"},{"id":"mym-chloe","name":"Chloe","group":"mym"},{"id":"mym-eden","name":"Eden","group":"mym"},{"id":"mym-carla-baby","name":"Carla Baby","group":"mym"},{"id":"other-ava-reveal","name":"Ava Reveal","group":"other"},{"id":"mym-angel","name":"Angel","group":"mym"},{"id":"mym-charlotte","name":"Charlotte","group":"mym"},{"id":"mym-tia","name":"Tia","group":"mym"},{"id":"mym-steffy","name":"Steffy","group":"mym"},{"id":"mym-victoria","name":"Victoria","group":"mym"},{"id":"mym-anaelle","name":"Anaelle","group":"mym"},{"id":"other-lila-telegram","name":"Lila Telegram","group":"other"},{"id":"of-naya","name":"Naya","group":"of"},{"id":"of-angel","name":"Angel","group":"of"},{"id":"of-carla-baby","name":"Carla Baby","group":"of"},{"id":"of-steffy","name":"Steffy","group":"of"},{"id":"of-ava","name":"Ava","group":"of"},{"id":"of-mae","name":"Mae","group":"of"},{"id":"of-thais","name":"Thaïs","group":"of"},{"id":"of-flavie","name":"Flavie","group":"of"},{"id":"of-carla-trans","name":"Carla Trans","group":"of"},{"id":"of-marie","name":"Marie","group":"of"},{"id":"of-eden","name":"Eden","group":"of"},{"id":"of-lila","name":"Lila","group":"of"}]};
 const PLAN_GROUPS = [
   {id:'mym', label:'MYM', color:'#22c55e', ink:'#062b14'},
-  {id:'other', label:'Reveal / Telegram', color:'#a855f7', ink:'#ffffff'},
-  {id:'of', label:'OnlyFans', color:'#eab308', ink:'#2a1d02'}
+  {id:'of', label:'OnlyFans', color:'#eab308', ink:'#2a1d02'},
+  {id:'other', label:'Reveal / Telegram', color:'#a855f7', ink:'#ffffff'}
 ];
 const PLAN_SHIFTS = ['04 - 10', '10 - 16', '16 - 22', '22 - 04'];
 const PLAN_DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -4089,7 +4089,7 @@ function frSupHTML() {
       const block = gid => { const g = PLAN_GROUPS.find(x => x.id === gid), l = ids.filter(id => mm[id].group === gid).sort((a, b) => mm[a].name.localeCompare(mm[b].name, 'fr'));
         return l.length ? `<div class="frs-g"><div class="frs-gh" style="--gc:${g.color}"><span></span>${gid === 'of' ? 'OnlyFans' : gid === 'mym' ? 'MYM' : 'Reveal'} <b>${l.length}</b></div><div class="frs-chips">${l.map(id => `<span class="frs-chip" style="--gc:${grp(id).color}">${esc(mm[id].name)}</span>`).join('')}</div></div>` : ''; };
       return `<article class="frs-card"><header><strong>${esc(f.name)}</strong><span class="muted">${plural(ids.length, 'modèle', 'modèles')}</span>${edit ? `<button class="btn ghost small-btn" type="button" data-fredit="${esc(f.id)}">Modifier</button>` : ''}</header>
-        ${['of', 'mym', 'other'].map(block).join('') || '<p class="hint" style="margin:0">Aucune modèle.</p>'}</article>`; }).join('')}</div></section>`;
+        ${['mym', 'of', 'other'].map(block).join('') || '<p class="hint" style="margin:0">Aucune modèle.</p>'}</article>`; }).join('')}</div></section>`;
 }
 function bindFrSup(main) {
   main.querySelectorAll('[data-fredit]').forEach(b => b.addEventListener('click', () => {
@@ -4098,7 +4098,7 @@ function bindFrSup(main) {
     const bg = document.createElement('div'); bg.className = 'modal-bg';
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:620px"><h3>Modèles de ${esc(f.name)}</h3>
       <p class="hint" style="margin-top:0">Cochez les modèles que ${esc(f.name)} suit. Attention : la même modèle existe souvent en OnlyFans et en MYM.</p>
-      ${['of', 'mym', 'other'].map(gid => { const g = PLAN_GROUPS.find(x => x.id === gid), l = models.filter(m => m.group === gid); return l.length ? `<h3 class="as-h" style="--gc:${g.color}"><span></span>${gid === 'of' ? 'OnlyFans' : gid === 'mym' ? 'MYM' : 'Reveal / Telegram'}</h3>
+      ${['mym', 'of', 'other'].map(gid => { const g = PLAN_GROUPS.find(x => x.id === gid), l = models.filter(m => m.group === gid); return l.length ? `<h3 class="as-h" style="--gc:${g.color}"><span></span>${gid === 'of' ? 'OnlyFans' : gid === 'mym' ? 'MYM' : 'Reveal / Telegram'}</h3>
         <div class="frs-pick">${l.map(m => `<label class="check"><input type="checkbox" data-frm="${esc(m.id)}" ${f.models && f.models[m.id] ? 'checked' : ''}> ${esc(m.name)}</label>`).join('')}</div>` : ''; }).join('')}
       <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
     bg.addEventListener('click', e => {
