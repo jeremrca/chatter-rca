@@ -274,6 +274,62 @@ tr.issue-error .issues{color:var(--red)}
 .ntabs a.on{color:#fff;border-color:var(--core);box-shadow:0 0 12px rgba(var(--g1-rgb),.5),inset 0 0 8px rgba(var(--g1-rgb),.25)}
 .nstack{display:flex;flex-direction:column;gap:14px}
 .nperiod{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.kmode{max-width:760px;margin:6px auto 18px}
+.psw-t small{display:block;font-size:12px;font-weight:700;letter-spacing:0;opacity:.8;text-shadow:none}
+.psw.gl:hover{border-color:rgba(167,139,250,.6)}
+.psw.gl.on{color:#fff;border-color:#a78bfa;background:linear-gradient(135deg,rgba(167,139,250,.28),rgba(99,102,241,.2));box-shadow:0 0 22px rgba(167,139,250,.5),inset 0 0 14px rgba(167,139,250,.2)}
+.psw.gl.on .psw-b{background:linear-gradient(135deg,#a78bfa,#6366f1);box-shadow:0 0 14px rgba(167,139,250,.7)}
+.psw.weak{border-color:rgba(239,68,68,.35)}
+.psw.weak:hover{border-color:rgba(249,115,22,.7)}
+.psw.weak .psw-b{background:rgba(239,68,68,.25);color:#fecaca}
+.psw.weak.on{color:#fff;border-color:#f97316;background:linear-gradient(135deg,rgba(239,68,68,.32),rgba(249,115,22,.26));box-shadow:0 0 24px rgba(239,68,68,.55),inset 0 0 14px rgba(249,115,22,.25)}
+.psw.weak.on .psw-b{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;box-shadow:0 0 14px rgba(239,68,68,.75)}
+.glpf{display:inline-block;font-size:10px;font-weight:900;padding:0 6px;border-radius:5px;background:var(--pc);color:#0b0b0f;letter-spacing:.3px;margin-left:4px;vertical-align:middle}
+.glhead{border-top:3px solid var(--sc)}
+.glstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0 4px}
+.glstats>div{background:var(--bg);border:1px solid var(--line-soft);border-radius:12px;padding:10px 12px}
+.glstats b{display:block;font-size:22px}.glstats span{font-size:12px;color:var(--muted)}
+.glstats .bad b{color:#f97316}.glstats .weak{border-color:rgba(239,68,68,.4);background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(249,115,22,.06))}.glstats .weak b{color:#f87171}
+.gltoday{margin-top:12px;padding:10px 14px;border-radius:12px;background:linear-gradient(90deg,rgba(167,139,250,.18),transparent);border-left:4px solid #a78bfa;font-size:14px}
+.gltoday.ok{border-left-color:#22c55e;background:linear-gradient(90deg,rgba(34,197,94,.15),transparent)}
+.gltoday span.w{color:#f87171;font-weight:800}.gltoday em{color:#fb923c;font-style:normal;font-weight:700}
+.glcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.glday{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:8px;min-height:120px;display:flex;flex-direction:column;gap:6px}
+.glday.now{border-color:#a78bfa;box-shadow:0 0 0 1px #a78bfa,0 0 18px rgba(167,139,250,.25)}
+.glday.past{opacity:.92}
+.glday-h{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;padding:2px 2px 4px;border-bottom:1px solid var(--line-soft)}
+.glday-h b{font-size:13.5px}.glday-h span{font-size:11px;color:var(--muted)}.glday-h i{margin-left:auto;font-style:normal;font-size:11px;font-weight:800;color:var(--muted)}
+.glc{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;width:100%;padding:6px 8px;border-radius:9px;border:1px solid var(--line-soft);border-left:4px solid var(--pc);background:var(--bg);color:var(--text);cursor:pointer;font:inherit}
+.glc:disabled{cursor:default}
+.glc:not(:disabled):hover{border-color:var(--pc)}
+.glc-n{font-weight:800;font-size:13px}.glc-s{font-size:11px;color:var(--muted)}
+.glc-w{font-size:10px;font-weight:900;color:#fff;background:linear-gradient(90deg,#ef4444,#f97316);padding:0 6px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+.glc.weak{background:linear-gradient(135deg,rgba(239,68,68,.16),rgba(249,115,22,.06));border-color:rgba(239,68,68,.45)}
+.glc.today{box-shadow:0 0 0 1px #a78bfa}
+.glc.late{border-color:#f97316;background:rgba(249,115,22,.14)}
+.glc.very{border-color:#ef4444;background:rgba(239,68,68,.2)}
+.glc-l{font-size:10px;font-weight:900;text-transform:uppercase;color:#fdba74}.glc.very .glc-l{color:#fca5a5}
+.glc.pre{opacity:.45;border-style:dashed}
+.glc.done{opacity:.55;border-left-color:#22c55e}.glc.done .glc-n{color:#86efac}
+@media (max-width:900px){.glcal{grid-template-columns:1fr}.glday{min-height:0}}
+.glgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.glcard{background:var(--surface);border:1px solid var(--line-soft);border-top:3px solid var(--sc);border-radius:14px;padding:12px}
+.glcard.none{--sc:#71717a;border-style:dashed}
+.glcard header{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.glcard header strong{font-size:15px}
+.glcount{margin-left:auto;font-weight:900;font-size:18px}
+.glbar{height:5px;border-radius:9px;background:var(--bg);overflow:hidden}.glbar span{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#86efac)}
+.gllist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;max-height:420px;overflow:auto}
+.gllist li{display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:7px;font-size:13px}
+.gllist li[data-glmove]{cursor:pointer}.gllist li[data-glmove]:hover{background:var(--raised)}
+.gllist li.hit{background:rgba(167,139,250,.25);outline:1px solid #a78bfa}.gllist li.dim{opacity:.35}
+.gln{font-weight:700;margin-right:2px}.gls{margin-left:auto;font-size:11px;color:var(--faint);white-space:nowrap}
+.glrev{padding:6px 0;border-top:1px solid var(--line-soft);font-size:13.5px}
+.glprev{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin:10px 0}
+.glprev-c{border:1px solid var(--line-soft);border-left:4px solid var(--sc);border-radius:10px;padding:8px 10px}
+.glopts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.glopt{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--text);cursor:pointer;font:inherit;font-weight:700}
+.glopt span:last-child{margin-left:auto;font-size:12px}.glopt.on{border-color:var(--sc);box-shadow:0 0 0 1px var(--sc)}
 .pswitch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:620px;margin:0 auto 22px}
 .psw{display:flex;align-items:center;justify-content:center;gap:14px;padding:18px 20px;border-radius:18px;text-decoration:none;color:rgba(255,255,255,.7);background:rgba(12,10,18,.7);border:2px solid rgba(255,255,255,.12);transition:transform .15s,box-shadow .2s,border-color .2s,color .2s,background .2s}
 .psw:hover{transform:translateY(-2px);color:#fff}
@@ -3567,13 +3623,14 @@ function chatterLeave(name, k, origin) {
     if (e.target === bg) return bg.remove();
     const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === '0') return bg.remove();
     const mode = bg.querySelector('input[name="lv"]:checked').value;
-    if (mode === 'list') { if (inList) delete planState.dayoff[inList[0]]; savePlan(); bg.remove(); toast(`${name} retiré(e) de la liste Jours OFF.`); return render(); }
+    if (mode === 'list') { if (inList) delete planState.dayoff[inList[0]]; savePlan(); if (coachState.global && coachState.global[k] && !leaveScan(k, today, false)) { delete coachState.global[k]; saveCoach(); } bg.remove(); toast(`${name} retiré(e) de la liste Jours OFF.`); return render(); }
     if (mode === 'mute') { (planState.ignored ||= {})[k] = {name, at: Date.now()}; savePlan(); bg.remove(); toast(`${name} n’est plus rappelé(e). Réactivable dans l’onglet Jours OFF.`); return render(); }
     const from = bg.querySelector('#lv-from').value || today, n = leaveScan(k, from, true);
     (planState.ignored ||= {})[k] = {name, at: Date.now(), left: from, ...(inList ? {off: inList[1]} : {})};
     if (inList) delete planState.dayoff[inList[0]];
     savePlan();
     if (!(coachState.ignore || {})[k]) { (coachState.ignore ||= {})[k] = {name, at: Date.now(), why: 'left', plan: 1}; saveCoach(); }
+    if (coachState.global && coachState.global[k]) { delete coachState.global[k]; saveCoach(); }   // retiré du suivi global de son superviseur
     bg.remove(); toast(`${name} supprimé(e) du planning${n ? ` · ${plural(n, 'shift enlevé', 'shifts enlevés')}` : ''}.`); render();
   });
   bg.querySelector('[data-a="1"]').focus();
@@ -5665,9 +5722,12 @@ function coachBuild(wk, keepFrom, opt = {}) {
   for (const x of prep) {
     if (x.kept) continue;   // déjà attribué dans la liste en cours : on n'y touche pas
     const cap = cfg.cap;
-    const keep = x.prevSup && x.opts.find(o => o.s.id === x.prevSup && load[o.s.id] < cap);
+    const gsup = (coachState.global || {})[x.key] && coachState.global[x.key].sup;
+    const keepPrev = x.prevSup && x.opts.find(o => o.s.id === x.prevSup && load[o.s.id] < cap);
+    const keepG = !keepPrev && gsup && x.opts.find(o => o.s.id === gsup && load[o.s.id] < cap);
+    const keep = keepPrev || keepG;
     const best = keep || x.opts.filter(o => load[o.s.id] < cap).sort((a, b) => (b.ov + b.mod * 3 - load[b.s.id] * 2) - (a.ov + a.mod * 3 - load[a.s.id] * 2))[0];
-    if (best) { x.it.sup = best.s.id; x.it.why = (keepFrom && keepFrom.items ? 'entré dans la liste · ' : '') + (keep ? 'même superviseur que la semaine dernière' : best.ov ? `${best.ov} h communes${best.mod ? ` · ${plural(best.mod, 'modèle attribuée', 'modèles attribuées')}` : ''}` : 'aucune heure commune trouvée'); x.it.isIn = !!(keepFrom && keepFrom.items); load[best.s.id]++; }
+    if (best) { x.it.sup = best.s.id; x.it.why = (keepFrom && keepFrom.items ? 'entré dans la liste · ' : '') + (keepPrev ? 'même superviseur que la semaine dernière' : keepG ? 'son superviseur attitré (suivi global)' : best.ov ? `${best.ov} h communes${best.mod ? ` · ${plural(best.mod, 'modèle attribuée', 'modèles attribuées')}` : ''}` : 'aucune heure commune trouvée'); x.it.isIn = !!(keepFrom && keepFrom.items); load[best.s.id]++; }
     else { x.it.sup = ''; x.it.why = 'aucun superviseur disponible (plafond atteint ou focus incompatible)'; }
   }
   const ctx = {wk, cands, prev, curShiftWeek, isIn: !!(keepFrom && keepFrom.items)};
@@ -5705,14 +5765,277 @@ function coachFill(items, ctx, opts) {
   return {added, short, min};
 }
 
+/* =====================================================================
+   SUIVI GLOBAL — chaque chatter de l'agence a un superviseur attitré, stable dans le temps
+   coachState.global = {[clé chatter]: {sup, name, since, by?}}
+   coachState.fb = {[lundi]: {[clé|g] ou [clé|w|jour]: {at, by}}}  (feedbacks faits)
+   ===================================================================== */
+const coachGlobal = () => (coachState.global ||= {});
+const GL_WEAK_FB = 3;   // feedbacks par semaine pour un maillon faible (en plus du verdict du dimanche)
+const glWeekNow = () => mondayOf(isoOf(new Date()));
+const glShiftWeek = wk => planState.weeks[wk] ? wk : addDaysIso(wk, -7);
+// Shifts d'un chatter avec la plateforme de la modèle (mym / of / other)
+function glShifts(plan, weeks) {
+  const mm = planModelsMap();
+  return coachShifts(plan, weeks).filter(x => !x.dup).map(x => ({...x, g: (mm[x.mid] || PLAN_BACKUPS.find(b => b.id === x.mid) || {}).group || 'other'}));
+}
+// Heures communes, en tenant compte du focus du superviseur ce jour-là (un shift MYM ne compte qu'avec un superviseur sur MYM à cette heure)
+function glOverlap(sup, shifts) {
+  let h = 0;
+  for (const x of shifts) { const [a, b] = SHIFT_HOURS[x.s], want = x.g === 'of' ? 'OF' : x.g === 'mym' ? 'MYM' : '';
+    for (let t = a; t < b; t++) { const d = (x.d + Math.floor(t / 24)) % 7, hh = t % 24;
+      if (supBlocks(sup, d).some(bl => hh + 0.5 > bl.start && hh + 0.5 < bl.end && (!want || !bl.pf || bl.pf === want))) h++; } }
+  return h;
+}
+const glPid = sh => { const n = {of: 0, mym: 0}; sh.forEach(x => { if (n[x.g] != null) n[x.g]++; });
+  return !n.of && !n.mym ? '' : n.of && n.mym && Math.min(n.of, n.mym) / (n.of + n.mym) >= 0.3 ? 'both' : n.of >= n.mym ? 'of' : 'mym'; };
+const supHours = s => s.days.reduce((t, x) => { const p = parseShift(x); return t + (p ? p.end - p.start : 0); }, 0);
+const glCanSync = () => !Sync.connected() || ['ok', 'pending', 'saving'].includes(Sync.status());
+// Contexte commun : équipe active, shifts des 2 dernières semaines, superviseurs
+function glContext() {
+  const wk = glWeekNow(), sw = glShiftWeek(wk), weeks = [...new Set([sw, addDaysIso(sw, -7)])];
+  const roster = teamRoster(wk), sups = supList(), supKeys = new Set(sups.map(s => rosterKey(s.name)).filter(k => k.length >= 3));
+  const team = new Map();
+  for (const [k, name] of roster) { if (supKeys.has(k) || BAD_NAME.test(name)) continue; const ig = coachIgn(k, wk); if (ig && ig.why === 'left') continue; team.set(k, name); }
+  const shCache = new Map(), sh = k => { if (!shCache.has(k)) shCache.set(k, glShifts(team.get(k) || (coachGlobal()[k] || {}).name || k, weeks)); return shCache.get(k); };
+  return {wk, sw, weeks, team, sups, sh};
+}
+// Candidats pour un chatter : superviseurs qui ont des heures communes sur la bonne plateforme
+function glOptions(ctx, k) {
+  const shifts = ctx.sh(k), mids = new Set(shifts.map(x => x.mid)), A = planState.supAssign || {};
+  return ctx.sups.map(s => ({s, ov: glOverlap(s, shifts), mod: [...mids].filter(m => A[s.id] && A[s.id][m]).length})).filter(o => o.ov > 0);
+}
+// Mise à jour : retire les départs, attribue les nouveaux. Les chatters déjà attribués ne changent jamais de superviseur ici.
+// opt.dry : calcule sans rien modifier. Retourne {add:[], rm:[], none:[], blocked}
+function glSync(opt = {}) {
+  const ctx = glContext(), G = coachGlobal(), supIds = new Set(ctx.sups.map(s => s.id));
+  const res = {add: [], rm: [], none: [], blocked: false};
+  if (!ctx.team.size) return res;
+  // 1. Départs : plus dans l'équipe (a quitté l'agence, retiré de Jours OFF et absent du planning depuis 3 semaines) ou superviseur supprimé
+  const gone = Object.keys(G).filter(k => !ctx.team.has(k)), orphan = Object.keys(G).filter(k => ctx.team.has(k) && !supIds.has(G[k].sup));
+  if (gone.length > Math.max(8, Object.keys(G).length * 0.15)) res.blocked = true;   // sécurité : planning pas encore chargé
+  else for (const k of gone) { res.rm.push({k, name: G[k].name}); if (!opt.dry) delete G[k]; }
+  // 2. Nouveaux (et chatters dont le superviseur a été supprimé)
+  const todo = [...[...ctx.team.keys()].filter(k => !G[k]), ...orphan];
+  const total = Object.keys(G).length - (opt.dry ? 0 : 0) + todo.filter(k => !G[k]).length;
+  const H = Object.fromEntries(ctx.sups.map(s => [s.id, supHours(s)])), sumH = Object.values(H).reduce((a, b) => a + b, 0) || 1;
+  const target = Object.fromEntries(ctx.sups.map(s => [s.id, Math.max(1, Math.round(total * H[s.id] / sumH))]));
+  const load = Object.fromEntries(ctx.sups.map(s => [s.id, 0]));
+  for (const [k, g] of Object.entries(G)) if (load[g.sup] != null && !orphan.includes(k)) load[g.sup]++;
+  const prep = todo.map(k => ({k, opts: glOptions(ctx, k)}));
+  prep.sort((a, b) => a.opts.length - b.opts.length || (ctx.team.get(a.k) || '').localeCompare(ctx.team.get(b.k) || '', 'fr'));
+  const today = isoOf(new Date());
+  for (const x of prep) {
+    if (!x.opts.length) { res.none.push({k: x.k, name: ctx.team.get(x.k)}); continue; }
+    const best = x.opts.slice().sort((a, b) => (load[a.s.id] >= target[a.s.id]) - (load[b.s.id] >= target[b.s.id]) || (b.ov + 4 * b.mod) - (a.ov + 4 * a.mod) || load[a.s.id] - load[b.s.id])[0];
+    load[best.s.id]++;
+    res.add.push({k: x.k, name: ctx.team.get(x.k), sup: best.s.id, ov: best.ov});
+    if (!opt.dry) G[x.k] = {sup: best.s.id, name: ctx.team.get(x.k), since: (G[x.k] && G[x.k].since) || today};
+  }
+  if (!opt.dry) for (const [k, g] of Object.entries(G)) if (ctx.team.has(k) && g.name !== ctx.team.get(k)) g.name = ctx.team.get(k);
+  return res;
+}
+// Chatters à revoir : des shifts ces 2 dernières semaines mais plus aucune heure commune avec leur superviseur
+function glReview(ctx) {
+  const G = coachGlobal(), out = [];
+  for (const [k, g] of Object.entries(G)) {
+    const s = ctx.sups.find(x => x.id === g.sup), shifts = ctx.sh(k); if (!s || !shifts.length) continue;
+    if (glOverlap(s, shifts) > 0) continue;
+    const best = glOptions(ctx, k).sort((a, b) => (b.ov + 4 * b.mod) - (a.ov + 4 * a.mod))[0];
+    out.push({k, name: g.name, sup: s, best});
+  }
+  return out;
+}
+// Maillons faibles validés de la semaine : clé → item
+const glWeak = wk => { const W = coachState.weeks[wk]; return W && W.status === 'validated' ? W.items || {} : {}; };
+// Agenda d'un superviseur pour la semaine wk : feedbacks placés sur les jours où le chatter travaille pendant ses heures, répartis au mieux
+function glAgenda(wk, sup) {
+  const sw = glShiftWeek(wk), days = Array.from({length: 7}, () => []), none = [], load = Array(7).fill(0);
+  const label = x => { const m = allModels().find(mm => mm.id === x.mid); return `${PLAN_SHIFTS[x.s].replace(/\s/g, '')}${m ? ` · ${m.name}${m.group === 'mym' ? ' MYM' : m.group === 'of' ? ' OF' : ''}` : ''}`; };
+  // minDate : pas de feedback placé avant le lancement du suivi ou avant l'arrivée du chatter chez ce superviseur (s'il reste des jours)
+  const pickDay = (shifts, n, minDate = '') => {
+    const after = shifts.filter(x => addDaysIso(wk, x.d) >= minDate); if (after.length) shifts = after;
+    const ok = shifts.filter(x => glOverlap(sup, [x]) > 0), pool = ok.length ? ok : shifts;
+    const byDay = new Map(); for (const x of pool.sort((a, b) => a.d - b.d || a.s - b.s)) if (!byDay.has(x.d)) byDay.set(x.d, x);
+    const list = [...byDay.values()];
+    if (n === 1) return list.length ? [list.slice().sort((a, b) => load[a.d] - load[b.d] || a.d - b.d)[0]] : [];
+    if (list.length <= n) return list;
+    return [...new Set([0, Math.floor((list.length - 1) / 2), list.length - 1])].map(i => list[i]);
+  };
+  const weak = Object.entries(glWeak(wk)).filter(([, it]) => it.sup === sup.id);
+  const weakKeys = new Set(weak.map(([k]) => k));
+  for (const [k, it] of weak.sort((a, b) => (a[1].plan || a[1].name).localeCompare(b[1].plan || b[1].name, 'fr'))) {
+    const shifts = it.plan ? glShifts(it.plan, [sw]) : [];
+    const picks = pickDay(shifts, GL_WEAK_FB, coachState.globalStart || '');
+    if (!picks.length) { none.push({k, name: it.plan || it.name, type: 'weak'}); continue; }
+    for (const x of picks) { days[x.d].push({k, name: it.plan || it.name, type: 'weak', d: x.d, fbk: `${k}|w|${x.d}`, label: label(x), g: x.g}); load[x.d]++; }
+  }
+  const mine = Object.entries(coachGlobal()).filter(([k, g]) => g.sup === sup.id && !weakKeys.has(k)).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'));
+  for (const [k, g] of mine) {
+    const [x] = pickDay(glShifts(g.name, [sw]), 1, [coachState.globalStart || '', g.since || ''].sort().pop());
+    if (!x) { none.push({k, name: g.name, type: 'global'}); continue; }
+    days[x.d].push({k, name: g.name, type: 'global', d: x.d, fbk: `${k}|g`, label: label(x), g: x.g}); load[x.d]++;
+  }
+  return {days, none, estimated: sw !== wk};
+}
+const glFb = wk => ((coachState.fb ||= {})[wk] ||= {});
+// État d'un feedback : fait, aujourd'hui, en retard (orange), très en retard (rouge), à venir
+function glState(wk, item) {
+  if ((coachState.fb && coachState.fb[wk] || {})[item.fbk]) return 'done';
+  const day = addDaysIso(wk, item.d), today = isoOf(new Date());
+  if (day === today) return 'today';
+  if (day < (coachState.globalStart || '')) return 'pre';   // avant le lancement du suivi : jamais en retard
+  if (day > today) return 'todo';
+  const late = Math.round((parseDate(today) - parseDate(day)) / 864e5);
+  return late >= 2 ? 'very' : 'late';
+}
+const glAgendaStats = (wk, ag) => { const all = ag.days.flat().filter(x => glState(wk, x) !== 'pre'); return {n: all.length, done: all.filter(x => glState(wk, x) === 'done').length, late: all.filter(x => ['late', 'very'].includes(glState(wk, x))).length}; };
+const pfBadge = pid => pid === 'both' ? `<span class="glpf" style="--pc:${SUP_PF.MYM.color}">MYM</span><span class="glpf" style="--pc:${SUP_PF.OF.color}">OF</span>` : pid ? `<span class="glpf" style="--pc:${SUP_PF[pid === 'of' ? 'OF' : 'MYM'].color}">${pid === 'of' ? 'OF' : 'MYM'}</span>` : '';
+const glWeeksSince = since => { const n = Math.max(0, Math.floor((parseDate(isoOf(new Date())) - parseDate(since)) / (7 * 864e5))); return n < 1 ? 'cette semaine' : `${n} sem.`; };
+
+// ---------- Vue « Calendrier » : les feedbacks de la semaine d'un superviseur ----------
+function glCalendarHTML(wk) {
+  const me = mySup(), dir = Sync.canDirect(), sups = supList();
+  const sid = coachUI.calSup && sups.some(s => s.id === coachUI.calSup) ? coachUI.calSup : me ? me.id : (sups[0] || {}).id;
+  const sup = sups.find(s => s.id === sid);
+  if (!sup) return '<div class="panel empty">Aucun superviseur dans le planning des superviseurs.</div>';
+  if (!Object.keys(coachGlobal()).length) return `<div class="panel empty"><h2 style="font-size:18px">La répartition n’est pas encore lancée</h2><p class="hint" style="margin:6px 0 0">${dir ? 'Ouvrez l’onglet « Tous les chatters » pour la lancer.' : 'La Direction doit d’abord lancer la répartition.'}</p></div>`;
+  const ag = glAgenda(wk, sup), st = glAgendaStats(wk, ag), today = isoOf(new Date());
+  const canMark = dir || (me && me.id === sup.id);
+  const chip = it => { const s = glState(wk, it);
+    return `<button type="button" class="glc ${it.type} ${s}" data-glfb="${esc(it.fbk)}" data-gld="${it.d}" ${canMark ? '' : 'disabled'} style="--pc:${SUP_PF[it.g === 'of' ? 'OF' : it.g === 'mym' ? 'MYM' : ''].color}" title="${s === 'done' ? 'Feedback fait · cliquez pour annuler' : canMark ? 'Cliquez quand le feedback est fait' : ''}">
+      <span class="glc-n">${s === 'done' ? '✓ ' : ''}${esc(it.name)}</span>${it.type === 'weak' ? '<span class="glc-w">Maillon faible</span>' : ''}<span class="glc-s">${esc(it.label)}</span>${s === 'very' ? '<span class="glc-l">en retard</span>' : s === 'late' ? '<span class="glc-l">d’hier</span>' : ''}</button>`; };
+  const todayIdx = PLAN_DAYS.findIndex((_, d) => addDaysIso(wk, d) === today);
+  const todays = todayIdx >= 0 ? ag.days[todayIdx] : [], todo = todays.filter(x => glState(wk, x) !== 'done'), late = ag.days.flat().filter(x => ['late', 'very'].includes(glState(wk, x)));
+  return `<div class="stack">
+    <section class="panel glhead" style="--sc:${sup.color}"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <h2 style="margin:0"><span class="g-dot" style="background:${sup.color};display:inline-block;margin-right:8px"></span>${me && me.id === sup.id ? 'Mes feedbacks' : `Feedbacks de ${esc(sup.name)}`} · ${esc(planWeekLabel(wk).toLowerCase())}</h2>
+      ${dir || !me ? `<select id="gl-calsup" style="margin-left:auto;width:auto">${sups.map(s => `<option value="${s.id}" ${s.id === sid ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select>` : ''}</div>
+      <div class="glstats"><div><b>${st.done}/${st.n}</b><span>feedbacks faits</span></div><div class="${late.length ? 'bad' : ''}"><b>${late.length}</b><span>en retard</span></div><div><b>${Object.values(coachGlobal()).filter(g => g.sup === sup.id).length}</b><span>chatters attitrés</span></div><div class="weak"><b>${Object.values(glWeak(wk)).filter(it => it.sup === sup.id).length}</b><span>maillons faibles</span></div></div>
+      ${todayIdx >= 0 ? `<div class="gltoday ${todo.length ? '' : 'ok'}">${todo.length ? `<strong>Aujourd’hui, feedback à faire :</strong> ${todo.map(x => `<span class="${x.type === 'weak' ? 'w' : ''}">${esc(x.name)}</span>`).join(', ')}` : todays.length ? '<strong>✓ Tous les feedbacks du jour sont faits.</strong>' : 'Aucun feedback prévu aujourd’hui.'}${late.length ? ` <em>· ${plural(late.length, 'feedback en retard', 'feedbacks en retard')} : ${late.map(x => esc(x.name)).join(', ')}</em>` : ''}</div>` : ''}
+      ${ag.estimated ? '<p class="hint" style="margin:8px 0 0">Le planning de cette semaine n’est pas encore fait : jours placés d’après le planning de la semaine dernière.</p>' : ''}
+    </section>
+    <div class="glcal">${PLAN_DAYS_LONG.map((dn, d) => { const date = addDaysIso(wk, d), list = ag.days[d];
+      return `<div class="glday ${date === today ? 'now' : ''} ${date < today ? 'past' : ''}"><div class="glday-h"><b>${dn}</b><span>${esc(fmtDayFr(date))}</span>${date < (coachState.globalStart || '') ? '<i>avant le lancement</i>' : list.length ? `<i>${list.filter(x => glState(wk, x) === 'done').length}/${list.length}</i>` : ''}</div>${list.map(chip).join('') || `<p class="hint" style="margin:6px 2px;font-size:12px">${isOff(sup.days[d]) ? 'OFF' : '—'}</p>`}</div>`; }).join('')}</div>
+    ${ag.none.length ? `<section class="panel"><h2 style="font-size:15px;margin:0 0 6px">Pas de shift au planning cette semaine</h2><p class="hint" style="margin:0 0 8px">Pas de jour de feedback possible : en congé, absent ou pas encore planifié.</p><div class="unplan-l">${ag.none.map(x => `<span class="unchip" style="padding-right:10px">${esc(x.name)}${x.type === 'weak' ? ' <span class="rtag hot">maillon faible</span>' : ''}</span>`).join('')}</div></section>` : ''}
+    <p class="hint" style="margin:0">Un feedback par semaine pour chaque chatter attitré, ${GL_WEAK_FB} pour un maillon faible (pastille rouge), placés les jours où il travaille pendant vos heures. Un feedback non fait passe en orange le lendemain, puis en rouge.</p>
+  </div>`;
+}
+function bindGlCalendar(main, wk) {
+  main.querySelector('#gl-calsup')?.addEventListener('change', e => { coachUI.calSup = e.target.value; render(); });
+  main.querySelectorAll('[data-glfb]').forEach(b => b.addEventListener('click', async () => {
+    const fbk = b.dataset.glfb, F = glFb(wk), k = fbk.split('|')[0];
+    const sid = coachUI.calSup || (mySup() || {}).id, it = glAgenda(wk, supList().find(s => s.id === sid) || mySup()).days.flat().find(x => x.fbk === fbk);
+    if (F[fbk]) { if (!(await modal('Annuler le feedback', `<p>Marquer le feedback de <strong>${esc(it ? it.name : k)}</strong> comme non fait ?</p>`, 'Oui, annuler'))) return; delete F[fbk]; saveCoach(); const y = window.scrollY; render(); window.scrollTo(0, y); return; }
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:520px"><h3>Feedback fait · ${esc(it ? it.name : k)}</h3>
+      <p class="hint" style="margin-top:0">Facultatif : une étiquette ou une phrase, gardée dans le journal du chatter (visible par vous et la Direction).</p>
+      <div class="ktags">${NOTE_TAGS.map(([t, l, c]) => `<button type="button" class="ktag sel ${c}" data-ktag="${t}">${esc(l)}</button>`).join('')}</div>
+      <input type="text" id="glfb-note" placeholder="Ce que vous lui avez dit, ce que vous avez observé" style="width:100%;margin-top:10px">
+      <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">✓ Feedback fait</button></div></div>`;
+    bg.addEventListener('click', async e => {
+      const t = e.target.closest('[data-ktag]'); if (t) { t.classList.toggle('on'); return; }
+      if (e.target === bg) return bg.remove();
+      const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === '0') return bg.remove();
+      a.disabled = true;
+      const tags = [...bg.querySelectorAll('[data-ktag].on')].map(x => x.dataset.ktag), body = bg.querySelector('#glfb-note').value.trim();
+      F[fbk] = {at: new Date().toISOString(), by: who(Sync.email()) || 'local'}; saveCoach();
+      if (tags.length || body) { try { await coachAddNote({week: wk, chatter_key: k, chatter_name: it ? it.name : k, sup_id: sid || '', tags: ['fb', ...tags], body: body || null}); } catch (err) { toast(`Feedback noté, mais la note n’a pas été enregistrée : ${err.message}`, true); } }
+      bg.remove(); toast('Feedback noté.'); const y = window.scrollY; render(); window.scrollTo(0, y);
+    });
+    bg.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'glfb-note') bg.querySelector('[data-a="1"]').click(); if (e.key === 'Escape') bg.remove(); });
+    document.body.appendChild(bg); bg.querySelector('#glfb-note').focus();
+  }));
+}
+
+// ---------- Vue « Tous les chatters » : la répartition par superviseur ----------
+function glBoardHTML(wk) {
+  const dir = Sync.canDirect(), G = coachGlobal(), sups = supList();
+  if (!Object.keys(G).length) {
+    const dry = glSync({dry: true}), ctx = glContext();
+    return `<section class="panel"><h2>Lancer la répartition des chatters</h2>
+      <p class="hint">Le site attribue chaque chatter actif (${ctx.team.size}) à un superviseur : même plateforme (MYM / OnlyFans, focus du jour compris), le plus d’heures en commun avec ses shifts des 2 dernières semaines, un bonus si le superviseur s’occupe de ses modèles, et une charge équilibrée selon les heures de chacun. Ensuite, un chatter garde son superviseur : seuls les nouveaux sont attribués et les départs retirés.</p>
+      <div class="glprev">${sups.map(s => { const l = dry.add.filter(a => a.sup === s.id); return `<div class="glprev-c" style="--sc:${s.color}"><b><span class="g-dot" style="background:${s.color};display:inline-block;margin-right:6px"></span>${esc(s.name)}</b> <span class="muted">${l.length}</span><div class="sub">${l.map(a => esc(a.name)).join(', ') || '—'}</div></div>`; }).join('')}</div>
+      ${dry.none.length ? `<p class="hint">Sans superviseur pour l’instant (pas de shift au planning ces 2 dernières semaines) : ${dry.none.map(x => esc(x.name)).join(', ')}.</p>` : ''}
+      ${dir ? '<button class="btn primary" id="gl-init" type="button">Valider cette répartition</button>' : '<p class="hint">La Direction doit valider la répartition.</p>'}</section>`;
+  }
+  const ctx = glContext(), rev = dir ? glReview(ctx) : [], weak = glWeak(wk), q = normName(coachUI.glq || '');
+  const none = [...ctx.team.keys()].filter(k => !G[k]);
+  const ent = Object.entries(G);
+  const card = s => { const l = ent.filter(([, g]) => g.sup === s.id).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'));
+    const ag = glAgenda(wk, s), st = glAgendaStats(wk, ag), f = focusKey(s.focus);
+    const pf = [...new Set(s.days.map((t, d) => parseShift(t) ? supDayFocus(s, d) : null).filter(x => x != null))];
+    return `<article class="glcard" style="--sc:${s.color}"><header><span class="g-dot" style="background:${s.color}"></span><strong>${esc(s.name)}</strong>${pf.map(p => p ? `<span class="glpf" style="--pc:${SUP_PF[p].color}">${p === 'OF' ? 'OF' : SUP_PF[p].label}</span>` : '').join('')}<span class="glcount">${l.length}</span></header>
+      <div class="glbar" title="Feedbacks faits cette semaine"><span style="width:${st.n ? Math.round(st.done / st.n * 100) : 0}%"></span></div><div class="sub" style="margin:2px 0 8px">${st.done}/${st.n} feedbacks faits${st.late ? ` · <span class="sc-lo">${st.late} en retard</span>` : ''}</div>
+      <ul class="gllist">${l.map(([k, g]) => { const sh = ctx.sh(k), hit = q && normName(g.name).includes(q);
+        return `<li class="${hit ? 'hit' : ''} ${q && !hit ? 'dim' : ''}" ${dir ? `data-glmove="${esc(k)}" tabindex="0" role="button"` : ''}><span class="gln">${esc(g.name)}</span>${pfBadge(glPid(sh))}${weak[k] ? '<span class="rtag hot">faible</span>' : ''}${g.since > (coachState.globalStart || '') && g.since >= addDaysIso(isoOf(new Date()), -7) ? '<span class="rtag ok">nouveau</span>' : ''}<span class="gls">${glWeeksSince(g.since)}</span></li>`; }).join('') || '<li class="muted">Aucun chatter</li>'}</ul></article>`; };
+  return `<div class="stack">
+    <section class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Qui suit qui · ${ent.length} chatters</h2>
+      <input type="search" id="gl-q" value="${esc(coachUI.glq || '')}" placeholder="Rechercher un chatter…" style="margin-left:auto;width:240px">
+      <p class="hint" style="width:100%;margin:0">Chaque chatter garde son superviseur de semaine en semaine. Les nouveaux sont attribués automatiquement, les départs (« A quitté l’agence » dans Jours OFF) retirés. ${dir ? 'Cliquez sur un chatter pour changer son superviseur.' : ''}</p></section>
+    ${rev.length ? `<section class="panel alert warn"><h2 style="font-size:15px;margin:0 0 6px">À revoir · ${rev.length}</h2><p class="hint" style="margin:0 0 8px">Plus aucune heure en commun avec leur superviseur ces 2 dernières semaines (horaires ou plateforme changés).</p>
+      ${rev.map(r => `<div class="glrev"><strong>${esc(r.name)}</strong> <span class="muted">suivi par ${esc(r.sup.name)}</span>${r.best ? ` → proposé : <strong>${esc(r.best.s.name)}</strong> <span class="muted">(${r.best.ov} h communes)</span> <button class="btn small-btn" type="button" data-glset="${esc(r.k)}|${r.best.s.id}">Changer</button>` : ' <span class="muted">· aucun superviseur sur ses horaires</span>'}</div>`).join('')}</section>` : ''}
+    <div class="glgrid">${sups.map(card).join('')}
+      ${none.length ? `<article class="glcard none"><header><strong>Sans superviseur</strong><span class="glcount">${none.length}</span></header><p class="sub">Pas de shift au planning ces 2 dernières semaines : attribués dès qu’ils sont planifiés.</p><ul class="gllist">${none.map(k => `<li ${dir ? `data-glmove="${esc(k)}" tabindex="0" role="button"` : ''}><span class="gln">${esc(ctx.team.get(k))}</span></li>`).join('')}</ul></article>` : ''}</div></div>`;
+}
+function bindGlBoard(main, wk) {
+  const done = msg => { saveCoach(); if (msg) toast(msg); const y = window.scrollY; render(); window.scrollTo(0, y); };
+  main.querySelector('#gl-init')?.addEventListener('click', () => { coachState.globalStart = isoOf(new Date()); const r = glSync(); done(`${plural(r.add.length, 'chatter attribué', 'chatters attribués')}.`); });
+  const qi = main.querySelector('#gl-q'); let t;
+  qi?.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { coachUI.glq = qi.value; render(); const n = document.getElementById('gl-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
+  main.querySelectorAll('[data-glset]').forEach(b => b.addEventListener('click', () => { const [k, sid] = b.dataset.glset.split('|'); const G = coachGlobal(); G[k] = {...G[k], sup: sid, since: isoOf(new Date()), by: who(Sync.email()) || 'manuel'}; done('Superviseur changé.'); }));
+  const move = k => {
+    const ctx = glContext(), G = coachGlobal(), cur = G[k], name = cur ? cur.name : ctx.team.get(k), shifts = ctx.sh(k);
+    const opts = ctx.sups.map(s => ({s, ov: glOverlap(s, shifts)})).sort((a, b) => b.ov - a.ov);
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:480px"><h3>Superviseur de ${esc(name)}</h3>
+      <p class="hint" style="margin-top:0">Heures communes sur ses shifts des 2 dernières semaines (même plateforme). ${cur ? `Suivi par ${esc((ctx.sups.find(s => s.id === cur.sup) || {}).name || '—')} depuis le ${esc(fmtDayFr(cur.since))}.` : ''}</p>
+      <div class="glopts">${opts.map(o => `<button type="button" class="glopt ${cur && cur.sup === o.s.id ? 'on' : ''}" data-glpick="${o.s.id}" style="--sc:${o.s.color}"><span class="g-dot" style="background:${o.s.color}"></span>${esc(o.s.name)}<span class="${o.ov ? '' : 'muted'}">${o.ov ? `${o.ov} h` : 'aucune heure'}</span></button>`).join('')}</div>
+      <div class="acts">${cur ? '<button class="btn ghost" data-a="rm" type="button" style="margin-right:auto">Retirer du suivi</button>' : ''}<button class="btn ghost" data-a="0" type="button">Fermer</button></div></div>`;
+    bg.addEventListener('click', e => {
+      const p = e.target.closest('[data-glpick]');
+      if (p) { G[k] = {name, since: cur && cur.sup === p.dataset.glpick ? cur.since : isoOf(new Date()), sup: p.dataset.glpick, by: who(Sync.email()) || 'manuel'}; bg.remove(); return done(`${name} → ${(ctx.sups.find(s => s.id === p.dataset.glpick) || {}).name}.`); }
+      if (e.target === bg) return bg.remove();
+      const a = e.target.closest('[data-a]'); if (!a) return;
+      if (a.dataset.a === 'rm') { delete G[k]; bg.remove(); return done(`${name} retiré du suivi (il sera réattribué s’il est toujours au planning).`); }
+      bg.remove();
+    });
+    document.body.appendChild(bg);
+  };
+  main.querySelectorAll('[data-glmove]').forEach(li => { li.addEventListener('click', () => move(li.dataset.glmove)); li.addEventListener('keydown', e => { if (e.key === 'Enter') move(li.dataset.glmove); }); });
+}
+function renderGlobal(main, wk, head) {
+  // Mise à jour automatique (nouveaux / départs), seulement une fois les données partagées chargées
+  if (Object.keys(coachGlobal()).length && glCanSync()) { const r = glSync(); if (r.add.length || r.rm.length) saveCoach(); }
+  const me = mySup(), dir = Sync.canDirect();
+  const tab = coachUI.gtab || (me || !dir ? 'cal' : 'board');
+  const tabs = `<div class="ptopt" role="tablist">${[['cal', me ? 'Mon calendrier' : 'Calendrier des feedbacks'], ['board', 'Tous les chatters']].map(([k, l]) => `<button type="button" class="${tab === k ? 'on' : ''}" data-gtab="${k}">${l}</button>`).join('')}</div>`;
+  main.innerHTML = head + tabs + (tab === 'cal' ? glCalendarHTML(wk) : glBoardHTML(wk));
+  bindCoachHead(wk);
+  main.querySelectorAll('[data-gtab]').forEach(b => b.addEventListener('click', () => { coachUI.gtab = b.dataset.gtab; render(); }));
+  if (tab === 'cal') bindGlCalendar(main, wk); else bindGlBoard(main, wk);
+}
+
 /* ---------- Page ---------- */
+// Deux grands boutons : Suivi global (tous les chatters) / Maillons faibles (rouge-orange)
+function coachModeHTML(wk) {
+  const m = coachUI.mode || 'global', nWeak = Object.keys(glWeak(wk)).length, me = mySup();
+  const mineWeak = me ? Object.values(glWeak(wk)).filter(it => it.sup === me.id).length : 0;
+  return `<nav class="pswitch kmode" aria-label="Partie du suivi">
+    <button type="button" class="psw gl ${m === 'global' ? 'on' : ''}" data-kmode="global"><span class="psw-b">★</span><span class="psw-t">Suivi global<small>${Object.keys(coachState.global || {}).length} chatters</small></span></button>
+    <button type="button" class="psw weak ${m === 'weak' ? 'on' : ''}" data-kmode="weak"><span class="psw-b">!</span><span class="psw-t">Maillons faibles<small>${nWeak ? `${nWeak} cette semaine${mineWeak ? ` · ${mineWeak} pour vous` : ''}` : 'liste pas encore validée'}</small></span></button></nav>`;
+}
+function bindCoachMode(main) { main.querySelectorAll('[data-kmode]').forEach(b => b.addEventListener('click', () => { coachUI.mode = b.dataset.kmode; render(); })); }
 function renderCoaching(main) {
   const wk = coachUI.week ||= mondayOf(isoOf(new Date()));
   const W = coachState.weeks[wk];
   const head = `<div class="top"><h1><span class="pbadge lg coach" aria-hidden="true">★</span><span>Suivi des chatters</span></h1>
     <div class="picker viewpick"><button class="btn ghost small-btn" id="kw-prev" type="button" aria-label="Semaine précédente">‹</button>
       <select id="kw-sel">${[...new Set([...Object.keys(coachState.weeks), mondayOf(isoOf(new Date())), wk])].sort().reverse().map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}</option>`).join('')}</select>
-      <button class="btn ghost small-btn" id="kw-next" type="button" aria-label="Semaine suivante">›</button></div></div>`;
+      <button class="btn ghost small-btn" id="kw-next" type="button" aria-label="Semaine suivante">›</button></div></div>`
+    + coachModeHTML(wk);
+  if ((coachUI.mode || 'global') === 'global') { renderGlobal(main, wk, head); bindCoachMode(main); return; }
+  setTimeout(() => bindCoachMode(main));
   if (!Sync.canDirect()) { main.innerHTML = head + coachSupView(wk); bindCoachHead(wk); bindCoachCards(main, wk); return; }
   const meSup = mySup();
   const tabsD = `<div class="ptopt" role="tablist">${[['list', 'Liste et répartition'], ['dec', 'Décisions'], ['sups', 'Suivi des superviseurs'], ...(meSup ? [['mine', 'Mes chatters']] : [])].map(([k, l]) => `<button type="button" class="${(coachUI.tab || 'list') === k ? 'on' : ''}" data-ktab="${k}">${l}</button>`).join('')}</div>`;
@@ -5887,7 +6210,7 @@ const VERDICTS = {
 };
 const STOP_REASONS = ['Toujours en retard ou absent', 'Micro ou partage d’écran KO', 'Ne pose aucune question', 'Je-m’en-foutiste', 'Ne veut pas évoluer', 'Ne répond pas aux feedbacks'];
 const NOTE_TAGS = [['abs', 'Absent / en retard', 'bad'], ['tech', 'Micro ou écran KO', 'bad'], ['noq', 'Ne pose aucune question', 'bad'], ['react', 'Répond juste par réaction', 'bad'], ['feedback', 'Ignore les feedbacks', 'bad'], ['understands', 'Comprend les consignes', 'good'], ['asks', 'Pose des questions', 'good'], ['progress', 'Progresse', 'good'], ['motivated', 'Motivé', 'good']];
-const tagInfo = k => NOTE_TAGS.find(t => t[0] === k) || [k, k, ''];
+const tagInfo = k => k === 'fb' ? ['fb', 'Feedback', 'good'] : NOTE_TAGS.find(t => t[0] === k) || [k, k, ''];
 // Cache des notes : chargées depuis la table coach_notes (Supabase), ou gardées dans ce navigateur sans partage
 const coachNotes = {list: [], loadedAt: 0, loading: false, remote: null};
 async function coachLoadNotes(force) {
