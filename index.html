@@ -6489,7 +6489,7 @@ const Sync = (() => {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
     } else if (key === 'coaching') {
-      syncInPlace(coachState, {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(data && data.ignore ? {ignore: data.ignore} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}); lsSet(LS_COACH, coachState);
+      syncInPlace(coachState, {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(data && data.ignore ? {ignore: data.ignore} : {}), ...(data && data.global ? {global: data.global} : {}), ...(data && data.fb ? {fb: data.fb} : {}), ...(data && data.globalStart ? {globalStart: data.globalStart} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}); lsSet(LS_COACH, coachState);
     } else if (key === 'cams') {
       syncInPlace(camsState, {items: (data && data.items) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {})}); lsSet(LS_CAMS, camsState);
     } else if (key === 'suivi') {
