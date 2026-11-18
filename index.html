@@ -288,6 +288,7 @@ tr.issue-error .issues{color:var(--red)}
 .psw.weak.on{color:#fff;border-color:#f97316;background:linear-gradient(135deg,rgba(239,68,68,.32),rgba(249,115,22,.26));box-shadow:0 0 24px rgba(239,68,68,.55),inset 0 0 14px rgba(249,115,22,.25)}
 .psw.weak.on .psw-b{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;box-shadow:0 0 14px rgba(239,68,68,.75)}
 .glpf{display:inline-block;font-size:10px;font-weight:900;padding:0 6px;border-radius:5px;background:var(--pc);color:#0b0b0f;letter-spacing:.3px;margin-left:4px;vertical-align:middle}
+.glpf.also{background:transparent;color:var(--pc);border:1px dashed var(--pc)}
 .glhead{border-top:3px solid var(--sc)}
 .glstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0 4px}
 .glstats>div{background:var(--bg);border:1px solid var(--line-soft);border-radius:12px;padding:10px 12px}
@@ -4200,11 +4201,12 @@ function supPlanHTML() {
       </tbody></table></div></section>
     <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">Planning des superviseurs</h2><span class="hint" style="margin:0">Planning fixe : il s'applique à toutes les semaines. Cliquez sur une case pour changer l'horaire.</span>
       <button class="btn primary" id="sup-add" type="button" style="margin-left:auto">+ Ajouter un superviseur</button></div>
-      <div class="tbl-wrap" style="max-height:none"><table class="sup-table"><thead><tr><th>Superviseur</th>${PLAN_DAYS_LONG.map(x => `<th>${x}</th>`).join('')}<th title="Plateforme de ses shifts, sauf exception sur un jour (cliquez sur la case du jour)">Focus habituel</th><th>Compte (e-mail)</th><th></th></tr></thead><tbody>
+      <div class="tbl-wrap" style="max-height:none"><table class="sup-table"><thead><tr><th>Superviseur</th>${PLAN_DAYS_LONG.map(x => `<th>${x}</th>`).join('')}<th title="Plateforme de ses shifts, sauf exception sur un jour (cliquez sur la case du jour)">Focus habituel</th><th title="Seconde plateforme à laquelle il a accès : il peut y suivre quelques chatters (3 au plus) dans le suivi global">Peut aussi suivre</th><th>Compte (e-mail)</th><th></th></tr></thead><tbody>
       ${list.map((s, i) => `<tr style="--sc:${s.color};--st:${textOn(s.color)}"><td class="sup-name"><button type="button" class="sup-sw" data-scol="${s.id}" title="Changer la couleur" style="background:${s.color}"></button><input type="text" data-sname="${s.id}" value="${esc(s.name)}"></td>
         ${s.days.map((t, dd) => { const work = !!parseShift(t), pf = supDayFocus(s, dd), ex = !!(s.focusDays && s.focusDays[dd]);
           return `<td><button type="button" class="sup-cell ${isOff(t) ? 'off' : !t ? 'empty' : !parseShift(t) ? 'bad' : ''}" data-scell="${s.id}|${dd}" title="${isOff(t) ? 'OFF' : t ? `${esc(t)}${work ? ` · ${SUP_PF[pf].label}${ex ? ' (ce jour seulement)' : ''}` : ''}` : 'Non renseigné'}">${isOff(t) ? 'OFF' : t ? esc(t) : '—'}${work && pf ? `<span class="sup-pf ${ex ? 'ex' : ''}" style="--pc:${SUP_PF[pf].color}">${pf === 'OF' ? 'OF' : SUP_PF[pf].label}</span>` : ''}</button></td>`; }).join('')}
         <td><input type="text" data-sfocus="${s.id}" value="${esc(s.focus || '')}" list="sup-focus" placeholder="—" style="width:110px"></td>
+        <td><select data-salso="${s.id}" style="width:120px">${[['', '—'], ['MYM', 'MYM'], ['OnlyFans', 'OnlyFans']].map(([v, l]) => `<option value="${v}" ${focusKey(s.alsoPf) === focusKey(v) && (v || !s.alsoPf) ? 'selected' : ''}>${l}</option>`).join('')}</select></td>
         <td><input type="email" data-semail="${s.id}" value="${esc(s.email || '')}" placeholder="e-mail de connexion" style="width:190px" ${Sync.canManage() ? '' : 'disabled'}></td>
         <td class="num" style="white-space:nowrap"><button class="btn ghost small-btn" data-sup-up="${s.id}" type="button" aria-label="Monter" ${i ? '' : 'disabled'}>↑</button> <button class="btn ghost small-btn" data-sup-dn="${s.id}" type="button" aria-label="Descendre" ${i < list.length - 1 ? '' : 'disabled'}>↓</button> <button class="btn ghost small-btn" data-sup-del="${s.id}" type="button" aria-label="Supprimer ${esc(s.name)}">×</button></td></tr>`).join('')}
       </tbody></table></div><datalist id="sup-focus"><option value="OnlyFans"><option value="MYM"><option value="Reveal"></datalist></section></div>`;
@@ -4215,6 +4217,7 @@ function bindSupPlan(main) {
   main.querySelectorAll('[data-covpf]').forEach(b => b.addEventListener('click', () => { planUI.supCovPf = b.dataset.covpf; const y = window.scrollY; render(); window.scrollTo(0, y); }));
   main.querySelectorAll('[data-sname]').forEach(i => i.addEventListener('change', () => { if (i.value.trim()) { map[i.dataset.sname].name = i.value.trim(); done(); } }));
   main.querySelectorAll('[data-sfocus]').forEach(i => i.addEventListener('change', () => { map[i.dataset.sfocus].focus = i.value.trim(); done(); }));
+  main.querySelectorAll('[data-salso]').forEach(i => i.addEventListener('change', () => { if (i.value) map[i.dataset.salso].alsoPf = i.value; else delete map[i.dataset.salso].alsoPf; done(); }));
   main.querySelectorAll('[data-semail]').forEach(i => i.addEventListener('change', () => { const v = i.value.trim().toLowerCase(); if (v) map[i.dataset.semail].email = v; else delete map[i.dataset.semail].email; done(); }));
   const reorder = (id, dir) => { const l = supList(); l.forEach((s, i) => { map[s.id].order = i; }); const i = l.findIndex(s => s.id === id), j = i + dir; if (j < 0 || j >= l.length) return; map[l[i].id].order = j; map[l[j].id].order = i; done(); };
   main.querySelectorAll('[data-sup-up]').forEach(b => b.addEventListener('click', () => reorder(b.dataset.supUp, -1)));
@@ -4394,7 +4397,7 @@ function supAssignHTML() {
   const A = planState.supAssign || {};
   // Un superviseur OnlyFans n'apparaît pas sur les modèles MYM, ni un superviseur MYM sur les modèles OF (champ « focus » des horaires)
   // Un superviseur polyvalent (ex. MYM en semaine, OF le samedi) apparaît sur les deux plateformes
-  const fits = (s, g) => g === 'other' || supEligible(s, g) || s.days.some((t, d) => parseShift(t) && supDayFocus(s, d) === (g === 'of' ? 'OF' : 'MYM'));
+  const fits = (s, g) => g === 'other' || supEligible(s, g) || s.days.some((t, d) => parseShift(t) && supDayFocus(s, d) === (g === 'of' ? 'OF' : 'MYM')) || supAlso(s) === (g === 'of' ? 'OF' : 'MYM');
   const mGroup = mid => (models.find(m => m.id === mid) || {}).group;
   const has = (sid, mid) => !!(A[sid] && A[sid][mid]) && fits(sups.find(s => s.id === sid) || {}, mGroup(mid));
   const colN = mid => sups.filter(s => has(s.id, mid)).length;
@@ -5791,7 +5794,7 @@ function glOverlap(sup, shifts) {
   let h = 0;
   for (const x of shifts) { const [a, b] = SHIFT_HOURS[x.s], want = x.g === 'of' ? 'OF' : x.g === 'mym' ? 'MYM' : '';
     for (let t = a; t < b; t++) { const d = (x.d + Math.floor(t / 24)) % 7, hh = t % 24;
-      if (supBlocks(sup, d).some(bl => hh + 0.5 > bl.start && hh + 0.5 < bl.end && (!want || !bl.pf || bl.pf === want))) h++; } }
+      if (supBlocks(sup, d).some(bl => hh + 0.5 > bl.start && hh + 0.5 < bl.end && (!want || !bl.pf || bl.pf === want || supAlso(sup) === want))) h++; } }
   return h;
 }
 const glPid = sh => { const n = {of: 0, mym: 0}; sh.forEach(x => { if (n[x.g] != null) n[x.g]++; });
@@ -5810,13 +5813,17 @@ function glContext() {
 // Un superviseur n'a accès qu'aux comptes de sa plateforme : un chatter MYM ne peut aller que chez un superviseur MYM
 // (ou polyvalent qui est sur MYM au moins un jour), un chatter OF chez un superviseur OF. Chatter sur les deux : l'une ou l'autre.
 const supOnPf = (s, P) => s.days.some((t, d) => parseShift(t) && (supDayFocus(s, d) || '') === P) || s.days.some((t, d) => parseShift(t) && !supDayFocus(s, d));
-function glFits(s, pid) { if (pid === 'of') return supOnPf(s, 'OF'); if (pid === 'mym') return supOnPf(s, 'MYM'); return true; }
+// Seconde plateforme autorisée (« Peut aussi suivre » dans le planning des superviseurs), limitée à GL_ALSO_MAX chatters
+const GL_ALSO_MAX = 3;
+const supAlso = s => focusKey(s && s.alsoPf);
+const glSecondary = (s, pid) => (pid === 'of' || pid === 'mym') && !supOnPf(s, pid === 'of' ? 'OF' : 'MYM') && supAlso(s) === (pid === 'of' ? 'OF' : 'MYM');
+function glFits(s, pid) { if (pid === 'of') return supOnPf(s, 'OF') || supAlso(s) === 'OF'; if (pid === 'mym') return supOnPf(s, 'MYM') || supAlso(s) === 'MYM'; return true; }
 // Candidats pour un chatter : superviseurs de sa plateforme principale, avec des heures communes sur les shifts de cette plateforme
 function glOptions(ctx, k) {
   const all = ctx.sh(k), pid = glPid(all), A = planState.supAssign || {};
   const shifts = pid === 'of' || pid === 'mym' ? all.filter(x => x.g === pid) : all.filter(x => x.g !== 'other').length ? all.filter(x => x.g !== 'other') : all;
   const mids = new Set(shifts.map(x => x.mid));
-  return ctx.sups.filter(s => glFits(s, pid)).map(s => ({s, ov: glOverlap(s, shifts), mod: [...mids].filter(m => A[s.id] && A[s.id][m]).length})).filter(o => o.ov > 0);
+  return ctx.sups.filter(s => glFits(s, pid)).map(s => ({s, ov: glOverlap(s, shifts), mod: [...mids].filter(m => A[s.id] && A[s.id][m]).length, sec: glSecondary(s, pid), pid})).filter(o => o.ov > 0);
 }
 // Mise à jour : retire les départs, attribue les nouveaux. Les chatters déjà attribués ne changent jamais de superviseur ici.
 // opt.dry : calcule sans rien modifier. Retourne {add:[], rm:[], none:[], blocked}
@@ -5838,13 +5845,16 @@ function glSync(opt = {}) {
   const target = Object.fromEntries(ctx.sups.map(s => [s.id, Math.max(1, Math.round(total * H[s.id] / sumH))]));
   const load = Object.fromEntries(ctx.sups.map(s => [s.id, 0]));
   for (const [k, g] of Object.entries(G)) if (load[g.sup] != null && !orphan.includes(k)) load[g.sup]++;
+  const secN = Object.fromEntries(ctx.sups.map(s => [s.id, Object.entries(G).filter(([k, g]) => g.sup === s.id && !orphan.includes(k) && glSecondary(s, glPid(ctx.sh(k)))).length]));
   const prep = todo.map(k => ({k, opts: glOptions(ctx, k)}));
   prep.sort((a, b) => a.opts.length - b.opts.length || (ctx.team.get(a.k) || '').localeCompare(ctx.team.get(b.k) || '', 'fr'));
   const today = isoOf(new Date());
   for (const x of prep) {
-    if (!x.opts.length) { res.none.push({k: x.k, name: ctx.team.get(x.k)}); continue; }
-    const best = x.opts.slice().sort((a, b) => (load[a.s.id] >= target[a.s.id]) - (load[b.s.id] >= target[b.s.id]) || (b.ov + 4 * b.mod) - (a.ov + 4 * a.mod) || load[a.s.id] - load[b.s.id])[0];
-    load[best.s.id]++;
+    const opts = x.opts.filter(o => !o.sec || secN[o.s.id] < GL_ALSO_MAX);
+    if (!opts.length) { res.none.push({k: x.k, name: ctx.team.get(x.k)}); continue; }
+    // Plateforme principale d'abord ; la seconde plateforme seulement en dépannage
+    const best = opts.slice().sort((a, b) => a.sec - b.sec || (load[a.s.id] >= target[a.s.id]) - (load[b.s.id] >= target[b.s.id]) || (b.ov + 4 * b.mod) - (a.ov + 4 * a.mod) || load[a.s.id] - load[b.s.id])[0];
+    load[best.s.id]++; if (best.sec) secN[best.s.id]++;
     res.add.push({k: x.k, name: ctx.team.get(x.k), sup: best.s.id, ov: best.ov});
     if (!opt.dry) G[x.k] = {sup: best.s.id, name: ctx.team.get(x.k), since: G[x.k] && G[x.k].sup === best.s.id ? G[x.k].since : today};
   }
@@ -5981,7 +5991,7 @@ function glBoardHTML(wk) {
   const card = s => { const l = ent.filter(([, g]) => g.sup === s.id).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'));
     const ag = glAgenda(wk, s), st = glAgendaStats(wk, ag), f = focusKey(s.focus);
     const pf = [...new Set(s.days.map((t, d) => parseShift(t) ? supDayFocus(s, d) : null).filter(x => x != null))];
-    return `<article class="glcard" style="--sc:${s.color}"><header><span class="g-dot" style="background:${s.color}"></span><strong>${esc(s.name)}</strong>${pf.map(p => p ? `<span class="glpf" style="--pc:${SUP_PF[p].color}">${p === 'OF' ? 'OF' : SUP_PF[p].label}</span>` : '').join('')}<span class="glcount">${l.length}</span></header>
+    return `<article class="glcard" style="--sc:${s.color}"><header><span class="g-dot" style="background:${s.color}"></span><strong>${esc(s.name)}</strong>${pf.map(p => p ? `<span class="glpf" style="--pc:${SUP_PF[p].color}">${p === 'OF' ? 'OF' : SUP_PF[p].label}</span>` : '').join('')}${supAlso(s) && !pf.includes(supAlso(s)) ? `<span class="glpf also" style="--pc:${SUP_PF[supAlso(s)].color}" title="Peut aussi suivre quelques chatters ${SUP_PF[supAlso(s)].label} (${GL_ALSO_MAX} au plus)">+${supAlso(s) === 'OF' ? 'OF' : 'MYM'}</span>` : ''}<span class="glcount">${l.length}</span></header>
       <div class="glbar" title="Feedbacks faits cette semaine"><span style="width:${st.n ? Math.round(st.done / st.n * 100) : 0}%"></span></div><div class="sub" style="margin:2px 0 8px">${st.done}/${st.n} feedbacks faits${st.late ? ` · <span class="sc-lo">${st.late} en retard</span>` : ''}</div>
       <ul class="gllist">${l.map(([k, g]) => { const sh = ctx.sh(k), hit = q && normName(g.name).includes(q);
         return `<li class="${hit ? 'hit' : ''} ${q && !hit ? 'dim' : ''}" ${dir ? `data-glmove="${esc(k)}" tabindex="0" role="button"` : ''}><span class="gln">${esc(g.name)}</span>${pfBadge(glPid(sh))}${weak[k] ? '<span class="rtag hot">faible</span>' : ''}${g.since > (coachState.globalStart || '') && g.since >= addDaysIso(isoOf(new Date()), -7) ? '<span class="rtag ok">nouveau</span>' : ''}<span class="gls">${glWeeksSince(g.since)}</span></li>`; }).join('') || '<li class="muted">Aucun chatter</li>'}</ul></article>`; };
