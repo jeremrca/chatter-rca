@@ -1308,7 +1308,7 @@ if (typeof module !== 'undefined') module.exports = RCA;
 
 RCA.ASV = (() => {
   const {normHeader, cellText, parseCell, parseCSV} = RCA;
-  const CURRENCY = {of:'$', mym:'€'};
+  const CURRENCY = {of:'$', mym:'$'};   // ASV OnlyFans et MYM saisis en dollars (MyPulse « Convertir en USD »)
   // Correspondance handle d'export → nom utilisé dans l'agence (reprise du cahier des charges, modifiable dans Réglages)
   const DEFAULT_MAPPING = {
     'Carlababyy':'Carla baby', 'Petitabricot':'Ava', 'Tablondinette_':'Flavie', 'Chloesanchez':'Chloé', 'Carlatrans':'Carla trans',
@@ -2629,7 +2629,8 @@ const modelsOf = (pid, withArchived) => asvState.models.filter(m => m.platform =
 const entriesOf = pid => { const ids = new Set(asvState.models.filter(m => m.platform === pid).map(m => m.id)); return asvState.entries.filter(e => ids.has(e.modelId)); };
 const findModel = (pid, name) => asvState.models.find(m => m.platform === pid && m.name.toLowerCase() === name.trim().toLowerCase());
 const cur = pid => ASVE.CURRENCY[pid];
-const fa = (pid, v, d = 2) => v == null ? '—' : nf(v, d, d) + '\u00a0' + cur(pid);
+// Montants ASV en dollars, suivis de l'équivalent en euros (taux des Réglages : 1 € = … $)
+const fa = (pid, v, d = 2) => { if (v == null) return '—'; const r = asvState.settings.eurToUsd; return nf(v, d, d) + '\u00a0$' + (r > 0 && r !== 1 ? ` / ${nf(v / r, d, d)}\u00a0€` : ''); };
 const fint = v => v == null ? '—' : nf(v, 0, 0);
 const deltaBadge = d => !d ? '<span class="dlt stable">—</span>' : d.dir === 'stable' ? '<span class="dlt stable">= stable</span>' : `<span class="dlt ${d.dir}">${d.dir === 'up' ? '▲' : '▼'} ${nf(Math.abs(d.pct), 1, 1)}\u00a0%</span>`;
 const goalPill = (pid, t) => t === null ? '<span class="goal stable">STABLE</span>' : t === undefined ? '—' : `<span class="goal">${fa(pid, t)}</span>`;
@@ -2923,14 +2924,14 @@ function asvPriorites(P, r) {
 /* ---------- Classement général (mise en page du rapport PDF) ---------- */
 function asvGeneral(P, r) {
   const rate = asvState.settings.eurToUsd;
-  const all = PIDS.flatMap(pid => periodRows(pid, r).filter(x => x.asv != null)).map(x => ({...x, cmp: x.pid === 'mym' ? x.asv * rate : x.asv})).sort((a, b) => b.cmp - a.cmp);
+  const all = PIDS.flatMap(pid => periodRows(pid, r).filter(x => x.asv != null)).map(x => ({...x, cmp: x.asv})).sort((a, b) => b.cmp - a.cmp);
   if (!all.length) return `<section class="nc"><h2>Aucune donnée sur cette période</h2><p class="muted">Aucune plateforme n'a de chiffres pour ${esc(fmtRange(r.start, r.end))}.</p></section>`;
   return `<section class="nc nrank">
     ${all.map((x, i) => `<div class="nrow ${i < 3 ? 'ntop' : ''}"><span class="nr-rank ${i === 0 ? 'r1' : i === 2 ? 'r3' : ''}">${String(i + 1).padStart(2, '0')}</span>
       <span class="nr-name">${esc(x.m.name)} ${PCODE[x.pid]}</span><span class="nr-tag ${x.pid}">${pbadge(PLATFORMS[x.pid])}${PLATFORMS[x.pid].name}</span>
-      <span class="nr-val ${i === 0 ? 'gold' : ''}">${fa(x.pid, x.asv)}${rate !== 1 && x.pid === 'mym' ? `<small class="muted"> ≈ ${fa('of', x.cmp)}</small>` : ''}</span></div>`).join('')}
+      <span class="nr-val ${i === 0 ? 'gold' : ''}">${fa(x.pid, x.asv)}</span></div>`).join('')}
     </section>
-    <p class="muted" style="text-align:center;font-size:12px;margin:0">${rate === 1 ? `OnlyFans ($) et MYM (€) sont comparés sans conversion de change ; un taux peut être défini dans Réglages.` : `Classement calculé en dollars, avec 1 € = ${nf(rate, 2, 4)} $.`}</p>`;
+    <p class="muted" style="text-align:center;font-size:12px;margin:0">OnlyFans et MYM en dollars${rate !== 1 ? ` · équivalent en euros avec 1 € = ${nf(rate, 2, 4)} $` : ' · indiquez le taux de change dans Réglages pour voir aussi les euros'}.</p>`;
 }
 
 /* ---------- Détail par modèle ---------- */
@@ -3248,7 +3249,7 @@ function asvReglages(P) {
   return `<section class="nc"><h2>Paliers d'objectif ${P.name}</h2><p class="muted" style="margin-top:0">L'objectif d'un modèle est le premier palier au-dessus de son ASV. Au-delà du dernier palier, l'objectif devient « STABLE ».</p>
       <div class="nperiod"><label class="f">Paliers (${cur(P.id)}, séparés par des virgules)<input type="text" id="set-pal" value="${esc(ps.paliers.join(', '))}" style="width:200px"></label>
       <label class="f">Alerte « En baisse » à partir de (%)<input type="number" id="set-drop" min="0" step="any" value="${ps.dropAlert}" style="width:120px"></label></div></section>
-    <section class="nc"><h2>Classement général</h2><p class="muted" style="margin-top:0">Pour comparer OnlyFans ($) et MYM (€) dans un même classement. Laissez 1 pour comparer les valeurs sans conversion.</p>
+    <section class="nc"><h2>Taux de change</h2><p class="muted" style="margin-top:0">Les ASV OnlyFans et MYM sont saisis en dollars. Ce taux sert à afficher aussi l’équivalent en euros (par ex. « 3,48 $ / 3,16 € »). Laissez 1 pour n’afficher que les dollars.</p>
       <label class="f">Taux de change : 1 € = … $<input type="number" id="set-rate" min="0" step="any" value="${s.eurToUsd}" style="width:120px"></label></section>
     <section class="nc"><h2>Correspondance des noms</h2><p class="muted" style="margin-top:0">Une ligne par modèle : nom dans l'export = nom dans l'agence. Commune à OnlyFans et MYM. Les suffixes « OF » et « MYM » sont retirés automatiquement.</p>
       <textarea id="set-map" rows="10">${esc(Object.entries(s.mapping).map(([h, n]) => `${h} = ${n}`).join('\n'))}</textarea></section>
