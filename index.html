@@ -274,6 +274,40 @@ tr.issue-error .issues{color:var(--red)}
 .ntabs a.on{color:#fff;border-color:var(--core);box-shadow:0 0 12px rgba(var(--g1-rgb),.5),inset 0 0 8px rgba(var(--g1-rgb),.25)}
 .nstack{display:flex;flex-direction:column;gap:14px}
 .nperiod{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.pbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px}
+.pb-seg{display:flex;align-items:center;gap:2px;padding:5px;border-radius:14px;background:rgba(10,8,14,.72);border:1px solid rgba(255,255,255,.1);overflow-x:auto;max-width:100%}
+.pb-seg button{border:0;background:none;color:rgba(255,255,255,.62);font:inherit;font-weight:600;font-size:14px;padding:7px 13px;border-radius:10px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.pb-seg button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.pb-seg button.on{background:var(--core,#f7a034);color:#120e14;box-shadow:0 0 14px rgba(var(--core-rgb,247,160,52),.45)}
+.pb-sep{width:1px;height:20px;background:rgba(255,255,255,.14);margin:0 4px;flex:none}
+.pb-date{position:relative}
+.pb-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.1);background:rgba(10,8,14,.72);color:#fff;font:inherit;font-weight:600;font-size:14.5px;padding:11px 16px;border-radius:14px;cursor:pointer;white-space:nowrap}
+.pb-btn:hover,.pb-btn[aria-expanded=true]{border-color:rgba(var(--core-rgb,247,160,52),.7)}
+.pb-btn svg{width:18px;height:18px;fill:none;stroke:var(--core,#f7a034);stroke-width:1.8;stroke-linecap:round}
+.pb-arr{color:var(--core,#f7a034)}
+.pb-pop{position:absolute;z-index:40;top:calc(100% + 8px);left:0;width:300px;padding:12px;border-radius:14px;background:#17121d;border:1px solid rgba(var(--core-rgb,247,160,52),.55);box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.pb-cmp{margin-left:auto;font-size:12.5px;color:rgba(255,255,255,.6)}
+.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-h b{text-transform:capitalize;font-size:14.5px}
+.cal-nav{border:0;background:rgba(255,255,255,.06);color:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:17px}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal-g i{font-style:normal;font-size:11.5px;color:rgba(255,255,255,.5);padding:2px 0 4px}
+.cal-d{border:0;background:none;color:#fff;font:inherit;font-size:13.5px;height:34px;border-radius:8px;cursor:pointer}
+.cal-d:hover{background:rgba(255,255,255,.1)}
+.cal-d.in{background:rgba(var(--core-rgb,247,160,52),.2)}
+.cal-d.edge{background:var(--core,#f7a034);color:#120e14;font-weight:700}
+.cal-d.today{box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)}
+.cal-hint{margin:8px 2px 0;font-size:12px;color:rgba(255,255,255,.55)}
+.live{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.neon .live-c{display:block;color:inherit;text-decoration:none;transition:border-color .15s,box-shadow .15s}
+.neon .live-c:hover{box-shadow:0 0 18px rgba(var(--g1-rgb),.35)}
+.neon .live-c.cur{border-color:var(--core);box-shadow:0 0 16px rgba(var(--g1-rgb),.4),inset 0 0 10px rgba(var(--g1-rgb),.15)}
+.live-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.live-h em{margin-left:auto;font-style:normal;font-weight:600;letter-spacing:0;text-transform:none;font-size:12.5px;color:rgba(255,255,255,.6)}
+.live-v{font-size:34px;font-weight:800;line-height:1.1;margin:12px 0 6px;color:#fff;text-shadow:0 0 12px rgba(var(--g1-rgb),.55)}
+.live-s{font-size:13px}
+.live-f{font-size:12px;margin-top:6px;line-height:1.5}
+@media (max-width:760px){.live{grid-template-columns:1fr}.pb-cmp{margin-left:0;width:100%}.live-v{font-size:28px}}
 .neon .nc.nperiod{margin-bottom:14px}
 .neon label.f,.neon .f{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:rgba(255,255,255,.6)}
 .ngrid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
@@ -2757,6 +2791,102 @@ function bindPeriod(root, idp, get, set, after) {
   root.querySelector(`[data-pb="${idp}"]`)?.addEventListener('change', e => { set({...get(), b:e.target.value}); after(); });
 }
 
+/* ---------- Barre de période façon MyPulse : raccourcis + calendrier ---------- */
+const ymShift = (ym, n) => { const [y, m] = ym.split('-').map(Number), d = new Date(y, m - 1 + n, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+function asvPresets() {
+  const t = isoOf(new Date()), ym = t.slice(0, 7), y = ym.slice(0, 4), first = +t.slice(8, 10) <= 15;
+  return [
+    {k:'q', l:'Quinzaine', p: {type:'half', a:ym, b: first ? '1' : '2'}},
+    {k:'q1', l:'Q-1', p: first ? {type:'half', a:ymShift(ym, -1), b:'2'} : {type:'half', a:ym, b:'1'}},
+    {sep:1},
+    {k:'m', l:'Mois', p: {type:'month', a:ym, b:''}},
+    {k:'m1', l:'M-1', p: {type:'month', a:ymShift(ym, -1), b:''}},
+    {k:'m3', l:'3 mois', p: {type:'custom', a:`${ymShift(ym, -2)}-01`, b:ASVE.monthRange(ym).end}},
+    {sep:1},
+    {k:'y', l:'Année', p: {type:'custom', a:`${y}-01-01`, b:`${y}-12-31`}}];
+}
+const frDate = iso => iso ? iso.split('-').reverse().join('/') : '';
+const CAL_DOW = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
+function calHTML(view, r, pick) {
+  const [y, m] = view.split('-').map(Number), first = new Date(y, m - 1, 1), off = (first.getDay() + 6) % 7, n = new Date(y, m, 0).getDate(), today = isoOf(new Date());
+  const lo = pick || (r && r.start), hi = pick ? pick : r && r.end;
+  let cells = '';
+  for (let i = 0; i < off; i++) cells += '<span></span>';
+  for (let d = 1; d <= n; d++) {
+    const iso = `${view}-${String(d).padStart(2, '0')}`, edge = iso === lo || iso === hi, inr = lo && hi && iso > lo && iso < hi;
+    cells += `<button type="button" class="cal-d${edge ? ' edge' : inr ? ' in' : ''}${iso === today ? ' today' : ''}" data-cald="${iso}">${d}</button>`;
+  }
+  return `<div class="cal-h"><button type="button" class="cal-nav" data-calm="-1" aria-label="Mois précédent">‹</button><b>${esc(new Date(y, m - 1, 1).toLocaleDateString('fr-FR', {month:'long', year:'numeric'}))}</b><button type="button" class="cal-nav" data-calm="1" aria-label="Mois suivant">›</button></div>
+    <div class="cal-g">${CAL_DOW.map(x => `<i>${x}</i>`).join('')}${cells}</div>
+    <p class="cal-hint">${pick ? `Du ${esc(frDate(pick))} : choisissez la date de fin.` : 'Choisissez la date de début, puis la date de fin.'}</p>`;
+}
+function periodBar(pid) {
+  const r = rangeOf(pid), pres = asvPresets();
+  const on = x => { const q = ASVE.rangeFor(x.p.type, x.p.a, x.p.b); return r && q.start === r.start && q.end === r.end; };
+  const pv = r ? ASVE.previousRange(r.start, r.end) : null, pm = pv ? ASVE.monthRange(pv.start.slice(0, 7)) : null;
+  const half = pv && pv.start.slice(0, 7) === pv.end.slice(0, 7) && (pm.start !== pv.start || pm.end !== pv.end);
+  return `<div class="pbar">
+    <div class="pb-seg" role="group" aria-label="Raccourcis de période">${pres.map((x, i) => x.sep ? '<span class="pb-sep" aria-hidden="true"></span>' : `<button type="button" class="${on(x) ? 'on' : ''}" data-pp="${i}" aria-pressed="${on(x)}">${x.l}</button>`).join('')}</div>
+    <div class="pb-date"><button type="button" class="pb-btn" id="pb-open" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>${r ? `${esc(frDate(r.start))} <span class="pb-arr">→</span> ${esc(frDate(r.end))}` : 'Choisir les dates'}</button>
+      <div class="pb-pop" id="pb-pop" role="dialog" aria-label="Choisir une plage de dates" hidden></div></div>
+    ${r ? `<span class="pb-cmp">Comparée à ${esc(fmtRange(pv.start, pv.end))}${half ? ` (à défaut : ${esc(monthLabel(pv.start.slice(0, 7)))} entier)` : ''}</span>` : '<span class="sc-lo">Plage de dates invalide.</span>'}
+  </div>`;
+}
+// Une plage qui tombe pile sur un mois ou une quinzaine est enregistrée comme telle (comparaison avec la période précédente équivalente)
+function periodFromRange(a, b) {
+  const ym = a.slice(0, 7), full = ASVE.monthRange(ym);
+  if (a === full.start && b === full.end) return {type:'month', a:ym, b:''};
+  if (a === `${ym}-01` && b === `${ym}-15`) return {type:'half', a:ym, b:'1'};
+  if (a === `${ym}-16` && b === full.end) return {type:'half', a:ym, b:'2'};
+  return {type:'custom', a, b};
+}
+let calDocBound = false;
+function bindPeriodBar(main, pid) {
+  const pres = asvPresets(), set = p => { asvUI.period[pid] = p; render(); };
+  main.querySelectorAll('[data-pp]').forEach(b => b.addEventListener('click', () => set({...pres[+b.dataset.pp].p})));
+  const open = main.querySelector('#pb-open'), pop = main.querySelector('#pb-pop'); if (!open) return;
+  let view = (rangeOf(pid) || {start: isoOf(new Date())}).start.slice(0, 7), pick = null;
+  const draw = () => { pop.innerHTML = calHTML(view, rangeOf(pid), pick); };
+  const close = () => { pop.hidden = true; open.setAttribute('aria-expanded', 'false'); pick = null; };
+  open.addEventListener('click', () => { if (!pop.hidden) return close(); draw(); pop.hidden = false; open.setAttribute('aria-expanded', 'true'); pop.querySelector('.cal-d.edge, .cal-d')?.focus(); });
+  pop.addEventListener('click', e => {
+    e.stopPropagation();
+    const mv = e.target.closest('[data-calm]'); if (mv) { view = ymShift(view, +mv.dataset.calm); return draw(); }
+    const d = e.target.closest('[data-cald]'); if (!d) return;
+    if (!pick) { pick = d.dataset.cald; return draw(); }
+    const a = pick < d.dataset.cald ? pick : d.dataset.cald, b = pick < d.dataset.cald ? d.dataset.cald : pick;
+    close(); set(periodFromRange(a, b));
+  });
+  pop.addEventListener('keydown', e => { if (e.key === 'Escape') { close(); open.focus(); } });
+  if (!calDocBound) { calDocBound = true; document.addEventListener('click', e => { const p = document.getElementById('pb-pop'); if (p && !p.hidden && !e.target.closest('.pb-date')) { p.hidden = true; document.getElementById('pb-open')?.setAttribute('aria-expanded', 'false'); } }); }
+}
+
+/* ---------- ASV moyen du mois en cours, OnlyFans et MYM (se met à jour à chaque import) ---------- */
+function asvMonthStats(pid, ym) {
+  const E = entriesOf(pid), mr = ASVE.monthRange(ym);
+  let f = 0, rv = 0, n = 0; const vals = [];
+  for (const m of modelsOf(pid)) {
+    const a = ASVE.aggregate(E, m.id, mr.start, mr.end); if (!a || a.asv == null) continue;
+    n++; vals.push(a.asv); if (a.fans > 0 && a.revenue != null) { f += a.fans; rv += a.revenue; }
+  }
+  const upTo = E.filter(e => e.start >= mr.start && e.end <= mr.end).reduce((x, e) => e.end > x ? e.end : x, '');
+  return n ? {n, asv: f > 0 ? rv / f : vals.reduce((a, x) => a + x, 0) / n, weighted: f > 0, mean: vals.reduce((a, x) => a + x, 0) / n, fans: f, upTo} : null;
+}
+function asvLiveHTML(curPid) {
+  const ym = isoOf(new Date()).slice(0, 7), pym = ymShift(ym, -1), mName = x => new Date(+x.slice(0, 4), +x.slice(5, 7) - 1, 1).toLocaleDateString('fr-FR', {month:'long'});
+  const card = pid => {
+    const P = PLATFORMS[pid], cur = asvMonthStats(pid, ym), prev = asvMonthStats(pid, pym), d = cur && prev ? ASVE.delta(cur.asv, prev.asv) : null;
+    return `<a class="nc live-c ${pid}${pid === curPid ? ' cur' : ''}" href="#${pid}/asv/dashboard" data-live="${pid}" title="Voir le classement ${P.name} de ${mName(ym)}">
+      <div class="live-h">${pbadge(P)}<span>ASV moyen ${P.name}</span><em>${esc(mName(ym))} en cours</em></div>
+      ${cur ? `<div class="live-v">${fa(pid, cur.asv)}</div>
+        <div class="live-s">${deltaBadge(d)} <span class="muted">vs ${esc(mName(pym))}${prev ? ` (${fa(pid, prev.asv)})` : ''}</span></div>
+        <div class="live-f muted">${cur.weighted ? 'Pondéré par les nouveaux fans' : 'Moyenne des modèles'} · ${plural(cur.n, 'modèle', 'modèles')} · chiffres jusqu’au ${esc(fmtDayFr(cur.upTo))}${cur.weighted ? ` · moyenne simple ${fa(pid, cur.mean)}` : ''}</div>`
+      : `<div class="live-v muted" style="font-size:20px">Pas encore de chiffres</div><div class="live-f muted">${prev ? `${esc(mName(pym))} : ${fa(pid, prev.asv)} · ` : ''}importez la première quinzaine de ${esc(mName(ym))}.</div>`}
+    </a>`;
+  };
+  return `<section class="live">${PIDS.map(card).join('')}</section>`;
+}
+
 /* ---------- Données calculées pour une période ---------- */
 function periodRows(pid, r) {
   const prev = ASVE.previousRange(r.start, r.end), E = entriesOf(pid);
@@ -2782,8 +2912,7 @@ function neonShell(P, sub, body, withPeriod) {
       <div class="nh-period ${global ? 'gold' : ''}">${r ? esc(periodUpper(r)) : ''}</div></header>
     <nav class="ntabs" aria-label="Sections ASV">${ASV_TABS.filter(t => t[0] !== 'reglages' || Sync.canManage()).map(([k, l]) => `<a href="#${P.id}/asv/${k}" class="${k === sub ? 'on' : ''}" ${k === sub ? 'aria-current="page"' : ''}>${l}</a>`).join('')}</nav>
     ${hero}
-    ${withPeriod ? `<div class="nc nperiod">${periodControls(P.id, 'main', periodOf(P.id))}${r ? (() => { const pv = ASVE.previousRange(r.start, r.end), pm = ASVE.monthRange(pv.start.slice(0, 7)); const half = pv.start.slice(0, 7) === pv.end.slice(0, 7) && (pm.start !== pv.start || pm.end !== pv.end);
-      return `<span class="muted" style="margin-left:auto;font-size:12.5px">Comparée à : ${esc(fmtRange(pv.start, pv.end))}${half ? ` (à défaut : ${esc(monthLabel(pv.start.slice(0, 7)))} entier)` : ''}</span>`; })() : '<span class="sc-lo">Plage de dates invalide.</span>'}</div>` : ''}
+    ${withPeriod ? periodBar(P.id) : ''}
     <div class="nstack">${body}</div>
     <footer class="nfoot">Suivi ASV — rapport généré automatiquement</footer>`;
 }
@@ -2794,8 +2923,8 @@ function renderASV(main, P, sub) {
   const r = rangeOf(P.id);
   const needsData = ['dashboard','objectifs'].includes(sub);
   let body;
-  if (needsData && !hasData) body = `<section class="nc" style="text-align:center;padding:40px 20px"><h2 style="font-size:19px">Aucune donnée ASV ${P.name} pour l'instant</h2><p class="muted">Importez un tableau avec une colonne Modèle et une colonne ASV (les abonnés sont facultatifs), ou saisissez des chiffres à la main.</p><a class="btn primary" href="#${P.id}/asv/saisie">Importer des données</a></section>`;
-  else if (sub === 'dashboard') body = r ? asvDashboard(P, r) : '';
+  if (needsData && !hasData) body = (sub === 'dashboard' ? asvLiveHTML(P.id) : '') + `<section class="nc" style="text-align:center;padding:40px 20px"><h2 style="font-size:19px">Aucune donnée ASV ${P.name} pour l'instant</h2><p class="muted">Importez un tableau avec une colonne Modèle et une colonne ASV (les abonnés sont facultatifs), ou saisissez des chiffres à la main.</p><a class="btn primary" href="#${P.id}/asv/saisie">Importer des données</a></section>`;
+  else if (sub === 'dashboard') body = asvLiveHTML(P.id) + (r ? asvDashboard(P, r) : '');
   else if (sub === 'objectifs') body = r ? asvObjectifs(P, r) : '';
   else if (sub === 'priorites') body = r ? asvPriorites(P, r) : '';
   else if (sub === 'general') body = r ? asvGeneral(P, r) : '';
@@ -2803,7 +2932,8 @@ function renderASV(main, P, sub) {
   else if (sub === 'saisie') body = asvSaisie(P);
   else body = asvReglages(P);
   main.innerHTML = neonShell(P, sub, body, ['dashboard','objectifs','priorites','general'].includes(sub));
-  bindPeriod(main, 'main', () => periodOf(P.id), v => { asvUI.period[P.id] = v; }, render);
+  bindPeriodBar(main, P.id);
+  main.querySelectorAll('[data-live]').forEach(a => a.addEventListener('click', () => { asvUI.period[a.dataset.live] = {type:'month', a:isoOf(new Date()).slice(0, 7), b:''}; }));
   ({dashboard:bindAsvDashboard, modeles:bindAsvModeles, saisie:bindAsvSaisie, reglages:bindAsvReglages}[sub] || (() => {}))(main, P, r);
 }
 
