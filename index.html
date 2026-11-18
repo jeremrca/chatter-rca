@@ -274,6 +274,9 @@ tr.issue-error .issues{color:var(--red)}
 .ntabs a.on{color:#fff;border-color:var(--core);box-shadow:0 0 12px rgba(var(--g1-rgb),.5),inset 0 0 8px rgba(var(--g1-rgb),.25)}
 .nstack{display:flex;flex-direction:column;gap:14px}
 .nperiod{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.kas{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin:-4px 0 8px;font-size:13px;color:var(--muted)}
+.kas.on{justify-content:flex-start;padding:10px 14px;border-radius:12px;border:1px solid var(--sc);background:linear-gradient(90deg,color-mix(in srgb,var(--sc) 22%,transparent),transparent);color:var(--text);font-size:14px}
+.kas.on select{margin-left:auto}
 .kmode{max-width:760px;margin:6px auto 18px}
 .psw-t small{display:block;font-size:12px;font-weight:700;letter-spacing:0;opacity:.8;text-shadow:none}
 .psw.gl:hover{border-color:rgba(167,139,250,.6)}
@@ -5590,7 +5593,11 @@ const BAD_NAME = /acc[eè]s\s+r[eé]voqu|superviseu?r|\bsup\b|\bmanager\b|@/i;
 const SHIFT_HOURS = [[4, 10], [10, 16], [16, 22], [22, 28]];
 const supFocus = s => /mym/i.test(s.focus || '') ? 'MYM' : /only|^\s*of\s*$/i.test(s.focus || '') ? 'OF' : '';
 const supEligible = (s, pid) => { const f = supFocus(s); return !f || f === (pid === 'of' ? 'OF' : 'MYM'); };
-const mySup = () => { const e = String(Sync.email() || '').toLowerCase(); return e ? supList().find(s => String(s.email || '').toLowerCase() === e) : null; };
+const mySupReal = () => { const e = String(Sync.email() || '').toLowerCase(); return e ? supList().find(s => String(s.email || '').toLowerCase() === e) : null; };
+// « Voir comme un superviseur » (Direction) : la page Suivi des chatters s'affiche exactement comme pour lui, en lecture seule
+const coachAs = () => Sync.canDirect() && coachUI.asSup ? supList().find(s => s.id === coachUI.asSup) || null : null;
+const mySup = () => coachAs() || mySupReal();
+const coachDir = () => Sync.canDirect() && !coachAs();
 
 // Nom d'un import (« rocharlotrakotoson », « Vonjy Mym ») → prénom du planning (« Rocharlot », « Vonjy »)
 // Toute l'équipe connue : tous les plannings enregistrés + Jours OFF (pas seulement les 3 dernières semaines)
@@ -5895,13 +5902,13 @@ const glWeeksSince = since => { const n = Math.max(0, Math.floor((parseDate(isoO
 
 // ---------- Vue « Calendrier » : les feedbacks de la semaine d'un superviseur ----------
 function glCalendarHTML(wk) {
-  const me = mySup(), dir = Sync.canDirect(), sups = supList();
+  const me = mySup(), dir = coachDir(), sups = supList();
   const sid = coachUI.calSup && sups.some(s => s.id === coachUI.calSup) ? coachUI.calSup : me ? me.id : (sups[0] || {}).id;
   const sup = sups.find(s => s.id === sid);
   if (!sup) return '<div class="panel empty">Aucun superviseur dans le planning des superviseurs.</div>';
   if (!Object.keys(coachGlobal()).length) return `<div class="panel empty"><h2 style="font-size:18px">La répartition n’est pas encore lancée</h2><p class="hint" style="margin:6px 0 0">${dir ? 'Ouvrez l’onglet « Tous les chatters » pour la lancer.' : 'La Direction doit d’abord lancer la répartition.'}</p></div>`;
   const ag = glAgenda(wk, sup), st = glAgendaStats(wk, ag), today = isoOf(new Date());
-  const canMark = dir || (me && me.id === sup.id);
+  const canMark = !coachAs() && (dir || (me && me.id === sup.id));
   const chip = it => { const s = glState(wk, it);
     return `<button type="button" class="glc ${it.type} ${s}" data-glfb="${esc(it.fbk)}" data-gld="${it.d}" ${canMark ? '' : 'disabled'} style="--pc:${SUP_PF[it.g === 'of' ? 'OF' : it.g === 'mym' ? 'MYM' : ''].color}" title="${s === 'done' ? 'Feedback fait · cliquez pour annuler' : canMark ? 'Cliquez quand le feedback est fait' : ''}">
       <span class="glc-n">${s === 'done' ? '✓ ' : ''}${esc(it.name)}</span>${it.type === 'weak' ? '<span class="glc-w">Maillon faible</span>' : ''}<span class="glc-s">${esc(it.label)}</span>${s === 'very' ? '<span class="glc-l">en retard</span>' : s === 'late' ? '<span class="glc-l">d’hier</span>' : ''}</button>`; };
@@ -5950,7 +5957,7 @@ function bindGlCalendar(main, wk) {
 
 // ---------- Vue « Tous les chatters » : la répartition par superviseur ----------
 function glBoardHTML(wk) {
-  const dir = Sync.canDirect(), G = coachGlobal(), sups = supList();
+  const dir = coachDir(), G = coachGlobal(), sups = supList();
   if (!Object.keys(G).length) {
     const dry = glSync({dry: true}), ctx = glContext();
     return `<section class="panel"><h2>Lancer la répartition des chatters</h2>
@@ -6007,7 +6014,7 @@ function bindGlBoard(main, wk) {
 function renderGlobal(main, wk, head) {
   // Mise à jour automatique (nouveaux / départs), seulement une fois les données partagées chargées
   if (Object.keys(coachGlobal()).length && glCanSync()) { const r = glSync(); if (r.add.length || r.rm.length) saveCoach(); }
-  const me = mySup(), dir = Sync.canDirect();
+  const me = mySup(), dir = coachDir();
   const tab = coachUI.gtab || (me || !dir ? 'cal' : 'board');
   const tabs = `<div class="ptopt" role="tablist">${[['cal', me ? 'Mon calendrier' : 'Calendrier des feedbacks'], ['board', 'Tous les chatters']].map(([k, l]) => `<button type="button" class="${tab === k ? 'on' : ''}" data-gtab="${k}">${l}</button>`).join('')}</div>`;
   main.innerHTML = head + tabs + (tab === 'cal' ? glCalendarHTML(wk) : glBoardHTML(wk));
@@ -6017,6 +6024,13 @@ function renderGlobal(main, wk, head) {
 }
 
 /* ---------- Page ---------- */
+// Bandeau « Voir comme un superviseur » (Direction seulement)
+function coachAsHTML() {
+  if (!Sync.canDirect()) return '';
+  const as = coachAs(), sel = `<select id="k-as" style="width:auto">${['<option value="">Vue Direction</option>', ...supList().map(s => `<option value="${s.id}" ${as && as.id === s.id ? 'selected' : ''}>Voir comme ${esc(s.name)}</option>`)].join('')}</select>`;
+  return as ? `<div class="kas on" style="--sc:${as.color}"><span class="g-dot" style="background:${as.color}"></span><span>Vous voyez la page <strong>exactement comme ${esc(as.name)}</strong> (lecture seule : rien n’est modifié).</span>${sel}<button class="btn small-btn" type="button" id="k-as-off">Revenir à la vue Direction</button></div>`
+    : `<div class="kas"><span>Vue superviseur :</span>${sel}</div>`;
+}
 // Deux grands boutons : Suivi global (tous les chatters) / Maillons faibles (rouge-orange)
 function coachModeHTML(wk) {
   const m = coachUI.mode || 'global', nWeak = Object.keys(glWeak(wk)).length, me = mySup();
@@ -6025,7 +6039,12 @@ function coachModeHTML(wk) {
     <button type="button" class="psw gl ${m === 'global' ? 'on' : ''}" data-kmode="global"><span class="psw-b">★</span><span class="psw-t">Suivi global<small>${Object.keys(coachState.global || {}).length} chatters</small></span></button>
     <button type="button" class="psw weak ${m === 'weak' ? 'on' : ''}" data-kmode="weak"><span class="psw-b">!</span><span class="psw-t">Maillons faibles<small>${nWeak ? `${nWeak} cette semaine${mineWeak ? ` · ${mineWeak} pour vous` : ''}` : 'liste pas encore validée'}</small></span></button></nav>`;
 }
-function bindCoachMode(main) { main.querySelectorAll('[data-kmode]').forEach(b => b.addEventListener('click', () => { coachUI.mode = b.dataset.kmode; render(); })); }
+function bindCoachMode(main) {
+  main.querySelectorAll('[data-kmode]').forEach(b => b.addEventListener('click', () => { coachUI.mode = b.dataset.kmode; render(); }));
+  const set = v => { coachUI.asSup = v || null; coachUI.gtab = null; coachUI.calSup = null; coachUI.tab = null; render(); window.scrollTo(0, 0); };
+  main.querySelector('#k-as')?.addEventListener('change', e => set(e.target.value));
+  main.querySelector('#k-as-off')?.addEventListener('click', () => set(''));
+}
 function renderCoaching(main) {
   const wk = coachUI.week ||= mondayOf(isoOf(new Date()));
   const W = coachState.weeks[wk];
@@ -6033,10 +6052,10 @@ function renderCoaching(main) {
     <div class="picker viewpick"><button class="btn ghost small-btn" id="kw-prev" type="button" aria-label="Semaine précédente">‹</button>
       <select id="kw-sel">${[...new Set([...Object.keys(coachState.weeks), mondayOf(isoOf(new Date())), wk])].sort().reverse().map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}</option>`).join('')}</select>
       <button class="btn ghost small-btn" id="kw-next" type="button" aria-label="Semaine suivante">›</button></div></div>`
-    + coachModeHTML(wk);
+    + coachAsHTML() + coachModeHTML(wk);
   if ((coachUI.mode || 'global') === 'global') { renderGlobal(main, wk, head); bindCoachMode(main); return; }
   setTimeout(() => bindCoachMode(main));
-  if (!Sync.canDirect()) { main.innerHTML = head + coachSupView(wk); bindCoachHead(wk); bindCoachCards(main, wk); return; }
+  if (!coachDir()) { main.innerHTML = head + coachSupView(wk); bindCoachHead(wk); bindCoachCards(main, wk); return; }
   const meSup = mySup();
   const tabsD = `<div class="ptopt" role="tablist">${[['list', 'Liste et répartition'], ['dec', 'Décisions'], ['sups', 'Suivi des superviseurs'], ...(meSup ? [['mine', 'Mes chatters']] : [])].map(([k, l]) => `<button type="button" class="${(coachUI.tab || 'list') === k ? 'on' : ''}" data-ktab="${k}">${l}</button>`).join('')}</div>`;
   const bindTabs = () => main.querySelectorAll('[data-ktab]').forEach(b => b.addEventListener('click', () => { coachUI.tab = b.dataset.ktab; render(); }));
@@ -6255,7 +6274,7 @@ function coachSupView(wk) {
   return `<div class="stack"><section class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Cette semaine, vous suivez ${plural(mine.length, 'chatter', 'chatters')}</h2>
       <span class="pill ${done === mine.length ? 'Strong' : 'Warning'}" style="margin-left:auto">${done === mine.length ? 'Tous les verdicts sont donnés' : `Verdicts : ${done}/${mine.length} · à donner avant dimanche soir`}</span>
       ${coachNotes.remote === false && Sync.connected() ? '<p class="hint" style="width:100%;margin:0">Les notes ne sont pas encore partagées (script SQL « notes » à exécuter) : elles restent dans ce navigateur.</p>' : ''}</section>
-    ${mine.map(it => coachCardHTML(it, wk, curWk, me, true)).join('') || '<div class="panel empty">Aucun chatter ne vous est attribué cette semaine.</div>'}
+    ${mine.map(it => coachCardHTML(it, wk, curWk, me, !coachAs())).join('') || '<div class="panel empty">Aucun chatter ne vous est attribué cette semaine.</div>'}
     ${others.length ? `<details class="panel"><summary style="cursor:pointer;font-weight:700">Chatters suivis par les autres superviseurs · ${others.length}</summary><div class="unplan-l" style="margin-top:10px">${others.map(it => `<span class="unchip" style="padding-right:10px">${esc(it.plan || it.name)} <span class="muted">· ${esc((supList().find(s => s.id === it.sup) || {}).name || '')}</span></span>`).join('')}</div></details>` : ''}</div>`;
 }
 // CA et unlock ratio des deux semaines qui ont servi à faire la liste (semaine passée et semaine d'avant), par plateforme
