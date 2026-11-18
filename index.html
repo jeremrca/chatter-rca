@@ -5732,9 +5732,10 @@ function coachBuild(wk, keepFrom, opt = {}) {
   for (const x of prep) {
     if (x.kept) continue;   // déjà attribué dans la liste en cours : on n'y touche pas
     const cap = cfg.cap;
-    const gsup = (coachState.global || {})[x.key] && coachState.global[x.key].sup;
-    const keepPrev = x.prevSup && x.opts.find(o => o.s.id === x.prevSup && load[o.s.id] < cap);
-    const keepG = !keepPrev && gsup && x.opts.find(o => o.s.id === gsup && load[o.s.id] < cap);
+    // Priorité au superviseur attitré du suivi global (un seul superviseur par chatter), sinon celui de la semaine dernière
+    const gk = glKeyOfWeak(x.key, x.it), gsup = gk && coachState.global[gk].sup;
+    const keepG = gsup && x.opts.find(o => o.s.id === gsup && load[o.s.id] < cap);
+    const keepPrev = !keepG && x.prevSup && x.opts.find(o => o.s.id === x.prevSup && load[o.s.id] < cap);
     const keep = keepPrev || keepG;
     const best = keep || x.opts.filter(o => load[o.s.id] < cap).sort((a, b) => (b.ov + b.mod * 3 - load[b.s.id] * 2) - (a.ov + a.mod * 3 - load[a.s.id] * 2))[0];
     if (best) { x.it.sup = best.s.id; x.it.why = (keepFrom && keepFrom.items ? 'entré dans la liste · ' : '') + (keepPrev ? 'même superviseur que la semaine dernière' : keepG ? 'son superviseur attitré (suivi global)' : best.ov ? `${best.ov} h communes${best.mod ? ` · ${plural(best.mod, 'modèle attribuée', 'modèles attribuées')}` : ''}` : 'aucune heure commune trouvée'); x.it.isIn = !!(keepFrom && keepFrom.items); load[best.s.id]++; }
@@ -5874,6 +5875,16 @@ function glReview(ctx) {
 }
 // Maillons faibles validés de la semaine : clé → item
 const glWeak = wk => { const W = coachState.weeks[wk]; return W && W.status === 'validated' ? W.items || {} : {}; };
+// Clé du suivi global d'un maillon faible (le nom de l'import peut différer du prénom du planning : « Manitra » / « Manitra Jessy »)
+function glKeyOfWeak(k, it, R = nameResolver()) {
+  const G = coachGlobal(), cands = [k, R.key(it.plan || ''), R.key(it.name || ''), rosterKey(it.plan || ''), rosterKey(it.name || '')].filter(Boolean);
+  for (const c of cands) if (G[c]) return c;
+  const keys = Object.keys(G);
+  for (const c of cands) { const hit = keys.filter(g => nearKey(g, c) || (c.length >= 4 && (g.startsWith(c) || c.startsWith(g)))); if (hit.length === 1) return hit[0]; }
+  return null;
+}
+// Maillons faibles de la semaine, indexés par clé du suivi global : un chatter maillon faible n'est suivi que par son superviseur « maillon faible » cette semaine-là
+function glWeakByGlobal(wk) { const R = nameResolver(), out = {}; for (const [k, it] of Object.entries(glWeak(wk))) { const g = glKeyOfWeak(k, it, R); if (g) out[g] = {k, ...it}; } return out; }
 // Agenda d'un superviseur pour la semaine wk : feedbacks placés sur les jours où le chatter travaille pendant ses heures, répartis au mieux
 function glAgenda(wk, sup) {
   const sw = glShiftWeek(wk), days = Array.from({length: 7}, () => []), none = [], load = Array(7).fill(0);
@@ -5889,7 +5900,7 @@ function glAgenda(wk, sup) {
     return [...new Set([0, Math.floor((list.length - 1) / 2), list.length - 1])].map(i => list[i]);
   };
   const weak = Object.entries(glWeak(wk)).filter(([, it]) => it.sup === sup.id);
-  const weakKeys = new Set(weak.map(([k]) => k));
+  const weakKeys = new Set(Object.keys(glWeakByGlobal(wk)));   // maillons faibles de tous les superviseurs
   for (const [k, it] of weak.sort((a, b) => (a[1].plan || a[1].name).localeCompare(b[1].plan || b[1].name, 'fr'))) {
     const shifts = it.plan ? glShifts(it.plan, [sw]) : [];
     const picks = pickDay(shifts, GL_WEAK_FB, coachState.globalStart || '');
@@ -5985,7 +5996,7 @@ function glBoardHTML(wk) {
       ${dry.none.length ? `<p class="hint">Sans superviseur pour l’instant (pas de shift au planning ces 2 dernières semaines) : ${dry.none.map(x => esc(x.name)).join(', ')}.</p>` : ''}
       ${dir ? '<button class="btn primary" id="gl-init" type="button">Valider cette répartition</button>' : '<p class="hint">La Direction doit valider la répartition.</p>'}</section>`;
   }
-  const ctx = glContext(), rev = dir ? glReview(ctx) : [], weak = glWeak(wk), q = normName(coachUI.glq || '');
+  const ctx = glContext(), rev = dir ? glReview(ctx) : [], weak = glWeakByGlobal(wk), q = normName(coachUI.glq || '');
   const none = [...ctx.team.keys()].filter(k => !G[k]);
   const ent = Object.entries(G);
   const card = s => { const l = ent.filter(([, g]) => g.sup === s.id).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'));
@@ -5994,7 +6005,7 @@ function glBoardHTML(wk) {
     return `<article class="glcard" style="--sc:${s.color}"><header><span class="g-dot" style="background:${s.color}"></span><strong>${esc(s.name)}</strong>${pf.map(p => p ? `<span class="glpf" style="--pc:${SUP_PF[p].color}">${p === 'OF' ? 'OF' : SUP_PF[p].label}</span>` : '').join('')}${supAlso(s) && !pf.includes(supAlso(s)) ? `<span class="glpf also" style="--pc:${SUP_PF[supAlso(s)].color}" title="Peut aussi suivre quelques chatters ${SUP_PF[supAlso(s)].label} (${GL_ALSO_MAX} au plus)">+${supAlso(s) === 'OF' ? 'OF' : 'MYM'}</span>` : ''}<span class="glcount">${l.length}</span></header>
       <div class="glbar" title="Feedbacks faits cette semaine"><span style="width:${st.n ? Math.round(st.done / st.n * 100) : 0}%"></span></div><div class="sub" style="margin:2px 0 8px">${st.done}/${st.n} feedbacks faits${st.late ? ` · <span class="sc-lo">${st.late} en retard</span>` : ''}</div>
       <ul class="gllist">${l.map(([k, g]) => { const sh = ctx.sh(k), hit = q && normName(g.name).includes(q);
-        return `<li class="${hit ? 'hit' : ''} ${q && !hit ? 'dim' : ''}" ${dir ? `data-glmove="${esc(k)}" tabindex="0" role="button"` : ''}><span class="gln">${esc(g.name)}</span>${pfBadge(glPid(sh))}${weak[k] ? '<span class="rtag hot">faible</span>' : ''}${g.since > (coachState.globalStart || '') && g.since >= addDaysIso(isoOf(new Date()), -7) ? '<span class="rtag ok">nouveau</span>' : ''}<span class="gls">${glWeeksSince(g.since)}</span></li>`; }).join('') || '<li class="muted">Aucun chatter</li>'}</ul></article>`; };
+        return `<li class="${hit ? 'hit' : ''} ${q && !hit ? 'dim' : ''}" ${dir ? `data-glmove="${esc(k)}" tabindex="0" role="button"` : ''}><span class="gln">${esc(g.name)}</span>${pfBadge(glPid(sh))}${weak[k] ? (weak[k].sup === s.id ? '<span class="rtag hot">faible</span>' : `<span class="rtag hot" title="Maillon faible cette semaine : c’est ${esc((sups.find(x => x.id === weak[k].sup) || {}).name || 'un autre superviseur')} qui fait ses feedbacks cette semaine">faible · ${esc((sups.find(x => x.id === weak[k].sup) || {}).name || '?')}</span>`) : ''}${g.since > (coachState.globalStart || '') && g.since >= addDaysIso(isoOf(new Date()), -7) ? '<span class="rtag ok">nouveau</span>' : ''}<span class="gls">${glWeeksSince(g.since)}</span></li>`; }).join('') || '<li class="muted">Aucun chatter</li>'}</ul></article>`; };
   return `<div class="stack">
     <section class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Qui suit qui · ${ent.length} chatters</h2>
       <input type="search" id="gl-q" value="${esc(coachUI.glq || '')}" placeholder="Rechercher un chatter…" style="margin-left:auto;width:240px">
