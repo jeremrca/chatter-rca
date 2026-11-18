@@ -4119,16 +4119,19 @@ function supAssignHTML() {
   const models = storedModels().filter(m => !m.end || m.end >= today);
   const groups = PLAN_GROUPS.map(g => ({g, ms: models.filter(m => m.group === g.id)})).filter(x => x.ms.length);
   const A = planState.supAssign || {};
-  const has = (sid, mid) => !!(A[sid] && A[sid][mid]);
+  // Un superviseur OnlyFans n'apparaît pas sur les modèles MYM, ni un superviseur MYM sur les modèles OF (champ « focus » des horaires)
+  const fits = (s, g) => g === 'other' || supEligible(s, g);
+  const mGroup = mid => (models.find(m => m.id === mid) || {}).group;
+  const has = (sid, mid) => !!(A[sid] && A[sid][mid]) && fits(sups.find(s => s.id === sid) || {}, mGroup(mid));
   const colN = mid => sups.filter(s => has(s.id, mid)).length;
   const orphans = models.filter(m => !colN(m.id));
   const short = g => g.id === 'mym' ? 'MYM' : g.id === 'of' ? 'OF' : 'Reveal';
   return `<section class="panel" style="margin-top:16px"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 style="margin:0">Modèles par superviseur</h2>
-      <span class="hint" style="margin:0">Cochez les modèles dont chaque superviseur s'occupe. MYM et OF sont séparés : un superviseur peut avoir des modèles sur les deux.</span></div>
+      <span class="hint" style="margin:0">Cochez les modèles dont chaque superviseur s’occupe. Les superviseurs OnlyFans n’apparaissent que sur les modèles OF, les superviseurs MYM que sur les modèles MYM ; les autres peuvent avoir des modèles sur les deux.</span></div>
     ${orphans.length ? `<div class="alert warn" style="margin:10px 0">${plural(orphans.length, 'modèle sans superviseur', 'modèles sans superviseur')} : ${orphans.map(m => `<strong>${esc(modelLabel(m))}</strong>`).join(', ')}</div>` : models.length ? '<div class="unplan ok" style="margin:10px 0">✓ Chaque modèle a au moins un superviseur.</div>' : ''}
     ${models.length && sups.length ? groups.map(x => `<h3 class="as-h" style="--gc:${x.g.color}"><span></span>Modèles ${short(x.g)} <span class="muted" style="font-weight:600;font-size:12.5px">· ${plural(x.ms.length, 'modèle', 'modèles')}</span></h3>
       <div class="tbl-wrap" style="max-height:none;margin-bottom:18px"><table class="assign"><thead><tr><th class="as-name">Superviseur</th>${x.ms.map(m => `<th class="as-m" style="box-shadow:inset 0 3px 0 ${x.g.color}" title="${esc(modelLabel(m))}">${esc(m.name)}</th>`).join('')}<th class="as-tot">Total ${short(x.g)}</th></tr></thead><tbody>
-      ${sups.map(s => { const n = x.ms.filter(m => has(s.id, m.id)).length; return `<tr style="--sc:${s.color};--st:${textOn(s.color)}"><td class="as-name"><span class="g-dot" style="background:${s.color};width:12px;height:12px"></span><strong>${esc(s.name)}</strong>${s.focus ? ` <span class="platb" style="--tc:${platColor(s.focus)}">${esc(s.focus)}</span>` : ''}</td>
+      ${sups.filter(s => fits(s, x.g.id)).map(s => { const n = x.ms.filter(m => has(s.id, m.id)).length; return `<tr style="--sc:${s.color};--st:${textOn(s.color)}"><td class="as-name"><span class="g-dot" style="background:${s.color};width:12px;height:12px"></span><strong>${esc(s.name)}</strong>${s.focus ? ` <span class="platb" style="--tc:${platColor(s.focus)}">${esc(s.focus)}</span>` : ''}</td>
         ${x.ms.map(m => `<td class="as-c"><label class="as-box ${has(s.id, m.id) ? 'on' : ''}" title="${esc(s.name)} · ${esc(modelLabel(m))}"><input type="checkbox" data-as="${s.id}|${m.id}" ${has(s.id, m.id) ? 'checked' : ''} aria-label="${esc(s.name)} s'occupe de ${esc(modelLabel(m))}"><span>✓</span></label></td>`).join('')}
         <td class="as-tot">${n ? `<strong>${plural(n, 'modèle', 'modèles')}</strong>` : '<span class="muted">—</span>'}</td></tr>`; }).join('')}
       </tbody><tfoot><tr><th class="as-name">Superviseurs</th>${x.ms.map(m => { const n = colN(m.id); return `<td class="as-c"><span class="as-n ${n ? '' : 'zero'}">${n}</span></td>`; }).join('')}<td></td></tr></tfoot></table></div>`).join('')
