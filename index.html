@@ -667,7 +667,6 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .g-tick{position:absolute;top:0;transform:translateX(-50%);font-size:11px;color:var(--faint)}
 .g-grid{position:absolute;top:0;bottom:0;width:1px;background:var(--line-soft)}
 .g-bar{position:absolute;top:3px;bottom:3px;border-radius:6px;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.35)}
-.g-bar.carry{background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.18) 0 6px,transparent 6px 12px)!important}
 .g-off{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11.5px;font-weight:800;color:var(--faint);letter-spacing:.5px}
 .g-off.right{left:auto;right:10px}
 .g-now{position:absolute;top:-4px;bottom:-4px;width:2px;background:#ef4444;box-shadow:0 0 6px #ef4444;z-index:2}
@@ -4230,7 +4229,7 @@ function supPlanHTML() {
   const ganttRow = r => { const {s, blocks, off} = r;
     return `<div class="g-row" style="--pc:${pfOf(r.key).color}"><div class="g-name"><span class="g-dot" style="background:${s.color}"></span>${esc(s.name)}${r.own && s.focusDays && s.focusDays[d] ? ' <span class="sfx" title="Focus différent de son focus habituel ce jour-là">ce jour</span>' : ''}</div>
       <div class="g-track">${ticks.map(t => `<span class="g-grid" style="left:${t / 24 * 100}%"></span>`).join('')}
-        ${blocks.map(b => `<div class="g-bar ${b.carry ? 'carry' : ''}" style="left:${b.start / 24 * 100}%;width:${(b.end - b.start) / 24 * 100}%;background:${s.color};color:${textOn(s.color)};--bc:${SUP_PF[b.pf].color}" title="${esc(s.name)} · ${esc(b.label)} · ${SUP_PF[b.pf].label}">${b.end - b.start >= 2.5 ? esc(b.carry ? `→ ${fmtH(b.end)}` : s.days[d]) : ''}</div>`).join('')}
+        ${blocks.map(b => `<div class="g-bar ${b.carry ? 'carry' : ''}" style="left:${b.start / 24 * 100}%;width:${(b.end - b.start) / 24 * 100}%;background:${s.color};color:${textOn(s.color)};--bc:${SUP_PF[b.pf].color}" title="${esc(s.name)} · ${esc(b.label)} · ${SUP_PF[b.pf].label}">${b.end - b.start >= 2.5 ? esc(b.carry ? s.days[(d + 6) % 7] : s.days[d]) : ''}</div>`).join('')}
         ${off && !blocks.length ? '<span class="g-off">OFF</span>' : off ? '<span class="g-off right">OFF</span>' : ''}
         ${d === today ? `<span class="g-now" style="left:${nowH / 24 * 100}%"></span>` : ''}</div></div>`; };
   const covRow = (label, arr, color, names) => `<div class="g-row"><div class="g-name" style="color:${color}">${label}</div><div class="g-track g-cov">${arr.map((n, h) => `<span class="g-cell c${Math.min(n, 4)}" style="left:${h / 24 * 100}%;width:${100 / 24}%" title="${h}h-${h + 1}h : ${n} ${label}${names ? ` · ${esc(names[h].join(', ') || 'personne')}` : ''}">${n}</span>`).join('')}</div></div>`;
