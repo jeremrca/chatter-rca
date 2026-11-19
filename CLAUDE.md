@@ -38,10 +38,11 @@ la Direction et une dizaine de superviseurs. **C'est un outil de production : pr
    - Avant toute migration qui touche `app_state` : sauvegarder son contenu (`select key, version, data from public.app_state`) dans `backups/app_state-AAAA-MM-JJ.json` (ce dossier est dans `.gitignore`).
    - Scripts idempotents (`if not exists`, `on conflict do nothing`, `drop policy if exists`).
    - Noter chaque script exécuté dans `supabase/migrations/AAAA-MM-JJ-description.sql` (commité).
-5. **Mise en ligne** : `git add index.html supabase/ && git commit -m "…" && git push`. Puis vérifier le site en ligne après 2 minutes.
+5. **Version du site** : à chaque mise en ligne qui ajoute ou change un champ des données partagées, augmenter `APP_BUILD` (module `Sync`, format AAAAMMJJ + chiffre). Les onglets plus anciens se rechargent alors tout seuls au lieu d’écrire. En base, le trigger `app_state_garde_parties` empêche un ancien onglet d’effacer une partie (planning, coaching, suivi, cams) et réserve la liste du suivi français (`coaching.fr`) aux admins et à la Direction.
+6. **Mise en ligne** : `git add index.html supabase/ && git commit -m "…" && git push`. Puis vérifier le site en ligne après 2 minutes.
    Rappeler au propriétaire de prévenir les superviseurs de recharger (Cmd/Ctrl + Maj + R) quand la modification touche le partage ou le planning.
-6. **Secrets** : ne jamais commiter de mot de passe, de token Supabase personnel ou de clé `service_role`. Ils restent dans `.env` (ignoré par git) ou dans la configuration du serveur MCP.
-7. **À la fin de chaque tâche**, résumer en français, sans jargon : ce qui a changé pour les utilisateurs, ce qui a été testé, le SQL exécuté (s'il y en a), et ce que le propriétaire doit faire (en général : rien, ou prévenir les superviseurs).
+7. **Secrets** : ne jamais commiter de mot de passe, de token Supabase personnel ou de clé `service_role`. Ils restent dans `.env` (ignoré par git) ou dans la configuration du serveur MCP.
+8. **À la fin de chaque tâche**, résumer en français, sans jargon : ce qui a changé pour les utilisateurs, ce qui a été testé, le SQL exécuté (s'il y en a), et ce que le propriétaire doit faire (en général : rien, ou prévenir les superviseurs).
 
 ## Repères dans le code (rechercher ces noms)
 

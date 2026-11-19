@@ -6923,6 +6923,27 @@ const Sync = (() => {
   let pendingRender = false;
   new MutationObserver(() => { if (pendingRender && !document.querySelector('.modal-bg')) { pendingRender = false; const y = window.scrollY; render(); window.scrollTo(0, y); } }).observe(document.body, {childList: true});
   let busy = false, flushTimer = null, pollTimer = null, status = 'idle', lastSync = null, lastError = '', firstDone = false;
+  /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
+     Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
+     et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
+  const APP_BUILD = 202611191;
+  const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
+  let outdated = false;
+  function markOutdated() {
+    if (outdated) return; outdated = true; setStatus('outdated');
+    let last = 0; try { last = +sessionStorage.getItem('rca-reload') || 0; } catch (e) {}
+    const banner = () => { if (document.getElementById('rca-outdated')) return; const d = document.createElement('div'); d.id = 'rca-outdated';
+      d.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;background:#7f1d1d;color:#fff;border:1px solid #ef4444;border-radius:12px;padding:12px 16px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:92vw;text-align:center';
+      d.textContent = 'Une nouvelle version du site est en ligne. Rechargez la page (Cmd/Ctrl + Maj + R) : vos modifications sont gardées.'; document.body.appendChild(d); };
+    if (Date.now() - last < 120000) { banner(); return; }   // déjà rechargé il y a peu (cache du navigateur) : on demande un rechargement forcé
+    const tryReload = () => {
+      const a = document.activeElement;
+      if (document.querySelector('.modal-bg') || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) { banner(); setTimeout(tryReload, 4000); return; }
+      try { sessionStorage.setItem('rca-reload', String(Date.now())); } catch (e) {}
+      saveMeta(); location.reload();
+    };
+    tryReload();
+  }
 
   const cfg = () => {
     const c = SHARED_CONFIG.url && SHARED_CONFIG.anonKey ? SHARED_CONFIG : lsGet(LS_CFG, null);
@@ -6960,13 +6981,16 @@ const Sync = (() => {
       for (const pid of PIDS) if (data && data[pid]) store.setSettings(pid, RCA.mergeSettings(pid, data[pid]));
       lsSet(LS.settings, allSettings);
     } else if (key === 'coaching') {
-      syncInPlace(coachState, {weeks: (data && data.weeks) || {}, links: (data && data.links) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {}), ...(data && data.flags ? {flags: data.flags} : {}), ...(data && data.ignore ? {ignore: data.ignore} : {}), ...(data && data.global ? {global: data.global} : {}), ...(data && data.fb ? {fb: data.fb} : {}), ...(data && data.globalStart ? {globalStart: data.globalStart} : {}), ...(data && data.goals ? {goals: data.goals} : {}), ...(data && data.fr ? {fr: data.fr} : {}), ...(coachState.localNotes ? {localNotes: coachState.localNotes} : {})}); lsSet(LS_COACH, coachState);
+      // Tous les champs reçus sont gardés (même ceux qu'on ne connaît pas encore) ; les notes locales restent celles de ce navigateur
+      const o = {...(isObj2(data) ? data : {}), weeks: (data && data.weeks) || {}, links: (data && data.links) || {}}; delete o.localNotes;
+      if (coachState.localNotes) o.localNotes = coachState.localNotes;
+      syncInPlace(coachState, o); lsSet(LS_COACH, coachState);
     } else if (key === 'cams') {
-      syncInPlace(camsState, {items: (data && data.items) || {}, ...(data && data.cfg ? {cfg: data.cfg} : {})}); lsSet(LS_CAMS, camsState);
+      syncInPlace(camsState, {...(isObj2(data) ? data : {}), items: (data && data.items) || {}}); lsSet(LS_CAMS, camsState);
     } else if (key === 'suivi') {
-      syncInPlace(suiviState, {weeks: (data && data.weeks) || {}}); lsSet(LS_SUIVI, suiviState);
+      syncInPlace(suiviState, {...(isObj2(data) ? data : {}), weeks: (data && data.weeks) || {}}); lsSet(LS_SUIVI, suiviState);
     } else if (key === 'planning') {
-      syncInPlace(planState, {weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}, ...(data && data.models ? {models: data.models} : {}), ...(data && data.dayoff ? {dayoff: data.dayoff} : {}), ...(data && data.ignored ? {ignored: data.ignored} : {}), ...(data && data.sups ? {sups: data.sups} : {}), ...(data && data.absreq ? {absreq: data.absreq} : {}), ...(data && data.supAssign ? {supAssign: data.supAssign} : {}), ...(data && data.frSups ? {frSups: data.frSups} : {}), ...(data && data.org ? {org: data.org} : {})}); lsSet(LS_PLAN, planState);
+      syncInPlace(planState, {...(isObj2(data) ? data : {}), weeks: (data && data.weeks) || {}, chatters: (data && data.chatters) || {}}); lsSet(LS_PLAN, planState);
     } else if (key === 'plancfg') {
       planCfgSaved = data && ((Array.isArray(data.models) && data.models.length) || (data.launches && Object.keys(data.launches).length) || (data.promos && Object.keys(data.promos).length)) ? data : null; lsSet(LS_PLANCFG, planCfgSaved);
     } else if (key === 'asvcfg') {
@@ -7105,6 +7129,7 @@ const Sync = (() => {
           throw new Error(`La table app_state ne contient pas la ligne « ${key} » : relancez le script SQL.`);
         }
         if (key === 'asv' && row.data && row.data.settings) legacyAsvCfg = row.data.settings;
+        if (row.data && row.data._app > APP_BUILD) markOutdated();
         const known = meta.version[key];
         const firstCheck = !checked.has(key); checked.add(key);
         if (key === 'asvcfg' && remoteEmpty(key, row.data) && legacyAsvCfg && known === undefined) {
@@ -7145,6 +7170,8 @@ const Sync = (() => {
   }
   async function pushKey(key, attempt = 0) {
     if ((PROTECTED.has(key) && !isAdmin) || (key === 'asvcfg' && noCfgRow) || missing.has(key)) { dirty.delete(key); return; }
+    if (outdated) return;   // version périmée : les modifications restent gardées ici et partiront après le rechargement
+    if (STAMP[key]) STAMP[key]()._app = APP_BUILD;
     const local = getData(key), v = meta.version[key] ?? 0;
     const rows = await api(`/rest/v1/app_state?key=eq.${key}&version=eq.${v}`, {method: 'PATCH', headers: {Prefer: 'return=representation'},
       body: JSON.stringify({data: local, version: v + 1, updated_at: new Date().toISOString(), updated_by: session.email || null})});
@@ -7164,7 +7191,7 @@ const Sync = (() => {
     return pushKey(key, attempt + 1);
   }
   async function flush() {
-    if (!connected() || !dirty.size) return;
+    if (!connected() || !dirty.size || outdated) return;
     if (busy) { scheduleFlush(400); return; }
     busy = true; setStatus('saving');
     try { for (const key of [...dirty]) await pushKey(key); lastSync = Date.now(); lastError = ''; setStatus(dirty.size ? 'pending' : 'ok'); }
@@ -7221,18 +7248,18 @@ const Sync = (() => {
   window.addEventListener('focus', () => { lastPollAt = 0; poll(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { lastPollAt = 0; poll(); if (session && (!ws || ws.readyState > 1)) rtStart(); } else if (dirty.size) flush(); });
   window.addEventListener('pagehide', () => { if (dirty.size) flush(); });
-  window.addEventListener('beforeunload', e => { if (connected() && dirty.size) { e.preventDefault(); e.returnValue = ''; } });
+  window.addEventListener('beforeunload', e => { if (connected() && dirty.size && !outdated) { e.preventDefault(); e.returnValue = ''; } });
 
   /* ---------- Affichage de l'état ---------- */
-  function setStatus(s) { status = s; drawStatus(); }
+  function setStatus(s) { status = outdated ? 'outdated' : s; drawStatus(); }
   function drawStatus() {
     const el = document.getElementById('sync-status');
     if (!el) return;
     if (!configured()) { el.innerHTML = `<a href="#of/partage" class="sync-link"><span class="dot"></span>Données sur cet appareil uniquement</a>`; el.className = 'sync local'; return; }
     if (!session) { el.innerHTML = `<a href="#of/partage" class="sync-link"><span class="dot"></span>Non connecté</a>`; el.className = 'sync off'; return; }
     const ago = lastSync ? Math.max(0, Math.round((Date.now() - lastSync) / 1000)) : null;
-    const label = {sync: 'Synchronisation…', saving: 'Enregistrement…', pending: 'Modifications en attente…', offline: 'Hors ligne · modifications gardées', error: 'Erreur de synchronisation', ok: wsLive ? 'Partagé · en direct' : `Partagé · à jour${ago != null && ago > 20 ? ` (il y a ${ago < 90 ? ago + ' s' : Math.round(ago / 60) + ' min'})` : ''}`, idle: 'Connexion…'}[status];
-    el.className = 'sync ' + (status === 'ok' ? 'ok' : status === 'error' || status === 'offline' ? 'bad' : 'wait');
+    const label = {sync: 'Synchronisation…', saving: 'Enregistrement…', pending: 'Modifications en attente…', offline: 'Hors ligne · modifications gardées', error: 'Erreur de synchronisation', outdated: 'Nouvelle version : rechargez la page', ok: wsLive ? 'Partagé · en direct' : `Partagé · à jour${ago != null && ago > 20 ? ` (il y a ${ago < 90 ? ago + ' s' : Math.round(ago / 60) + ' min'})` : ''}`, idle: 'Connexion…'}[status];
+    el.className = 'sync ' + (status === 'ok' ? 'ok' : status === 'error' || status === 'offline' || status === 'outdated' ? 'bad' : 'wait');
     el.innerHTML = `<a href="#of/partage" class="sync-link" title="${esc(lastError)}"><span class="dot"></span>${esc(label)}</a><span class="sync-who" title="${esc(session.email || '')}">${esc(session.email || '')}</span>${rolesConfigured ? `<span class="sync-role ${isAdmin || isDirection ? 'adm' : ''}">${isAdmin ? 'Administrateur' : isDirection ? 'Direction' : 'Équipe'}</span>` : ''}`;
   }
   setInterval(drawStatus, 30000);
