@@ -667,6 +667,13 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .g-tick{position:absolute;top:0;transform:translateX(-50%);font-size:11px;color:var(--faint)}
 .g-grid{position:absolute;top:0;bottom:0;width:1px;background:var(--line-soft)}
 .g-bar{position:absolute;top:3px;bottom:3px;border-radius:6px;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.35)}
+.mover{display:inline-flex;align-items:center;gap:2px;border-bottom:2px solid #f59e0b}.mover>b{font-size:9.5px;font-weight:900;color:#1a1000;background:#f59e0b;border-radius:4px;padding:0 3px;line-height:1.35}
+.mtag{font-size:11px;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:4px;white-space:nowrap}.mtag.bad{background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.5)}.mtag.warn{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.45)}
+.pe-sug{margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.25)}.pe-sug-h{font-size:13px;font-weight:800;margin-bottom:6px}.pe-sug-h .muted{font-weight:500;font-size:12px}
+.pe-sug-l{display:flex;flex-wrap:wrap;gap:6px}.pe-sg{font:inherit;font-size:12.5px;font-weight:700;padding:5px 10px;border-radius:10px;border:1px solid var(--line-soft);background:var(--bg);color:var(--text,#fff);cursor:pointer}
+.pe-sg small{font-weight:500;color:var(--faint);margin-left:4px}.pe-sg.knows{border-color:rgba(34,197,94,.55)}.pe-sg.knows small{color:#86efac}.pe-sg:hover{background:var(--raised)}
+.disp summary{cursor:pointer;list-style:none}.disp summary::-webkit-details-marker{display:none}.disp-x{color:#fbbf24;font-weight:700}
+.disp-tr{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}.disp-tr span{padding:6px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line-soft);display:flex;align-items:baseline;gap:6px}.disp-tr span.on{border-color:#f59e0b}.disp-tr small{color:var(--faint);font-size:11px}.disp-tr b{font-size:16px}.disp-tr em{font-style:normal;font-weight:800}
 .offsh{display:flex;gap:3px}.offsh button{font:inherit;font-size:11px;font-weight:700;padding:3px 6px;border-radius:7px;border:1px solid var(--line-soft);background:var(--bg);color:var(--faint);cursor:pointer;white-space:nowrap}
 .offsh button.on{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.6);color:#e0f2fe}.offsh.none button{border-style:dashed}
 .fx-plan{margin:14px 0 4px;display:flex;flex-direction:column;gap:10px}
@@ -3819,9 +3826,10 @@ function createWeek(wk, fromWk) {
 }
 
 /* ---------- Affichage ---------- */
-function chipHTML(e, wk, d, s, hl) {
+function chipHTML(e, wk, d, s, hl, ov) {
   const nk = n => hl.get(`${wk}|${d}|${s}|${normName(n)}`);
-  const nm = n => { const i = nk(n); return i ? `<span class="pc new" title="Nouveau : shift ${i}/${NEW_SHIFTS}">${esc(n)}</span>` : `<span class="pc">${esc(n)}</span>`; };
+  const nm0 = n => { const i = nk(n); return i ? `<span class="pc new" title="Nouveau : shift ${i}/${NEW_SHIFTS}">${esc(n)}</span>` : `<span class="pc">${esc(n)}</span>`; };
+  const nm = n => { const o = ov && ov.get(rosterKey(n)); return o ? `<span class="mover" title="${esc(n)} : ${o} modèles cette semaine (maximum ${MODEL_MAX}). Cette modèle n’est pas une de ses ${MODEL_MAX} principales.">${nm0(n)}<b>${o}</b></span>` : nm0(n); };
   if (e.r) return `<span class="pchip rep" title="${esc(e.n)} remplacé(e) par ${esc(e.r)}"><s>${esc(e.n)}</s><span class="arr">→</span>${e.r.split('/').map(x => nm(x.trim())).join(' / ')}</span>`;
   if (e.a) return `<span class="pchip"><span class="pc abs" title="Absent(e)">${esc(e.n)}</span></span>`;
   if (e.c) return `<span class="pchip"><span class="pc cut ${offOn(e.n, d) ? 'offc' : ''}" title="Coupure de courant">${esc(e.n)}</span></span>`;
@@ -3830,6 +3838,22 @@ function chipHTML(e, wk, d, s, hl) {
   const ar = absReqFor(e.n, addDaysIso(wk, +d), s);
   if (ar) return `<span class="pchip"><span class="offwrap" title="Demande d'absence (${esc(ABS_STATUS[ar.status][0].toLowerCase())})${ar.note ? ' : ' + esc(ar.note) : ''}">${nm(e.n)}<b class="abstag">ABS</b></span></span>`;
   return `<span class="pchip">${offOn(e.n, d) ? `<span class="offwrap" title="${esc(e.n)} est planifié(e) sur son jour OFF">${nm(e.n)}<b class="offtag">OFF</b></span>` : nm(e.n)}</span>`;
+}
+function dispersionHTML(wk, WC) {
+  const G = coachGlobal(), sups = supList(), ign = planState.ignored || {};
+  const rows = [...WC.entries()].filter(([k, o]) => o.cre.size > MODEL_MAX && !ign[k]).map(([k, o]) => ({k, ...o, n: o.cre.size, sup: (sups.find(x => G[k] && x.id === G[k].sup) || {}).name || ''}))
+    .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'fr'));
+  const trend = Object.keys(planState.weeks).filter(w => w <= wk).sort().slice(-4).map(w => ({w, n: w === wk ? rows.length : [...weekCreators(w).entries()].filter(([k, o]) => o.cre.size > MODEL_MAX && !ign[k]).length}));
+  const total = [...WC.keys()].filter(k => !ign[k]).length;
+  return `<section class="panel"><details class="disp" ${rows.length ? 'open' : ''}><summary><h2 style="display:inline;margin:0">Chatters sur plus de ${MODEL_MAX} modèles · ${rows.length}</h2>
+      <span class="muted" style="font-size:12.5px;margin-left:8px">sur ${total} chatters au planning cette semaine</span></summary>
+    <p class="hint" style="margin:8px 0 10px">Un chatter connaît mieux les fans, la modèle et ses scripts quand il reste sur les mêmes modèles. Objectif : ${MODEL_MAX} modèles maximum par semaine (toutes plateformes confondues, BACKUP non compté). Dans le planning, ses shifts en dehors de ses ${MODEL_MAX} modèles principales sont soulignés en orange.</p>
+    <div class="disp-tr">${trend.map((t, i) => `<span class="${t.w === wk ? 'on' : ''}"><small>${esc(fmtDayFr(t.w))}</small><b>${t.n}</b>${i && trend[i - 1].n ? `<em class="${t.n <= trend[i - 1].n ? 'sc-hi' : 'sc-lo'}">${t.n < trend[i - 1].n ? '↘' : t.n > trend[i - 1].n ? '↗' : '='}</em>` : ''}</span>`).join('')}</div>
+    ${rows.length ? `<div class="tbl-wrap" style="max-height:420px"><table><thead><tr><th>Chatter</th><th class="num">Modèles</th><th>Modèles de la semaine (nombre de shifts)</th><th>Superviseur</th></tr></thead><tbody>
+      ${rows.map(r => { const top = topCreators(r); return `<tr><td><button type="button" class="linkbtn" data-dispq="${esc(r.name)}" title="Voir son planning de la semaine">${esc(r.name)}</button></td><td class="num"><strong class="${r.n >= MODEL_MAX + 3 ? 'sc-lo' : 'sc-mid'}">${r.n}</strong></td>
+        <td style="font-size:12.5px">${[...r.cre.entries()].sort((a, b) => b[1].n - a[1].n).map(([ck, c]) => `<span class="${top.has(ck) ? '' : 'disp-x'}">${esc(c.name)} ${c.n}</span>`).join(' · ')}</td><td>${esc(r.sup) || '<span class="muted">—</span>'}</td></tr>`; }).join('')}
+    </tbody></table></div>` : `<p class="hint" style="margin:0">✓ Aucun chatter au-delà de ${MODEL_MAX} modèles cette semaine.</p>`}
+  </details></section>`;
 }
 function renderPlanning(main) {
   const wk = planWeekKey(), W = weekOf(wk), d = planDay(wk);
@@ -3883,6 +3907,7 @@ function renderPlanning(main) {
     const names = [e.n, ...(e.r ? e.r.split('/').map(x => x.trim()) : [])];
     if (names.some(n => normName(n).includes(q))) found.push({dd, s, m, e});
   }
+  const WC = weekCreators(wk);
   main.innerHTML = head + `<div class="stack">
     <section class="panel plan-bar">
       <div class="ptabs" role="tablist">${PLAN_DAYS.map((x, i) => `<button type="button" role="tab" class="ptab ${i === d ? 'on' : ''}" data-day="${i}" aria-selected="${i === d}"><b>${x}${launchesOn(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Lancement ce jour-là">🚀</span>' : ''}${bannersOnDay(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Bannière ce jour-là">⚡</span>' : ''}</b><span>${parseDate(addDaysIso(wk, i)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</span></button>`).join('')}</div>
@@ -3894,7 +3919,7 @@ function renderPlanning(main) {
         ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>`}
         <button class="btn ghost" id="p-xls" type="button">Importer un Excel</button>
       </div>
-      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="pc late">Prénom</span> retard</span><span><span class="offwrap"><span class="pc renf">Prénom</span><b class="rftag">RENFORT</b></span> renfort</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
+      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="pc late">Prénom</span> retard</span><span><span class="offwrap"><span class="pc renf">Prénom</span><b class="rftag">RENFORT</b></span> renfort</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span><span class="mover"><span class="pc">Prénom</span><b>6</b></span> plus de ${MODEL_MAX} modèles cette semaine</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
     </section>
     ${q ? `<section class="panel"><h2>Planning de « ${esc(planUI.q)} » · ${esc(planWeekLabel(wk))}</h2>${found.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Jour</th><th>Shift</th><th>Modèle</th><th>Statut</th></tr></thead><tbody>${found.map(x => `<tr><td>${PLAN_DAYS_LONG[x.dd]} ${parseDate(addDaysIso(wk, x.dd)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</td><td>${PLAN_SHIFTS[x.s]}</td><td>${esc(modelLabel(x.m))}</td><td>${x.e.r ? `remplacé(e) par ${esc(x.e.r)}` : x.e.a ? '<span class="sc-lo">absent</span>' : x.e.c ? '<span class="pc cut">coupure de courant</span>' : x.e.l ? '<span class="pc late">retard</span>' : 'prévu'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Aucun shift trouvé cette semaine.</p>'}</section>` : ''}
     ${(() => {
@@ -3919,13 +3944,15 @@ function renderPlanning(main) {
           return `<th class="pm${cls}" style="box-shadow:inset 0 3px 0 ${x.g.color}">${esc(m.backup ? modelLabel(m) : m.name)}${bn ? `<span class="plb">⚡ Bannière ${esc(fmtHour(`${pad2(bn.s.getHours())}:${pad2(bn.s.getMinutes())}`))} → ${esc(fmtHour(`${pad2(bn.e.getHours())}:${pad2(bn.e.getMinutes())}`))}</span>` : ''}${la ? `<span class="plb">🚀 Lancement ${esc(fmtHour(la.time))}</span>` : ''}${wp ? '<span class="plb">🔥 Mise en avant</span>' : ''}</th>`; }).join('')).join('')}</tr>
       </thead><tbody>
         ${PLAN_SHIFTS.map((sh, s) => `<tr><th class="sh">${sh}</th>${groupsShown.map(x => x.ms.map(m => {
-          const list = W.cells[cellKey(d, s, m.id)] || [];
+          const list = W.cells[cellKey(d, s, m.id)] || [], ov = new Map();
+          if (!m.backup) { const ck = creatorKey(m.name); for (const e of list) { const w = workerOf(e); if (w) for (const n of w.split('/')) { const o = WC.get(rosterKey(n.trim())); if (o && o.cre.size > MODEL_MAX && !topCreators(o).has(ck)) ov.set(rosterKey(n.trim()), o.cre.size); } } }
           const la = launchesOn(dayDate).some(L => L.model === m.id), bn = bannersOnDay(dayDate, m.id).some(P => bannerHitsShift(P, dayDate, s)), wp = !!weekPromoFor(wk, m.id);
           const hit = q && list.some(e => [e.n, ...(e.r ? e.r.split('/') : [])].some(n => normName(n).includes(q)));
-          return `<td class="pcell ${hit ? 'hit' : ''} ${list.length ? '' : 'empty'}${m.backup ? ' pbackup-c' : bn ? ' pbanner-c' : la ? ' plaunch-c' : wp ? ' ppromo-c' : ''}" data-cell="${cellKey(d, s, m.id)}" tabindex="0" title="${esc(modelLabel(m))} · ${PLAN_DAYS_LONG[d]} ${sh}">${list.map(e => chipHTML(e, wk, d, s, hl)).join('') || '<span class="plus">+</span>'}</td>`;
+          return `<td class="pcell ${hit ? 'hit' : ''} ${list.length ? '' : 'empty'}${m.backup ? ' pbackup-c' : bn ? ' pbanner-c' : la ? ' plaunch-c' : wp ? ' ppromo-c' : ''}" data-cell="${cellKey(d, s, m.id)}" tabindex="0" title="${esc(modelLabel(m))} · ${PLAN_DAYS_LONG[d]} ${sh}">${list.map(e => chipHTML(e, wk, d, s, hl, ov)).join('') || '<span class="plus">+</span>'}</td>`;
         }).join('')).join('')}</tr>`).join('')}
       </tbody></table></div>
     </section>
+    ${dispersionHTML(wk, WC)}
     <section class="panel"><h2>Notes du ${PLAN_DAYS_LONG[d].toLowerCase()}</h2><textarea id="p-note" rows="4" placeholder="Retards, absences, problèmes de connexion…">${esc(note)}</textarea><p class="hint" style="margin:6px 0 0;font-size:12px">Enregistré automatiquement et visible par toute l'équipe.</p></section>
     ${launchesHTML()}
     ${promosHTML()}
@@ -3947,6 +3974,7 @@ function renderPlanning(main) {
   main.querySelectorAll('.offbar [data-arid]').forEach(b => b.addEventListener('click', () => absReqEdit(b.dataset.arid)));
   main.querySelectorAll('[data-ign]').forEach(b => b.addEventListener('click', () => chatterLeave(b.dataset.ignn, b.dataset.ign, 'remind')));
   document.getElementById('p-xls')?.addEventListener('click', () => importExcelModal(wk));
+  main.querySelectorAll('[data-dispq]').forEach(b => b.addEventListener('click', () => { planUI.q = b.dataset.dispq; render(); window.scrollTo(0, 0); }));
   bindPlanModels(wk, d);
   bindLaunches(main);
   bindPromos(main);
@@ -4728,12 +4756,31 @@ function editCell(wk, key) {
   const W = weekOf(wk);
   let list = (W.cells[key] || []).map(e => ({...e}));
   const names = knownChatters();
+  // Modèles de la semaine sans cette case (pour savoir si ce placement ajoute une modèle) et habitudes des 4 dernières semaines
+  const ck = m && !m.backup ? creatorKey(m.name) : null, date = addDaysIso(wk, +d);
+  const WC0 = (() => { const saved = W.cells[key]; delete W.cells[key]; const r = weekCreators(wk); if (saved) W.cells[key] = saved; return r; })();
+  const HB = ck ? planHabits(planWeeksUpTo(wk, 5).filter(w => w < wk).slice(-4)) : new Map();
+  const mcount = n => { const o = WC0.get(rosterKey(n)), set = new Set(o ? o.cre.keys() : []); if (ck) set.add(ck); return {n: set.size, added: !!ck && !(o && o.cre.has(ck))}; };
+  const mtag = n => { if (!ck || !n) return ''; const c = mcount(n); if (c.n > MODEL_MAX) return ` <b class="mtag bad" title="Cette modèle s’ajoute à ses modèles de la semaine">${c.n}e modèle cette semaine</b>`;
+    if (c.n === MODEL_MAX && c.added) return ` <b class="mtag warn">${MODEL_MAX}e modèle · limite atteinte</b>`; return ''; };
+  const suggest = () => {
+    if (!ck) return [];
+    const busy = new Set(); for (const [k2, l2] of Object.entries(W.cells)) { const [d2, s2] = k2.split('|'); if (+d2 === +d && +s2 === +s) for (const e of l2) { const w = workerOf(e); if (w) w.split('/').forEach(n => busy.add(rosterKey(n.trim()))); } }
+    for (const e of list) [e.n, ...(e.r ? e.r.split('/') : [])].forEach(n => busy.add(rosterKey(String(n).trim())));
+    const out = [];
+    for (const o of Object.values(planState.dayoff || {})) { const k = rosterKey(o.name); if (!k || busy.has(k) || (o.days || []).includes(+d) || absReqFor(o.name, date, +s) || (planState.ignored || {})[k]) continue;
+      const sh = Array.isArray(o.shifts) && o.shifts.length ? o.shifts : null; if (!sh || !sh.includes(+s)) continue;
+      const h = HB.get(k), c = h && h.get(ck), same = !!(c && c.g.has(m.group)), cnt = mcount(o.name);
+      if (cnt.n > MODEL_MAX) continue;
+      out.push({name: o.name.replace(/\s+(mym|of)$/i, ''), full: o.name, knows: c ? c.n : 0, same, n: cnt.n, added: cnt.added}); }
+    return out.sort((a, b) => (b.same - a.same) || (b.knows - a.knows) || (a.n - b.n) || a.name.localeCompare(b.name, 'fr')).slice(0, 8);
+  };
   const bg = document.createElement('div'); bg.className = 'modal-bg';
   const draw = () => {
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:640px"><h3>${esc(m ? modelLabel(m) : mid)} · ${PLAN_DAYS_LONG[d]} ${parseDate(addDaysIso(wk, +d)).toLocaleDateString('fr-FR', {day:'numeric', month:'long'})} · ${PLAN_SHIFTS[s]}</h3>
       <datalist id="pl-names">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
       ${list.length ? `<div class="pe-list">${list.map((e, i) => `<div class="pe-row">
-        <strong class="${e.a && !e.r ? 'sc-lo' : ''}">${esc(e.n)}${absReqFor(e.n, addDaysIso(wk, +d), +s) ? ` <b class="abstag" title="${esc(absReqFor(e.n, addDaysIso(wk, +d), +s).note || 'Demande d’absence')}">ABS demandée</b>` : ''}</strong>
+        <strong class="${e.a && !e.r ? 'sc-lo' : ''}">${esc(e.n)}${e.a ? '' : mtag(e.n)}${e.r ? mtag(e.r.split('/')[0].trim()) : ''}${absReqFor(e.n, addDaysIso(wk, +d), +s) ? ` <b class="abstag" title="${esc(absReqFor(e.n, addDaysIso(wk, +d), +s).note || 'Demande d’absence')}">ABS demandée</b>` : ''}</strong>
         <label class="check"><input type="checkbox" data-abs="${i}" ${e.a ? 'checked' : ''}> Absent</label>
         <label class="check" title="Coupure de courant"><input type="checkbox" data-cut="${i}" ${e.c ? 'checked' : ''}> Coupure</label>
         <label class="check" title="Arrivé(e) en retard"><input type="checkbox" data-late="${i}" ${e.l ? 'checked' : ''}> Retard</label>
@@ -4743,6 +4790,10 @@ function editCell(wk, key) {
         <input type="text" list="pl-names" data-rep="${i}" value="${esc(e.r || '')}" placeholder="Remplaçant (facultatif)">
         </div>`).join('')}</div>` : '<p class="hint">Personne sur ce shift.</p>'}
       ${(() => { const rq = absReqsOnDate(addDaysIso(wk, +d)).filter(r => (r.shifts || []).includes(+s)); return rq.length ? `<div class="absbox" style="margin-top:12px"><div class="absbox-h">Demandes d’absence sur ce shift</div><div style="font-size:13px">${rq.map(r => `<strong>${esc(r.name)}</strong>${r.status === 'wait' ? ' (en attente)' : ''}${r.note ? ` — ${esc(r.note)}` : ''}`).join(' · ')}</div></div>` : ''; })()}
+      ${(() => { const sg = suggest(); if (!ck) return ''; const needRep = list.some(e => e.a && !e.r);
+        return `<div class="pe-sug"><div class="pe-sug-h">${needRep ? 'Remplaçants proposés' : 'Chatters disponibles proposés'} <span class="muted">· sur ce shift, pas OFF, pas déjà placés, ${MODEL_MAX} modèles max</span></div>
+          ${sg.length ? `<div class="pe-sug-l">${sg.map(x => `<button type="button" class="pe-sg${x.knows ? ' knows' : ''}" data-sug="${esc(x.full)}" title="${x.knows ? `${plural(x.knows, 'shift', 'shifts')} sur ${esc(creatorName(m.name))} ces 4 dernières semaines${x.same ? '' : ' (sur une autre plateforme)'}` : `Ne connaît pas encore ${esc(creatorName(m.name))}`} · ${x.n} modèle${x.n > 1 ? 's' : ''} cette semaine avec celle-ci">${esc(x.name)} <small>${x.knows ? `connaît · ${x.knows}${x.same ? '' : ' (autre plateforme)'}` : 'nouvelle modèle'} · ${x.n}/${MODEL_MAX}</small></button>`).join('')}</div>`
+            : '<p class="hint" style="margin:4px 0 0;font-size:12.5px">Personne de disponible avec ce shift coché dans « Jours OFF ».</p>'}</div>`; })()}
       <div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="pe-add" list="pl-names" placeholder="Ajouter un ou plusieurs chatters (séparés par /)" style="flex:1"><button class="btn" id="pe-addb" type="button">Ajouter</button></div>
       <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
     bg.querySelector('#pe-add').focus();
@@ -4762,6 +4813,8 @@ function editCell(wk, key) {
   bg.addEventListener('click', e => {
     if (e.target === bg) { bg.remove(); return; }
     if (e.target.id === 'pe-addb') { add(); return; }
+    const sg = e.target.closest('[data-sug]'); if (sg) { sync(); const n = sg.dataset.sug, hole = list.find(x => x.a && !x.r);
+      if (hole) hole.r = n; else if (!list.some(x => normName(x.n) === normName(n))) list.push({n}); draw(); return; }
     const del = e.target.closest('[data-del]'); if (del) { sync(); list.splice(+del.dataset.del, 1); draw(); return; }
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a === '1') {
@@ -5900,6 +5953,29 @@ function chatterPlanInfo(name, nWeeks = 4) {
   const off = offEntryOf(name);
   return {weeks, curWk, isCur: curWk === glWeekNow(), models: list, weekCount: list.filter(m => m.week).length,
     seen: usualShifts(all), off, declared: off && Array.isArray(off.shifts) ? off.shifts : null};
+}
+// Modèles de chaque chatter sur une semaine du planning : rosterKey -> {name, cre: Map(créatrice -> {name, n})}
+function weekCreators(wk) {
+  const W = planState.weeks[wk], mm = planModelsMap(), out = new Map(); if (!W) return out;
+  for (const [key, list] of Object.entries(W.cells || {})) { const mid = key.split('|')[2], m = mm[mid]; if (!m || /-backup$/.test(mid)) continue;
+    const ck = creatorKey(m.name);
+    for (const e of list) { const w = workerOf(e); if (!w) continue;
+      for (const n of w.split('/').map(x => x.trim()).filter(Boolean)) { const k = rosterKey(n); if (!k) continue;
+        const o = out.get(k) || out.set(k, {name: n.replace(/\s+(mym|of)$/i, ''), cre: new Map()}).get(k);
+        const c = o.cre.get(ck) || o.cre.set(ck, {name: creatorName(m.name), n: 0}).get(ck); c.n++; } } }
+  return out;
+}
+// Les MODEL_MAX modèles principales de la semaine (les plus de shifts) ; au-delà, le chatter est « dispersé » sur les autres
+const topCreators = o => new Set([...o.cre.entries()].sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0])).slice(0, MODEL_MAX).map(([k]) => k));
+// Habitudes sur plusieurs semaines : rosterKey -> Map(créatrice -> {n, g: Set(plateformes)})
+function planHabits(weeks) {
+  const mm = planModelsMap(), out = new Map();
+  for (const wk of weeks) { const W = planState.weeks[wk]; if (!W) continue;
+    for (const [key, list] of Object.entries(W.cells || {})) { const mid = key.split('|')[2], m = mm[mid]; if (!m || /-backup$/.test(mid)) continue; const ck = creatorKey(m.name);
+      for (const e of list) { const w = workerOf(e); if (!w) continue;
+        for (const n of w.split('/').map(x => x.trim()).filter(Boolean)) { const k = rosterKey(n); if (!k) continue;
+          const M = out.get(k) || out.set(k, new Map()).get(k), c = M.get(ck) || M.set(ck, {n: 0, g: new Set()}).get(ck); c.n++; c.g.add(m.group); } } } }
+  return out;
 }
 const shiftsTxt = arr => arr && arr.length ? arr.map(shiftLbl).join(' + ') : '';
 // Heures communes, en tenant compte du focus du superviseur ce jour-là (un shift MYM ne compte qu'avec un superviseur sur MYM à cette heure)
