@@ -667,6 +667,15 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .g-tick{position:absolute;top:0;transform:translateX(-50%);font-size:11px;color:var(--faint)}
 .g-grid{position:absolute;top:0;bottom:0;width:1px;background:var(--line-soft)}
 .g-bar{position:absolute;top:3px;bottom:3px;border-radius:6px;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.35)}
+.offsh{display:flex;gap:3px}.offsh button{font:inherit;font-size:11px;font-weight:700;padding:3px 6px;border-radius:7px;border:1px solid var(--line-soft);background:var(--bg);color:var(--faint);cursor:pointer;white-space:nowrap}
+.offsh button.on{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.6);color:#e0f2fe}.offsh.none button{border-style:dashed}
+.fx-plan{margin:14px 0 4px;display:flex;flex-direction:column;gap:10px}
+.fx-pl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.fx-pl>span{border-radius:12px;padding:8px 10px;background:rgba(255,255,255,.04);border:1px solid var(--line-soft);min-width:0}
+.fx-pl small,.fx-mods small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:800;margin-bottom:3px}
+.fx-pl b{font-size:13px}.fx-pl .warn{border-color:rgba(245,158,11,.5)}.fx-pl .warn b{color:#fbbf24}.fx-pl .bad{border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.1)}.fx-pl .bad b{color:#fca5a5}
+.fx-mods{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.fx-mods small{width:100%}
+.fx-mod{font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.05);border:1px solid var(--line-soft)}.fx-mod b{color:var(--pc);margin-left:3px}.fx-mod.wk{border-color:var(--pc)}
+@media (max-width:640px){.fx-pl{grid-template-columns:1fr}}
 .g-off{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11.5px;font-weight:800;color:var(--faint);letter-spacing:.5px}
 .g-off.right{left:auto;right:10px}
 .g-now{position:absolute;top:-4px;bottom:-4px;width:2px;background:#ef4444;box-shadow:0 0 6px #ef4444;z-index:2}
@@ -3845,7 +3854,7 @@ function renderPlanning(main) {
       <button class="btn ghost small-btn" id="pw-next" type="button" aria-label="Semaine suivante">›</button></div></div>` + tabs + planBilanHTML(wk);
     bindPlanningHead(main, wk); bindPlanBilan(main, wk); return;
   }
-  if (planUI.tab === 'off') { main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1></div>` + tabs + offViewHTML(); bindPlanTabs(main); bindOffView(); return; }
+  if (planUI.tab === 'off') { offAutoShifts(); main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1></div>` + tabs + offViewHTML(); bindPlanTabs(main); bindOffView(); return; }
   const head = tabs + `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1>
     <div class="picker viewpick"><button class="btn ghost small-btn" id="pw-prev" type="button" aria-label="Semaine précédente">‹</button>
       <select id="pw-sel">${allWeeks.map(k => `<option value="${k}" ${k === wk ? 'selected' : ''}>${esc(planWeekLabel(k))}${planState.weeks[k] ? '' : ' (vide)'}</option>`).join('')}</select>
@@ -4625,12 +4634,22 @@ function bindPlanBilan(main, wk) {
   }));
 }
 function bindPlanTabs(main) { main.querySelectorAll('[data-ptab]').forEach(b => b.addEventListener('click', () => { planUI.tab = b.dataset.ptab; render(); })); }
+function offAutoShifts() {
+  if (!Object.keys(planState.weeks || {}).length || !glCanSync()) return;
+  let n = 0;
+  for (const o of Object.values(planState.dayoff || {})) {
+    if (Array.isArray(o.shifts)) continue;
+    const sh = usualShifts(coachShifts(o.name, planWeeksUpTo(glWeekNow(), 3)));
+    if (sh.length) { o.shifts = sh; n++; }
+  }
+  if (n) savePlan();
+}
 function offViewHTML() {
   const list = Object.entries(dayOff()).map(([k, o]) => ({k, ...o})).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   const perDay = PLAN_DAYS.map((_, i) => list.filter(o => (o.days || []).includes(i)).length);
   return `<div class="stack">
     <section class="panel"><h2>Coller la liste des jours OFF</h2>
-      <p class="hint">Copiez les colonnes « Chatter », « Jour OFF » et « Note » depuis Excel et collez-les ici (une ligne par chatter). Un jour (« Jeudi »), plusieurs (« Samedi, Dimanche ») ou « Pas de off ». Les chatters déjà présents sont mis à jour.</p>
+      <p class="hint">Pour chaque nouveau chatter, cochez aussi son ou ses shifts dans la liste ci-dessous (colonne « Shift »). Copiez les colonnes « Chatter », « Jour OFF » et « Note » depuis Excel et collez-les ici (une ligne par chatter). Un jour (« Jeudi »), plusieurs (« Samedi, Dimanche ») ou « Pas de off ». Les chatters déjà présents sont mis à jour.</p>
       <textarea id="off-paste" rows="6" placeholder="Alex&#9;Jeudi&#10;Ambinintsoa MYM&#9;Samedi&#10;Ferlin&#9;Pas de off&#9;Enchaine tous les jours"></textarea>
       <div id="off-prev" class="hint" style="margin:8px 0 0"></div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
@@ -4640,8 +4659,9 @@ function offViewHTML() {
     <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">Jours OFF de l'équipe · ${plural(list.length, 'chatter', 'chatters')}</h2>
       <span class="muted" style="font-size:12.5px">${PLAN_DAYS.map((x, i) => `${x} ${perDay[i]}`).join(' · ')}</span>
       <input type="search" id="off-q" placeholder="Rechercher" style="margin-left:auto;max-width:220px" value="${esc(planUI.offq || '')}"></div>
-      ${list.length ? `<div class="tbl-wrap" style="max-height:560px"><table><thead><tr><th>Chatter</th>${PLAN_DAYS.map(x => `<th style="text-align:center">${x}</th>`).join('')}<th>Note</th><th></th></tr></thead><tbody>
+      ${list.length ? `<div class="tbl-wrap" style="max-height:560px"><table><thead><tr><th>Chatter</th><th title="Le ou les shifts habituels du chatter">Shift</th>${PLAN_DAYS.map(x => `<th style="text-align:center">${x}</th>`).join('')}<th>Note</th><th></th></tr></thead><tbody>
       ${list.filter(o => !planUI.offq || normName(o.name).includes(normName(planUI.offq))).map(o => `<tr><td><strong>${esc(o.name)}</strong>${!(o.days || []).length ? ' <span class="sub">pas de OFF</span>' : ''}</td>
+        <td><div class="offsh${Array.isArray(o.shifts) && o.shifts.length ? '' : ' none'}">${[0, 1, 2, 3].map(sh => `<button type="button" class="${(o.shifts || []).includes(sh) ? 'on' : ''}" data-offs="${esc(o.k)}|${sh}" aria-pressed="${(o.shifts || []).includes(sh)}" aria-label="${esc(o.name)} sur le shift ${shiftLbl(sh)}">${shiftLbl(sh)}</button>`).join('')}</div></td>
         ${PLAN_DAYS.map((_, i) => `<td style="text-align:center"><input type="checkbox" data-offd="${esc(o.k)}|${i}" ${(o.days || []).includes(i) ? 'checked' : ''} aria-label="${esc(o.name)} OFF ${PLAN_DAYS_LONG[i]}"></td>`).join('')}
         <td><input type="text" data-offn="${esc(o.k)}" value="${esc(o.note || '')}" placeholder="—" style="min-width:180px"></td>
         <td class="num"><button class="btn ghost" data-offx="${esc(o.k)}" type="button" title="A quitté l’agence, ou erreur dans la liste" aria-label="Retirer ${esc(o.name)}">Retirer</button></td></tr>`).join('')}
@@ -4674,8 +4694,8 @@ function bindOffView() {
   };
   ta.addEventListener('input', show);
   go.addEventListener('click', () => {
-    const map = document.getElementById('off-replace').checked ? (planState.dayoff = {}) : dayOff();
-    for (const x of parsed) { const k = offKey(x.name); map[k] = {name: x.name, days: x.days, ...(x.note ? {note: x.note} : {})}; }
+    const old = {...dayOff()}, map = document.getElementById('off-replace').checked ? (planState.dayoff = {}) : dayOff();
+    for (const x of parsed) { const k = offKey(x.name), sh = old[k] && old[k].shifts; map[k] = {name: x.name, days: x.days, ...(x.note ? {note: x.note} : {}), ...(Array.isArray(sh) ? {shifts: sh} : {})}; }
     savePlan(); toast(`${plural(parsed.length, 'jour OFF enregistré', 'jours OFF enregistrés')}.`); render();
   });
   const qi = document.getElementById('off-q'); let t;
@@ -4683,6 +4703,11 @@ function bindOffView() {
   document.querySelectorAll('[data-offd]').forEach(cb => cb.addEventListener('change', () => {
     const [k, i] = cb.dataset.offd.split('|'); const o = dayOff()[k]; const set = new Set(o.days || []);
     cb.checked ? set.add(+i) : set.delete(+i); o.days = [...set].sort(); savePlan();
+  }));
+  document.querySelectorAll('[data-offs]').forEach(b => b.addEventListener('click', () => {
+    const [k, sh] = b.dataset.offs.split('|'), o = dayOff()[k]; if (!o) return; const set = new Set(o.shifts || []);
+    set.has(+sh) ? set.delete(+sh) : set.add(+sh); o.shifts = [...set].sort(); savePlan();
+    const on = set.has(+sh); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.parentElement.classList.toggle('none', !set.size);
   }));
   document.querySelectorAll('[data-offn]').forEach(inp => inp.addEventListener('change', () => { const o = dayOff()[inp.dataset.offn]; if (inp.value.trim()) o.note = inp.value.trim(); else delete o.note; savePlan(); }));
   document.querySelectorAll('[data-offx]').forEach(b => b.addEventListener('click', () => { const o = dayOff()[b.dataset.offx]; if (o) chatterLeave(o.name, rosterKey(o.name), 'off'); }));
@@ -5850,6 +5875,33 @@ function glShifts(plan, weeks) {
   const mm = planModelsMap();
   return coachShifts(plan, weeks).filter(x => !x.dup).map(x => ({...x, g: (mm[x.mid] || PLAN_BACKUPS.find(b => b.id === x.mid) || {}).group || 'other'}));
 }
+/* ---------- Habitudes de planning d'un chatter : shift(s), modèles, jour OFF ----------
+   Une modèle = la créatrice, toutes plateformes confondues (Carla Baby OF, MYM et Reveal = 1). Le BACKUP ne compte pas. */
+const MODEL_MAX = 4;
+const shiftLbl = s => `${SHIFT_HOURS[s][0]}h-${SHIFT_HOURS[s][1] % 24}h`;
+const creatorKey = n => normName(n).replace(/\s+(reveal|paid subs|\d+)$/, '').trim();
+const creatorName = n => String(n || '').replace(/\s+(reveal|paid subs|\d+)$/i, '').trim();
+const planWeeksUpTo = (wk, n) => Object.keys(planState.weeks || {}).filter(w => w <= wk).sort().slice(-n);
+function offEntryOf(name) { const k = rosterKey(name); if (!k) return null; return Object.values(planState.dayoff || {}).find(o => nearKey(rosterKey(o.name), k)) || null; }
+// Shifts habituels vus au planning : un créneau compte s'il revient sur au moins 35 % des jours travaillés
+function usualShifts(list) {
+  const days = new Map(); for (const x of list) { const dk = `${x.wk}|${x.d}`; (days.get(dk) || days.set(dk, new Set()).get(dk)).add(x.s); }
+  const cnt = [0, 0, 0, 0]; for (const set of days.values()) for (const sh of set) cnt[sh]++;
+  return days.size ? [0, 1, 2, 3].filter(sh => cnt[sh] >= Math.max(1, days.size * 0.35)) : [];
+}
+function chatterPlanInfo(name, nWeeks = 4) {
+  const mm = planModelsMap(), weeks = planWeeksUpTo(glWeekNow(), nWeeks), curWk = glShiftWeek(glWeekNow());
+  const all = coachShifts(name, weeks).filter(x => mm[x.mid] && !/-backup$/.test(x.mid));
+  const models = new Map();
+  for (const x of all) { const m = mm[x.mid], ck = creatorKey(m.name);
+    const o = models.get(ck) || {name: creatorName(m.name), slots: new Set(), pfs: new Set(), week: false};
+    o.slots.add(`${x.wk}|${x.d}|${x.s}`); o.pfs.add(m.group); if (x.wk === curWk) o.week = true; models.set(ck, o); }
+  const list = [...models.values()].map(o => ({name: o.name, n: o.slots.size, pfs: [...o.pfs], week: o.week})).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'fr'));
+  const off = offEntryOf(name);
+  return {weeks, curWk, isCur: curWk === glWeekNow(), models: list, weekCount: list.filter(m => m.week).length,
+    seen: usualShifts(all), off, declared: off && Array.isArray(off.shifts) ? off.shifts : null};
+}
+const shiftsTxt = arr => arr && arr.length ? arr.map(shiftLbl).join(' + ') : '';
 // Heures communes, en tenant compte du focus du superviseur ce jour-là (un shift MYM ne compte qu'avec un superviseur sur MYM à cette heure)
 function glOverlap(sup, shifts) {
   let h = 0;
@@ -6248,6 +6300,18 @@ function fxRing(val, ratio, color, label) {
 }
 const FX_C = {g: '#22c55e', a: '#f59e0b', r: '#ef4444'};
 const fxShortMoney = (P, v) => v == null ? '—' : v >= 1000 ? `${nf(v / 1000, 0, 1)}k${P.currency}` : moneyP(P, v);
+function fxPlanHTML(d) {
+  const I = chatterPlanInfo(d.name), off = I.off, sh = I.declared && I.declared.length ? I.declared : I.seen;
+  const offTxt = !off ? '<span class="muted">pas dans la liste Jours OFF</span>' : (off.days || []).length ? esc(off.days.map(i => PLAN_DAYS_LONG[i]).join(', ')) : 'pas de jour OFF';
+  const shTxt = sh.length ? `${esc(shiftsTxt(sh))}${sh.some(x => sh.includes((x + 1) % 4)) ? ' <span class="muted">(enchaîne)</span>' : ''}` : '<span class="muted">pas encore au planning</span>';
+  const over = I.weekCount > MODEL_MAX, at = I.weekCount === MODEL_MAX;
+  const top = I.models.slice(0, 6), more = I.models.length - top.length;
+  return `<div class="fx-plan">
+    <div class="fx-pl"><span><small>Jour OFF</small><b>${offTxt}</b></span><span><small>Shift${sh.length > 1 ? 's' : ''}</small><b>${shTxt}</b></span>
+      <span class="${over ? 'bad' : at ? 'warn' : ''}"><small>${I.isCur ? 'Modèles cette semaine' : 'Modèles semaine dernière'}</small><b>${I.weekCount} / ${MODEL_MAX}${over ? ' · trop dispersé' : at ? ' · limite atteinte' : ''}</b></span></div>
+    ${I.models.length ? `<div class="fx-mods"><small>Ses modèles · ${plural(I.weeks.length, 'dernière semaine', 'dernières semaines')} de planning</small>${top.map(m => `<span class="fx-mod${m.week ? ' wk' : ''}" title="${plural(m.n, 'shift', 'shifts')} sur ${esc(m.name)} (${esc(m.pfs.map(g => g === 'of' ? 'OF' : g === 'mym' ? 'MYM' : 'Reveal').join(' + '))})">${esc(m.name)} <b>${m.n}</b></span>`).join('')}${more > 0 ? `<span class="muted">+${more}</span>` : ''}</div>` : ''}
+  </div>`;
+}
 function fxCardHTML(d, editable) {
   const pc = d.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color, sup = d.G && supList().find(s => s.id === d.G.sup);
   const wsup = d.weak && supList().find(s => s.id === d.weak.sup);
@@ -6273,6 +6337,7 @@ function fxCardHTML(d, editable) {
         <div class="fx-sub">${d.both.length > 1 ? `<span class="fx-pill" style="--pc:${SUP_PF.MYM.color}">MYM</span><span class="fx-pill" style="--pc:${SUP_PF.OF.color}">OF</span>` : `<span class="fx-pill">${d.pid === 'of' ? 'OF' : 'MYM'}</span>`}${first ? `Chez Redes ${fxSeniority(first, fs.bound)}` : 'Pas encore au planning'}${sup ? ` · suivi par ${esc(sup.name)}` : ''}</div>
         ${d.weak ? `<div class="fx-weak">Maillon faible cette semaine${wsup ? ` · avec ${esc(wsup.name)}` : ''}</div>` : frActive()[d.k] ? `<div class="fx-weak new">Suivi français · avec ${esc((frList().find(f => f.id === frActive()[d.k].sup) || {}).name || '')}</div>` : d.isNew ? '<div class="fx-weak new">Nouveau chatter</div>' : ''}</div>
       <div class="fx-grade">${M ? `<b>${esc(M.r.grade)}</b><span>${M.rank}e / ${M.of}</span>` : '<b class="muted">—</b><span>pas sur cette période</span>'}</div></div>
+    ${fxPlanHTML(d)}
     ${ranges.length ? `<div class="fx-per">${ranges.map(x => `<button type="button" class="${x === rg ? 'on' : ''}" data-fper="${x.id}">${esc(x.label)}</button>`).join('')}</div>` : ''}
     <div class="fx-rings">
       ${fxRing(fxShortMoney(d.P, ca), caRatio, caCol, 'Ventes')}
@@ -6926,7 +6991,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611191;
+  const APP_BUILD = 202611201;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
