@@ -898,6 +898,11 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .kcard2 .kcard-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .kcompose{margin-top:12px;padding:10px;border-radius:var(--r-md);background:var(--bg);border:1px solid var(--line-soft)}
 .ktags{display:flex;flex-wrap:wrap;gap:6px}
+.fx-notes{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft)}.fx-notes h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.fx-notes h4 .muted{text-transform:none;letter-spacing:0;font-weight:500}
+.fxn-form textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:54px}.fxn-acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}.fxn-acts .btn{margin-left:auto}
+.fxn-list{margin-top:10px;max-height:420px;overflow:auto}.fxn-it{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line-soft)}
+.fxn-ic{width:22px;text-align:center;flex:none}.fxn-h{font-size:12.5px;color:var(--muted)}.fxn-h b{color:var(--text)}.fxn-h .ktag{margin:0 0 0 4px;font-size:11px;padding:1px 7px}.fxn-b{font-size:13.5px;margin-top:3px;white-space:pre-wrap;overflow-wrap:anywhere}
+.fxn-it.pen .fxn-h b{color:#fca5a5}.fxn-it.weak .fxn-h b{color:#fbbf24}
 .ktag{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--raised);color:var(--muted);margin:0 4px 3px 0;border:1px solid transparent}
 .ktag.bad{color:#fca5a5}.ktag.good{color:#86efac}
 .ktag.sel{cursor:pointer;border-color:var(--line)}
@@ -6449,6 +6454,38 @@ function fxPlanHTML(d) {
     ${I.models.length ? `<div class="fx-mods"><small>Ses modèles · ${plural(I.weeks.length, 'dernière semaine', 'dernières semaines')} de planning</small>${top.map(m => `<span class="fx-mod${m.week ? ' wk' : ''}" title="${plural(m.n, 'shift', 'shifts')} sur ${esc(m.name)} (${esc(m.pfs.map(g => g === 'of' ? 'OF' : g === 'mym' ? 'MYM' : 'Reveal').join(' + '))})">${esc(m.name)} <b>${m.n}</b></span>`).join('')}${more > 0 ? `<span class="muted">+${more}</span>` : ''}</div>` : ''}
   </div>`;
 }
+/* ---------- Notes et feedbacks d'un chatter : tout le monde écrit, tout le monde lit (6 derniers mois) ---------- */
+const FX_NOTE_TAGS = ['fb', 'err', 'abs', 'prog'];
+const fxUI = {tags: new Set()};
+function fxTimeline(d) {
+  const k = d.k, ev = [], notes = notesFor(k);
+  for (const n of notes) ev.push({t: String(n.created_at), kind: 'note', n});
+  // Feedbacks cochés : on ne les répète pas quand une note « Feedback » du même auteur existe le même jour
+  const fbNoteDay = new Set(notes.filter(n => (n.tags || []).includes('fb')).map(n => `${who(n.author)}|${String(n.created_at).slice(0, 10)}`));
+  const FBT = {g: 'Feedback (suivi global)', w: 'Feedback (maillon faible)', fr: 'Feedback (suivi français)'};
+  for (const [wk, F] of Object.entries(coachState.fb || {})) for (const [fk, v] of Object.entries(F || {})) {
+    const [kk, typ] = fk.split('|'); if (kk !== k || !v) continue; const t = String(v.at || wk);
+    if (fbNoteDay.has(`${v.by}|${t.slice(0, 10)}`)) continue;
+    ev.push({t, kind: 'fb', label: FBT[typ] || 'Feedback', by: v.by}); }
+  for (const x of coachHistory(k)) ev.push({t: x.wk, kind: 'weak', label: `Maillon faible · ${planWeekLabel(x.wk).toLowerCase()}`, sub: x.it.verdict && VERDICTS[x.it.verdict.v] ? VERDICTS[x.it.verdict.v].l : ''});
+  for (const e of d.pens || []) ev.push({t: String(e.date || e.wk), kind: 'pen', label: `Pénalité${e.pts ? ` −${nf(e.pts, 0, 1)} pts` : ''}`, sub: e.comment || '', by: e.sup});
+  for (const e of d.pri || []) ev.push({t: String(e.date || e.wk), kind: 'pri', label: `Prime${e.pts ? ` +${nf(e.pts, 0, 1)}` : ''}`, sub: e.comment || '', by: e.sup});
+  return ev.sort((a, b) => b.t.localeCompare(a.t));
+}
+function fxNotesHTML(d) {
+  const ev = fxTimeline(d), me = String(Sync.email() || '').toLowerCase(), adm = Sync.isAdmin() || !Sync.connected();
+  const ICON = {note: '📝', fb: '💬', weak: '⚠️', pen: '⛔', pri: '⭐'};
+  const row = x => x.kind === 'note'
+    ? `<div class="fxn-it"><span class="fxn-ic">${(x.n.tags || []).includes('fb') ? ICON.fb : ICON.note}</span><div style="flex:1;min-width:0"><div class="fxn-h"><b>${esc(fmtDayFr(x.t.slice(0, 10)))}</b> · ${esc(who(x.n.author))}${(x.n.tags || []).map(t => ` <span class="ktag ${tagInfo(t)[2]}">${esc(tagInfo(t)[1])}</span>`).join('')}</div>${x.n.body ? `<div class="fxn-b">${esc(x.n.body)}</div>` : ''}</div>${adm || String(x.n.author || '').toLowerCase() === me ? `<button class="btn ghost small-btn" type="button" data-fxndel="${esc(x.n.id)}" aria-label="Supprimer la note" title="Supprimer la note">×</button>` : ''}</div>`
+    : `<div class="fxn-it ${x.kind}"><span class="fxn-ic">${ICON[x.kind]}</span><div style="flex:1;min-width:0"><div class="fxn-h"><b>${esc(fmtDayFr(x.t.slice(0, 10)))}</b> · ${esc(x.label)}${x.by ? ` · ${esc(x.by)}` : ''}</div>${x.sub ? `<div class="fxn-b muted">${esc(x.sub)}</div>` : ''}</div></div>`;
+  return `<section class="fx-notes">
+    <h4>Notes et feedbacks <span class="muted">· ${plural(ev.length, 'élément', 'éléments')} sur 6 mois · visibles par toute l’équipe</span></h4>
+    <div class="fxn-form"><textarea id="fxn-body" rows="2" placeholder="Ex. feedback sur les relances PPV, erreur de prix, a bien progressé sur le sexting…"></textarea>
+      <div class="fxn-acts"><div class="ktags">${FX_NOTE_TAGS.map(t => `<span class="ktag sel ${tagInfo(t)[2]}${fxUI.tags.has(t) ? ' on' : ''}" role="button" tabindex="0" data-fxntag="${t}">${esc(tagInfo(t)[1])}</span>`).join('')}</div>
+        <button class="btn primary small-btn" type="button" id="fxn-add">Ajouter la note</button></div></div>
+    <div class="fxn-list">${ev.length ? ev.slice(0, 60).map(row).join('') : '<p class="hint" style="margin:6px 0 0">Aucune note ni feedback pour l’instant.</p>'}${ev.length > 60 ? `<p class="hint" style="margin:6px 0 0">+ ${ev.length - 60} plus anciens</p>` : ''}</div>
+  </section>`;
+}
 function fxCardHTML(d, editable) {
   const pc = d.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color, sup = d.G && supList().find(s => s.id === d.G.sup);
   const wsup = d.weak && supList().find(s => s.id === d.weak.sup);
@@ -6493,6 +6530,7 @@ function fxCardHTML(d, editable) {
       ${goal && goal.wk === glWeekNow() && goal.text ? `<small>par ${esc(goal.by || '')}</small>` : ''}</div>
     ${d.h.length >= 3 ? `<div class="fx-spark">${d.h.map((x, i) => `<i style="height:${Math.max(8, Math.round(x.final / max * 100))}%" title="${esc(fmtRange(x.start, x.end))} · score ${nf(x.final, 0, 1)}" class="${i === d.h.length - 1 ? 'last' : ''}"></i>`).join('')}</div>
       <div class="fx-sl"><span>${plural(d.h.length, 'import', 'imports')}</span><span>${d.h.length < 3 ? 'score' : d.trend > 5 ? 'score en hausse ↗' : d.trend < -5 ? 'score en baisse ↘' : 'score stable'}</span></div>` : ''}
+    ${fxNotesHTML(d)}
     ${Sync.canDirect() && !coachAs() ? `<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small-btn" type="button" data-glmove="${esc(d.k)}">Changer de superviseur</button>${coachHistory(d.k).length ? `<button class="btn ghost small-btn" type="button" data-kall="${esc(d.k)}">Historique maillon faible</button>` : ''}</div>` : ''}
   </article>`;
 }
@@ -6523,6 +6561,20 @@ function fxPageHTML() {
 }
 function bindFx(main) {
   const rr = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
+  main.querySelectorAll('[data-fxntag]').forEach(b => { const tg = () => { const t = b.dataset.fxntag; fxUI.tags.has(t) ? fxUI.tags.delete(t) : fxUI.tags.add(t); b.classList.toggle('on', fxUI.tags.has(t)); };
+    b.addEventListener('click', tg); b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tg(); } }); });
+  main.querySelector('#fxn-add')?.addEventListener('click', async e => {
+    const btn = e.currentTarget, body = (main.querySelector('#fxn-body').value || '').trim(), tags = [...fxUI.tags], k = coachUI.fsel;
+    if (!k) return; if (!body && !tags.length) { toast('Écrivez une note ou choisissez une étiquette.', true); return; }
+    const name = (main.querySelector('.fx-nm') || {}).textContent || k, sup = mySup() || myFr();
+    btn.disabled = true;
+    try { await coachAddNote({week: glWeekNow(), chatter_key: k, chatter_name: name, sup_id: sup ? sup.id : '', tags, body: body || null}); fxUI.tags.clear(); toast('Note ajoutée.'); rr(); }
+    catch (err) { btn.disabled = false; toast(`La note n’a pas été enregistrée : ${err.message || err}`, true); }
+  });
+  main.querySelectorAll('[data-fxndel]').forEach(b => b.addEventListener('click', async () => {
+    if (!(await modal('Supprimer la note', '<p>Supprimer définitivement cette note ?</p>', 'Supprimer'))) return;
+    try { await coachDelNote(b.dataset.fxndel); toast('Note supprimée.'); rr(); } catch (err) { toast(`Suppression impossible : ${err.message || err}`, true); }
+  }));
   main.querySelectorAll('[data-fx]').forEach(b => b.addEventListener('click', () => { coachUI.fsel = b.dataset.fx; rr(); if (window.innerWidth <= 900) window.scrollTo(0, 0); }));
   main.querySelector('[data-fxback]')?.addEventListener('click', () => { coachUI.fsel = null; coachUI.fback = true; rr(); });
   main.querySelectorAll('[data-fscope]').forEach(b => b.addEventListener('click', () => { coachUI.fscope = b.dataset.fscope; coachUI.fsel = null; rr(); }));
@@ -6922,14 +6974,14 @@ const VERDICTS = {
 };
 const STOP_REASONS = ['Toujours en retard ou absent', 'Micro ou partage d’écran KO', 'Ne pose aucune question', 'Je-m’en-foutiste', 'Ne veut pas évoluer', 'Ne répond pas aux feedbacks'];
 const NOTE_TAGS = [['abs', 'Absent / en retard', 'bad'], ['tech', 'Micro ou écran KO', 'bad'], ['noq', 'Ne pose aucune question', 'bad'], ['react', 'Répond juste par réaction', 'bad'], ['feedback', 'Ignore les feedbacks', 'bad'], ['understands', 'Comprend les consignes', 'good'], ['asks', 'Pose des questions', 'good'], ['progress', 'Progresse', 'good'], ['motivated', 'Motivé', 'good']];
-const tagInfo = k => k === 'fb' ? ['fb', 'Feedback', 'good'] : NOTE_TAGS.find(t => t[0] === k) || [k, k, ''];
+const tagInfo = k => k === 'fb' ? ['fb', 'Feedback', 'good'] : k === 'err' ? ['err', 'Erreur / bêtise', 'bad'] : k === 'prog' ? ['prog', 'Progrès', 'good'] : NOTE_TAGS.find(t => t[0] === k) || [k, k, ''];
 // Cache des notes : chargées depuis la table coach_notes (Supabase), ou gardées dans ce navigateur sans partage
 const coachNotes = {list: [], loadedAt: 0, loading: false, remote: null};
 async function coachLoadNotes(force) {
   if (coachNotes.loading || (!force && Date.now() - coachNotes.loadedAt < 60000)) return;
   if (!Sync.connected()) { coachNotes.list = coachState.localNotes || []; coachNotes.remote = false; coachNotes.loadedAt = Date.now(); return; }
   coachNotes.loading = true;
-  try { coachNotes.list = (await Sync.notesList(addDaysIso(mondayOf(isoOf(new Date())), -7 * 12))) || []; coachNotes.remote = true; }
+  try { coachNotes.list = (await Sync.notesList(addDaysIso(mondayOf(isoOf(new Date())), -7 * 26))) || []; coachNotes.remote = true; }
   catch (e) { coachNotes.remote = false; coachNotes.list = coachState.localNotes || []; }
   coachNotes.loading = false; coachNotes.loadedAt = Date.now();
   if (route().page === 'coaching') { const y = window.scrollY; render(); window.scrollTo(0, y); }
