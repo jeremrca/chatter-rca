@@ -1402,13 +1402,32 @@ const RCA = (() => {
       else if (/\bmanager\b/i.test(name)) issues.push({sev:'warn', msg:'Manager : exclu par défaut'});
       out.push({line: r + 1, name, values, derived, issues, notes, include: false});
     }
-    const counts = {};
-    out.forEach(o => { if (o.name) { const k = o.name.toLowerCase(); counts[k] = (counts[k] || 0) + 1; } });
-    out.forEach(o => {
-      if (o.name && counts[o.name.toLowerCase()] > 1) o.issues.push({sev:'warn', msg:'Nom de chatter en double'});
-      o.include = o.issues.length === 0;
-    });
-    return out;
+    // Même nom sur plusieurs lignes (ex. un chatter sur deux comptes) : les lignes sont fusionnées en une seule
+    // (montants et nombres additionnés, ratios recalculés ou moyennés selon leur poids). Si une ligne a une erreur, on ne fusionne pas.
+    const groups = new Map();
+    out.forEach(o => { if (o.name) { const k = o.name.toLowerCase(); (groups.get(k) || groups.set(k, []).get(k)).push(o); } });
+    const merged = [];
+    for (const o of out) {
+      const g = o.name ? groups.get(o.name.toLowerCase()) : null;
+      if (!g || g.length < 2) { merged.push(o); continue; }
+      if (g[0] !== o) continue;
+      if (g.some(x => x.issues.some(i => i.sev === 'error'))) { g.forEach(x => { x.issues.push({sev:'warn', msg:'Nom de chatter en double'}); merged.push(x); }); continue; }
+      const values = {}, derived = {};
+      for (const k of P.kpis) {
+        const vs = g.filter(x => x.values[k.key] != null);
+        if (!vs.length) { values[k.key] = null; continue; }
+        if (k.agg === 'wavg' || k.agg === 'ratio') {
+          const w = vs.map(x => (k.by && x.values[k.by] != null ? x.values[k.by] : 0)), tw = w.reduce((a, x) => a + x, 0);
+          values[k.key] = r6(tw > 0 ? vs.reduce((a, x, i) => a + x.values[k.key] * w[i], 0) / tw : vs.reduce((a, x) => a + x.values[k.key], 0) / vs.length);
+        } else values[k.key] = r6(vs.reduce((a, x) => a + x.values[k.key], 0));
+      }
+      for (const k of P.kpis) if (k.agg === 'ratio' && values[k.num] != null && values[k.den] > 0) { values[k.key] = r6(Math.min(100, values[k.num] / values[k.den] * 100)); derived[k.key] = true; }
+      const issues = g.flatMap(x => x.issues.filter(i => i.sev !== 'error'));
+      const seen = new Set(), uniq = issues.filter(i => !seen.has(i.msg) && seen.add(i.msg));
+      merged.push({line: g[0].line, name: g[0].name, values, derived, issues: uniq, notes: [...new Set(g.flatMap(x => x.notes)), `${g.length} lignes au même nom fusionnées (lignes ${g.map(x => x.line).join(', ')})`], include: false, merged: g.length});
+    }
+    merged.forEach(o => { o.include = o.issues.length === 0; });
+    return merged;
   }
   function summarize(rows) {
     const total = rows.length;
