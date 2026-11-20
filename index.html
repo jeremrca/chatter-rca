@@ -997,6 +997,8 @@ const RCA = (() => {
           aliases:['taux conv','taux conv %','taux de conversion','conversion','conversion rate','conv','taux conversion','unlock ratio','unlock']},
         {key:'react', label:'Réactivité', kind:'seconds', scoring:'bands', lowerIsBetter:true, missingZero:true, agg:'wavg', by:'proposed',
           aliases:['reactivite','reactivity','temps de reponse','temps de reponse moyen','response time','avg response time','delai de reponse']},
+        {key:'golden', label:'Golden Ratio', kind:'pct', pctRule:'golden', scoring:'bands', agg:'wavg', by:'proposed', optional:true, skipIfMissing:true,
+          aliases:['golden ratio','golden ratio %','golden %','golden rate','golden','ratio golden','ratio d or','golden ratio (%)']},
         {key:'ppv', label:'CA PPV', kind:'money', dec:2, scoring:'info', optional:true,
           aliases:['ca ppv','ppv','ventes ppv','revenu ppv','ppv revenue']},
         {key:'tips', label:'CA Tips', kind:'money', dec:2, scoring:'info', optional:true,
@@ -1009,11 +1011,12 @@ const RCA = (() => {
       dashStats: [['sum','total',`CA de l'équipe`],['avg','conv','Taux de conversion moyen'],['avg','react','Réactivité moyenne'],['sum','ppv','CA PPV (info)']],
       defaults: {
         schema: 2,
-        weights: {total:40, conv:35, react:25},
+        weights: {total:40, conv:35, react:25, golden:0},
         targets: {total:5000},
         bands: {
           conv: [[0,0],[10,25],[15,45],[20,60],[25,75],[30,90],[35,100]],
-          react: [[0,100],[90,90],[150,80],[210,65],[270,50],[330,30],[420,10],[600,0]]
+          react: [[0,100],[90,90],[150,80],[210,65],[270,50],[330,30],[420,10],[600,0]],
+          golden: [[0,10],[1,25],[2,40],[3,60],[3.5,75],[4,100],[5.01,90],[6,75],[8,55],[10,35]]
         },
         caps: {enabled:true, kpi:'conv', criticalBelow:10, criticalCap:'C', warnBelow:15, warnCap:'B'},
         grades: {S:90, A:80, B:70, C:60}
@@ -1044,6 +1047,7 @@ const RCA = (() => {
     }
     for (const k of ['weights','targets','caps','grades','aliases']) if (saved[k]) Object.assign(d[k], saved[k]);
     if (saved.bands) for (const b of Object.keys(d.bands)) if (Array.isArray(saved.bands[b])) d.bands[b] = saved.bands[b];
+    if (Array.isArray(saved.history)) d.history = clone(saved.history);
     return d;
   }
   // Anciens paramètres (version OF seule) → nouveau format
@@ -1075,9 +1079,14 @@ const RCA = (() => {
   function scoreChatter(row, P, s) {
     const scores = {}, contrib = {};
     let total = 0;
+    const W = k => (s.weights && s.weights[k.key]) || 0;
+    const skip = k => k.skipIfMissing && row[k.key] == null;
+    const wAll = P.scored.reduce((t, k) => t + W(k), 0), wUsed = P.scored.reduce((t, k) => t + (skip(k) ? 0 : W(k)), 0);
+    const scale = wUsed > 0 && wUsed < wAll ? wAll / wUsed : 1;
     for (const k of P.scored) {
-      scores[k.key] = row[k.key] == null ? 0 : k.scoring === 'target' ? propScore(row[k.key], s.targets[k.key]) : bandScore(row[k.key], s.bands[k.key]);
-      contrib[k.key] = scores[k.key] * s.weights[k.key] / 100;
+      if (skip(k)) { scores[k.key] = null; contrib[k.key] = 0; continue; }
+      scores[k.key] = row[k.key] == null ? 0 : k.scoring === 'target' ? propScore(row[k.key], s.targets[k.key]) : bandScore(row[k.key], (s.bands && s.bands[k.key]) || []);
+      contrib[k.key] = scores[k.key] * W(k) * scale / 100;
       total += contrib[k.key];
     }
     const final = r1(total);
@@ -1105,8 +1114,12 @@ const RCA = (() => {
   // Les objectifs sont hebdomadaires (7 jours) : ils sont ajustés à la durée réelle de la période.
   const utcDay = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); };
   function periodDays(p) { return p && p.start && p.end ? Math.max(1, Math.round((utcDay(p.end) - utcDay(p.start)) / 86400000) + 1) : 7; }
-  function computePeriod(period, s) {
-    const P = PLATFORMS[period.platform || 'of'];
+  function settingsAt(s, start) {
+    const h = (s.history || []).filter(x => x && x.until && start && start <= x.until).sort((a, b) => a.until.localeCompare(b.until))[0];
+    return h ? {...s, ...h, history: undefined} : s;
+  }
+  function computePeriod(period, s0) {
+    const P = PLATFORMS[period.platform || 'of'], s = settingsAt(s0, period.start);
     const days = periodDays(period), factor = days / 7;
     const sc = factor === 1 ? s : {...s, targets: Object.fromEntries(Object.entries(s.targets).map(([k, v]) => [k, v * factor]))};
     const results = period.rows.map(r => scoreChatter(r, P, sc));
@@ -1123,10 +1136,10 @@ const RCA = (() => {
       sum[k.key] = vals.reduce((a, v) => a + v, 0);
       avg[k.key] = vals.length ? sum[k.key] / vals.length : null;
     }
-    for (const k of P.scored) avgScores[k.key] = n ? results.reduce((a, r) => a + r.scores[k.key], 0) / n : 0;
+    for (const k of P.scored) { const v = results.map(r => r.scores[k.key]).filter(x => x != null); avgScores[k.key] = v.length ? v.reduce((a, x) => a + x, 0) / v.length : 0; }
     const grades = {S:0, A:0, B:0, C:0, D:0};
     results.forEach(r => grades[r.grade]++);
-    return {period, platform: P, results, targets: sc.targets, days, factor, stats: {
+    return {period, platform: P, results, targets: sc.targets, settings: s, days, factor, stats: {
       count: n, grades, sum, avg, avgScores,
       avgScore: r1(n ? results.reduce((a, r) => a + r.final, 0) / n : 0),
       critical: results.filter(r => r.critical).length,
@@ -1483,10 +1496,12 @@ const RCA = (() => {
       return {pass: rows.length === 2 && rows.every(r => !r.issues.length) && a.name === 'Vonjy Mym' && a.values.react === 140 && a.values.conv === 21.1 && a.values.total === 5650.79 && a.values.sold === 248,
         detail: `${rows.length} lignes · ${a.name} : ${a.values.react} s, ${a.values.conv} %, ${a.values.total} €`};
     });
-    t('MYM · score sur 3 critères seulement (CA total, taux de conversion, réactivité)', () => {
-      const v = parseDuration('140s').value, r = scoreChatter({name:'m', react:v, conv:21.1, ppv:4966.31, tips:684.48, total:5650.79}, MYM, sm);
+    t('MYM · score sur CA, conversion, réactivité et Golden Ratio (Golden absent : son poids est réparti)', () => {
+      const v = parseDuration('140s').value, row = {name:'m', react:v, conv:21.1, ppv:4966.31, tips:684.48, total:5650.79}, r = scoreChatter(row, MYM, sm);
       const keys = Object.keys(r.scores).sort().join(',');
-      return {pass: v === 140 && r.scores.react === 90 && keys === 'conv,react,total' && r.final === 83.5, detail:`notés : ${keys} · 140 s → ${r.scores.react}/100 · score ${fr(r.final, 1)}`};
+      const s2 = {...sm, weights: {total:35, conv:30, react:20, golden:15}}, r2 = scoreChatter(row, MYM, s2), r3 = scoreChatter({...row, golden:4.5}, MYM, s2);
+      return {pass: v === 140 && r.scores.react === 90 && keys === 'conv,golden,react,total' && r.scores.golden === null && r.final === 83.5 && r3.scores.golden === 100 && r2.final > 0 && Math.abs(r2.final - r1((r2.scores.total * 35 + r2.scores.conv * 30 + r2.scores.react * 20) / 85)) < 0.2,
+        detail:`notés : ${keys} · 140 s → ${r.scores.react}/100 · score ${fr(r.final, 1)} · Golden 4,5 % → ${r3.scores.golden}/100`};
     });
     t('MYM · Taux de conversion à 8 % → alerte critique + grade plafonné', () => {
       const r = scoreChatter({name:'m', react:30, conv:8, ppv:99999, tips:99999, total:99999}, MYM, sm);
@@ -1875,6 +1890,30 @@ let charts = [];
 
 const saveSettings = () => { lsSet(LS.settings, allSettings); Sync.changed('settings'); };
 const savePeriods = () => { lsSet(LS.periods, store.periods); Sync.changed('periods'); };
+/* Barème du lundi 23/11/2026 (validé par le propriétaire le 20/11) : Golden Ratio en « zone idéale » (4 à 5 %) sur OF et MYM ;
+   MYM : CA 35 · conversion 30 · réactivité 20 · Golden 15, objectif 800 €, conversion 30 % = 100, plafonds 8 % / 12 %.
+   Les semaines qui commencent avant le 23/11 gardent l'ancien barème (settings[pid].history). Fait une seule fois, par un administrateur. */
+const GOLDEN_IDEAL = [[0,10],[1,25],[2,40],[3,60],[3.5,75],[4,100],[5.01,90],[6,75],[8,55],[10,35]];
+function scoringMigrate2611() {
+  if (Sync.connected() && !(Sync.isAdmin() && Sync.status() === 'ok')) return;
+  let done = false;
+  for (const pid of PIDS) {
+    const cur = allSettings[pid];
+    if ((cur.history || []).some(h => h.until === '2026-11-22')) continue;
+    const snap = RCA.clone({weights: cur.weights, targets: cur.targets, bands: cur.bands, caps: cur.caps, grades: cur.grades});
+    if (pid === 'mym') snap.weights.golden = 0;
+    const ns = RCA.clone(cur); ns.history = [...(cur.history || []), {until: '2026-11-22', ...snap}];
+    ns.bands.golden = RCA.clone(GOLDEN_IDEAL);
+    if (pid === 'mym') {
+      ns.weights = {...ns.weights, total: 35, conv: 30, react: 20, golden: 15};
+      ns.targets = {...ns.targets, total: 800};
+      ns.bands.conv = [[0,0],[5,10],[10,30],[15,50],[20,65],[25,80],[30,100]];
+      ns.caps = {...ns.caps, criticalBelow: 8, warnBelow: 12};
+    }
+    store.setSettings(pid, ns); done = true;
+  }
+  if (done) saveSettings();
+}
 const saveUI = () => lsSet(LS.ui, {period: ui.period, navOpen: ui.navOpen, view: ui.view});
 ui.view ||= {};
 const platformPeriods = pid => store.periods.filter(p => p.platform === pid);
@@ -2120,6 +2159,7 @@ function bindTopbar(P) {
 function destroyCharts() { charts.forEach(c => { try { c.destroy(); } catch {} }); charts = []; }
 
 function render() {
+  scoringMigrate2611();
   destroyCharts();
   const rt = route(), P = PLATFORMS[rt.pid];
   renderNav(rt);
@@ -2236,7 +2276,7 @@ function renderDashboard(main, P) {
   if (!view) { main.innerHTML = emptyState(P, 'Tableau de bord'); return; }
   if (!view.period) { main.innerHTML = topbar(P, 'Tableau de bord', true) + noDataPanel(P, view); return; }
   const p = view.period;
-  const s = allSettings[P.id], res = store.resultsFor(p), st = res.stats;
+  const res = store.resultsFor(p), s = res.settings || allSettings[P.id], st = res.stats;
   const statCell = ([agg, key, label]) => {
     const k = P.kpi[key];
     if (agg === 'sum') return `<div class="stat"><div class="k">${esc(label)}</div><div class="v">${fmtK(P, k, st.sum[key], 0)}</div><div class="d">${fmtK(P, k, st.avg[key], 0)} par chatter</div></div>`;
@@ -2284,7 +2324,7 @@ function improvement(k, v, bands) {
   const pb = sorted[i - 1]; return pb && pb[1] > sorted[i][1] ? {verb:'descendre sous', v:sorted[i][0], pts:pb[1]} : null;
 }
 function observations(P, r, res) {
-  const s = allSettings[P.id], o = [], c = s.caps;
+  const s = (res && res.settings) || allSettings[P.id], o = [], c = s.caps;
   const capKpi = c.enabled ? P.kpi[c.kpi] : null;
   if (capKpi && r.row[c.kpi] != null) {
     const v = r.row[c.kpi];
@@ -2294,6 +2334,7 @@ function observations(P, r, res) {
   if (r.capped) o.push(['warn', `Le score de ${num(r.final)} correspond au grade ${r.scoreGrade} ; le plafond lié au ${capKpi ? capKpi.label : 'KPI'} fixe le grade final à ${r.grade}.`]);
   for (const k of P.scored) {
     const v = r.row[k.key], sc = r.scores[k.key];
+    if (!s.weights[k.key] || (sc == null && k.skipIfMissing)) continue;   // critère pas compté dans ce barème, ou absent de l'import
     if (k.scoring === 'target') {
       const t = res.targets[k.key], share = t ? v / t * 100 : 0;
       if (v >= t) o.push(['good', `${k.label} : objectif atteint (${fmtK(P, k, v)} pour un objectif de ${fmtK(P, k, t)}).`]);
@@ -2308,7 +2349,7 @@ function observations(P, r, res) {
     }
   }
   if (P.id === 'mym' && r.row.sold != null && r.row.proposed != null) o.push(['info', `${nf(r.row.sold, 0, 0)} ventes pour ${nf(r.row.proposed, 0, 0)} médias proposés.`]);
-  const losses = P.scored.map(k => [k, (100 - r.scores[k.key]) * s.weights[k.key] / 100]).sort((a,b) => b[1] - a[1]);
+  const losses = P.scored.map(k => [k, r.scores[k.key] == null ? 0 : (100 - r.scores[k.key]) * (s.weights[k.key] || 0) / 100]).sort((a,b) => b[1] - a[1]);
   if (losses.length && losses[0][1] > 0.05) o.push(['warn', `Plus grosse perte de points : ${losses[0][0].label}, qui coûte ${num(losses[0][1], 2)} points pondérés.`]);
   const diff = RCA.r1(r.final - res.stats.avgScore);
   o.push([diff >= 0 ? 'good' : 'warn', `Classé ${ordinal(r.rank)} sur ${res.stats.count}, ${diff >= 0 ? '+' : ''}${num(diff)} points par rapport à la moyenne de l'équipe (${num(res.stats.avgScore)}).`]);
@@ -2325,7 +2366,7 @@ function renderDetail(main, P, name) {
     main.innerHTML = topbar(P, 'Chatter', true) + `<a class="back" href="#${P.id}/chatters" style="display:inline-block;text-decoration:none">‹ Tous les chatters</a><div class="panel empty">${esc(name)} n'a pas de données sur ${esc(p.name)}. Choisissez une autre période ci-dessus ou ouvrez l'<a href="#${P.id}/history">Historique</a>.</div>`;
     return;
   }
-  const s = allSettings[P.id];
+  const s = res.settings || allSettings[P.id];
   const info = P.kpis.filter(k => k.scoring === 'info');
   main.innerHTML = topbar(P, 'Détail du chatter', true) + `<button class="back" type="button" id="back">‹ Tous les chatters</button>
   <div class="stack">
@@ -2338,7 +2379,7 @@ function renderDetail(main, P, name) {
       <div class="scorebox"><div class="v ${scClass(r.final)}">${num(r.final)}</div><div class="k">Score final / 100</div></div>
     </section>
     <section class="panel"><h2>Détail des KPI</h2><p class="hint">Chaque KPI est noté sur 100, puis multiplié par son poids. La somme des contributions donne le score final.</p>
-      ${P.scored.map(k => `<div class="kpi-row">
+      ${P.scored.filter(k => s.weights[k.key] && r.scores[k.key] != null).map(k => `<div class="kpi-row">
         <div class="lab">${k.label}</div>
         <div class="raw">${fmtK(P, k, r.row[k.key])}</div>
         <div class="bar" role="img" aria-label="Score ${esc(k.label)} : ${r.scores[k.key]} sur 100"><i style="width:${r.scores[k.key]}%;background:${scColor(r.scores[k.key])}"></i></div>
@@ -2408,7 +2449,7 @@ function renderAnalytics(main, P) {
   if (!view) { main.innerHTML = emptyState(P, `Analyse d'équipe`); return; }
   if (!view.period) { main.innerHTML = topbar(P, `Analyse d'équipe`, true) + noDataPanel(P, view); return; }
   const p = view.period;
-  const s = allSettings[P.id], res = store.resultsFor(p), st = res.stats;
+  const res = store.resultsFor(p), s = res.settings || allSettings[P.id], st = res.stats;
   const rows = P.scored.map(k => {
     const t = kpiTarget(P, k, s, res.targets);
     const meeting = res.results.filter(r => r.row[k.key] != null && t.meets(r.row[k.key])).length;
@@ -5728,6 +5769,7 @@ const LS_COACH = 'rca.coach.v1';
 let coachState = (() => { const s = lsGet(LS_COACH, null) || {}; s.weeks ||= {}; s.links ||= {}; return s; })();
 const saveCoach = () => { lsSet(LS_COACH, coachState); Sync.changed('coaching'); };
 const COACH_DEF = {n: 20, cap: 6, min: 4, minShifts: 2, span: 2};
+const WEAK_MALUS_FROM = '2026-11-23';
 const coachCfg = () => ({...COACH_DEF, ...(coachState.cfg || {})});
 const coachUI = {week: null};
 const BAD_NAME = /acc[eè]s\s+r[eé]voqu|superviseu?r|\bsup\b|\bmanager\b|@/i;
@@ -5838,14 +5880,20 @@ function coachBuild(wk, keepFrom, opt = {}) {
       if (plan && shifts.length < cfg.minShifts) { out.excluded.push({name: r.name, pid, why: `${plural(shifts.length, 'shift', 'shifts')} au planning sur la période`}); continue; }
       cand.push({r, plan, shifts: shifts.length});
     }
-    cand.sort((a, b) => a.r.final - b.r.final);
+    // À partir du 23/11 : pénalités, retards / absences et CA catastrophique font remonter le chatter dans les maillons faibles
+    if (wk >= WEAK_MALUS_FROM) { const X = fxIndex(), cap = pid === 'mym' ? 'total' : 'revenue';
+      for (const c of cand) { const k = rosterKey(c.plan || c.r.name), pz = X.pens.get(k), lt = X.late.get(k) || {late: 0, abs: 0};
+        const np = pz ? pz.pen.filter(e => (e.date || e.wk) >= X.since).length : 0, nl = lt.late + lt.abs, low = c.r.scores[cap] != null && c.r.scores[cap] < 25;
+        const m = Math.min(16, 4 * np) + Math.min(8, 2 * nl) + (low ? 8 : 0);
+        c.malus = m; c.why = [np ? plural(np, 'pénalité', 'pénalités') : '', nl ? plural(nl, 'retard / absence', 'retards / absences') : '', low ? 'CA très faible' : ''].filter(Boolean).join(', '); } }
+    cand.sort((a, b) => (a.r.final - (a.malus || 0)) - (b.r.final - (b.malus || 0)));
     cands[pid] = cand;
     const kept = keepFrom && keepFrom.items || {};
     cand.forEach((c, i) => {
       const key = rosterKey(c.plan || c.r.name);
       if (opt.noNew || i >= cfg.n ? !kept[key] : false) return;   // au-delà du classement : seulement ceux déjà suivis (ajoutés pour compléter)
       const ex = out.items[key];
-      const item = {name: c.r.name, plan: c.plan || '', pid, rank: i + 1, of: cand.length, score: Math.round(c.r.final * 10) / 10, grade: c.r.grade, ca: c.r.row.revenue ?? c.r.row.total ?? null, shifts: c.shifts,
+      const item = {name: c.r.name, plan: c.plan || '', pid, rank: i + 1, of: cand.length, score: Math.round(c.r.final * 10) / 10, ...(c.malus ? {malus: c.malus, malusWhy: c.why} : {}), grade: c.r.grade, ca: c.r.row.revenue ?? c.r.row.total ?? null, shifts: c.shifts,
         isNew: c.plan ? isFlaggedNew(c.plan) : false, streak: prev && prev.items && prev.items[key] ? (prev.items[key].streak || 1) + 1 : 1};
       if (ex) { ex.pid = 'both'; ex.alsoRank = `${pid.toUpperCase()} ${i + 1}`; } else out.items[key] = item;
     });
@@ -6361,12 +6409,25 @@ function fxData(k, name) {
   return {k, name, pid, both, P, main, ca, un, unAvg, uk, lt, pen4, pens: pz.pen, pri: pz.pri, good: good.slice(0, 3), bad: bad.slice(0, 3), h, trend, st, why, G, weak, isNew: isFlaggedNew(name)};
 }
 // Forces et points à travailler tirés des chiffres de la période choisie
+// Golden Ratio (PPV proposés pour 100 messages) lu avec l'Unlock Ratio (OF : seuils du guide) ou la conversion (MYM : seuils de l'équipe)
+const GP_TH = {of: {hi: 50, midLo: 30, lo: 30, okLo: 45, okHi: 60}, mym: {hi: 30, midLo: 12, lo: 12, okLo: 25, okHi: 100}};
+function goldenProfile(row, pid) {
+  const g = row && row.golden, u = row && (pid === 'mym' ? row.conv : row.unlock), T = GP_TH[pid];
+  if (g == null || u == null || !T) return null;
+  const U = pid === 'mym' ? 'conversion' : 'unlock';
+  if (g >= 4 && g <= 5 && u >= T.okLo && u <= T.okHi) return {good: true, tag: '⚖️ Bon équilibre : propose régulièrement et ça achète', tip: 'Garde ce rythme.'};
+  if (g < 3 && u > T.hi) return {tag: `🎯 Propose plus de PPV : ${U} haut, prends plus de risques`, tip: 'Va plus vite à l’essentiel, propose dès que le fan montre de l’intérêt.'};
+  if (g > 5 && u < T.lo) return {tag: '⏸️ Espace les PPV : plus de sexting et de complicité', tip: 'Réponds à ce que dit le fan avant de reproposer.'};
+  if (g < 3.5 && u >= T.midLo && u <= T.hi) return {tag: '💬 Fais avancer l’échange : propose au bon moment', tip: 'Rebondis sur ses réponses et propose une PPV qui a du sens.'};
+  return null;
+}
 function fxPerfTags(M, pid) {
   const good = [], bad = []; if (!M) return {good, bad};
   if (M.rank <= Math.ceil(M.of * 0.3)) good.push('💪 Gros vendeur');
   if (M.upct != null && M.upct >= 0.7) good.push(pid === 'mym' ? '🔓 Bonne conversion' : '🔓 Bon unlock');
   if (M.upct != null && M.upct < 0.3) bad.push(pid === 'mym' ? '🔒 Conversion trop basse' : '🔒 Unlock trop bas');
   if (M.rank > Math.floor(M.of * 0.8)) bad.push('📉 Ventes faibles');
+  const pr = goldenProfile(M.r.row, pid); if (pr) (pr.good ? good : bad).unshift(pr.tag);
   return {good, bad};
 }
 const fxInit = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
@@ -6422,7 +6483,8 @@ function fxCardHTML(d, editable) {
       ${fxRing(String(np), np / 5, np === 0 ? FX_C.g : np <= 2 ? FX_C.a : FX_C.r, 'Pénalités')}</div>
     <div class="fx-expl">${rg ? `<b>${esc(rg.label)}</b> · ${esc(fmtRange(rg.weeks[0].start, rg.weeks[rg.weeks.length - 1].end))} · ${plural(rg.weeks.length, 'semaine d’import', 'semaines d’import')}${M && M.weeksIn < rg.weeks.length ? ` <span class="muted">(présent ${M.weeksIn} sur ${rg.weeks.length})</span>` : ''}` : 'Aucun import'}
       ${M ? `<span>Ventes : <strong>${esc(moneyP(d.P, ca))}</strong> de CA total sur la période${M.weeksIn > 1 ? ` (${esc(moneyP(d.P, ca / M.weeksIn))} par semaine)` : ''}${evo != null ? ` · <strong class="${evo >= 0 ? 'sc-hi' : 'sc-lo'}">${evo > 0 ? '+' : ''}${evo} %</strong> vs ${esc(rg.prevLabel)}${perWeek ? ' (en moyenne par semaine travaillée)' : ''}` : ''}</span>
-        <span>${d.pid === 'mym' ? 'Conversion' : 'Unlock'} : <strong>${unTxt}</strong>${unAvg ? ` · moyenne de l’agence ${nf(unAvg, 0, 0)} %` : ''} · note ${esc(M.r.grade)}, ${M.rank}e sur ${M.of} chatters</span>` : `<span class="muted">${esc(d.name)} n’apparaît dans aucun import de cette période.</span>`}
+        <span>${d.pid === 'mym' ? 'Conversion' : 'Unlock'} : <strong>${unTxt}</strong>${unAvg ? ` · moyenne de l’agence ${nf(unAvg, 0, 0)} %` : ''} · note ${esc(M.r.grade)}, ${M.rank}e sur ${M.of} chatters</span>
+        ${M.r.row.golden != null ? `<span>Golden Ratio : <strong class="${M.r.row.golden >= 4 && M.r.row.golden <= 5 ? 'sc-hi' : M.r.row.golden < 3 || M.r.row.golden > 6 ? 'sc-lo' : 'sc-mid'}">${nf(M.r.row.golden, 0, 1)} %</strong> · cible 4 à 5 % (PPV proposés pour 100 messages)${(() => { const pr = goldenProfile(M.r.row, d.pid); return pr ? ` · <em>${esc(pr.tip)}</em>` : ''; })()}</span>` : ''}` : `<span class="muted">${esc(d.name)} n’apparaît dans aucun import de cette période.</span>`}
       <span class="muted">Retards et pénalités : 4 dernières semaines.</span></div>
     ${d.pens.length ? `<div class="fx-pens">${d.pens.slice(0, 2).map(e => `<span>${e.pts ? `−${nf(e.pts, 0, 1)} pts · ` : ''}${esc(fmtDayFr(e.date || e.wk))}${e.comment ? ` · ${esc(e.comment)}` : ''}</span>`).join('')}</div>` : ''}
     <div class="fx-duo"><div class="fx-box g"><h4>Ses forces</h4>${[...fxPerfTags(M, d.pid).good, ...d.good].slice(0, 3).map(x => `<span>${esc(x)}</span>`).join('') || '<span class="muted">Pas encore assez d’informations</span>'}</div>
@@ -6706,7 +6768,7 @@ function renderCoaching(main) {
       <td><button type="button" class="linkbtn" data-kall="${esc(it.k)}" title="Voir la fiche"><strong>${esc(it.plan || it.name)}</strong></button>${it.verdict ? ' ' + verdictBadge(it.verdict) : ''}${it.plan && rosterKey(it.plan) !== rosterKey(it.name) ? `<div class="sub" style="margin:0">import : ${esc(it.name)}</div>` : ''}
         <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag warm">Nouveau · à vérifier</span>' : ''}${it.pid === 'both' ? `<span class="rtag">aussi ${esc(it.alsoRank || '')}</span>` : ''}${!it.plan ? '<span class="rtag hot">introuvable au planning</span>' : ''}</div></td>
       <td>${it.pid === 'both' ? platBadge('OF') + ' ' + platBadge('MYM') : platBadge(it.pid === 'of' ? 'OF' : 'MYM')}</td>
-      <td class="num"><strong>${nf(it.score, 0, 1)}</strong> <span class="badge ${it.grade} g${it.grade}" style="width:22px;height:22px;font-size:12px">${it.grade}</span></td>
+      <td class="num"><strong>${nf(it.score, 0, 1)}</strong>${it.malus ? ` <span class="sc-lo" title="Malus pour le classement des maillons faibles : ${esc(it.malusWhy || '')}">−${it.malus}</span>` : ''} <span class="badge ${it.grade} g${it.grade}" style="width:22px;height:22px;font-size:12px">${it.grade}</span></td>
       <td class="num">${it.ca != null ? moneyP(PLATFORMS[it.pid === 'both' ? 'of' : it.pid], it.ca) : '—'}</td>
       <td class="num">${it.plan ? it.shifts : '—'}</td>
       <td>${W.status === 'validated' && !Sync.canManage() && !Sync.canDirect() ? esc(supName(it.sup)) : `<select data-ksup="${esc(it.k)}" ${W.status === 'validated' ? '' : ''}><option value="">— non attribué —</option>${elig.map(s => `<option value="${s.id}" ${s.id === it.sup ? 'selected' : ''}>${esc(s.name)}${supFocus(s) ? ` (${supFocus(s)})` : ''} · ${loads.find(l => l.s.id === s.id).n}</option>`).join('')}</select>`}
@@ -6932,7 +6994,7 @@ function coachCardHTML(it, wk, curWk, me, editable) {
   return `<article class="panel kcard2 ${it.streak > 1 ? 'again' : ''}" data-kcard="${esc(it.k)}">
     <div class="kcard-h"><strong style="font-size:17px">${esc(it.plan || it.name)}</strong> ${it.pid === 'both' ? platBadge('OF') + platBadge('MYM') : platBadge(it.pid === 'of' ? 'OF' : 'MYM')}
       ${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag warm">Nouveau · à vérifier</span>' : ''}
-      <span class="sub" style="margin:0 0 0 auto">Rang ${it.rank}/${it.of} · score ${nf(it.score, 0, 1)} · grade ${it.grade}</span></div>
+      <span class="sub" style="margin:0 0 0 auto">Rang ${it.rank}/${it.of} · score ${nf(it.score, 0, 1)}${it.malus ? ` · malus −${it.malus} (${esc(it.malusWhy || '')})` : ''} · grade ${it.grade}</span></div>
     ${coachPerfHTML(it, wk)}
     <div class="kshifts">${sh.length ? sh.sort((a, b) => a.d - b.d || a.s - b.s).map(x => { const m = allModels().find(mm => mm.id === x.mid); const mine2 = me && coachOverlap(me, [x]) > 0; return `<span class="shc ${mine2 ? 'mine' : 'other'}" title="${mine2 ? 'Pendant vos heures' : ''}">${PLAN_DAYS[x.d]} ${PLAN_SHIFTS[x.s]}${m ? ` · ${esc(m.name)}` : ''}</span>`; }).join('') : '<span class="muted">Pas de shift trouvé au planning cette semaine</span>'}</div>
     ${editable ? `<div class="kcompose"><div class="ktags">${NOTE_TAGS.map(([k, l, c]) => `<button type="button" class="ktag sel ${c}" data-ktag="${k}">${esc(l)}</button>`).join('')}</div>
@@ -7067,7 +7129,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611201;
+  const APP_BUILD = 202611202;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
