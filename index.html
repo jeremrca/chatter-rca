@@ -900,8 +900,13 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .ktags{display:flex;flex-wrap:wrap;gap:6px}
 .fx-notes{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft)}.fx-notes h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.fx-notes h4 .muted{text-transform:none;letter-spacing:0;font-weight:500}
 .fxn-form textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:54px}.fxn-acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}.fxn-acts .btn{margin-left:auto}
-.fxn-list{margin-top:10px;max-height:420px;overflow:auto}.fxn-it{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line-soft)}
-.fxn-ic{width:22px;text-align:center;flex:none}.fxn-h{font-size:12.5px;color:var(--muted)}.fxn-h b{color:var(--text)}.fxn-h .ktag{margin:0 0 0 4px;font-size:11px;padding:1px 7px}.fxn-b{font-size:13.5px;margin-top:3px;white-space:pre-wrap;overflow-wrap:anywhere}
+.fxn-list{margin-top:8px;max-height:460px;overflow:auto}.fxn-it{display:flex;gap:9px;align-items:flex-start;padding:9px 6px;border:0;border-top:1px solid var(--line-soft);background:none;color:inherit;font:inherit;text-align:left;width:100%;cursor:pointer;border-radius:8px}
+.fxn-it:hover,.fxn-it:focus-visible{background:var(--raised)}.fxn-m{flex:1;min-width:0;display:flex;flex-direction:column}.fxn-go{color:var(--faint);font-size:18px;align-self:center}
+.fxn-ic{width:22px;text-align:center;flex:none}.fxn-h{font-size:12.5px;color:var(--muted)}.fxn-h b{color:var(--text)}.fxn-h strong{color:var(--text)}.fxn-h .ktag{margin:0 0 0 4px;font-size:11px;padding:1px 7px}.fxn-dt{float:right;color:var(--faint);font-size:11.5px;margin-left:8px}
+.fxn-b{font-size:13.5px;margin-top:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.fxn-f{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.fxn-f button{font:inherit;font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;border:1px solid var(--line-soft);background:var(--bg);color:var(--muted);cursor:pointer}.fxn-f button.on{border-color:var(--pc,#f472b6);color:var(--text)}.fxn-f button span{color:var(--faint);font-weight:500}
+.fxd{display:flex;flex-direction:column;gap:8px;min-width:min(440px,80vw)}.fxd-l{display:flex;gap:12px;font-size:13.5px}.fxd-l>span{width:84px;flex:none;color:var(--faint);font-size:12.5px;padding-top:1px}
+.fxd-txt{margin-top:6px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line-soft);font-size:14.5px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;max-height:50vh;overflow:auto}
 .fxn-it.pen .fxn-h b{color:#fca5a5}.fxn-it.weak .fxn-h b{color:#fbbf24}
 .ktag{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--raised);color:var(--muted);margin:0 4px 3px 0;border:1px solid transparent}
 .ktag.bad{color:#fca5a5}.ktag.good{color:#86efac}
@@ -6456,35 +6461,71 @@ function fxPlanHTML(d) {
 }
 /* ---------- Notes et feedbacks d'un chatter : tout le monde écrit, tout le monde lit (6 derniers mois) ---------- */
 const FX_NOTE_TAGS = ['fb', 'err', 'abs', 'prog'];
-const fxUI = {tags: new Set()};
+const fxUI = {tags: new Set(), filter: 'all', ev: []};
+// Nom lisible d'un auteur (e-mail ou début d'e-mail) : superviseur ou sub français, sinon le début de l'e-mail
+function authorName(a) {
+  const x = String(a || '').toLowerCase(), pre = x.split('@')[0]; if (!x) return '';
+  const all = [...supList(), ...frList()].filter(p => p.email);
+  const f = all.find(p => String(p.email).toLowerCase() === x || String(p.email).toLowerCase().split('@')[0] === pre) || [...supList(), ...frList()].find(p => normName(p.name) === normName(x));
+  return f ? f.name : pre;
+}
+// Jour local d'une date (« 2026-11-20 » ou horodatage complet)
+const fxDay = t => { t = String(t || ''); if (t.length <= 10) return t; const d = new Date(t); return isNaN(d) ? t.slice(0, 10) : isoOf(d); };
+function fxAgo(iso) {
+  const d = fxDay(iso); if (!d) return '';
+  const n = Math.round((parseDate(isoOf(new Date())) - parseDate(d)) / 86400000);
+  return n <= 0 ? 'aujourd’hui' : n === 1 ? 'hier' : n < 7 ? `il y a ${n} jours` : n < 14 ? 'il y a 1 semaine' : n < 31 ? `il y a ${Math.floor(n / 7)} semaines` : n < 60 ? 'il y a 1 mois' : `il y a ${Math.floor(n / 30)} mois`;
+}
 function fxTimeline(d) {
-  const k = d.k, ev = [], notes = notesFor(k);
-  for (const n of notes) ev.push({t: String(n.created_at), kind: 'note', n});
-  // Feedbacks cochés : on ne les répète pas quand une note « Feedback » du même auteur existe le même jour
-  const fbNoteDay = new Set(notes.filter(n => (n.tags || []).includes('fb')).map(n => `${who(n.author)}|${String(n.created_at).slice(0, 10)}`));
-  const FBT = {g: 'Feedback (suivi global)', w: 'Feedback (maillon faible)', fr: 'Feedback (suivi français)'};
+  const k = d.k, ev = [], notes = notesFor(k), used = new Set();
+  const FBT = {g: 'Feedback · suivi global', w: 'Feedback · maillon faible', fr: 'Feedback · suivi français'};
+  // Feedbacks cochés, avec le texte écrit au même moment (note « Feedback » du même auteur, le même jour)
   for (const [wk, F] of Object.entries(coachState.fb || {})) for (const [fk, v] of Object.entries(F || {})) {
     const [kk, typ] = fk.split('|'); if (kk !== k || !v) continue; const t = String(v.at || wk);
-    if (fbNoteDay.has(`${v.by}|${t.slice(0, 10)}`)) continue;
-    ev.push({t, kind: 'fb', label: FBT[typ] || 'Feedback', by: v.by}); }
-  for (const x of coachHistory(k)) ev.push({t: x.wk, kind: 'weak', label: `Maillon faible · ${planWeekLabel(x.wk).toLowerCase()}`, sub: x.it.verdict && VERDICTS[x.it.verdict.v] ? VERDICTS[x.it.verdict.v].l : ''});
-  for (const e of d.pens || []) ev.push({t: String(e.date || e.wk), kind: 'pen', label: `Pénalité${e.pts ? ` −${nf(e.pts, 0, 1)} pts` : ''}`, sub: e.comment || '', by: e.sup});
-  for (const e of d.pri || []) ev.push({t: String(e.date || e.wk), kind: 'pri', label: `Prime${e.pts ? ` +${nf(e.pts, 0, 1)}` : ''}`, sub: e.comment || '', by: e.sup});
+    const n = notes.find(x => !used.has(x.id) && (x.tags || []).includes('fb') && who(x.author) === v.by && fxDay(x.created_at) === fxDay(t));
+    if (n) used.add(n.id);
+    ev.push({t: n ? String(n.created_at) : t, kind: 'fb', label: FBT[typ] || 'Feedback', author: n ? n.author : v.by, n, wk}); }
+  for (const n of notes) if (!used.has(n.id)) ev.push({t: String(n.created_at), kind: (n.tags || []).includes('fb') ? 'fb' : 'note', label: (n.tags || []).includes('fb') ? 'Feedback' : 'Note', author: n.author, n, wk: n.week});
+  for (const x of coachHistory(k)) ev.push({t: x.wk, kind: 'weak', label: 'Maillon faible', sub: `${planWeekLabel(x.wk)}${x.it.verdict && VERDICTS[x.it.verdict.v] ? ` · ${VERDICTS[x.it.verdict.v].l}` : ''}`, wk: x.wk});
+  for (const e of d.pens || []) ev.push({t: String(e.date || e.wk), kind: 'pen', label: `Pénalité${e.pts ? ` −${nf(e.pts, 0, 1)} pts` : ''}`, sub: e.comment || '', author: e.sup, wk: e.wk});
+  for (const e of d.pri || []) ev.push({t: String(e.date || e.wk), kind: 'pri', label: `Prime${e.pts ? ` +${nf(e.pts, 0, 1)}` : ''}`, sub: e.comment || '', author: e.sup, wk: e.wk});
   return ev.sort((a, b) => b.t.localeCompare(a.t));
 }
+const FX_ICON = {note: '📝', fb: '💬', weak: '⚠️', pen: '⛔', pri: '⭐'};
+const FX_FILTERS = [['all', 'Tout'], ['fb', 'Feedbacks'], ['note', 'Notes'], ['pen', 'Pénalités et primes'], ['weak', 'Maillons faibles']];
+const fxMatch = (x, f) => f === 'all' || x.kind === f || (f === 'pen' && x.kind === 'pri');
 function fxNotesHTML(d) {
-  const ev = fxTimeline(d), me = String(Sync.email() || '').toLowerCase(), adm = Sync.isAdmin() || !Sync.connected();
-  const ICON = {note: '📝', fb: '💬', weak: '⚠️', pen: '⛔', pri: '⭐'};
-  const row = x => x.kind === 'note'
-    ? `<div class="fxn-it"><span class="fxn-ic">${(x.n.tags || []).includes('fb') ? ICON.fb : ICON.note}</span><div style="flex:1;min-width:0"><div class="fxn-h"><b>${esc(fmtDayFr(x.t.slice(0, 10)))}</b> · ${esc(who(x.n.author))}${(x.n.tags || []).map(t => ` <span class="ktag ${tagInfo(t)[2]}">${esc(tagInfo(t)[1])}</span>`).join('')}</div>${x.n.body ? `<div class="fxn-b">${esc(x.n.body)}</div>` : ''}</div>${adm || String(x.n.author || '').toLowerCase() === me ? `<button class="btn ghost small-btn" type="button" data-fxndel="${esc(x.n.id)}" aria-label="Supprimer la note" title="Supprimer la note">×</button>` : ''}</div>`
-    : `<div class="fxn-it ${x.kind}"><span class="fxn-ic">${ICON[x.kind]}</span><div style="flex:1;min-width:0"><div class="fxn-h"><b>${esc(fmtDayFr(x.t.slice(0, 10)))}</b> · ${esc(x.label)}${x.by ? ` · ${esc(x.by)}` : ''}</div>${x.sub ? `<div class="fxn-b muted">${esc(x.sub)}</div>` : ''}</div></div>`;
+  const all = fxTimeline(d), f = fxUI.filter || 'all', ev = all.filter(x => fxMatch(x, f)); fxUI.ev = ev;
+  const cnt = k => all.filter(x => fxMatch(x, k)).length;
+  const row = (x, i) => { const txt = x.n ? x.n.body : x.sub, tags = x.n ? (x.n.tags || []).filter(t => t !== 'fb') : [];
+    return `<button type="button" class="fxn-it ${x.kind}" data-fxev="${i}" title="Voir le détail"><span class="fxn-ic">${FX_ICON[x.kind]}</span><span class="fxn-m">
+      <span class="fxn-h"><b>${esc(fxAgo(x.t))}</b> · ${esc(x.label)}${x.author ? ` · <strong>${esc(authorName(x.author))}</strong>` : ''}${tags.map(t => ` <span class="ktag ${tagInfo(t)[2]}">${esc(tagInfo(t)[1])}</span>`).join('')}<span class="fxn-dt">${esc(fmtDayFr(fxDay(x.t)))}</span></span>
+      ${txt ? `<span class="fxn-b">${esc(txt)}</span>` : x.kind === 'fb' ? '<span class="fxn-b muted">Coché comme fait, sans texte</span>' : ''}</span><span class="fxn-go" aria-hidden="true">›</span></button>`; };
   return `<section class="fx-notes">
-    <h4>Notes et feedbacks <span class="muted">· ${plural(ev.length, 'élément', 'éléments')} sur 6 mois · visibles par toute l’équipe</span></h4>
+    <h4>Notes et feedbacks <span class="muted">· 6 derniers mois · visibles par toute l’équipe · cliquez pour voir le détail</span></h4>
     <div class="fxn-form"><textarea id="fxn-body" rows="2" placeholder="Ex. feedback sur les relances PPV, erreur de prix, a bien progressé sur le sexting…"></textarea>
       <div class="fxn-acts"><div class="ktags">${FX_NOTE_TAGS.map(t => `<span class="ktag sel ${tagInfo(t)[2]}${fxUI.tags.has(t) ? ' on' : ''}" role="button" tabindex="0" data-fxntag="${t}">${esc(tagInfo(t)[1])}</span>`).join('')}</div>
         <button class="btn primary small-btn" type="button" id="fxn-add">Ajouter la note</button></div></div>
-    <div class="fxn-list">${ev.length ? ev.slice(0, 60).map(row).join('') : '<p class="hint" style="margin:6px 0 0">Aucune note ni feedback pour l’instant.</p>'}${ev.length > 60 ? `<p class="hint" style="margin:6px 0 0">+ ${ev.length - 60} plus anciens</p>` : ''}</div>
+    <div class="fxn-f">${FX_FILTERS.map(([k, l]) => `<button type="button" class="${k === f ? 'on' : ''}" data-fxnf="${k}">${l} <span>${cnt(k)}</span></button>`).join('')}</div>
+    <div class="fxn-list">${ev.length ? ev.slice(0, 80).map(row).join('') : '<p class="hint" style="margin:6px 0 0">Rien pour l’instant.</p>'}${ev.length > 80 ? `<p class="hint" style="margin:6px 0 0">+ ${ev.length - 80} plus anciens</p>` : ''}</div>
   </section>`;
+}
+async function fxEventModal(x, name) {
+  const me = String(Sync.email() || '').toLowerCase(), canDel = x.n && (Sync.isAdmin() || !Sync.connected() || String(x.n.author || '').toLowerCase() === me);
+  const when = x.t.length > 10 ? new Date(x.t).toLocaleString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'}) : fmtDayFr(x.t);
+  const txt = x.n ? x.n.body : x.sub, tags = x.n ? (x.n.tags || []) : [];
+  const line = (l, v) => v ? `<div class="fxd-l"><span>${l}</span><div>${v}</div></div>` : '';
+  const html = `<div class="fxd">
+    ${line('Chatter', esc(name))}
+    ${line('Type', `${FX_ICON[x.kind]} ${esc(x.label)}`)}
+    ${line('Quand', `${esc(when)} <span class="muted">(${esc(fxAgo(x.t))})</span>`)}
+    ${line('Par', x.author ? `<strong>${esc(authorName(x.author))}</strong> <span class="muted">${esc(String(x.author).includes('@') ? x.author : '')}</span>` : '')}
+    ${line('Semaine', x.wk ? esc(planWeekLabel(x.wk)) : '')}
+    ${line('Étiquettes', tags.map(t => `<span class="ktag ${tagInfo(t)[2]}">${esc(tagInfo(t)[1])}</span>`).join(''))}
+    <div class="fxd-txt">${txt ? esc(txt) : '<span class="muted">' + (x.kind === 'fb' ? 'Le feedback a été coché comme fait, sans texte.' : 'Pas de texte.') + '</span>'}</div></div>`;
+  const del = await modal(x.label, html, canDel ? 'Supprimer la note' : null, 'Fermer');
+  if (del && canDel) { if (!(await modal('Supprimer la note', '<p>Supprimer définitivement cette note ?</p>', 'Supprimer'))) return false; await coachDelNote(x.n.id); toast('Note supprimée.'); return true; }
+  return false;
 }
 function fxCardHTML(d, editable) {
   const pc = d.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color, sup = d.G && supList().find(s => s.id === d.G.sup);
@@ -6571,9 +6612,10 @@ function bindFx(main) {
     try { await coachAddNote({week: glWeekNow(), chatter_key: k, chatter_name: name, sup_id: sup ? sup.id : '', tags, body: body || null}); fxUI.tags.clear(); toast('Note ajoutée.'); rr(); }
     catch (err) { btn.disabled = false; toast(`La note n’a pas été enregistrée : ${err.message || err}`, true); }
   });
-  main.querySelectorAll('[data-fxndel]').forEach(b => b.addEventListener('click', async () => {
-    if (!(await modal('Supprimer la note', '<p>Supprimer définitivement cette note ?</p>', 'Supprimer'))) return;
-    try { await coachDelNote(b.dataset.fxndel); toast('Note supprimée.'); rr(); } catch (err) { toast(`Suppression impossible : ${err.message || err}`, true); }
+  main.querySelectorAll('[data-fxnf]').forEach(b => b.addEventListener('click', () => { fxUI.filter = b.dataset.fxnf; rr(); }));
+  main.querySelectorAll('[data-fxev]').forEach(b => b.addEventListener('click', async () => {
+    const x = fxUI.ev[+b.dataset.fxev]; if (!x) return;
+    try { if (await fxEventModal(x, (main.querySelector('.fx-nm') || {}).textContent || '')) rr(); } catch (err) { toast(`Suppression impossible : ${err.message || err}`, true); }
   }));
   main.querySelectorAll('[data-fx]').forEach(b => b.addEventListener('click', () => { coachUI.fsel = b.dataset.fx; rr(); if (window.innerWidth <= 900) window.scrollTo(0, 0); }));
   main.querySelector('[data-fxback]')?.addEventListener('click', () => { coachUI.fsel = null; coachUI.fback = true; rr(); });
