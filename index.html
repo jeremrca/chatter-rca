@@ -681,6 +681,7 @@ table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:point
 .dsp-pick button small{margin-left:auto;color:var(--faint);font-size:11.5px}.dsp-pick button.warn{opacity:.55}.dsp-pick button.on{border-color:#a78bfa;background:rgba(167,139,250,.14)}.dsp-pick button:hover{background:var(--raised)}
 .dsp-l{display:flex;flex-direction:column;gap:2px;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--muted);text-align:left;white-space:nowrap}.dsp-l i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px}
 .dsp-mine{border:1px solid rgba(167,139,250,.55);background:linear-gradient(90deg,rgba(167,139,250,.16),transparent);font-size:14px}
+.pe-lock{margin-top:10px;padding:9px 12px;border-radius:10px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.45);font-size:13px}
 .offsh{display:flex;gap:3px}.offsh button{font:inherit;font-size:11px;font-weight:700;padding:3px 6px;border-radius:7px;border:1px solid var(--line-soft);background:var(--bg);color:var(--faint);cursor:pointer;white-space:nowrap}
 .offsh button.on{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.6);color:#e0f2fe}.offsh.none button{border-style:dashed}
 .fx-plan{margin:14px 0 4px;display:flex;flex-direction:column;gap:10px}
@@ -3997,8 +3998,8 @@ function renderPlanning(main) {
         <button class="btn" id="p-unav" type="button">Indisponibilité</button>
         <button class="btn" id="p-addm" type="button">+ Ajouter une modèle</button>
         ${Sync.canManage() ? '<button class="btn" id="p-launch" type="button">🚀 Lancement</button>' : ''}
-        ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>`}
-        <button class="btn ghost" id="p-xls" type="button">Importer un Excel</button>
+        ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : dspAnyRef() ? `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>` : ''}
+        ${dspAnyRef() ? '<button class="btn ghost" id="p-xls" type="button">Importer un Excel</button>' : ''}
       </div>
       <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="pc late">Prénom</span> retard</span><span><span class="offwrap"><span class="pc renf">Prénom</span><b class="rftag">RENFORT</b></span> renfort</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span><span class="mover"><span class="pc">Prénom</span><b>6</b></span> plus de ${MODEL_MAX} modèles cette semaine</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
     </section>
@@ -4408,6 +4409,19 @@ function bindDispatch(main) {
     else { delete D.dates[kd]; if (r.id && r.id !== D.ref[`${pf}|${sl}`]) D.alt[ka] = r.id; else delete D.alt[ka]; }
     savePlan(); rr(); }; c.addEventListener('click', open); c.addEventListener('keydown', e => { if (e.key === 'Enter') open(); }); });
 }
+// Verrouillage : seuls le référent du dispatch (ce shift, ce jour, cette plateforme) et la Direction changent l'affectation des chatters.
+// Les autres superviseurs peuvent toujours noter absences, retards et coupures.
+const dspActive = () => !!(planState.dispatch && Object.keys(planState.dispatch.ref || {}).length);
+const dspFree = () => !Sync.connected() || Sync.canDirect() || !dspActive();
+function cellLock(wk, d, s, mid) {
+  if (dspFree()) return null;
+  const g = (allModels().find(m => m.id === mid) || {}).group, pfs = g === 'of' ? ['of'] : g === 'mym' ? ['mym'] : ['mym', 'of'];
+  const date = addDaysIso(wk, +d), me = mySupReal(), who = pfs.map(pf => ({pf, ...dspWho(pf, +s, date)}));
+  if (me && who.some(w => w.id === me.id)) return null;
+  return who.map(w => `${w.sup ? w.sup.name : 'personne'} (${w.pf === 'of' ? 'OnlyFans' : 'MYM'} ${dspHour(+s)}h)`).join(' ou ');
+}
+// Référent d'au moins un dispatch (pour préparer la semaine suivante ou importer un planning Excel)
+const dspAnyRef = () => { if (dspFree()) return true; const me = mySupReal(), D = planState.dispatch; return !!me && [...Object.values(D.ref || {}), ...Object.values(D.alt || {}), ...Object.values(D.dates || {})].includes(me.id); };
 // Bandeau du référent connecté : ses dispatchs du jour et du lendemain
 function dispatchMineHTML() {
   const me = mySupReal(); if (!me || !planState.dispatch) return '';
@@ -4939,6 +4953,7 @@ function editCell(wk, key) {
   const names = baseOn() ? baseList() : knownChatters();
   const orig = new Set(list.flatMap(e => [e.n, ...(e.r ? e.r.split('/') : [])]).map(n => rosterKey(String(n).trim())));
   let err = '';
+  const lock = cellLock(wk, d, s, mid), LK = lock ? 'disabled' : '';
   // Modèles de la semaine sans cette case (pour savoir si ce placement ajoute une modèle) et habitudes des 4 dernières semaines
   const ck = m && !m.backup ? creatorKey(m.name) : null, date = addDaysIso(wk, +d);
   const WC0 = (() => { const saved = W.cells[key]; delete W.cells[key]; const r = weekCreators(wk); if (saved) W.cells[key] = saved; return r; })();
@@ -4969,16 +4984,17 @@ function editCell(wk, key) {
         <label class="check" title="Arrivé(e) en retard"><input type="checkbox" data-late="${i}" ${e.l ? 'checked' : ''}> Retard</label>
         <label class="check" title="Vient en renfort sur ce shift"><input type="checkbox" data-rf="${i}" ${e.rf ? 'checked' : ''}> Renfort</label>
         <label class="check" title="Mis en couleur sur ses ${NEW_SHIFTS} premiers shifts travaillés"><input type="checkbox" data-new="${i}" ${isFlaggedNew(e.n) ? 'checked' : ''}> Nouveau</label>
-        <button class="btn ghost" type="button" data-del="${i}" aria-label="Retirer ${esc(e.n)}">×</button>
-        <input type="text" list="pl-names" data-rep="${i}" value="${esc(e.r || '')}" placeholder="Remplaçant (facultatif)">
+        <button class="btn ghost" type="button" data-del="${i}" aria-label="Retirer ${esc(e.n)}" ${LK}>×</button>
+        <input type="text" list="pl-names" data-rep="${i}" value="${esc(e.r || '')}" placeholder="${lock ? 'Remplaçant : choisi par le référent' : 'Remplaçant (facultatif)'}" ${LK}>
         </div>`).join('')}</div>` : '<p class="hint">Personne sur ce shift.</p>'}
       ${(() => { const rq = absReqsOnDate(addDaysIso(wk, +d)).filter(r => (r.shifts || []).includes(+s)); return rq.length ? `<div class="absbox" style="margin-top:12px"><div class="absbox-h">Demandes d’absence sur ce shift</div><div style="font-size:13px">${rq.map(r => `<strong>${esc(r.name)}</strong>${r.status === 'wait' ? ' (en attente)' : ''}${r.note ? ` — ${esc(r.note)}` : ''}`).join(' · ')}</div></div>` : ''; })()}
-      ${(() => { const sg = suggest(); if (!ck) return ''; const needRep = list.some(e => e.a && !e.r);
+      ${lock ? `<div class="pe-lock" role="note">🔒 Seul ${esc(lock)} ou la Direction peut placer, retirer ou remplacer des chatters sur ce shift. Vous pouvez noter les absences, retards et coupures.</div>` : ''}
+      ${(() => { if (lock) return ''; const sg = suggest(); if (!ck) return ''; const needRep = list.some(e => e.a && !e.r);
         return `<div class="pe-sug"><div class="pe-sug-h">${needRep ? 'Remplaçants proposés' : 'Chatters disponibles proposés'} <span class="muted">· sur ce shift, pas OFF, pas déjà placés, ${MODEL_MAX} modèles max</span></div>
           ${sg.length ? `<div class="pe-sug-l">${sg.map(x => `<button type="button" class="pe-sg${x.knows ? ' knows' : ''}" data-sug="${esc(x.full)}" title="${x.knows ? `${plural(x.knows, 'shift', 'shifts')} sur ${esc(creatorName(m.name))} ces 4 dernières semaines${x.same ? '' : ' (sur une autre plateforme)'}` : `Ne connaît pas encore ${esc(creatorName(m.name))}`} · ${x.n} modèle${x.n > 1 ? 's' : ''} cette semaine avec celle-ci">${esc(x.name)} <small>${x.knows ? `connaît · ${x.knows}${x.same ? '' : ' (autre plateforme)'}` : 'nouvelle modèle'} · ${x.n}/${MODEL_MAX}</small></button>`).join('')}</div>`
             : '<p class="hint" style="margin:4px 0 0;font-size:12.5px">Personne de disponible avec ce shift coché dans « Jours OFF / Base chatters ».</p>'}</div>`; })()}
       ${err ? `<div class="pe-err" role="alert">${err}</div>` : ''}
-      <div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="pe-add" list="pl-names" placeholder="${baseOn() ? 'Tapez les premières lettres du prénom (base chatters)' : 'Ajouter un ou plusieurs chatters (séparés par /)'}" style="flex:1"><button class="btn" id="pe-addb" type="button">Ajouter</button></div>
+      <div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="pe-add" list="pl-names" placeholder="${baseOn() ? 'Tapez les premières lettres du prénom (base chatters)' : 'Ajouter un ou plusieurs chatters (séparés par /)'}" style="flex:1" ${LK}><button class="btn" id="pe-addb" type="button" ${LK}>Ajouter</button></div>
       <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
     bg.querySelector('#pe-add').focus();
   };
@@ -4989,7 +5005,7 @@ function editCell(wk, key) {
     bg.querySelectorAll('[data-rf]').forEach(c => { list[+c.dataset.rf].rf = c.checked ? 1 : 0; });
     bg.querySelectorAll('[data-rep]').forEach(c => { const v = c.value.trim(); list[+c.dataset.rep].r = v || undefined; });
   };
-  const add = () => { sync(); const inp = bg.querySelector('#pe-add'), bad = [];
+  const add = () => { if (lock) return true; sync(); const inp = bg.querySelector('#pe-add'), bad = [];
     for (const n0 of inp.value.split('/').map(x => x.trim()).filter(Boolean)) { const n = baseOn() ? baseName(n0) : n0; if (!n) { bad.push(n0); continue; } if (!list.some(e => normName(e.n) === normName(n))) list.push({n}); }
     err = bad.length ? notInBaseMsg(bad) : ''; draw(); if (bad.length) bg.querySelector('#pe-add').value = bad.join(' / '); return !bad.length; };
   const newFlags = {};
@@ -5001,7 +5017,7 @@ function editCell(wk, key) {
     if (e.target.id === 'pe-addb') { add(); return; }
     const sg = e.target.closest('[data-sug]'); if (sg) { sync(); const n = sg.dataset.sug, hole = list.find(x => x.a && !x.r);
       if (hole) hole.r = n; else if (!list.some(x => normName(x.n) === normName(n))) list.push({n}); draw(); return; }
-    const del = e.target.closest('[data-del]'); if (del) { sync(); list.splice(+del.dataset.del, 1); draw(); return; }
+    const del = e.target.closest('[data-del]'); if (del && lock) return; if (del) { sync(); list.splice(+del.dataset.del, 1); draw(); return; }
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a === '1') {
       sync(); if (bg.querySelector('#pe-add').value.trim() && !add()) return;
@@ -5035,7 +5051,7 @@ function unavailability(wk) {
       <div style="margin:12px 0 6px;font-size:13px;color:var(--muted)">Jours concernés</div>
       <div class="un-days">${PLAN_DAYS.map((x, i) => `<label class="check"><input type="checkbox" data-ud="${i}" ${st.days.has(i) ? 'checked' : ''}> ${x} ${parseDate(addDaysIso(wk, i)).getDate()}</label>`).join('')}</div>
       <div class="un-days" style="margin-top:12px"><label class="check"><input type="radio" name="un-mode" value="abs" ${st.mode === 'abs' ? 'checked' : ''}> Marquer absent (prénom en rouge, on peut ajouter un remplaçant)</label>
-        <label class="check"><input type="radio" name="un-mode" value="del" ${st.mode === 'del' ? 'checked' : ''}> Retirer du planning</label></div>
+        <label class="check"><input type="radio" name="un-mode" value="del" ${st.mode === 'del' ? 'checked' : ''} ${dspFree() ? '' : 'disabled'}> Retirer du planning${dspFree() ? '' : ' <span class="muted">(Direction : le référent du dispatch réaffecte)</span>'}</label></div>
       <p class="hint" id="un-prev" style="margin:12px 0 0"></p>
       <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button" id="un-go" disabled>Appliquer</button></div></div>`;
   };
