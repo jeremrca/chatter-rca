@@ -674,6 +674,13 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .pe-sg small{font-weight:500;color:var(--faint);margin-left:4px}.pe-sg.knows{border-color:rgba(34,197,94,.55)}.pe-sg.knows small{color:#86efac}.pe-sg:hover{background:var(--raised)}
 .disp summary{cursor:pointer;list-style:none}.disp summary::-webkit-details-marker{display:none}.disp-x{color:#fbbf24;font-weight:700}
 .disp-tr{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}.disp-tr span{padding:6px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line-soft);display:flex;align-items:baseline;gap:6px}.disp-tr span.on{border-color:#f59e0b}.disp-tr small{color:var(--faint);font-size:11px}.disp-tr b{font-size:16px}.disp-tr em{font-style:normal;font-weight:800}
+table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:pointer;border-left:4px solid var(--pc)}.dsp-h b{display:block;font-size:13px}.dsp-h span{font-size:11.5px;color:var(--faint);font-weight:500}
+.dsp-c{font-size:12.5px;font-weight:700;cursor:pointer}.dsp-c small{display:block;font-weight:500;color:var(--faint);font-size:11px}.dsp-c .g-dot{display:inline-block;margin-right:5px;vertical-align:middle}
+.dsp-c.alt{background:rgba(250,204,21,.07)}.dsp-c.bad{background:rgba(239,68,68,.14);box-shadow:inset 0 0 0 1px rgba(239,68,68,.5)}.dsp-c.now{box-shadow:inset 0 -3px 0 #a78bfa}.dsp-c:hover{background:var(--raised)}
+.dsp-pick{display:flex;flex-direction:column;gap:5px;max-height:55vh;overflow:auto}.dsp-pick button{display:flex;align-items:center;gap:8px;text-align:left;font:inherit;padding:8px 10px;border-radius:10px;border:1px solid var(--line-soft);background:var(--bg);color:var(--text,#fff);cursor:pointer}
+.dsp-pick button small{margin-left:auto;color:var(--faint);font-size:11.5px}.dsp-pick button.warn{opacity:.55}.dsp-pick button.on{border-color:#a78bfa;background:rgba(167,139,250,.14)}.dsp-pick button:hover{background:var(--raised)}
+.dsp-l{display:flex;flex-direction:column;gap:2px;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--muted);text-align:left;white-space:nowrap}.dsp-l i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px}
+.dsp-mine{border:1px solid rgba(167,139,250,.55);background:linear-gradient(90deg,rgba(167,139,250,.16),transparent);font-size:14px}
 .offsh{display:flex;gap:3px}.offsh button{font:inherit;font-size:11px;font-weight:700;padding:3px 6px;border-radius:7px;border:1px solid var(--line-soft);background:var(--bg);color:var(--faint);cursor:pointer;white-space:nowrap}
 .offsh button.on{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.6);color:#e0f2fe}.offsh.none button{border-style:dashed}
 .fx-plan{margin:14px 0 4px;display:flex;flex-direction:column;gap:10px}
@@ -3982,6 +3989,7 @@ function renderPlanning(main) {
   }
   const WC = weekCreators(wk);
   main.innerHTML = head + `<div class="stack">
+    ${dispatchMineHTML()}
     <section class="panel plan-bar">
       <div class="ptabs" role="tablist">${PLAN_DAYS.map((x, i) => `<button type="button" role="tab" class="ptab ${i === d ? 'on' : ''}" data-day="${i}" aria-selected="${i === d}"><b>${x}${launchesOn(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Lancement ce jour-là">🚀</span>' : ''}${bannersOnDay(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Bannière ce jour-là">⚡</span>' : ''}</b><span>${parseDate(addDaysIso(wk, i)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</span></button>`).join('')}</div>
       <div class="pactions">
@@ -4016,7 +4024,7 @@ function renderPlanning(main) {
           const cls = m.backup ? ' pbackup' : bn ? ' pbanner' : la ? ' plaunch' : wp ? ' ppromo' : '';
           return `<th class="pm${cls}" style="box-shadow:inset 0 3px 0 ${x.g.color}">${esc(m.backup ? modelLabel(m) : m.name)}${bn ? `<span class="plb">⚡ Bannière ${esc(fmtHour(`${pad2(bn.s.getHours())}:${pad2(bn.s.getMinutes())}`))} → ${esc(fmtHour(`${pad2(bn.e.getHours())}:${pad2(bn.e.getMinutes())}`))}</span>` : ''}${la ? `<span class="plb">🚀 Lancement ${esc(fmtHour(la.time))}</span>` : ''}${wp ? '<span class="plb">🔥 Mise en avant</span>' : ''}</th>`; }).join('')).join('')}</tr>
       </thead><tbody>
-        ${PLAN_SHIFTS.map((sh, s) => `<tr><th class="sh">${sh}</th>${groupsShown.map(x => x.ms.map(m => {
+        ${PLAN_SHIFTS.map((sh, s) => `<tr><th class="sh">${sh}${planState.dispatch ? `<div class="dsp-l" title="Responsables du dispatch de ce shift (réunion 1 h avant)">${DSP_PF.map(([pf, pl]) => { const w = dspWho(pf, s, dayDate); return w.sup ? `<span><i style="background:${pf === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}"></i>${pf === 'of' ? 'OF' : 'MYM'} ${esc(w.sup.name)}</span>` : ''; }).join('')}</div>` : ''}</th>${groupsShown.map(x => x.ms.map(m => {
           const list = W.cells[cellKey(d, s, m.id)] || [], ov = new Map();
           if (!m.backup) { const ck = creatorKey(m.name); for (const e of list) { const w = workerOf(e); if (w) for (const n of w.split('/')) { const o = WC.get(rosterKey(n.trim())); if (o && o.cre.size > MODEL_MAX && !topCreators(o).has(ck)) ov.set(rosterKey(n.trim()), o.cre.size); } } }
           const la = launchesOn(dayDate).some(L => L.model === m.id), bn = bannersOnDay(dayDate, m.id).some(P => bannerHitsShift(P, dayDate, s)), wp = !!weekPromoFor(wk, m.id);
@@ -4318,6 +4326,95 @@ function supCoverage(pf = '') {
   for (const s of supList()) for (let d = 0; d < 7; d++) for (const b of supBlocks(s, d)) if (!pf || b.pf === pf) for (let h = 0; h < 24; h++) if (h + 0.5 > b.start && h + 0.5 < b.end) { grid[d][h]++; who[d][h].push(s.name); }
   return {grid, who};
 }
+/* ---------- Responsables du dispatch : un superviseur référent par shift (4h, 10h, 16h, 22h) et par plateforme ----------
+   planState.dispatch = {ref: {'mym|1': supId}, alt: {'mym|1|4': supId} (remplaçant habituel tel jour de la semaine), dates: {'AAAA-MM-JJ|mym|1': supId}}
+   Le référent prépare le dispatch et réunit les autres subs 1 h avant. Créneaux : 0 = 4h, 1 = 10h, 2 = 16h, 3 = 22h. */
+const DSP_PF = [['mym', 'MYM'], ['of', 'OnlyFans']];
+const dspHour = sl => SHIFT_HOURS[sl][0] % 24;
+const dspState = () => (planState.dispatch ||= {ref: {}, alt: {}, dates: {}});
+const dspSup = id => supList().find(x => x.id === id) || null;
+// Qui est responsable : exception du jour > remplaçant habituel de ce jour de la semaine > référent
+function dspWho(pf, sl, date) {
+  const D = planState.dispatch || {}, d = (parseDate(date).getDay() + 6) % 7, k = `${pf}|${sl}`;
+  const ex = (D.dates || {})[`${date}|${k}`], al = (D.alt || {})[`${k}|${d}`], rf = (D.ref || {})[k];
+  const id = ex || al || rf; return {id, sup: id ? dspSup(id) : null, ref: rf ? dspSup(rf) : null, kind: ex ? 'date' : al ? 'alt' : rf ? 'ref' : ''};
+}
+// Présent à une heure donnée ce jour-là (y compris la fin de sa nuit de la veille)
+const supAt = (s, d, h) => supBlocks(s, d).some(b => h + 0.01 >= b.start && h + 0.01 < b.end);
+// Problèmes : OFF, absent pour la réunion (1 h avant) ou pas d'accès à la plateforme
+function dspIssue(s, pf, sl, d) {
+  if (!s) return 'Personne de désigné';
+  const h = dspHour(sl), hm = (h + 23) % 24, dm = h === 0 ? (d + 6) % 7 : d;
+  if (!glFits(s, pf)) return `${s.name} n’a pas accès à ${pf === 'of' ? 'OnlyFans' : 'MYM'}`;
+  if (!supAt(s, dm, hm) && !supAt(s, d, h)) return `${s.name} ne travaille pas à ${h}h ce jour-là`;
+  if (!supAt(s, dm, hm)) return `${s.name} n’est pas là à ${hm}h pour la réunion`;
+  return '';
+}
+function dspCandidates(pf, sl, d) {
+  return supList().map(s => ({s, issue: dspIssue(s, pf, sl, d)})).sort((a, b) => (!!a.issue - !!b.issue) || a.s.name.localeCompare(b.s.name, 'fr'));
+}
+// Organisation validée par le propriétaire le 21/11/2026 (référents + remplaçants habituels), appliquée en un clic par la Direction
+const DSP_SEED = {ref: {'mym|0': 'Tsiferana', 'mym|1': 'Ilyas', 'mym|2': 'Ariane', 'mym|3': 'Fong', 'of|0': 'Stephane', 'of|1': 'Jimmy', 'of|2': 'Jimmy', 'of|3': 'Anselme'},
+  alt: {'mym|0|2': 'Tsiry', 'mym|1|4': 'Safidy', 'mym|2|5': 'Safidy', 'mym|3|2': 'Joevanny', 'mym|3|5': 'Safidy', 'of|0|0': 'Tsiry', 'of|1|6': 'Safidy', 'of|2|6': 'Safidy', 'of|3|5': 'Fong'}};
+function dspSeed() {
+  const id = n => (supList().find(x => normName(x.name) === normName(n)) || {}).id, D = dspState(), miss = [];
+  for (const [k, n] of Object.entries(DSP_SEED.ref)) { const i = id(n); if (i) D.ref[k] = i; else miss.push(n); }
+  for (const [k, n] of Object.entries(DSP_SEED.alt)) { const i = id(n); if (i) D.alt[k] = i; else miss.push(n); }
+  savePlan(); return [...new Set(miss)];
+}
+function dispatchHTML() {
+  const wk = planUI.week || thisMonday(), today = isoOf(new Date()), dir = Sync.canDirect();
+  const D = dspState(); let bad = 0;
+  const rows = DSP_PF.flatMap(([pf, pl]) => [0, 1, 2, 3].map(sl => {
+    const R = dspSup(D.ref[`${pf}|${sl}`]);
+    const cells = PLAN_DAYS.map((_, d) => { const date = addDaysIso(wk, d), w = dspWho(pf, sl, date), iss = dspIssue(w.sup, pf, sl, d); if (iss) bad++;
+      return `<td class="dsp-c${iss ? ' bad' : ''}${w.kind !== 'ref' && w.sup ? ' alt' : ''}${date === today ? ' now' : ''}" ${dir ? `data-dspc="${pf}|${sl}|${d}" tabindex="0" role="button"` : ''} title="${esc(iss || (w.kind === 'date' ? 'Exception pour ce jour' : w.kind === 'alt' ? `Remplaçant habituel le ${PLAN_DAYS_LONG[d].toLowerCase()}` : 'Référent'))}">
+        ${w.sup ? `<span class="g-dot" style="background:${w.sup.color}"></span>${esc(w.sup.name)}` : '<span class="muted">—</span>'}${w.kind !== 'ref' && w.sup && w.ref ? `<small>remplace ${esc(w.ref.name)}</small>` : ''}${iss ? '<small class="sc-lo">⚠</small>' : ''}</td>`; }).join('');
+    return `<tr><th class="dsp-h" style="--pc:${pf === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}" ${dir ? `data-dspr="${pf}|${sl}" role="button" tabindex="0" title="Changer le référent"` : ''}><b>${pl} ${dspHour(sl)}h</b><span>${R ? esc(R.name) : 'à désigner'} · réunion ${(dspHour(sl) + 23) % 24}h</span></th>${cells}</tr>`; })).join('');
+  return `<section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 style="margin:0">Responsables du dispatch · ${esc(planWeekLabel(wk))}</h2>
+      ${!Object.keys(D.ref).length ? (dir ? '<button class="btn primary" type="button" id="dsp-seed" style="margin-left:auto">Appliquer l’organisation proposée</button>' : '') : bad ? `<span class="pill Critical">${plural(bad, 'case à régler', 'cases à régler')}</span>` : '<span class="pill Strong">Tout est couvert</span>'}</div>
+    <p class="hint" style="margin:0 0 10px">Pour chaque shift et chaque plateforme, un superviseur référent, le même toute la semaine : il est responsable des cases de ce shift dans le planning et réunit les autres subs 1 h avant pour préparer le dispatch. Objectif : garder chaque chatter sur ses modèles.${dir ? ' Cliquez sur une ligne pour changer le référent, sur une case pour un remplaçant.' : ''}</p>
+    <div class="tbl-wrap" style="max-height:none"><table class="dsp"><thead><tr><th>Dispatch</th>${PLAN_DAYS.map((x, i) => `<th>${x} ${parseDate(addDaysIso(wk, i)).getDate()}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></section>`;
+}
+function dspPick(title, pf, sl, d, cur, extra) {
+  const L = dspCandidates(pf, sl, d);
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:520px"><h3>${esc(title)}</h3>${extra || ''}
+    <div class="dsp-pick">${L.map(({s, issue}) => `<button type="button" class="${s.id === cur ? 'on' : ''}${issue ? ' warn' : ''}" data-pk="${s.id}"><span class="g-dot" style="background:${s.color}"></span><b>${esc(s.name)}</b><small>${issue ? esc(issue) : `${esc(s.days[d])} · présent à ${(dspHour(sl) + 23) % 24}h et ${dspHour(sl)}h`}</small></button>`).join('')}</div>
+    <div class="acts"><button class="btn ghost" data-a="x" type="button">Retirer</button><button class="btn ghost" data-a="0" type="button">Annuler</button></div></div>`;
+  return new Promise(res => {
+    bg.addEventListener('click', e => { if (e.target === bg) { bg.remove(); res(undefined); return; }
+      const b = e.target.closest('[data-pk]'), a = e.target.closest('[data-a]');
+      if (b) { const scope = bg.querySelector('input[name="dsc"]:checked'); bg.remove(); res({id: b.dataset.pk, scope: scope ? scope.value : ''}); }
+      else if (a) { const scope = bg.querySelector('input[name="dsc"]:checked'); bg.remove(); res(a.dataset.a === 'x' ? {id: null, scope: scope ? scope.value : ''} : undefined); } });
+    document.body.appendChild(bg);
+  });
+}
+function bindDispatch(main) {
+  const rr = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
+  main.querySelector('#dsp-seed')?.addEventListener('click', () => { const miss = dspSeed(); toast(miss.length ? `Organisation appliquée. Introuvables : ${miss.join(', ')}.` : 'Organisation du dispatch appliquée.', !!miss.length); rr(); });
+  main.querySelectorAll('[data-dspr]').forEach(b => b.addEventListener('click', async () => {
+    const [pf, sl] = b.dataset.dspr.split('|'), D = dspState(), k = `${pf}|${sl}`;
+    const r = await dspPick(`Référent du dispatch ${pf === 'of' ? 'OnlyFans' : 'MYM'} ${dspHour(+sl)}h`, pf, +sl, 0, D.ref[k], '<p class="hint" style="margin:0 0 8px">Le même toute la semaine. Les jours où il est OFF, désignez un remplaçant en cliquant sur la case du jour.</p>');
+    if (r === undefined) return; if (r.id) D.ref[k] = r.id; else delete D.ref[k]; savePlan(); rr();
+  }));
+  main.querySelectorAll('[data-dspc]').forEach(c => { const open = async () => {
+    const [pf, sl, d] = c.dataset.dspc.split('|'), D = dspState(), wk = planUI.week || thisMonday(), date = addDaysIso(wk, +d), w = dspWho(pf, +sl, date);
+    const r = await dspPick(`Dispatch ${pf === 'of' ? 'OnlyFans' : 'MYM'} ${dspHour(+sl)}h · ${PLAN_DAYS_LONG[d]} ${fmtDayFr(date)}`, pf, +sl, +d, w.id,
+      `<div class="un-days" style="margin:0 0 10px"><label class="check"><input type="radio" name="dsc" value="alt" ${w.kind !== 'date' ? 'checked' : ''}> Tous les ${PLAN_DAYS_LONG[d].toLowerCase()}s (remplaçant habituel)</label><label class="check"><input type="radio" name="dsc" value="date" ${w.kind === 'date' ? 'checked' : ''}> Seulement le ${esc(fmtDayFr(date))}</label></div>`);
+    if (r === undefined) return;
+    const ka = `${pf}|${sl}|${d}`, kd = `${date}|${pf}|${sl}`;
+    if (r.scope === 'date') { if (r.id) D.dates[kd] = r.id; else delete D.dates[kd]; }
+    else { delete D.dates[kd]; if (r.id && r.id !== D.ref[`${pf}|${sl}`]) D.alt[ka] = r.id; else delete D.alt[ka]; }
+    savePlan(); rr(); }; c.addEventListener('click', open); c.addEventListener('keydown', e => { if (e.key === 'Enter') open(); }); });
+}
+// Bandeau du référent connecté : ses dispatchs du jour et du lendemain
+function dispatchMineHTML() {
+  const me = mySupReal(); if (!me || !planState.dispatch) return '';
+  const today = isoOf(new Date()), out = [];
+  for (const date of [today, addDaysIso(today, 1)]) for (const [pf, pl] of DSP_PF) for (const sl of [0, 1, 2, 3]) { const w = dspWho(pf, sl, date); if (w.id === me.id) out.push(`<b>${pl} ${dspHour(sl)}h</b> ${date === today ? 'aujourd’hui' : 'demain'} (réunion à ${(dspHour(sl) + 23) % 24}h)${w.kind !== 'ref' && w.ref ? ` · vous remplacez ${esc(w.ref.name)}` : ''}`); }
+  return out.length ? `<section class="panel dsp-mine">🎯 Vous êtes responsable du dispatch : ${out.join(' · ')}. Réunissez les autres subs 1 h avant et gardez chaque chatter sur ses modèles.</section>` : '';
+}
 function supPlanHTML() {
   const list = supList();
   const today = (new Date().getDay() + 6) % 7;
@@ -4361,6 +4458,7 @@ function supPlanHTML() {
       <p class="hint" style="margin:10px 0 0;font-size:12px">Chaque superviseur est rangé dans la plateforme de son shift du jour (rose : MYM, bleu : OnlyFans) ; le liseré coloré de la barre rappelle la plateforme. Les shifts de nuit (22h-8h, 16h-2h) se prolongent sur le lendemain, en barre hachurée, avec le focus du jour où ils commencent. ${d === today ? 'Le trait rouge indique l’heure actuelle.' : ''}</p>
     </section>
     ${frSupHTML()}
+    ${dispatchHTML()}
     <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Couverture de la semaine</h2>
       <div class="pfsw" style="margin-left:auto">${[['', 'Tous'], ['MYM', 'MYM'], ['OF', 'OnlyFans']].map(([k, l]) => `<button type="button" class="${k === covPf ? 'on' : ''}" data-covpf="${k}" style="--pc:${k ? SUP_PF[k].color : '#a1a1aa'}">${l}</button>`).join('')}</div></div>
       <p class="hint">Nombre de superviseurs ${covPf ? `<strong style="color:${SUP_PF[covPf].color}">${SUP_PF[covPf].label}</strong> ` : ''}présents par heure. ${holes.length ? `<strong class="sc-lo">Créneaux sans superviseur${covPf ? ` ${SUP_PF[covPf].label}` : ''} : ${holes.map(esc).join(' · ')}</strong>` : '<span class="sc-hi">Chaque heure de la semaine est couverte.</span>'}</p>
@@ -4380,6 +4478,7 @@ function supPlanHTML() {
       </tbody></table></div><datalist id="sup-focus"><option value="OnlyFans"><option value="MYM"><option value="Reveal"></datalist></section></div>`;
 }
 function bindSupPlan(main) {
+  bindDispatch(main);
   const map = supsMap(), done = () => { savePlan(); render(); };
   main.querySelectorAll('[data-sd]').forEach(b => b.addEventListener('click', () => { planUI.supDay = +b.dataset.sd; render(); }));
   main.querySelectorAll('[data-covpf]').forEach(b => b.addEventListener('click', () => { planUI.supCovPf = b.dataset.covpf; const y = window.scrollY; render(); window.scrollTo(0, y); }));
@@ -7263,7 +7362,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611202;
+  const APP_BUILD = 202611211;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
