@@ -898,6 +898,8 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .kcard2 .kcard-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .kcompose{margin-top:12px;padding:10px;border-radius:var(--r-md);background:var(--bg);border:1px solid var(--line-soft)}
 .ktags{display:flex;flex-wrap:wrap;gap:6px}
+.exclr{margin-top:6px;font-size:12.5px}.exclr summary{cursor:pointer;color:var(--muted)}.exclr>div{display:flex;flex-direction:column;gap:2px;margin-top:6px;max-height:220px;overflow:auto}
+.pe-err{margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45);color:#fecaca;font-size:13px}
 .fx-notes{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft)}.fx-notes h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.fx-notes h4 .muted{text-transform:none;letter-spacing:0;font-weight:500}
 .fxn-form textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:54px}.fxn-acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}.fxn-acts .btn{margin-left:auto}
 .fxn-list{margin-top:8px;max-height:460px;overflow:auto}.fxn-it{display:flex;gap:9px;align-items:flex-start;padding:9px 6px;border:0;border-top:1px solid var(--line-soft);background:none;color:inherit;font:inherit;text-align:left;width:100%;cursor:pointer;border-radius:8px}
@@ -1183,7 +1185,7 @@ const RCA = (() => {
       }
       return row;
     });
-    return {platform: pid, rows, virtual: true, sources: list.map(p => p.id), fileName: `${list.length} imports`, excluded: list.reduce((a, p) => a + (p.excluded || 0), 0), createdAt: 0, ...meta};
+    return {platform: pid, rows, virtual: true, sources: list.map(p => p.id), fileName: `${list.length} imports`, excluded: list.reduce((a, p) => a + (p.excluded || 0), 0), excludedRows: list.flatMap(p => p.excludedRows || []), createdAt: 0, ...meta};
   }
 
   // Le store met en cache les résultats par période et vide le cache quand les paramètres changent :
@@ -2298,7 +2300,7 @@ function renderDashboard(main, P) {
     <section class="hero">
       <div>
         <div class="period">${esc(view.label)}</div>
-        <div class="meta">${view.v.type !== 'import' && view.v.type !== 'custom' ? esc(fmtRange(p.start, p.end)) + ' · ' : ''}${plural(st.count, 'chatter noté', 'chatters notés')} à partir de ${esc(p.fileName || `l'import`)}${res.days !== 7 ? ` · objectifs de CA ajustés à ${plural(res.days, 'jour', 'jours')}` : ''}${p.excluded ? `, ${plural(p.excluded, 'ligne exclue', 'lignes exclues')} à l'import` : ''}${st.critical ? ` · <span style="color:var(--red)">${st.critical} avec un ${esc(capLabel(P))} critique</span>` : ''}</div>
+        <div class="meta">${view.v.type !== 'import' && view.v.type !== 'custom' ? esc(fmtRange(p.start, p.end)) + ' · ' : ''}${plural(st.count, 'chatter noté', 'chatters notés')} à partir de ${esc(p.fileName || `l'import`)}${res.days !== 7 ? ` · objectifs de CA ajustés à ${plural(res.days, 'jour', 'jours')}` : ''}${p.excluded ? `, ${plural(p.excluded, 'ligne exclue', 'lignes exclues')} à l'import` : ''}${(p.excludedRows || []).length ? `<details class="exclr"><summary>Voir les lignes écartées</summary><div>${p.excludedRows.map(x => `<span><strong>${esc(x.name)}</strong> · ${esc(x.why)}</span>`).join('')}</div></details>` : ''}${st.critical ? ` · <span style="color:var(--red)">${st.critical} avec un ${esc(capLabel(P))} critique</span>` : ''}</div>
       </div>
       <div class="dist" aria-label="Chatters par grade">${GRADE_ORDER.map(g => `<button type="button" class="g ${g}" data-grade="${g}" title="Afficher uniquement le grade ${g}"><div class="letter g${g}">${g}</div><div class="glbl">${GRADE_INFO[g][0]}</div><div class="n">${st.grades[g]}</div></button>`).join('')}</div>
     </section>
@@ -2697,7 +2699,7 @@ function bindImport(P) {
 function confirmImport(P) {
   const d = importDraft[P.id];
   const rows = d.rows.filter(r => r.include && !r.issues.some(i => i.sev === 'error')).map(r => ({name: r.name, ...r.values}));
-  if (rows.some(r => P.scored.some(k => r[k.key] == null && !k.missingZero))) { toast('Certaines lignes sélectionnées ont des KPI manquants.', true); return; }
+  if (rows.some(r => P.scored.some(k => r[k.key] == null && !k.missingZero && !k.skipIfMissing))) { toast('Certaines lignes sélectionnées ont des KPI manquants.', true); return; }
   if (d.remember && Sync.canManage()) {
     const s = RCA.clone(allSettings[P.id]); let added = 0;
     for (const [k, man] of Object.entries(d.manual)) {
@@ -2708,7 +2710,8 @@ function confirmImport(P) {
     if (added) { store.setSettings(P.id, s); saveSettings(); }
   }
   const period = {id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), platform: P.id, name: (d.label || '').trim() || fmtRange(d.start, d.end), start: d.start, end: d.end,
-    fileName: d.fileName, createdAt: Date.now(), excluded: d.rows.length - rows.length, rows};
+    fileName: d.fileName, createdAt: Date.now(), excluded: d.rows.length - rows.length, rows,
+    excludedRows: d.rows.filter(r => !(r.include && !r.issues.some(i => i.sev === 'error'))).map(r => ({name: r.name || `ligne ${r.line}`, why: r.issues.map(i => i.msg).join(' · ') || 'décochée à la main'}))};
   store.periods.push(period); store.invalidate(); savePeriods();
   ui.period[P.id] = period.id;
   ui.view[P.id] = period.end <= addDaysIso(mondayOf(period.start), 6) ? {type:'week', a:mondayOf(period.start)} : {type:'import', id:period.id};
@@ -3913,7 +3916,7 @@ function renderPlanning(main) {
   const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
   const hl = newHighlights();
   const q = normName(planUI.q);
-  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button></div>`;
+  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button></div>`;
   if (planUI.tab === 'abs') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Demandes d'absence</span></h1></div>` + tabs + absReqHTML();
     bindPlanTabs(main); bindAbsReq(main); return;
@@ -3984,7 +3987,7 @@ function renderPlanning(main) {
       const reqHTML = reqs.length ? `<div class="absbox"><div class="absbox-h">Absences demandées ce ${PLAN_DAYS_LONG[d].toLowerCase()} · ${reqs.length}</div><div class="absbox-l">${reqs.map(r => `<button type="button" class="abschip" data-arid="${r.id}" title="Modifier la demande"><strong>${esc(r.name)}</strong> <span>${esc(shiftsLabel(r.shifts))}</span>${r.status === 'wait' ? ' <span class="pill Warning">en attente</span>' : ''}${r.note ? `<em>${esc(r.note)}</em>` : ''}</button>`).join('')}</div>
         ${reqClash.length ? `<div class="absbox-w">⚠ Planifié(e)s malgré leur demande : ${reqClash.map(esc).join(' · ')}</div>` : ''}</div>` : '';
       const unHTML = un.length ? `<div class="unplan"><div class="unplan-h">⚠ Reste à planifier · ${plural(un.length, 'chatter', 'chatters')} pas OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} et sur aucun shift</div><div class="unplan-l">${un.map(x => `<span class="unchip">${esc(x.n)}<button type="button" data-ign="${esc(x.k)}" data-ignn="${esc(x.n)}" title="A quitté l’agence ou ne plus le rappeler" aria-label="Retirer ${esc(x.n)}">×</button></span>`).join('')}</div></div>`
-        : `<div class="unplan ok"><span>✓ Tous les chatters de l'équipe sont planifiés ou OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()}.</span>${noRoster ? ' <span class="muted">Remplissez l’onglet « Jours OFF » pour que toute l’équipe soit vérifiée.</span>' : ''}</div>`;
+        : `<div class="unplan ok"><span>✓ Tous les chatters de l'équipe sont planifiés ou OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()}.</span>${noRoster ? ' <span class="muted">Remplissez l’onglet « Jours OFF / Base chatters » pour que toute l’équipe soit vérifiée.</span>' : ''}</div>`;
       return `<section class="panel offbar">${reqHTML}${unHTML}${clash.length ? `<div class="alert warn" style="margin:10px 0 ${offs.length ? '10px' : '0'}"><strong>${plural(clash.length, 'créneau', 'créneaux')} sur un jour OFF :</strong> ${clash.map(esc).join(' · ')}</div>` : ''}${offs.length ? `<div class="muted" style="font-size:13px;margin-top:10px"><strong style="color:var(--text)">OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} (${offs.length}) :</strong> ${offs.map(esc).join(', ')}</div>` : ''}</section>`;
     })()}
     <section class="panel" style="padding:12px">
@@ -4713,6 +4716,15 @@ function bindPlanBilan(main, wk) {
   }));
 }
 function bindPlanTabs(main) { main.querySelectorAll('[data-ptab]').forEach(b => b.addEventListener('click', () => { planUI.tab = b.dataset.ptab; render(); })); }
+// Base chatters (= liste « Jours OFF / Base chatters ») : on ne peut planifier que les chatters qui y sont
+const baseOn = () => Object.keys(planState.dayoff || {}).length > 0;
+const baseList = () => Object.values(planState.dayoff || {}).map(o => o.name).filter(Boolean).sort((a, b) => a.localeCompare(b, 'fr'));
+function baseName(n) {
+  const k = rosterKey(n); if (!k) return null; const L = Object.values(planState.dayoff || {});
+  const o = L.find(x => rosterKey(x.name) === k) || L.find(x => nearKey(rosterKey(x.name), k));
+  return o ? o.name.replace(/\s+(mym|of)$/i, '').trim() : null;
+}
+const notInBaseMsg = bad => `${bad.map(n => `« ${esc(n)} »`).join(', ')} ${bad.length > 1 ? 'ne sont pas' : 'n’est pas'} dans la base chatters. Ajoutez-${bad.length > 1 ? 'les' : 'le'} d’abord dans Planning → Jours OFF / Base chatters.`;
 function offAutoShifts() {
   if (!Object.keys(planState.weeks || {}).length || !glCanSync()) return;
   let n = 0;
@@ -4735,7 +4747,7 @@ function offViewHTML() {
         <label class="check"><input type="checkbox" id="off-replace"> Remplacer toute la liste (sinon : ajout et mise à jour)</label>
         <button class="btn primary" id="off-apply" type="button" disabled style="margin-left:auto">Enregistrer la liste</button></div>
     </section>
-    <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">Jours OFF de l'équipe · ${plural(list.length, 'chatter', 'chatters')}</h2>
+    <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px"><h2 style="margin:0">Base chatters · jours OFF et shifts · ${plural(list.length, 'chatter', 'chatters')}</h2>
       <span class="muted" style="font-size:12.5px">${PLAN_DAYS.map((x, i) => `${x} ${perDay[i]}`).join(' · ')}</span>
       <input type="search" id="off-q" placeholder="Rechercher" style="margin-left:auto;max-width:220px" value="${esc(planUI.offq || '')}"></div>
       ${list.length ? `<div class="tbl-wrap" style="max-height:560px"><table><thead><tr><th>Chatter</th><th title="Le ou les shifts habituels du chatter">Shift</th>${PLAN_DAYS.map(x => `<th style="text-align:center">${x}</th>`).join('')}<th>Note</th><th></th></tr></thead><tbody>
@@ -4806,7 +4818,9 @@ function editCell(wk, key) {
   const [d, s, mid] = key.split('|'); const m = allModels().find(x => x.id === mid);
   const W = weekOf(wk);
   let list = (W.cells[key] || []).map(e => ({...e}));
-  const names = knownChatters();
+  const names = baseOn() ? baseList() : knownChatters();
+  const orig = new Set(list.flatMap(e => [e.n, ...(e.r ? e.r.split('/') : [])]).map(n => rosterKey(String(n).trim())));
+  let err = '';
   // Modèles de la semaine sans cette case (pour savoir si ce placement ajoute une modèle) et habitudes des 4 dernières semaines
   const ck = m && !m.backup ? creatorKey(m.name) : null, date = addDaysIso(wk, +d);
   const WC0 = (() => { const saved = W.cells[key]; delete W.cells[key]; const r = weekCreators(wk); if (saved) W.cells[key] = saved; return r; })();
@@ -4844,8 +4858,9 @@ function editCell(wk, key) {
       ${(() => { const sg = suggest(); if (!ck) return ''; const needRep = list.some(e => e.a && !e.r);
         return `<div class="pe-sug"><div class="pe-sug-h">${needRep ? 'Remplaçants proposés' : 'Chatters disponibles proposés'} <span class="muted">· sur ce shift, pas OFF, pas déjà placés, ${MODEL_MAX} modèles max</span></div>
           ${sg.length ? `<div class="pe-sug-l">${sg.map(x => `<button type="button" class="pe-sg${x.knows ? ' knows' : ''}" data-sug="${esc(x.full)}" title="${x.knows ? `${plural(x.knows, 'shift', 'shifts')} sur ${esc(creatorName(m.name))} ces 4 dernières semaines${x.same ? '' : ' (sur une autre plateforme)'}` : `Ne connaît pas encore ${esc(creatorName(m.name))}`} · ${x.n} modèle${x.n > 1 ? 's' : ''} cette semaine avec celle-ci">${esc(x.name)} <small>${x.knows ? `connaît · ${x.knows}${x.same ? '' : ' (autre plateforme)'}` : 'nouvelle modèle'} · ${x.n}/${MODEL_MAX}</small></button>`).join('')}</div>`
-            : '<p class="hint" style="margin:4px 0 0;font-size:12.5px">Personne de disponible avec ce shift coché dans « Jours OFF ».</p>'}</div>`; })()}
-      <div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="pe-add" list="pl-names" placeholder="Ajouter un ou plusieurs chatters (séparés par /)" style="flex:1"><button class="btn" id="pe-addb" type="button">Ajouter</button></div>
+            : '<p class="hint" style="margin:4px 0 0;font-size:12.5px">Personne de disponible avec ce shift coché dans « Jours OFF / Base chatters ».</p>'}</div>`; })()}
+      ${err ? `<div class="pe-err" role="alert">${err}</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="pe-add" list="pl-names" placeholder="${baseOn() ? 'Tapez les premières lettres du prénom (base chatters)' : 'Ajouter un ou plusieurs chatters (séparés par /)'}" style="flex:1"><button class="btn" id="pe-addb" type="button">Ajouter</button></div>
       <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
     bg.querySelector('#pe-add').focus();
   };
@@ -4856,7 +4871,9 @@ function editCell(wk, key) {
     bg.querySelectorAll('[data-rf]').forEach(c => { list[+c.dataset.rf].rf = c.checked ? 1 : 0; });
     bg.querySelectorAll('[data-rep]').forEach(c => { const v = c.value.trim(); list[+c.dataset.rep].r = v || undefined; });
   };
-  const add = () => { sync(); const v = bg.querySelector('#pe-add').value; for (const n of v.split('/').map(x => x.trim()).filter(Boolean)) if (!list.some(e => normName(e.n) === normName(n))) list.push({n}); draw(); };
+  const add = () => { sync(); const inp = bg.querySelector('#pe-add'), bad = [];
+    for (const n0 of inp.value.split('/').map(x => x.trim()).filter(Boolean)) { const n = baseOn() ? baseName(n0) : n0; if (!n) { bad.push(n0); continue; } if (!list.some(e => normName(e.n) === normName(n))) list.push({n}); }
+    err = bad.length ? notInBaseMsg(bad) : ''; draw(); if (bad.length) bg.querySelector('#pe-add').value = bad.join(' / '); return !bad.length; };
   const newFlags = {};
   draw();
   bg.addEventListener('keydown', e => { if (e.key === 'Escape') bg.remove(); if (e.key === 'Enter' && e.target.id === 'pe-add') { e.preventDefault(); add(); } });
@@ -4869,7 +4886,11 @@ function editCell(wk, key) {
     const del = e.target.closest('[data-del]'); if (del) { sync(); list.splice(+del.dataset.del, 1); draw(); return; }
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a === '1') {
-      sync(); if (bg.querySelector('#pe-add').value.trim()) add();
+      sync(); if (bg.querySelector('#pe-add').value.trim() && !add()) return;
+      // Remplaçants : seulement des chatters de la base (ceux déjà enregistrés dans la case restent acceptés)
+      if (baseOn()) { const bad = [];
+        for (const e of list) if (e.r) e.r = e.r.split('/').map(x => x.trim()).filter(Boolean).map(n => { if (orig.has(rosterKey(n))) return n; const b = baseName(n); if (!b) bad.push(n); return b || n; }).join('/') || undefined;
+        if (bad.length) { err = notInBaseMsg(bad); draw(); return; } }
       const clean = list.map(e => { const o = {n: e.n}; if (e.a) o.a = 1; if (e.c) o.c = 1; if (e.l) o.l = 1; if (e.rf) o.rf = 1; if (e.r) o.r = e.r; return o; });
       if (clean.length) W.cells[key] = clean; else delete W.cells[key];
       for (const [k, f] of Object.entries(newFlags)) { if (f.on) planState.chatters[k] = {...(planState.chatters[k] || {}), name: f.name, isNew: true}; else if (planState.chatters[k]) planState.chatters[k].isNew = false; }
@@ -6449,7 +6470,7 @@ const FX_C = {g: '#22c55e', a: '#f59e0b', r: '#ef4444'};
 const fxShortMoney = (P, v) => v == null ? '—' : v >= 1000 ? `${nf(v / 1000, 0, 1)}k${P.currency}` : moneyP(P, v);
 function fxPlanHTML(d) {
   const I = chatterPlanInfo(d.name), off = I.off, sh = I.declared && I.declared.length ? I.declared : I.seen;
-  const offTxt = !off ? '<span class="muted">pas dans la liste Jours OFF</span>' : (off.days || []).length ? esc(off.days.map(i => PLAN_DAYS_LONG[i]).join(', ')) : 'pas de jour OFF';
+  const offTxt = !off ? '<span class="muted">pas dans la base chatters</span>' : (off.days || []).length ? esc(off.days.map(i => PLAN_DAYS_LONG[i]).join(', ')) : 'pas de jour OFF';
   const shTxt = sh.length ? `${esc(shiftsTxt(sh))}${sh.some(x => sh.includes((x + 1) % 4)) ? ' <span class="muted">(enchaîne)</span>' : ''}` : '<span class="muted">pas encore au planning</span>';
   const over = I.weekCount > MODEL_MAX, at = I.weekCount === MODEL_MAX;
   const top = I.models.slice(0, 6), more = I.models.length - top.length;
