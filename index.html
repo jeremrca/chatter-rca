@@ -4390,7 +4390,7 @@ function dispatchHTML() {
     return `<tr><th class="dsp-h" style="--pc:${pf === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}" ${dir ? `data-dspr="${pf}|${sl}" role="button" tabindex="0" title="Changer le référent"` : ''}><b>${pl} ${dspHour(sl)}h</b><span>${R ? esc(R.name) : 'à désigner'} · réunion ${(dspHour(sl) + 23) % 24}h</span></th>${cells}</tr>`; })).join('');
   return `<section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 style="margin:0">Responsables du dispatch · ${esc(planWeekLabel(wk))}</h2>
       ${!Object.keys(D.ref).length ? (dir ? '<button class="btn primary" type="button" id="dsp-seed" style="margin-left:auto">Appliquer l’organisation proposée</button>' : '') : bad ? `<span class="pill Critical">${plural(bad, 'case à régler', 'cases à régler')}</span>` : '<span class="pill Strong">Tout est couvert</span>'}</div>
-    <p class="hint" style="margin:0 0 10px">Pour chaque shift et chaque plateforme, un superviseur référent, le même toute la semaine : il est responsable des cases de ce shift dans le planning et réunit les autres subs 1 h avant pour préparer le dispatch. Objectif : garder chaque chatter sur ses modèles.${dir ? ' Cliquez sur une ligne pour changer le référent, sur une case pour un remplaçant.' : ''}</p>
+    <p class="hint" style="margin:0 0 10px">Pour chaque shift et chaque plateforme, un superviseur référent, le même toute la semaine : il pilote le dispatch de ce shift et réunit les autres subs 1 h avant pour vérifier le planning. Tous les superviseurs peuvent modifier le planning si besoin. Objectif : garder chaque chatter sur ses modèles.${dir ? ' Cliquez sur une ligne pour changer le référent, sur une case pour un remplaçant.' : ''}</p>
     <div class="tbl-wrap" style="max-height:none"><table class="dsp"><thead><tr><th>Dispatch</th>${PLAN_DAYS.map((x, i) => `<th>${x} ${parseDate(addDaysIso(wk, i)).getDate()}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></section>`;
 }
 function dspPick(title, pf, sl, d, cur, extra) {
@@ -4428,7 +4428,10 @@ function bindDispatch(main) {
 // Verrouillage : seuls le référent du dispatch (ce shift, ce jour, cette plateforme) et la Direction changent l'affectation des chatters.
 // Les autres superviseurs peuvent toujours noter absences, retards et coupures.
 const dspActive = () => !!(planState.dispatch && Object.keys(planState.dispatch.ref || {}).length);
-const dspFree = () => !Sync.connected() || Sync.canDirect() || !dspActive();
+// Verrouillage désactivé le 21/11/2026 à la demande du propriétaire : tous les superviseurs peuvent modifier le planning
+// (maladie, onboarding…). Les responsables du dispatch restent affichés. Mettre DSP_LOCK à true pour le réactiver.
+const DSP_LOCK = false;
+const dspFree = () => !DSP_LOCK || !Sync.connected() || Sync.canDirect() || !dspActive();
 function cellLock(wk, d, s, mid) {
   if (dspFree()) return null;
   const g = (allModels().find(m => m.id === mid) || {}).group, pfs = g === 'of' ? ['of'] : g === 'mym' ? ['mym'] : ['mym', 'of'];
