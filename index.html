@@ -682,6 +682,13 @@ table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:point
 .dsp-l{display:flex;flex-direction:column;gap:2px;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--muted);text-align:left;white-space:nowrap}.dsp-l i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px}
 .dsp-mine{border:1px solid rgba(167,139,250,.55);background:linear-gradient(90deg,rgba(167,139,250,.16),transparent);font-size:14px}
 .pe-lock{margin-top:10px;padding:9px 12px;border-radius:10px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.45);font-size:13px}
+.ptab.today{background:rgba(250,204,21,.16);border-color:rgba(250,204,21,.75)!important;box-shadow:inset 0 -3px 0 #facc15}.ptab.today b,.ptab.today span{color:#fde68a}.ptab.today.on{background:rgba(250,204,21,.28)}
+.g-dsprow .g-track{height:62px;background:none;border:1px dashed rgba(167,139,250,.35)}.g-dsprow .g-name{color:#c4b5fd}
+.g-dspm{position:absolute;top:3px;transform:translateX(-50%);display:flex;flex-direction:column;gap:2px;padding:4px 7px;border-radius:8px;background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.55);font-size:11px;white-space:nowrap;z-index:1}
+.g-dspm.r{transform:translateX(-100%)}.g-dspm.l{transform:none}.g-dspm b{font-size:11.5px;color:#ddd6fe}.g-dspm span{display:flex;align-items:center;gap:4px;font-weight:700}.g-dspm i{width:7px;height:7px;border-radius:2px;background:var(--pc)}.g-dspm small{font-weight:500;color:var(--faint)}
+.g-dline{position:absolute;top:-3px;bottom:-3px;width:0;border-left:2px dashed rgba(167,139,250,.55);z-index:1}
+.g-dspb{position:absolute;top:50%;transform:translate(4px,-50%);z-index:2;font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:99px;background:#1e1b2e;border:1.5px solid var(--pc);white-space:nowrap}.g-dspb.r{transform:translate(calc(-100% - 4px),-50%)}
+.pfc-dsp{display:flex;flex-wrap:wrap;gap:4px 10px;margin:6px 0 4px;font-size:12px;color:var(--muted)}.pfc-dsp b{color:var(--text,#fff)}
 .offsh{display:flex;gap:3px}.offsh button{font:inherit;font-size:11px;font-weight:700;padding:3px 6px;border-radius:7px;border:1px solid var(--line-soft);background:var(--bg);color:var(--faint);cursor:pointer;white-space:nowrap}
 .offsh button.on{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.6);color:#e0f2fe}.offsh.none button{border-style:dashed}
 .fx-plan{margin:14px 0 4px;display:flex;flex-direction:column;gap:10px}
@@ -3992,7 +3999,7 @@ function renderPlanning(main) {
   main.innerHTML = head + `<div class="stack">
     ${dispatchMineHTML()}
     <section class="panel plan-bar">
-      <div class="ptabs" role="tablist">${PLAN_DAYS.map((x, i) => `<button type="button" role="tab" class="ptab ${i === d ? 'on' : ''}" data-day="${i}" aria-selected="${i === d}"><b>${x}${launchesOn(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Lancement ce jour-là">🚀</span>' : ''}${bannersOnDay(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Bannière ce jour-là">⚡</span>' : ''}</b><span>${parseDate(addDaysIso(wk, i)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</span></button>`).join('')}</div>
+      <div class="ptabs" role="tablist">${PLAN_DAYS.map((x, i) => `<button type="button" role="tab" class="ptab ${i === d ? 'on' : ''}${addDaysIso(wk, i) === isoOf(new Date()) ? ' today' : ''}" data-day="${i}" aria-selected="${i === d}"><b>${x}${launchesOn(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Lancement ce jour-là">🚀</span>' : ''}${bannersOnDay(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Bannière ce jour-là">⚡</span>' : ''}</b><span>${parseDate(addDaysIso(wk, i)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</span></button>`).join('')}</div>
       <div class="pactions">
         <input type="search" id="p-q" placeholder="Rechercher un chatter" value="${esc(planUI.q)}" aria-label="Rechercher un chatter">
         <button class="btn" id="p-unav" type="button">Indisponibilité</button>
@@ -4449,22 +4456,26 @@ function supPlanHTML() {
   const pM = supCoverage('MYM').grid[d], pO = supCoverage('OF').grid[d], all = supCoverage().grid[d], allWho = supCoverage().who[d];
   const ganttRow = r => { const {s, blocks, off} = r;
     return `<div class="g-row" style="--pc:${pfOf(r.key).color}"><div class="g-name"><span class="g-dot" style="background:${s.color}"></span>${esc(s.name)}${r.own && s.focusDays && s.focusDays[d] ? ' <span class="sfx" title="Focus différent de son focus habituel ce jour-là">ce jour</span>' : ''}</div>
-      <div class="g-track">${ticks.map(t => `<span class="g-grid" style="left:${t / 24 * 100}%"></span>`).join('')}
+      <div class="g-track">${ticks.map(t => `<span class="g-grid" style="left:${t / 24 * 100}%"></span>`).join('')}${dspActive() ? [4, 10, 16, 22].map(h => `<span class="g-dline" style="left:${h / 24 * 100}%"></span>`).join('') + DSP_PF.flatMap(([pf]) => [0, 1, 2, 3].filter(sl => dspWho(pf, sl, addDaysIso(planUI.week || thisMonday(), d)).id === s.id).map(sl => `<span class="g-dspb${dspHour(sl) >= 20 ? ' r' : ''}" style="left:${dspHour(sl) / 24 * 100}%;--pc:${pf === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}" title="${esc(s.name)} est responsable du dispatch ${pf === 'of' ? 'OnlyFans' : 'MYM'} ${dspHour(sl)}h (réunion ${(dspHour(sl) + 23) % 24}h)">🎯 ${pf === 'of' ? 'OF' : 'MYM'} ${dspHour(sl)}h</span>`)).join('') : ''}
         ${blocks.map(b => `<div class="g-bar ${b.carry ? 'carry' : ''}" style="left:${b.start / 24 * 100}%;width:${(b.end - b.start) / 24 * 100}%;background:${s.color};color:${textOn(s.color)};--bc:${SUP_PF[b.pf].color}" title="${esc(s.name)} · ${esc(b.label)} · ${SUP_PF[b.pf].label}">${b.end - b.start >= 2.5 ? esc(b.carry ? s.days[(d + 6) % 7] : s.days[d]) : ''}</div>`).join('')}
         ${off && !blocks.length ? '<span class="g-off">OFF</span>' : off ? '<span class="g-off right">OFF</span>' : ''}
         ${d === today ? `<span class="g-now" style="left:${nowH / 24 * 100}%"></span>` : ''}</div></div>`; };
   const covRow = (label, arr, color, names) => `<div class="g-row"><div class="g-name" style="color:${color}">${label}</div><div class="g-track g-cov">${arr.map((n, h) => `<span class="g-cell c${Math.min(n, 4)}" style="left:${h / 24 * 100}%;width:${100 / 24}%" title="${h}h-${h + 1}h : ${n} ${label}${names ? ` · ${esc(names[h].join(', ') || 'personne')}` : ''}">${n}</span>`).join('')}</div></div>`;
   // Cartes « qui est sur quoi » du jour choisi (shifts qui commencent ce jour-là)
   const card = k => { const l = rows.filter(r => r.own && r.own.pf === k).sort((a, b) => parseShift(a.s.days[d]).start - parseShift(b.s.days[d]).start);
+    const dpf = k === 'OF' ? 'of' : k === 'MYM' ? 'mym' : null, ddate = addDaysIso(planUI.week || thisMonday(), d);
     return `<div class="pfc" style="--pc:${SUP_PF[k].color}"><div class="pfc-h"><span class="pfc-t">${SUP_PF[k].label}</span><b>${l.length}</b><span class="muted">${l.length > 1 ? 'superviseurs' : 'superviseur'}</span></div>
+      ${dpf && dspActive() ? `<div class="pfc-dsp">🎯 Dispatch ${[0, 1, 2, 3].map(sl => { const w = dspWho(dpf, sl, ddate); return `<span><b>${dspHour(sl)}h</b> ${w.sup ? esc(w.sup.name) : '—'}</span>`; }).join('')}</div>` : ''}
       <div class="pfc-l">${l.length ? l.map(r => `<span class="pfc-p"><span class="g-dot" style="background:${r.s.color}"></span><strong>${esc(r.s.name)}</strong><span class="pfc-h2">${esc(r.s.days[d])}</span>${r.s.focusDays && r.s.focusDays[d] ? '<span class="sfx">ce jour</span>' : ''}</span>`).join('') : '<span class="muted">Personne</span>'}</div></div>`; };
   const extra = ['REVEAL', ''].filter(k => rows.some(r => r.own && r.own.pf === k));
   return `<div class="stack">
     <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px"><h2 style="margin:0">Qui supervise, heure par heure</h2>
-      <div class="ptabs" style="margin-left:auto">${PLAN_DAYS.map((x, i) => `<button type="button" class="ptab ${i === d ? 'on' : ''}" data-sd="${i}" style="min-width:58px;padding:5px 8px"><b>${x}</b>${i === today ? '<span>aujourd’hui</span>' : ''}</button>`).join('')}</div></div>
+      <div class="ptabs" style="margin-left:auto">${PLAN_DAYS.map((x, i) => `<button type="button" class="ptab ${i === d ? 'on' : ''}${i === today && (planUI.week || thisMonday()) === thisMonday() ? ' today' : ''}" data-sd="${i}" style="min-width:58px;padding:5px 8px"><b>${x}</b>${i === today ? '<span>aujourd’hui</span>' : ''}</button>`).join('')}</div></div>
       <div class="pfcs">${card('MYM')}${card('OF')}${extra.map(card).join('')}</div>
       <div class="gantt">
         <div class="g-row g-axis"><div class="g-name"></div><div class="g-track">${ticks.map(t => `<span class="g-tick" style="left:${t / 24 * 100}%">${t}h</span>`).join('')}</div></div>
+        ${dspActive() ? `<div class="g-row g-dsprow"><div class="g-name">🎯 Dispatch</div><div class="g-track">${[0, 1, 2, 3].map(sl => { const h = dspHour(sl), date = addDaysIso(planUI.week || thisMonday(), d);
+          return `<div class="g-dspm${h >= 20 ? ' r' : h <= 4 ? ' l' : ''}" style="left:${h / 24 * 100}%"><b>${h}h</b>${DSP_PF.map(([pf]) => { const w = dspWho(pf, sl, date); return `<span style="--pc:${pf === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}"><i></i>${pf === 'of' ? 'OF' : 'MYM'} ${w.sup ? esc(w.sup.name) : '<em>personne</em>'}${w.kind !== 'ref' && w.sup ? ' <small>(remplace)</small>' : ''}</span>`; }).join('')}</div>`; }).join('')}</div></div>` : ''}
         ${groups.map(g => `<div class="g-sec" style="--pc:${pfOf(g.k).color}"><span>${pfOf(g.k).label}</span><small>${g.rows.length}</small></div>${g.rows.map(ganttRow).join('')}`).join('')}
         <div class="g-sec" style="--pc:#71717a"><span>Présents par heure</span></div>
         ${covRow('MYM', pM, SUP_PF.MYM.color)}${covRow('OnlyFans', pO, SUP_PF.OF.color)}${covRow('Total', all, 'var(--muted)', allWho)}
