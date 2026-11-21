@@ -689,6 +689,7 @@ table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:point
 .g-dline{position:absolute;top:-3px;bottom:-3px;width:0;border-left:2px dashed rgba(167,139,250,.55);z-index:1}
 .g-dspb{position:absolute;top:50%;transform:translate(4px,-50%);z-index:2;font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:99px;background:#1e1b2e;border:1.5px solid var(--pc);white-space:nowrap}.g-dspb.r{transform:translate(calc(-100% - 4px),-50%)}
 .pfc-dsp{display:flex;flex-wrap:wrap;gap:4px 10px;margin:6px 0 4px;font-size:12px;color:var(--muted)}.pfc-dsp b{color:var(--text,#fff)}
+.pe-scope{margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(250,204,21,.07);border:1px solid rgba(250,204,21,.4);display:flex;flex-direction:column;gap:4px}.pe-scope-h{font-size:13px;font-weight:800}
 .offsh{display:flex;gap:3px}.offsh button{font:inherit;font-size:11px;font-weight:700;padding:3px 6px;border-radius:7px;border:1px solid var(--line-soft);background:var(--bg);color:var(--faint);cursor:pointer;white-space:nowrap}
 .offsh button.on{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.6);color:#e0f2fe}.offsh.none button{border-style:dashed}
 .fx-plan{margin:14px 0 4px;display:flex;flex-direction:column;gap:10px}
@@ -4977,6 +4978,12 @@ function editCell(wk, key) {
   const orig = new Set(list.flatMap(e => [e.n, ...(e.r ? e.r.split('/') : [])]).map(n => rosterKey(String(n).trim())));
   let err = '';
   const lock = cellLock(wk, d, s, mid), LK = lock ? 'disabled' : '';
+  // Portée des ajouts / retraits : ce jour, toute la semaine (même shift, même modèle) ou aussi les semaines suivantes déjà préparées
+  const orig0 = list.map(e => e.n), keyset = a => new Set(a.map(n => rosterKey(n)));
+  let scope = planUI.peScope || 'day';
+  const diff = () => { const o = keyset(orig0), nw = keyset(list.map(e => e.n));
+    return {added: list.map(e => e.n).filter(n => !o.has(rosterKey(n))), removed: orig0.filter(n => !nw.has(rosterKey(n)))}; };
+  const nextWeeks = () => Object.keys(planState.weeks).filter(w => w > wk).sort();
   // Modèles de la semaine sans cette case (pour savoir si ce placement ajoute une modèle) et habitudes des 4 dernières semaines
   const ck = m && !m.backup ? creatorKey(m.name) : null, date = addDaysIso(wk, +d);
   const WC0 = (() => { const saved = W.cells[key]; delete W.cells[key]; const r = weekCreators(wk); if (saved) W.cells[key] = saved; return r; })();
@@ -5018,6 +5025,13 @@ function editCell(wk, key) {
             : '<p class="hint" style="margin:4px 0 0;font-size:12.5px">Personne de disponible avec ce shift coché dans « Jours OFF / Base chatters ».</p>'}</div>`; })()}
       ${err ? `<div class="pe-err" role="alert">${err}</div>` : ''}
       <div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="pe-add" list="pl-names" placeholder="${baseOn() ? 'Tapez les premières lettres du prénom (base chatters)' : 'Ajouter un ou plusieurs chatters (séparés par /)'}" style="flex:1" ${LK}><button class="btn" id="pe-addb" type="button" ${LK}>Ajouter</button></div>
+      ${(() => { const df = diff(); if (!df.added.length && !df.removed.length) return '';
+        const nw = nextWeeks().length, what = [df.added.length ? `ajout de ${df.added.map(esc).join(', ')}` : '', df.removed.length ? `retrait de ${df.removed.map(esc).join(', ')}` : ''].filter(Boolean).join(' · ');
+        return `<div class="pe-scope"><div class="pe-scope-h">Appliquer ce changement (${what}) :</div>
+          <label class="check"><input type="radio" name="pe-sc" value="day" ${scope === 'day' ? 'checked' : ''}> Seulement le ${esc(PLAN_DAYS_LONG[d].toLowerCase())}</label>
+          <label class="check"><input type="radio" name="pe-sc" value="week" ${scope === 'week' ? 'checked' : ''}> Tous les jours de cette semaine, sur ce shift et cette modèle</label>
+          <label class="check"><input type="radio" name="pe-sc" value="next" ${scope === 'next' ? 'checked' : ''} ${nw ? '' : 'disabled'}> Cette semaine et ${nw === 1 ? 'la semaine suivante déjà préparée' : nw ? `les ${nw} semaines suivantes déjà préparées` : 'les suivantes (aucune n’est encore préparée)'}</label>
+          <p class="hint" style="margin:4px 0 0;font-size:12px">Un chatter ajouté n’est pas placé sur ses jours OFF ni sur un jour où il a demandé une absence.</p></div>`; })()}
       <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer</button></div></div>`;
     bg.querySelector('#pe-add').focus();
   };
@@ -5034,7 +5048,7 @@ function editCell(wk, key) {
   const newFlags = {};
   draw();
   bg.addEventListener('keydown', e => { if (e.key === 'Escape') bg.remove(); if (e.key === 'Enter' && e.target.id === 'pe-add') { e.preventDefault(); add(); } });
-  bg.addEventListener('change', e => { const t = e.target; if (t.dataset.new != null) newFlags[normName(list[+t.dataset.new].n)] = {name: list[+t.dataset.new].n, on: t.checked}; });
+  bg.addEventListener('change', e => { const t = e.target; if (t.name === 'pe-sc') { scope = t.value; planUI.peScope = scope; return; } if (t.dataset.new != null) newFlags[normName(list[+t.dataset.new].n)] = {name: list[+t.dataset.new].n, on: t.checked}; });
   bg.addEventListener('click', e => {
     if (e.target === bg) { bg.remove(); return; }
     if (e.target.id === 'pe-addb') { add(); return; }
@@ -5050,8 +5064,20 @@ function editCell(wk, key) {
         if (bad.length) { err = notInBaseMsg(bad); draw(); return; } }
       const clean = list.map(e => { const o = {n: e.n}; if (e.a) o.a = 1; if (e.c) o.c = 1; if (e.l) o.l = 1; if (e.rf) o.rf = 1; if (e.r) o.r = e.r; return o; });
       if (clean.length) W.cells[key] = clean; else delete W.cells[key];
+      // Même changement sur les autres jours de la semaine (et les semaines suivantes déjà préparées)
+      const df = diff(); let nAdd = 0, nDel = 0;
+      if (scope !== 'day' && (df.added.length || df.removed.length)) {
+        const remK = keyset(df.removed), weeks = scope === 'next' ? [wk, ...nextWeeks()] : [wk];
+        for (const w of weeks) { const Wk = planState.weeks[w]; if (!Wk) continue;
+          for (let dd = 0; dd < 7; dd++) { if (w === wk && dd === +d) continue;
+            const date = addDaysIso(w, dd); if (m && !m.backup && !modelActiveOn(m, date)) continue;
+            const ck2 = cellKey(dd, s, mid); let l2 = (Wk.cells[ck2] || []).slice(); const before = l2.length;
+            if (remK.size) { l2 = l2.filter(e => !remK.has(rosterKey(e.n))); nDel += before - l2.length; }
+            for (const n of df.added) { if (offOn(n, dd) || absReqFor(n, date, +s) || l2.some(e => rosterKey(e.n) === rosterKey(n))) continue; l2.push({n}); nAdd++; }
+            if (l2.length) Wk.cells[ck2] = l2; else delete Wk.cells[ck2]; } } }
       for (const [k, f] of Object.entries(newFlags)) { if (f.on) planState.chatters[k] = {...(planState.chatters[k] || {}), name: f.name, isNew: true}; else if (planState.chatters[k]) planState.chatters[k].isNew = false; }
       savePlan(); render();
+      if (nAdd || nDel) toast(`Appliqué aussi sur ${[nAdd ? plural(nAdd, 'autre case (ajout)', 'autres cases (ajout)') : '', nDel ? plural(nDel, 'autre case (retrait)', 'autres cases (retrait)') : ''].filter(Boolean).join(' et ')}${scope === 'next' ? ', semaines suivantes comprises' : ''}.`);
     }
     bg.remove();
   });
