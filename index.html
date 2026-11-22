@@ -3121,16 +3121,26 @@ function bindPeriodBar(main, pid) {
 }
 
 /* ---------- ASV moyen OnlyFans et MYM sur la période choisie (suit la barre de période) ---------- */
+// ASV de l'équipe = CA total ÷ nouveaux abonnés totaux, en additionnant toutes les saisies de la période (mêmes saisies retenues
+// que pour l'ASV de chaque modèle : une saisie incluse dans une plus longue n'est pas comptée deux fois). Une saisie faite seulement
+// en ASV compte pour ASV × abonnés ; une saisie sans nombre d'abonnés ne peut pas être pondérée et reste de côté.
+// Aucune saisie avec abonnés sur la période : moyenne simple des ASV des modèles, faute de quoi pondérer.
+function asvTeam(pid, start, end, rows) {
+  const E = entriesOf(pid); let F = 0, R = 0, nE = 0, nAll = 0;
+  for (const m of modelsOf(pid)) {
+    const c = E.filter(e => e.modelId === m.id && e.start >= start && e.end <= end);
+    const kept = c.filter(e => !c.some(o => o !== e && o.start <= e.start && o.end >= e.end && (o.start !== e.start || o.end !== e.end)));
+    for (const e of kept) { nAll++; const rev = ASVE.entryRevenue(e), a = ASVE.entryASV(e);
+      if (e.fans > 0 && (rev != null || a != null)) { F += e.fans; R += rev != null ? rev : a * e.fans; nE++; } }
+  }
+  const vals = rows.filter(x => x && x.asv != null), mean = vals.length ? vals.reduce((a, x) => a + x.asv, 0) / vals.length : null;
+  return {asv: F > 0 ? R / F : mean, weighted: F > 0, mean, n: vals.length, nE, nAll, fans: F, revenue: R};
+}
 function asvRangeStats(pid, start, end) {
   const E = entriesOf(pid);
-  let f = 0, rv = 0, n = 0; const vals = [];
-  for (const m of modelsOf(pid)) {
-    const a = ASVE.aggregate(E, m.id, start, end); if (!a || a.asv == null) continue;
-    n++; vals.push(a.asv); if (a.fans > 0 && a.revenue != null) { f += a.fans; rv += a.revenue; }
-  }
+  const T = asvTeam(pid, start, end, modelsOf(pid).map(m => ASVE.aggregate(E, m.id, start, end)));
   const upTo = E.filter(e => e.start >= start && e.end <= end).reduce((x, e) => e.end > x ? e.end : x, '');
-  const mean = n ? vals.reduce((a, x) => a + x, 0) / n : null;
-  return n ? {n, asv: f > 0 ? rv / f : mean, weighted: f > 0, mean, upTo} : null;
+  return T.n ? {n: T.n, nE: T.nE, nAll: T.nAll, asv: T.asv, weighted: T.weighted, mean: T.mean, upTo} : null;
 }
 function asvLiveHTML(curPid, r) {
   if (!r) return '';
@@ -3142,7 +3152,7 @@ function asvLiveHTML(curPid, r) {
       <div class="live-h">${pbadge(P)}<span>ASV moyen ${P.name}</span><em>${esc(lbl)}${open ? ' · en cours' : ''}</em></div>
       ${cur ? `<div class="live-v">${fa(pid, cur.asv)}</div>
         <div class="live-s">${deltaBadge(d)} <span class="muted">vs ${esc(plbl)}${prev ? ` (${fa(pid, prev.asv)})` : ''}</span></div>
-        <div class="live-f muted">${cur.weighted ? 'Pondéré par les nouveaux fans' : 'Moyenne des modèles'} · ${plural(cur.n, 'modèle', 'modèles')} · chiffres jusqu’au ${esc(fmtDayFr(cur.upTo))}${cur.weighted ? ` · moyenne simple ${fa(pid, cur.mean)}` : ''}</div>`
+        <div class="live-f muted">${cur.weighted ? `CA total ÷ nouveaux fans${cur.nE < cur.nAll ? ` (${cur.nAll - cur.nE} saisie${cur.nAll - cur.nE > 1 ? 's' : ''} sans fans écartée${cur.nAll - cur.nE > 1 ? 's' : ''})` : ''}` : 'Moyenne des modèles (aucun nombre de fans connu)'} · ${plural(cur.n, 'modèle', 'modèles')} · chiffres jusqu’au ${esc(fmtDayFr(cur.upTo))}${cur.weighted ? ` · moyenne simple ${fa(pid, cur.mean)}` : ''}</div>`
       : `<div class="live-v muted" style="font-size:20px">Pas de chiffres sur cette période</div><div class="live-f muted">${prev ? `${esc(plbl)} : ${fa(pid, prev.asv)}` : 'Importez les chiffres dans « Saisie & import ».'}</div>`}
     </a>`;
   };
@@ -3210,8 +3220,7 @@ function asvDashboard(P, r) {
   const withFans = rows.filter(x => x.fans != null), withRev = rows.filter(x => x.revenue != null);
   const tf = withFans.length === rows.length ? withFans.reduce((a, x) => a + x.fans, 0) : null;
   const tr = withRev.length === rows.length ? withRev.reduce((a, x) => a + x.revenue, 0) : null;
-  const weighted = tf > 0 && rows.every(x => x.fans != null && x.asv != null) ? rows.reduce((a, x) => a + x.asv * x.fans, 0) / tf : null;
-  const avg = rows.filter(x => x.asv != null).reduce((a, x, _, arr) => a + x.asv / arr.length, 0);
+  const team = asvTeam(P.id, r.start, r.end, rows), weighted = team.weighted ? team.asv : null, avg = team.mean;
   const bestSub = best ? [best.revenue != null ? `${fa(P.id, best.revenue, 0)} de CA net` : null, best.fans != null ? `${fint(best.fans)} nouveaux fans` : null].filter(Boolean).join(' · ') : '';
   const sF = rows.some(x => x.fans != null), sR = rows.some(x => x.revenue != null);
   const table = `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th class="num">#</th><th>Modèle</th>${sF ? '<th class="num">Nouveaux fans</th>' : ''}${sR ? '<th class="num">CA net</th>' : ''}<th class="num">ASV</th><th>Objectif</th><th>Évolution</th></tr></thead><tbody>
@@ -3236,7 +3245,7 @@ function asvDashboard(P, r) {
       <label class="check"><input type="checkbox" id="asv-all" ${asvUI.allLines[P.id] ? 'checked' : ''}> Afficher tous les modèles</label></div>
       <div class="chart-box tall" id="asv-lines-box"><canvas id="asv-lines"></canvas></div></section>
     <section class="nstats">
-      <div class="nc"><div class="k">${weighted != null ? `ASV de l'équipe` : 'ASV moyen'}</div><div class="v">${fa(P.id, weighted ?? avg)}</div><div class="muted" style="font-size:12px;margin-top:4px">${weighted != null ? 'pondéré par les nouveaux fans' : 'moyenne des modèles'}</div></div>
+      <div class="nc"><div class="k">${weighted != null ? `ASV de l'équipe` : 'ASV moyen'}</div><div class="v">${fa(P.id, weighted ?? avg)}</div><div class="muted" style="font-size:12px;margin-top:4px">${weighted != null ? `CA total ÷ nouveaux fans${team.nE < team.nAll ? ` · ${team.nAll - team.nE} saisie${team.nAll - team.nE > 1 ? 's' : ''} sans fans écartée${team.nAll - team.nE > 1 ? 's' : ''}` : ''} · moyenne simple ${fa(P.id, avg)}` : 'moyenne des modèles (aucun nombre de fans connu)'}</div></div>
       ${tf != null ? `<div class="nc"><div class="k">Nouveaux fans</div><div class="v">${fint(tf)}</div></div>` : ''}
       ${tr != null ? `<div class="nc"><div class="k">CA net</div><div class="v">${fa(P.id, tr, 0)}</div></div>` : ''}
       <div class="nc"><div class="k">Modèles classées</div><div class="v">${n}<span class="muted" style="font-size:14px"> / ${modelsOf(P.id).length}</span></div></div>
