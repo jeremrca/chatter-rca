@@ -7597,7 +7597,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611233;
+  const APP_BUILD = 202611241;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
@@ -7785,9 +7785,19 @@ const Sync = (() => {
     try {
       if (session.expires_at - Date.now() < 60000) await refresh();
       if (await refreshRoles()) changed = true;
-      const rows = await api('/rest/v1/app_state?select=key,data,version,updated_by');
+      // Économie de bande passante : on ne télécharge que les données qui ont changé (le planning pèse ~450 Ko).
+      let need = null;
+      if (!first) {
+        const vers = await api('/rest/v1/app_state?select=key,version') || [];
+        if (KEYS.every(k => vers.some(x => x.key === k))) {
+          need = KEYS.filter(k => { const r = vers.find(x => x.key === k), known = meta.version[k];
+            return known === undefined || r.version > known || !checked.has(k) || k === 'plancfg'; });
+        }
+      }
+      const rows = need && !need.length ? [] : await api('/rest/v1/app_state?select=key,data,version,updated_by' + (need ? `&key=in.(${need.join(',')})` : ''));
       let legacyAsvCfg = null; noCfgRow = false;
       for (const key of KEYS) {
+        if (need && !need.includes(key)) continue;
         const row = (rows || []).find(x => x.key === key);
         if (!row && OPTIONAL.has(key)) { missing.add(key); continue; }
         if (row) missing.delete(key);
@@ -7844,10 +7854,11 @@ const Sync = (() => {
     if (outdated) return;   // version périmée : les modifications restent gardées ici et partiront après le rechargement
     if (STAMP[key]) STAMP[key]()._app = APP_BUILD;
     const local = getData(key), v = meta.version[key] ?? 0;
-    const rows = await api(`/rest/v1/app_state?key=eq.${key}&version=eq.${v}`, {method: 'PATCH', headers: {Prefer: 'return=representation'},
+    const rows = await api(`/rest/v1/app_state?key=eq.${key}&version=eq.${v}&select=key,version`, {method: 'PATCH', headers: {Prefer: 'return=representation'},
       body: JSON.stringify({data: local, version: v + 1, updated_at: new Date().toISOString(), updated_by: session.email || null})});
     if (Array.isArray(rows) && rows.length) {
       meta.version[key] = v + 1; meta.base[key] = local;
+      rtSend('broadcast', {type: 'broadcast', event: 'changed', payload: {key, version: v + 1}});   // signal léger aux autres onglets
       if (same(getData(key), local)) dirty.delete(key);
       saveMeta(); return;
     }
@@ -7880,7 +7891,8 @@ const Sync = (() => {
     rtStop(); const c = cfg(); if (!c || !session || !('WebSocket' in window)) return;
     try { ws = new WebSocket(`${c.url.replace(/^http/, 'ws')}/realtime/v1/websocket?apikey=${encodeURIComponent(c.anonKey)}&vsn=1.0.0`); } catch (e) { ws = null; return; }
     ws.onopen = () => {
-      rtSend('phx_join', {config: {broadcast: {self: false}, presence: {key: ''}, postgres_changes: [{event: '*', schema: 'public', table: 'app_state'}]}, access_token: session.access_token});
+      // Signal léger (clé + version) au lieu de « postgres_changes », qui envoyait toute la ligne (jusqu'à 450 Ko) à chaque onglet.
+      rtSend('phx_join', {config: {broadcast: {self: false}, presence: {key: ''}, postgres_changes: []}, access_token: session.access_token});
       wsHb = setInterval(() => rtSend('heartbeat', {}, 'phoenix'), 25000);
     };
     ws.onmessage = ev => {
@@ -7888,9 +7900,10 @@ const Sync = (() => {
       if (m.topic !== RT_TOPIC) return;
       if (m.event === 'phx_reply' && m.payload && m.payload.status === 'ok') { if (!wsLive) { wsLive = true; wsRetry = 0; drawStatus(); } }
       else if (m.event === 'phx_reply' && m.payload && m.payload.status === 'error') { wsLive = false; drawStatus(); }
-      if (m.event === 'postgres_changes') {
-        const rec = m.payload && m.payload.data && (m.payload.data.record || m.payload.data.new);
-        if (!rec || rec.version == null || rec.version > (meta.version[rec.key] ?? -1)) schedulePull();
+      if (m.event === 'broadcast' && m.payload && m.payload.event === 'changed') {
+        const rec = m.payload.payload || {};
+        if (document.visibilityState === 'hidden') return;   // onglet en arrière-plan : mise à jour au retour sur l'onglet
+        if (rec.version == null || rec.version > (meta.version[rec.key] ?? -1)) schedulePull();
       }
     };
     ws.onclose = () => {
@@ -7902,8 +7915,9 @@ const Sync = (() => {
   function rtStop() { if (ws) { ws.onclose = null; try { ws.close(); } catch (e) {} } ws = null; wsLive = false; clearInterval(wsHb); }
   async function poll() {
     if (!connected() || busy) return;
-    // En direct : un contrôle de secours toutes les 30 s. Sinon toutes les 5 s (onglet visible) ou 30 s (arrière-plan).
-    const every = wsLive || document.visibilityState === 'hidden' ? 30000 : 5000;
+    if (document.visibilityState === 'hidden') return;   // arrière-plan : rien n'est téléchargé, contrôle au retour sur l'onglet
+    // En direct : un contrôle de secours toutes les 30 s. Sinon toutes les 5 s.
+    const every = wsLive ? 30000 : 5000;
     if (Date.now() - lastPollAt < every - 200) return;
     lastPollAt = Date.now();
     try {
