@@ -6763,7 +6763,7 @@ function fxCardHTML(d, editable) {
     <div class="fx-top"><div class="fx-ava">${esc(fxInit(d.name))}</div>
       <div style="min-width:0"><div class="fx-nm">${esc(d.name)}</div>
         <div class="fx-sub">${d.both.length > 1 ? `<span class="fx-pill" style="--pc:${SUP_PF.MYM.color}">MYM</span><span class="fx-pill" style="--pc:${SUP_PF.OF.color}">OF</span>` : `<span class="fx-pill">${d.pid === 'of' ? 'OF' : 'MYM'}</span>`}${first ? `Chez Redes ${fxSeniority(first, fs.bound)}` : 'Pas encore au planning'}${sup ? ` · suivi par ${esc(sup.name)}` : ''}</div>
-        ${d.weak ? `<div class="fx-weak">Maillon faible cette semaine${wsup ? ` · avec ${esc(wsup.name)}` : ''}</div>` : frActive()[d.k] ? `<div class="fx-weak new">Suivi français · avec ${esc((frList().find(f => f.id === frActive()[d.k].sup) || {}).name || '')}</div>` : d.isNew ? '<div class="fx-weak new">Nouveau chatter</div>' : ''}</div>
+        ${d.weak ? `<div class="fx-weak">Maillon faible cette semaine${wsup ? ` · avec ${esc(wsup.name)}` : frActive()[d.k] ? ` · avec ${esc((frList().find(f => f.id === frActive()[d.k].sup) || {}).name || '')} (sub français)` : ''}</div>` : frActive()[d.k] ? `<div class="fx-weak new">Suivi français · avec ${esc((frList().find(f => f.id === frActive()[d.k].sup) || {}).name || '')}</div>` : d.isNew ? '<div class="fx-weak new">Nouveau chatter</div>' : ''}</div>
       <div class="fx-grade">${M ? `<b>${esc(M.r.grade)}</b><span>${M.rank}e / ${M.of}</span>` : '<b class="muted">—</b><span>pas sur cette période</span>'}</div></div>
     ${fxPlanHTML(d)}
     ${ranges.length ? `<div class="fx-per">${ranges.map(x => `<button type="button" class="${x === rg ? 'on' : ''}" data-fper="${x.id}">${esc(x.label)}</button>`).join('')}</div>` : ''}
@@ -6866,7 +6866,7 @@ function fxOpen(k) { coachUI.mode = 'global'; coachUI.gtab = 'fiches'; coachUI.f
    coachState.fr = {items: {[clé]: {sup, name, slot, since, until, why, pid}}, draft: {...même forme} | null, hist: [...]}
    Feedbacks : coachState.fb[semaine][clé|fr|jour]
    ===================================================================== */
-const FR_WEEKS = 4, FR_MAX = 6, FR_FB = 2;
+const FR_WEEKS = 4, FR_MAX = 6, FR_FB = 2, FR_WEAK_MAX = 2;   // FR_WEAK_MAX : maillons faibles sans superviseur pris en renfort, en plus des 6 places
 // Créneaux du planning : 0 = 04-10, 1 = 10-16, 2 = 16-22, 3 = 22-04
 const FR_RULES = {'fr-carel': {slots: [1, 2, 3], cap: {1: 3}}, 'fr-iliane': {slots: [2, 3]}, 'fr-kenzo': {slots: [2, 3]}};
 const frRule = id => FR_RULES[id] || {slots: [2, 3]};
@@ -6881,11 +6881,19 @@ function frActive(wk = glWeekNow()) {
   if (moved && glCanSync()) saveCoach();
   return S.items;
 }
+// Maillons faibles de la semaine restés sans superviseur et pas encore confiés à un sub français
+const frOrphans = (wk = glWeekNow()) => { const act = frActive(wk); return Object.entries(glWeakByGlobal(wk)).filter(([k, it]) => !it.sup && !act[k]); };
 // Proposition : pour chaque sub français, des chatters de ses modèles sur ses créneaux, au profil « à potentiel »
 function frPropose() {
   const ctx = glContext(), X = fxIndex(), act = frActive(), weak = glWeakByGlobal(glWeekNow()), out = {}, taken = new Set(Object.keys(act));
   const wk = glWeekNow(), until = addDaysIso(wk, 7 * (FR_WEEKS - 1));
   const cands = [];
+  // Maillons faibles de la semaine restés sans superviseur : pris en priorité, pour cette semaine seulement, en plus des ${FR_MAX} places
+  for (const [k, it] of Object.entries(weak)) {
+    if (it.sup || taken.has(k)) continue;
+    const name = (coachGlobal()[k] || {}).name || it.plan || it.name, sh = ctx.sh(k); if (!sh.length) continue;
+    cands.push({k, name, sh, w: 100, weak: true, why: 'Maillon faible sans superviseur cette semaine', pid: it.pid === 'mym' ? 'mym' : 'of'});
+  }
   for (const [k, name] of ctx.team) {
     if (taken.has(k) || weak[k] || isFlaggedNew(name)) continue;
     const sh = ctx.sh(k); if (!sh.length) continue;
@@ -6900,7 +6908,7 @@ function frPropose() {
   }
   cands.sort((a, b) => b.w - a.w);
   const sups = frList().filter(f => FR_RULES[f.id] || f.models);
-  const load = Object.fromEntries(sups.map(f => [f.id, Object.values(act).filter(it => it.sup === f.id).length]));
+  const load = Object.fromEntries(sups.map(f => [f.id, Object.values(act).filter(it => it.sup === f.id && !it.weak).length]));
   const loadSlot = Object.fromEntries(sups.map(f => [f.id, {}])); for (const it of Object.values(act)) if (loadSlot[it.sup]) loadSlot[it.sup][it.slot] = (loadSlot[it.sup][it.slot] || 0) + 1;
   // Créneau d'un candidat pour un sub français : celui où il fait le plus de shifts sur ses modèles
   const slotFor = (c, f) => { const R = frRule(f.id), mods = f.models || {}, n = {};
@@ -6908,10 +6916,21 @@ function frPropose() {
     const ok = Object.entries(n).filter(([s]) => !R.cap || R.cap[s] == null || (loadSlot[f.id][s] || 0) < R.cap[s]).sort((a, b) => b[1] - a[1] || (loadSlot[f.id][a[0]] || 0) - (loadSlot[f.id][b[0]] || 0));
     return ok.length ? {slot: +ok[0][0], n: ok[0][1]} : null; };
   // Les subs qui ont le moins de candidats choisissent en premier ; on alterne les créneaux pour équilibrer
+  // 1) Maillons faibles sans superviseur : au sub français le moins chargé en renforts qui a ses modèles sur ce créneau
+  const extra = Object.fromEntries(sups.map(f => [f.id, Object.values(act).filter(it => it.sup === f.id && it.weak).length]));
+  for (const c of cands.filter(c => c.weak)) {
+    const opts = sups.map(f => ({f, s: slotFor(c, f)})).filter(x => x.s && extra[x.f.id] < FR_WEAK_MAX)
+      .sort((a, b) => extra[a.f.id] - extra[b.f.id] || b.s.n - a.s.n || load[a.f.id] - load[b.f.id]);
+    if (!opts.length) continue;
+    const {f, s} = opts[0];
+    taken.add(c.k); extra[f.id]++; loadSlot[f.id][s.slot] = (loadSlot[f.id][s.slot] || 0) + 1;
+    out[c.k] = {sup: f.id, name: c.name, slot: s.slot, since: wk, until: wk, why: c.why, pid: c.pid, weak: true, start: isoOf(new Date())};
+  }
+  // 2) Chatters à potentiel, sur les places libres
   for (let round = 0; round < FR_MAX; round++) {
     for (const f of sups.slice().sort((a, b) => cands.filter(c => slotFor(c, a)).length - cands.filter(c => slotFor(c, b)).length)) {
       if (load[f.id] >= FR_MAX) continue;
-      const pick = cands.map(c => ({c, s: slotFor(c, f)})).filter(x => x.s && !taken.has(x.c.k))
+      const pick = cands.map(c => ({c, s: !c.weak && slotFor(c, f)})).filter(x => x.s && !taken.has(x.c.k))
         .sort((a, b) => (loadSlot[f.id][a.s.slot] || 0) - (loadSlot[f.id][b.s.slot] || 0) || b.c.w - a.c.w)[0];
       if (!pick) continue;
       taken.add(pick.c.k); load[f.id]++; loadSlot[f.id][pick.s.slot] = (loadSlot[f.id][pick.s.slot] || 0) + 1;
@@ -6925,7 +6944,8 @@ function frAgenda(wk, f) {
   const sw = glShiftWeek(wk), days = Array.from({length: 7}, () => []), none = [], weak = glWeakByGlobal(wk), mods = f.models || {};
   const load = Array(7).fill(0);
   for (const [k, it] of Object.entries(frActive(wk)).filter(([, it]) => it.sup === f.id).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'))) {
-    if (weak[k]) { none.push({k, name: it.name, why: 'maillon faible cette semaine : suivi par son superviseur maillon faible'}); continue; }
+    if (weak[k] && weak[k].sup) { none.push({k, name: it.name, why: 'maillon faible cette semaine : suivi par son superviseur maillon faible'}); continue; }
+    const nfb = weak[k] ? GL_WEAK_FB : FR_FB;   // maillon faible sans superviseur : le sub français fait ses ${GL_WEAK_FB} feedbacks
     let sh = glShifts(it.name, [sw]); const best = sh.filter(x => x.s === it.slot && mods[x.mid]); if (best.length) sh = best; else sh = sh.filter(x => x.s === it.slot).length ? sh.filter(x => x.s === it.slot) : sh;
     // Pas de feedback avant le jour où le suivi a commencé
     const from = [coachState.globalStart || '', it.start || ''].sort().pop();
@@ -6933,7 +6953,8 @@ function frAgenda(wk, f) {
     const byDay = new Map(); for (const x of sh.sort((a, b) => a.d - b.d)) if (!byDay.has(x.d)) byDay.set(x.d, x);
     let list = [...byDay.values()];
     if (!list.length) { none.push({k, name: it.name, why: it.start && addDaysIso(wk, 6) >= it.start && it.start > wk ? 'plus de shift d’ici dimanche : feedbacks dès la semaine prochaine' : 'pas de shift cette semaine'}); continue; }
-    if (list.length > FR_FB) { list.sort((a, b) => load[a.d] - load[b.d] || a.d - b.d); const first = list[0]; const far = list.filter(x => Math.abs(x.d - first.d) >= 2).sort((a, b) => load[a.d] - load[b.d])[0] || list[1]; list = [first, far].sort((a, b) => a.d - b.d); }
+    if (list.length > nfb && nfb >= 3) list = [...new Set([0, Math.floor((list.length - 1) / 2), list.length - 1])].map(i => list[i]);
+    else if (list.length > nfb) { list.sort((a, b) => load[a.d] - load[b.d] || a.d - b.d); const first = list[0]; const far = list.filter(x => Math.abs(x.d - first.d) >= 2).sort((a, b) => load[a.d] - load[b.d])[0] || list[1]; list = [first, far].sort((a, b) => a.d - b.d); }
     for (const x of list) { const m = allModels().find(mm => mm.id === x.mid);
       days[x.d].push({k, name: it.name, type: 'fr', d: x.d, fbk: `${k}|fr|${x.d}`, label: `${PLAN_SHIFTS[x.s].replace(/\s/g, '')}${m ? ` · ${modelLabel(m)}` : ''}`, g: x.g}); load[x.d]++; }
   }
@@ -6946,10 +6967,10 @@ function frCardHTML(f, wk, opts = {}) {
   const mods = Object.keys(f.models || {}).filter(frLive).map(id => planModelsMap()[id]).filter(Boolean);
   const R = frRule(f.id), slotTxt = R.slots.map(s => PLAN_SHIFTS[s].replace(/\s/g, '')).join(', ');
   return `<article class="frc">
-    <header><span class="frc-av">${esc(fxInit(f.name))}</span><div><strong>${esc(f.name)}</strong><div class="sub" style="margin:2px 0 0">${f.email ? '' : '<span class="rtag hot">compte non relié</span> '}${mods.map(m => `<span class="glpf" style="--pc:${m.group === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}">${esc(m.name)}</span>`).join('')}</div></div><span class="glcount">${act.length}/${FR_MAX}</span></header>
+    <header><span class="frc-av">${esc(fxInit(f.name))}</span><div><strong>${esc(f.name)}</strong><div class="sub" style="margin:2px 0 0">${f.email ? '' : '<span class="rtag hot">compte non relié</span> '}${mods.map(m => `<span class="glpf" style="--pc:${m.group === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}">${esc(m.name)}</span>`).join('')}</div></div><span class="glcount">${act.filter(([, it]) => !it.weak).length}/${FR_MAX}${act.some(([, it]) => it.weak) ? ` + ${act.filter(([, it]) => it.weak).length}` : ''}</span></header>
     <p class="sub" style="margin:6px 0 10px">Créneaux : ${slotTxt}${R.cap && R.cap[1] ? ` (10-16 : ${R.cap[1]} au plus)` : ''}${st ? ` · feedbacks ${st.done}/${st.n} cette semaine` : ''}</p>
     ${act.length ? act.sort((a, b) => a[1].slot - b[1].slot || a[1].name.localeCompare(b[1].name, 'fr')).map(([k, it]) => { const n = Math.min(FR_WEEKS, Math.round((parseDate(wk) - parseDate(it.since)) / (7 * 864e5)) + 1);
-      return `<div class="frc-it" style="--pc:${it.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}"><div class="frc-l"><button type="button" class="linkbtn frc-n" data-fxopen="${esc(k)}">${esc(it.name)}</button><span class="frc-slot">${PLAN_SHIFTS[it.slot].replace(/\s/g, '')}</span>${opts.items ? '' : `<span class="frc-wk">semaine ${n}/${FR_WEEKS}</span>`}${opts.edit ? `<button class="btn ghost small-btn" type="button" data-frrm="${esc(k)}" aria-label="Retirer ${esc(it.name)}" style="margin-left:auto">×</button>` : ''}</div><div class="frc-why">${esc(it.why)}</div></div>`; }).join('') : '<p class="hint" style="margin:0">Aucun chatter pour l’instant.</p>'}
+      return `<div class="frc-it" style="--pc:${it.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}"><div class="frc-l"><button type="button" class="linkbtn frc-n" data-fxopen="${esc(k)}">${esc(it.name)}</button><span class="frc-slot">${PLAN_SHIFTS[it.slot].replace(/\s/g, '')}</span>${it.weak ? '<span class="rtag hot">maillon faible · cette semaine</span>' : opts.items ? '' : `<span class="frc-wk">semaine ${n}/${FR_WEEKS}</span>`}${opts.edit ? `<button class="btn ghost small-btn" type="button" data-frrm="${esc(k)}" aria-label="Retirer ${esc(it.name)}" style="margin-left:auto">×</button>` : ''}</div><div class="frc-why">${esc(it.why)}</div></div>`; }).join('') : '<p class="hint" style="margin:0">Aucun chatter pour l’instant.</p>'}
   </article>`;
 }
 function frPageHTML(wk) {
@@ -6957,12 +6978,12 @@ function frPageHTML(wk) {
   const fl = frList().filter(f => FR_RULES[f.id] || Object.keys(f.models || {}).length);
   if (me && !dir) return frCalendarHTML(wk, me);
   const draft = S.draft && Object.keys(S.draft).length ? S.draft : null;
-  const free = fl.reduce((n, f) => n + Math.max(0, FR_MAX - Object.values(act).filter(it => it.sup === f.id).length), 0);
+  const free = fl.reduce((n, f) => n + Math.max(0, FR_MAX - Object.values(act).filter(it => it.sup === f.id && !it.weak).length), 0), orph = frOrphans(wk).length;
   return `<div class="stack">
     <section class="panel frhead"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Suivi français</h2>
-      ${dir && !draft && free ? `<button class="btn primary" type="button" id="fr-propose" style="margin-left:auto">Proposer des chatters (${free} place${free > 1 ? 's' : ''} libre${free > 1 ? 's' : ''})</button>` : ''}
-      ${dir ? `<select id="fr-cal" style="width:auto;${dir && !draft && free ? '' : 'margin-left:auto'}"><option value="">Voir le calendrier de…</option>${fl.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('')}</select>` : ''}</div>
-      <p class="hint" style="margin:8px 0 0">Carel, Iliane et Kenzo suivent chacun jusqu’à ${FR_MAX} chatters de leurs modèles pendant ${FR_WEEKS} semaines, avec ${FR_FB} feedbacks par semaine. Le site choisit des chatters à potentiel : ils vendent bien mais ont un unlock trop bas, sont souvent en retard ou sont en baisse. Pendant ce suivi, c’est le sub français qui fait leurs feedbacks, pas leur superviseur attitré.</p></section>
+      ${dir && !draft && (free || orph) ? `<button class="btn primary" type="button" id="fr-propose" style="margin-left:auto">Proposer des chatters (${[orph ? plural(orph, 'maillon faible sans superviseur', 'maillons faibles sans superviseur') : '', free ? `${free} place${free > 1 ? 's' : ''} libre${free > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ')})</button>` : ''}
+      ${dir ? `<select id="fr-cal" style="width:auto;${dir && !draft && (free || orph) ? '' : 'margin-left:auto'}"><option value="">Voir le calendrier de…</option>${fl.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('')}</select>` : ''}</div>
+      <p class="hint" style="margin:8px 0 0">Carel, Iliane et Kenzo suivent chacun jusqu’à ${FR_MAX} chatters de leurs modèles pendant ${FR_WEEKS} semaines, avec ${FR_FB} feedbacks par semaine. Le site choisit des chatters à potentiel : ils vendent bien mais ont un unlock trop bas, sont souvent en retard ou sont en baisse. Pendant ce suivi, c’est le sub français qui fait leurs feedbacks, pas leur superviseur attitré. Les maillons faibles restés sans superviseur passent en premier : le sub français qui a leurs modèles sur ses créneaux les prend pour la semaine (${GL_WEAK_FB} feedbacks, ${FR_WEAK_MAX} au plus en plus de ses ${FR_MAX} places).</p></section>
     ${draft ? `<section class="panel alert warn"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0;font-size:16px">Proposition · ${Object.keys(draft).length} chatters</h2><span class="hint" style="margin:0">Retirez ceux qui ne conviennent pas, puis validez.</span>
       <button class="btn ghost" type="button" id="fr-cancel" style="margin-left:auto">Annuler</button><button class="btn primary" type="button" id="fr-validate">Valider la proposition</button></div>
       <div class="frgrid" style="margin-top:12px">${fl.map(f => frCardHTML(f, wk, {items: draft, edit: true})).join('')}</div></section>` : ''}
@@ -7067,6 +7088,7 @@ function renderCoaching(main) {
   const supName = id => (sups.find(s => s.id === id) || {}).name || '';
   const loads = sups.map(s => ({s, n: items.filter(i => i.sup === s.id).length}));
   const unmatched = items.filter(i => !i.plan);
+  const frByWeak = {}; { const fa = frActive(wk), R = nameResolver(); for (const it of items) { const g = glKeyOfWeak(it.k, it, R); if (g && fa[g]) frByWeak[it.k] = (frList().find(f => f.id === fa[g].sup) || {}).name || 'sub français'; } }
   const rosterMap = coachRoster(wk), roster = [...rosterMap.values()].sort((a, b) => a.localeCompare(b, 'fr'));
   const byPid = pid => items.filter(i => i.pid === pid || (pid === 'of' && i.pid === 'both')).sort((a, b) => a.rank - b.rank);
   const row = it => {
@@ -7079,7 +7101,7 @@ function renderCoaching(main) {
       <td class="num">${it.ca != null ? moneyP(PLATFORMS[it.pid === 'both' ? 'of' : it.pid], it.ca) : '—'}</td>
       <td class="num">${it.plan ? it.shifts : '—'}</td>
       <td>${W.status === 'validated' && !Sync.canManage() && !Sync.canDirect() ? esc(supName(it.sup)) : `<select data-ksup="${esc(it.k)}" ${W.status === 'validated' ? '' : ''}><option value="">— non attribué —</option>${elig.map(s => `<option value="${s.id}" ${s.id === it.sup ? 'selected' : ''}>${esc(s.name)}${supFocus(s) ? ` (${supFocus(s)})` : ''} · ${loads.find(l => l.s.id === s.id).n}</option>`).join('')}</select>`}
-        <div class="sub" style="margin:2px 0 0">${esc(it.why || '')}</div></td></tr>`;
+        <div class="sub" style="margin:2px 0 0">${!it.sup && frByWeak[it.k] ? `<strong style="color:${FR_COLOR}">suivi par ${esc(frByWeak[it.k])} (sub français)</strong>` : esc(it.why || '')}</div></td></tr>`;
   };
   const tbl = pid => { const l = byPid(pid); return l.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table rank-table"><thead><tr><th class="num">#</th><th>Chatter</th><th>Plateforme</th><th class="num">Score 2 sem.</th><th class="num">CA</th><th class="num">Shifts</th><th>Superviseur</th></tr></thead><tbody>${l.map(row).join('')}</tbody></table></div>` : '<div class="empty" style="padding:20px">Aucun chatter.</div>'; };
   main.innerHTML = head + tabsD + `<div class="stack">
@@ -7436,7 +7458,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611211;
+  const APP_BUILD = 202611231;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
