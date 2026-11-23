@@ -6509,11 +6509,15 @@ function bindGlCalendar(main, wk) {
 function weekStepsHTML(wk, step) {
   const W = coachState.weeks[wk], ok = W && W.status === 'validated', adj = ok && W.globalAdj;
   const st = (n, l, sub, on, done) => `<button type="button" class="wkstep ${on ? 'on' : ''} ${done ? 'done' : ''}" data-wkstep="${n}"><b>${done ? '✓' : n}</b><span>${l}<small>${sub}</small></span></button>`;
-  return `<nav class="wksteps" aria-label="Liste de la semaine">${st(1, 'Maillons faibles', ok ? 'validés' : W ? 'à vérifier puis valider' : 'à préparer', step === 1, ok)}<span class="wkarr">→</span>${st(2, 'Suivi global', ok ? 'tous les autres chatters' : 'après validation de l’étape 1', step === 2, false)}</nav>
+  const frN = Object.keys(frActive(wk)).length;
+  return `<nav class="wksteps" aria-label="Liste de la semaine">${st(1, 'Maillons faibles', ok ? 'validés' : W ? 'à vérifier puis valider' : 'à préparer', step === 1, ok)}<span class="wkarr">→</span>${st(2, 'Suivi global', ok ? 'mis à jour sans les maillons faibles' : 'après validation de l’étape 1', step === 2, ok)}<span class="wkarr">→</span>${st(3, 'Suivi français', frN ? `${frN} chatters cette semaine` : ok ? 'liste à préparer' : 'après l’étape 1', step === 3, frN > 0)}</nav>
+    ${step === 1 && !ok ? `<p class="hint" style="margin:0 0 12px">Chaque lundi : ${W ? '' : '« Préparer la liste de la semaine », puis '}vérifiez la liste, retirez les erreurs avec la croix ×, puis « Valider les maillons faibles → suivi global ».</p>` : ''}
+    ${step === 2 && ok && !frN ? '<p class="hint" style="margin:0 0 12px">Suivi global à jour. Dernière étape : <button type="button" class="linkbtn" data-wkstep="3"><strong>③ Suivi français</strong></button>, « Préparer la liste », puis « Valider la proposition ».</p>' : ''}
+    ${step === 3 && !ok ? '<div class="alert warn" style="margin:0 0 12px">Étape 1 d’abord : validez les maillons faibles de la semaine, les subs français les prennent en priorité.</div>' : ''}
     ${step === 2 && !ok ? '<div class="alert warn" style="margin:0 0 12px">Étape 1 d’abord : validez les maillons faibles de la semaine (erreurs retirées et remplacées). Le suivi global se met ensuite à jour sans eux.</div>' : ''}
     ${step === 2 && adj ? `<div class="alert" style="margin:0 0 12px"><strong>Ajustement de la ${esc(planWeekLabel(wk).toLowerCase())}</strong> · chaque chatter garde son superviseur, sauf s’il n’a plus d’heures en commun avec lui. ${adj.add.length ? `Nouveaux : ${adj.add.map(esc).join(', ')}. ` : ''}${adj.rm.length ? `Départs : ${adj.rm.map(esc).join(', ')}. ` : ''}${adj.moved.length ? `Changés de superviseur : ${adj.moved.map(m => `${esc(m.name)} (${esc(m.from)} → ${esc(m.to)})`).join(', ')}.` : 'Aucun changement de superviseur.'}</div>` : ''}`;
 }
-function bindWeekSteps(main) { main.querySelectorAll('[data-wkstep]').forEach(b => b.addEventListener('click', () => { if (b.dataset.wkstep === '1') { coachUI.mode = 'weak'; coachUI.tab = 'list'; } else { coachUI.mode = 'global'; coachUI.gtab = 'board'; } render(); })); }
+function bindWeekSteps(main) { main.querySelectorAll('[data-wkstep]').forEach(b => b.addEventListener('click', () => { if (b.dataset.wkstep === '1') { coachUI.mode = 'weak'; coachUI.tab = 'list'; } else if (b.dataset.wkstep === '3') coachUI.mode = 'fr'; else { coachUI.mode = 'global'; coachUI.gtab = 'board'; } render(); window.scrollTo(0, 0); })); }
 // ---------- Vue « Tous les chatters » : la répartition par superviseur ----------
 function glBoardHTML(wk) { return (coachDir() ? weekStepsHTML(wk, 2) : '') + glBoardInner(wk); }
 function glBoardInner(wk) {
@@ -6932,7 +6936,7 @@ document.addEventListener('keydown', e => {
 function fxOpen(k) { coachUI.mode = 'global'; coachUI.gtab = 'fiches'; coachUI.fsel = k; coachUI.fq = ''; coachUI.fscope = 'all'; coachUI.fpf = ''; render(); window.scrollTo(0, 0); }
 
 /* =====================================================================
-   SUIVI FRANÇAIS — Carel, Iliane, Kenzo reçoivent chaque semaine des chatters de leurs modèles : maillons faibles d'abord, puis « à potentiel »
+   SUIVI FRANÇAIS — Carel, Iliane, Kenzo reçoivent chaque semaine des chatters de leurs modèles : maillons faibles d'abord, puis les plus faibles du classement (« à remonter »)
    coachState.fr = {items: {[clé]: {sup, name, slot, since, until, why, pid}}, draft: {...même forme} | null, hist: [...]}
    Feedbacks : coachState.fb[semaine][clé|fr|jour]
    ===================================================================== */
@@ -6956,7 +6960,7 @@ function frActive(wk = glWeekNow()) {
 // Maillons faibles de la semaine restés sans superviseur et pas encore confiés à un sub français
 const frOrphans = (wk = glWeekNow()) => { const act = frActive(wk); return Object.entries(glWeakByGlobal(wk)).filter(([k, it]) => !it.sup && !it.decision && !act[k]); };
 // Proposition de la semaine : d'abord les maillons faibles qui travaillent sur les modèles et créneaux d'un sub français
-// (ceux sans superviseur en premier, puis les autres, retirés à leur superviseur pour la semaine), puis des chatters « à potentiel » sur les places restantes
+// (ceux sans superviseur en premier, puis les autres, retirés à leur superviseur pour la semaine), puis les plus faibles du classement sur les places restantes
 function frPropose() {
   const ctx = glContext(), X = fxIndex(), act = frActive(), wk = glWeekNow(), weak = glWeakByGlobal(wk), out = {}, taken = new Set(Object.keys(act));
   const prevWk = addDaysIso(wk, -7), lastFr = {};
@@ -6968,17 +6972,15 @@ function frPropose() {
     cands.push({k, name, sh, weak: true, wkey: it.k, wsup: it.sup || '', w: (it.sup ? 100 : 200) + (it.streak || 1) - (it.rank || 0) / 100,
       why: `Maillon faible${it.sup ? '' : ' sans superviseur'} · ${it.rank === 1 ? '1er' : `${it.rank}e`} plus faible sur ${it.of}${it.streak > 1 ? ` · ${it.streak}e semaine dans la liste` : ''}`, pid: it.pid === 'mym' ? 'mym' : 'of'});
   }
+  // Places restantes : les plus faibles du classement (moitié basse), qui doivent remonter la pente ; le plus bas d'abord
   for (const [k, name] of ctx.team) {
-    if (taken.has(k) || weak[k] || lastFr[k] || isFlaggedNew(name)) continue;   // « à potentiel » : des chatters différents de la semaine passée
+    if (taken.has(k) || weak[k] || isFlaggedNew(name)) continue;
     const sh = ctx.sh(k); if (!sh.length) continue;
-    const d = fxData(k, name); if (!d.main) continue;
-    const pos = 1 - (d.main.rank - 1) / d.main.of, up = d.main.upct, late = d.lt.late + d.lt.abs;
-    let why = '', w = 0;
-    if (pos >= 0.5 && up != null && up < 0.35) { w = 3; why = `Vend bien (${d.main.rank}e / ${d.main.of}) mais ${d.pid === 'mym' ? 'conversion' : 'unlock'} trop bas (${nf(d.un, 0, 0)} %, agence ${nf(d.unAvg || 0, 0, 0)} %)`; }
-    else if (pos >= 0.4 && late >= 2) { w = 2.5; why = `Du potentiel (${d.main.rank}e / ${d.main.of}) mais ${late} retards / absences en 4 semaines`; }
-    else if (pos >= 0.4 && d.h.length >= 3 && d.trend < -5) { w = 2; why = `Bon chatter en baisse (${d.main.rank}e / ${d.main.of}, score en baisse)`; }
-    if (!w) continue;
-    cands.push({k, name, sh, w: w + pos, why, pid: d.pid});
+    const d = fxData(k, name); if (!d.main || !d.main.of) continue;
+    const pos = (d.main.rank - 1) / d.main.of;   // 0 = premier, proche de 1 = dernier
+    if (pos < 0.5) continue;
+    const pf = d.pid === 'mym' ? 'MYM' : 'OF';
+    cands.push({k, name, sh, w: 1 + pos, why: `À remonter au classement · ${d.main.rank}e / ${d.main.of} sur ${pf}`, pid: d.pid});
   }
   cands.sort((a, b) => b.w - a.w);
   const sups = frList().filter(f => FR_RULES[f.id] || f.models);
@@ -6997,12 +6999,12 @@ function frPropose() {
       .sort((a, b) => (b.f.id === lastFr[c.k]) - (a.f.id === lastFr[c.k]) || load[a.f.id] - load[b.f.id] || b.s.n - a.s.n);
     if (opts.length) give(c, opts[0].f, opts[0].s);
   }
-  // 2) Chatters à potentiel, sur les places libres ; les subs qui ont le moins de candidats choisissent en premier
+  // 2) Chatters à remonter (les plus faibles du classement), sur les places libres ; même sub français que la semaine passée si possible
   for (let round = 0; round < FR_MAX; round++) {
     for (const f of sups.slice().sort((a, b) => cands.filter(c => slotFor(c, a)).length - cands.filter(c => slotFor(c, b)).length)) {
       if (load[f.id] >= FR_MAX) continue;
       const pick = cands.map(c => ({c, s: !c.weak && slotFor(c, f)})).filter(x => x.s && !taken.has(x.c.k))
-        .sort((a, b) => (loadSlot[f.id][a.s.slot] || 0) - (loadSlot[f.id][b.s.slot] || 0) || b.c.w - a.c.w)[0];
+        .sort((a, b) => (b.c.w + (lastFr[b.c.k] === f.id ? 0.2 : 0)) - (a.c.w + (lastFr[a.c.k] === f.id ? 0.2 : 0)) || (loadSlot[f.id][a.s.slot] || 0) - (loadSlot[f.id][b.s.slot] || 0))[0];
       if (pick) give(pick.c, f, pick.s);
     }
   }
@@ -7042,7 +7044,7 @@ function frCardHTML(f, wk, opts = {}) {
     <header><span class="frc-av">${esc(fxInit(f.name))}</span><div><strong>${esc(f.name)}</strong><div class="sub" style="margin:2px 0 0">${f.email ? '' : '<span class="rtag hot">compte non relié</span> '}${mods.map(m => `<span class="glpf" style="--pc:${m.group === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}">${esc(m.name)}</span>`).join('')}</div></div><span class="glcount">${act.length}/${FR_MAX}</span></header>
     <p class="sub" style="margin:6px 0 10px">Créneaux : ${slotTxt}${R.cap && R.cap[1] ? ` (10-16 : ${R.cap[1]} au plus)` : ''}${st ? ` · feedbacks ${st.done}/${st.n} cette semaine` : ''}</p>
     ${act.length ? act.sort((a, b) => (b[1].weak ? 1 : 0) - (a[1].weak ? 1 : 0) || a[1].slot - b[1].slot || a[1].name.localeCompare(b[1].name, 'fr')).map(([k, it]) => {
-      return `<div class="frc-it" style="--pc:${it.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}"><div class="frc-l"><button type="button" class="linkbtn frc-n" data-fxopen="${esc(k)}">${esc(it.name)}</button><span class="frc-slot">${PLAN_SHIFTS[it.slot].replace(/\s/g, '')}</span>${it.weak ? '<span class="rtag hot">maillon faible</span>' : '<span class="frc-wk">à potentiel</span>'}${opts.edit ? `<button class="btn ghost small-btn" type="button" data-frrm="${esc(k)}" aria-label="Retirer ${esc(it.name)}" style="margin-left:auto">×</button>` : ''}</div><div class="frc-why">${esc(it.why)}</div></div>`; }).join('') : '<p class="hint" style="margin:0">Aucun chatter pour l’instant.</p>'}
+      return `<div class="frc-it" style="--pc:${it.pid === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}"><div class="frc-l"><button type="button" class="linkbtn frc-n" data-fxopen="${esc(k)}">${esc(it.name)}</button><span class="frc-slot">${PLAN_SHIFTS[it.slot].replace(/\s/g, '')}</span>${it.weak ? '<span class="rtag hot">maillon faible</span>' : '<span class="frc-wk">à remonter</span>'}${opts.edit ? `<button class="btn ghost small-btn" type="button" data-frrm="${esc(k)}" aria-label="Retirer ${esc(it.name)}" style="margin-left:auto">×</button>` : ''}</div><div class="frc-why">${esc(it.why)}</div></div>`; }).join('') : '<p class="hint" style="margin:0">Aucun chatter pour l’instant.</p>'}
   </article>`;
 }
 function frPageHTML(wk) {
@@ -7052,12 +7054,11 @@ function frPageHTML(wk) {
   const draft = S.draft && Object.keys(S.draft).length ? S.draft : null;
   const free = fl.reduce((n, f) => n + Math.max(0, FR_MAX - Object.values(act).filter(it => it.sup === f.id).length), 0), orph = frOrphans(wk).length, nAct = Object.keys(act).length;
   const Wk = coachState.weeks[wk], weakOk = Wk && Wk.status === 'validated';
-  return `<div class="stack">
+  return `${dir ? weekStepsHTML(wk, 3) : ''}<div class="stack">
     <section class="panel frhead"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Suivi français</h2>
       ${dir && !draft && free ? `<button class="btn primary" type="button" id="fr-propose" style="margin-left:auto">${nAct ? `Compléter la liste (${free} place${free > 1 ? 's' : ''} libre${free > 1 ? 's' : ''}${orph ? ` · ${plural(orph, 'maillon faible sans superviseur', 'maillons faibles sans superviseur')}` : ''})` : `Préparer la liste de la ${esc(planWeekLabel(wk).toLowerCase())}`}</button>` : ''}
       ${dir ? `<select id="fr-cal" style="width:auto;${dir && !draft && free ? '' : 'margin-left:auto'}"><option value="">Voir le calendrier de…</option>${fl.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('')}</select>` : ''}</div>
-      ${dir && !draft && !weakOk ? '<div class="alert warn" style="margin:10px 0 0">Validez d’abord la liste des maillons faibles de la semaine : les subs français la prennent en priorité.</div>' : ''}
-      <p class="hint" style="margin:8px 0 0">Chaque semaine, Carel, Iliane et Kenzo reçoivent jusqu’à ${FR_MAX} nouveaux chatters de leurs modèles, sur leurs créneaux. D’abord les maillons faibles de la semaine (ceux sans superviseur en premier ; les autres sont retirés à leur superviseur pour la semaine), avec ${GL_WEAK_FB} feedbacks et un verdict, comme chez les superviseurs. Les places restantes vont à des chatters à potentiel, différents de la semaine passée, avec ${FR_FB} feedbacks (verdict si besoin) : ils vendent bien mais ont un unlock trop bas, sont souvent en retard ou sont en baisse. Pendant la semaine, c’est le sub français qui fait leurs feedbacks, pas leur superviseur attitré.</p></section>
+      <p class="hint" style="margin:8px 0 0">Chaque semaine, Carel, Iliane et Kenzo reçoivent jusqu’à ${FR_MAX} nouveaux chatters de leurs modèles, sur leurs créneaux. D’abord les maillons faibles de la semaine (ceux sans superviseur en premier ; les autres sont retirés à leur superviseur pour la semaine), avec ${GL_WEAK_FB} feedbacks et un verdict, comme chez les superviseurs. Les places restantes (${FR_MAX} chatters au plus par sub français) vont aux plus faibles du classement (moitié basse, le plus bas d’abord), qui doivent remonter la pente, avec ${FR_FB} feedbacks (verdict si besoin). Pendant la semaine, c’est le sub français qui fait leurs feedbacks, pas leur superviseur attitré.</p></section>
     ${draft ? `<section class="panel alert warn"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0;font-size:16px">Proposition · ${Object.keys(draft).length} chatters</h2><span class="hint" style="margin:0">Retirez ceux qui ne conviennent pas, puis validez.</span>
       <button class="btn ghost" type="button" id="fr-cancel" style="margin-left:auto">Annuler</button><button class="btn primary" type="button" id="fr-validate">Valider la proposition</button></div>
       <div class="frgrid" style="margin-top:12px">${fl.map(f => frCardHTML(f, wk, {items: draft, edit: true})).join('')}</div></section>` : ''}
@@ -7118,7 +7119,7 @@ function bindFr(main, wk) {
     if (T.verdict && T.verdict.v === v) delete T.verdict;
     else {
       T.verdict = {v, reasons: v === 'stop' ? ((T.verdict && T.verdict.reasons) || []) : [], by: who(Sync.email()) || 'local', at: new Date().toISOString()};
-      const it = S.items[k] || {}; if (!it.weak) Object.assign(T, {name: it.name || k, fr: it.sup || '', pid: it.pid || ''});   // chatter « à potentiel » : de quoi l'afficher dans « Décisions »
+      const it = S.items[k] || {}; if (!it.weak) Object.assign(T, {name: it.name || k, fr: it.sup || '', pid: it.pid || ''});   // chatter « à remonter » : de quoi l'afficher dans « Décisions »
     }
     rr();
   }));
@@ -7184,7 +7185,7 @@ function renderCoaching(main) {
       <button class="btn ghost small-btn" id="kw-next" type="button" aria-label="Semaine suivante">›</button></div></div>`
     + coachAsHTML() + coachModeHTML(wk);
   const mode = coachUI.mode || (myFrReal() && !mySupReal() && !Sync.canDirect() ? 'fr' : 'global');
-  if (mode === 'fr') { main.innerHTML = head + frPageHTML(wk); bindCoachHead(wk); bindCoachMode(main); bindFr(main, wk); return; }
+  if (mode === 'fr') { main.innerHTML = head + frPageHTML(wk); bindCoachHead(wk); bindCoachMode(main); bindFr(main, wk); bindWeekSteps(main); return; }
   if (mode === 'global') { renderGlobal(main, wk, head); bindCoachMode(main); return; }
   setTimeout(() => bindCoachMode(main));
   if (!coachDir()) { main.innerHTML = head + coachSupView(wk); bindCoachHead(wk); bindCoachCards(main, wk); return; }
