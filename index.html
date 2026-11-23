@@ -582,6 +582,8 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .pcell:hover,.pcell:focus{background:var(--raised);outline:none}
 .pcell.empty .plus{color:var(--faint);font-size:16px;display:block;text-align:center;opacity:.5}
 .pcell.hit{background:rgba(234,179,8,.14);box-shadow:inset 0 0 0 2px #eab308}
+.wksteps{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}.wkstep{display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;cursor:pointer;text-align:left;font:inherit}.wkstep b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.08);font-size:13px}.wkstep span{display:flex;flex-direction:column;font-weight:700;font-size:14px}.wkstep small{font-weight:400;color:var(--muted,#94a3b8);font-size:12px}.wkstep.on{border-color:#f97316;box-shadow:0 0 0 1px #f97316 inset}.wkstep.done b{background:#45d08f;color:#04131d}.wkarr{color:var(--faint,#64748b)}
+.pcell .pc{cursor:pointer}.pcell .pc:hover{text-decoration:underline;text-underline-offset:2px}
 .pchip{display:block;font-size:12.5px;line-height:1.35;margin:1px 0}
 .pc{color:var(--text)}
 .pc.new{color:#60a5fa;font-weight:700}
@@ -4018,7 +4020,7 @@ function renderPlanning(main) {
         ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : dspAnyRef() ? `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>` : ''}
         ${dspAnyRef() ? '<button class="btn ghost" id="p-xls" type="button">Importer un Excel</button>' : ''}
       </div>
-      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="pc late">Prénom</span> retard</span><span><span class="offwrap"><span class="pc renf">Prénom</span><b class="rftag">RENFORT</b></span> renfort</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span><span class="mover"><span class="pc">Prénom</span><b>6</b></span> plus de ${MODEL_MAX} modèles cette semaine</span><span class="muted">Cliquez sur une case pour la modifier.</span></div>
+      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="pc late">Prénom</span> retard</span><span><span class="offwrap"><span class="pc renf">Prénom</span><b class="rftag">RENFORT</b></span> renfort</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span><span class="mover"><span class="pc">Prénom</span><b>6</b></span> plus de ${MODEL_MAX} modèles cette semaine</span><span class="muted">Cliquez sur un prénom pour lui faire un feedback, sur le reste de la case pour la modifier.</span></div>
     </section>
     ${q ? `<section class="panel"><h2>Planning de « ${esc(planUI.q)} » · ${esc(planWeekLabel(wk))}</h2>${found.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Jour</th><th>Shift</th><th>Modèle</th><th>Statut</th></tr></thead><tbody>${found.map(x => `<tr><td>${PLAN_DAYS_LONG[x.dd]} ${parseDate(addDaysIso(wk, x.dd)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</td><td>${PLAN_SHIFTS[x.s]}</td><td>${esc(modelLabel(x.m))}</td><td>${x.e.r ? `remplacé(e) par ${esc(x.e.r)}` : x.e.a ? '<span class="sc-lo">absent</span>' : x.e.c ? '<span class="pc cut">coupure de courant</span>' : x.e.l ? '<span class="pc late">retard</span>' : 'prévu'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Aucun shift trouvé cette semaine.</p>'}</section>` : ''}
     ${(() => {
@@ -4062,6 +4064,9 @@ function renderPlanning(main) {
   const qi = document.getElementById('p-q'); let qt;
   qi.addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => { planUI.q = qi.value; render(); const n = document.getElementById('p-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 300); });
   main.querySelectorAll('[data-cell]').forEach(td => { const open = () => editCell(wk, td.dataset.cell); td.addEventListener('click', open); td.addEventListener('keydown', e => { if (e.key === 'Enter') open(); }); });
+  // Clic sur le prénom d'un chatter : feedback (gardé dans sa fiche) ; la case reste modifiable depuis la fenêtre
+  main.querySelectorAll('[data-cell] .pc').forEach(sp => { sp.title = `${sp.title ? sp.title + ' · ' : ''}Cliquez pour lui faire un feedback`;
+    sp.addEventListener('click', e => { e.stopPropagation(); const key = sp.closest('[data-cell]').dataset.cell; planFeedback(wk, +key.split('|')[0], sp.textContent.trim(), key); }); });
   const nt = document.getElementById('p-note'); let ntt;
   nt.addEventListener('input', () => { clearTimeout(ntt); ntt = setTimeout(() => { W.notes ||= {}; if (nt.value.trim()) W.notes[d] = nt.value; else delete W.notes[d]; savePlan(); }, 600); });
   document.getElementById('p-next')?.addEventListener('click', async () => {
@@ -4979,6 +4984,41 @@ function bindPlanningHead(main, wk) {
 }
 
 /* ---------- Modifier une case ---------- */
+// Feedback depuis le planning : note « Feedback » dans la fiche du chatter ; si un feedback était prévu ce jour-là dans votre calendrier, il est coché
+function planFeedback(wk, d, name, cell) {
+  const R = nameResolver(), k = R.key(name), me = typeof mySup === 'function' ? mySup() : null, fr = typeof myFr === 'function' ? myFr() : null;
+  const same = n => { const x = R.key(n); return x === k || nearKey(x, k); };
+  let planned = null;
+  try {
+    if (me) { const it = glAgenda(wk, me).days[d].find(x => same(x.name)); if (it) planned = it; }
+    if (!planned && fr) { const it = frAgenda(wk, fr).days[d].find(x => same(x.name)); if (it) planned = it; }
+  } catch (err) { planned = null; }
+  const day = `${PLAN_DAYS_LONG[d]} ${parseDate(addDaysIso(wk, d)).toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'})}`;
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:520px"><h3>Feedback · ${esc(name)}</h3>
+    <p class="hint" style="margin-top:0">${esc(day)} · gardé dans sa fiche (Notes et feedbacks).${planned ? ' <strong>Un feedback était prévu ce jour-là dans votre calendrier : il sera coché.</strong>' : ''}</p>
+    <div class="ktags">${NOTE_TAGS.map(([t, l, c]) => `<button type="button" class="ktag sel ${c}" data-ktag="${t}">${esc(l)}</button>`).join('')}</div>
+    <textarea id="pfb-note" rows="3" placeholder="Ce que vous lui avez dit, ce que vous avez observé" style="width:100%;margin-top:10px"></textarea>
+    <div id="pfb-err" class="sc-lo" style="min-height:18px;font-size:13px"></div>
+    <div class="acts" style="flex-wrap:wrap"><button class="btn ghost" data-a="edit" type="button" style="margin-right:auto">Modifier la case</button><button class="btn ghost" data-a="fiche" type="button">Voir sa fiche</button><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Enregistrer le feedback</button></div></div>`;
+  bg.addEventListener('click', async e => {
+    const t = e.target.closest('[data-ktag]'); if (t) { t.classList.toggle('on'); return; }
+    if (e.target === bg) return bg.remove();
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === '0') return bg.remove();
+    if (a.dataset.a === 'edit') { bg.remove(); return editCell(wk, cell); }
+    if (a.dataset.a === 'fiche') { bg.remove(); coachLoadNotes(); location.hash = '#of/coaching'; return setTimeout(() => fxOpen(k)); }
+    const tags = [...bg.querySelectorAll('[data-ktag].on')].map(x => x.dataset.ktag), body = bg.querySelector('#pfb-note').value.trim();
+    if (!tags.length && !body && !planned) { bg.querySelector('#pfb-err').textContent = 'Écrivez le feedback ou choisissez une étiquette.'; return; }
+    a.disabled = true;
+    if (planned) { glFb(wk)[planned.fbk] = {at: new Date().toISOString(), by: who(Sync.email()) || 'local'}; saveCoach(); }
+    try { await coachAddNote({week: wk, chatter_key: k, chatter_name: name, sup_id: (me || fr || {}).id || '', tags: ['fb', ...tags], body: body || null}); }
+    catch (err) { a.disabled = false; bg.querySelector('#pfb-err').textContent = `Pas enregistré : ${err.message}`; return; }
+    bg.remove(); toast(`Feedback de ${name} enregistré dans sa fiche${planned ? ' et coché dans votre calendrier' : ''}.`);
+  });
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') bg.remove(); });
+  document.body.appendChild(bg); bg.querySelector('#pfb-note').focus();
+}
 function editCell(wk, key) {
   const [d, s, mid] = key.split('|'); const m = allModels().find(x => x.id === mid);
   const W = weekOf(wk);
@@ -6321,6 +6361,26 @@ function glSync(opt = {}) {
   if (!opt.dry) for (const [k, g] of Object.entries(G)) if (ctx.team.has(k) && g.name !== ctx.team.get(k)) g.name = ctx.team.get(k);
   return res;
 }
+// Ajustement de la semaine (après validation des maillons faibles) : un chatter garde son superviseur,
+// sauf s'il n'a plus aucune heure commune avec lui ; il passe alors au superviseur compatible le moins chargé.
+// Charge = feedbacks de la semaine : 1 par chatter attitré + 1 par jour travaillé pour chaque maillon faible.
+function glAdjust(wk, opt = {}) {
+  const ctx = glContext(), G = coachGlobal(), weak = glWeakByGlobal(wk), frAct = frActive(wk), sw = glShiftWeek(wk), out = [];
+  const H = Object.fromEntries(ctx.sups.map(s => [s.id, supHours(s)])), sumH = Object.values(H).reduce((a, b) => a + b, 0) || 1;
+  const load = Object.fromEntries(ctx.sups.map(s => [s.id, 0]));
+  for (const [k, g] of Object.entries(G)) if (load[g.sup] != null && !weak[k] && !frAct[k]) load[g.sup]++;
+  for (const it of Object.values(glWeak(wk))) if (load[it.sup] != null) load[it.sup] += Math.max(1, new Set((it.plan ? glShifts(it.plan, [sw]) : []).map(x => x.d)).size);
+  const total = Object.values(load).reduce((a, b) => a + b, 0) || 1, share = id => load[id] / (total * H[id] / sumH || 1);
+  for (const r of glReview(ctx)) {
+    if (weak[r.k] || frAct[r.k]) continue;   // suivi cette semaine par son superviseur maillon faible ou un sub français
+    const best = glOptions(ctx, r.k).filter(o => o.s.id !== r.sup.id).sort((a, b) => a.sec - b.sec || share(a.s.id) - share(b.s.id) || (b.ov + 4 * b.mod) - (a.ov + 4 * a.mod))[0];
+    if (!best) continue;
+    out.push({k: r.k, name: r.name, from: r.sup.name, to: best.s.name, ov: best.ov});
+    load[r.sup.id]--; load[best.s.id]++;
+    if (!opt.dry) G[r.k] = {...G[r.k], sup: best.s.id, since: isoOf(new Date()), by: 'ajustement de la semaine'};
+  }
+  return out;
+}
 // Chatters à revoir : des shifts ces 2 dernières semaines mais plus aucune heure commune avec leur superviseur
 function glReview(ctx) {
   const G = coachGlobal(), out = [];
@@ -6351,25 +6411,25 @@ function glAgenda(wk, sup) {
   // minDate : pas de feedback placé avant le lancement du suivi ou avant l'arrivée du chatter chez ce superviseur (s'il reste des jours)
   const pickDay = (shifts, n, minDate = '') => {
     const after = shifts.filter(x => addDaysIso(wk, x.d) >= minDate); if (after.length) shifts = after;
-    const ok = shifts.filter(x => glOverlap(sup, [x]) > 0), pool = ok.length ? ok : shifts;
+    // Jamais un jour où le superviseur est OFF : seulement les shifts où il est présent (heures communes)
+    const pool = shifts.filter(x => glOverlap(sup, [x]) > 0);
     const byDay = new Map(); for (const x of pool.sort((a, b) => a.d - b.d || a.s - b.s)) if (!byDay.has(x.d)) byDay.set(x.d, x);
     const list = [...byDay.values()];
     if (n === 1) return list.length ? [list.slice().sort((a, b) => load[a.d] - load[b.d] || a.d - b.d)[0]] : [];
-    if (list.length <= n) return list;
-    return [...new Set([0, Math.floor((list.length - 1) / 2), list.length - 1])].map(i => list[i]);
+    return list;   // maillon faible : un feedback chaque jour commun
   };
   const weak = Object.entries(glWeak(wk)).filter(([, it]) => it.sup === sup.id);
   const weakKeys = new Set([...Object.keys(glWeakByGlobal(wk)), ...Object.keys(frActive(wk))]);   // maillons faibles et suivis français : feedbacks faits par eux
   for (const [k, it] of weak.sort((a, b) => (a[1].plan || a[1].name).localeCompare(b[1].plan || b[1].name, 'fr'))) {
     const shifts = it.plan ? glShifts(it.plan, [sw]) : [];
-    const picks = pickDay(shifts, GL_WEAK_FB, coachState.globalStart || '');
-    if (!picks.length) { none.push({k, name: it.plan || it.name, type: 'weak'}); continue; }
+    const picks = pickDay(shifts, 7, coachState.globalStart || '');
+    if (!picks.length) { none.push({k, name: it.plan || it.name, type: 'weak', why: shifts.length ? 'aucun jour commun avec vos horaires' : ''}); continue; }
     for (const x of picks) { days[x.d].push({k, name: it.plan || it.name, type: 'weak', d: x.d, fbk: `${k}|w|${x.d}`, label: label(x), g: x.g}); load[x.d]++; }
   }
   const mine = Object.entries(coachGlobal()).filter(([k, g]) => g.sup === sup.id && !weakKeys.has(k)).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'));
   for (const [k, g] of mine) {
     const [x] = pickDay(glShifts(g.name, [sw]), 1, [coachState.globalStart || '', g.since || ''].sort().pop());
-    if (!x) { none.push({k, name: g.name, type: 'global'}); continue; }
+    if (!x) { const sh = glShifts(g.name, [sw]); none.push({k, name: g.name, type: 'global', why: sh.length ? 'aucun jour commun avec vos horaires' : ''}); continue; }
     days[x.d].push({k, name: g.name, type: 'global', d: x.d, fbk: `${k}|g`, label: label(x), g: x.g}); load[x.d]++;
   }
   return {days, none, estimated: sw !== wk};
@@ -6413,8 +6473,8 @@ function glCalendarHTML(wk) {
     </section>
     <div class="glcal">${PLAN_DAYS_LONG.map((dn, d) => { const date = addDaysIso(wk, d), list = ag.days[d];
       return `<div class="glday ${date === today ? 'now' : ''} ${date < today ? 'past' : ''}"><div class="glday-h"><b>${dn}</b><span>${esc(fmtDayFr(date))}</span>${date < (coachState.globalStart || '') ? '<i>avant le lancement</i>' : list.length ? `<i>${list.filter(x => glState(wk, x) === 'done').length}/${list.length}</i>` : ''}</div>${list.map(chip).join('') || `<p class="hint" style="margin:6px 2px;font-size:12px">${isOff(sup.days[d]) ? 'OFF' : '—'}</p>`}</div>`; }).join('')}</div>
-    ${ag.none.length ? `<section class="panel"><h2 style="font-size:15px;margin:0 0 6px">Pas de shift au planning cette semaine</h2><p class="hint" style="margin:0 0 8px">Pas de jour de feedback possible : en congé, absent ou pas encore planifié.</p><div class="unplan-l">${ag.none.map(x => `<span class="unchip" style="padding-right:10px">${esc(x.name)}${x.type === 'weak' ? ' <span class="rtag hot">maillon faible</span>' : ''}</span>`).join('')}</div></section>` : ''}
-    <p class="hint" style="margin:0">Un feedback par semaine pour chaque chatter attitré, ${GL_WEAK_FB} pour un maillon faible (pastille rouge), placés les jours où il travaille pendant vos heures. Un feedback non fait passe en orange le lendemain, puis en rouge.</p>
+    ${ag.none.length ? `<section class="panel"><h2 style="font-size:15px;margin:0 0 6px">Pas de feedback possible cette semaine</h2><p class="hint" style="margin:0 0 8px">Pas de shift au planning (congé, absent, pas encore planifié), ou ses shifts tombent uniquement sur vos jours OFF ou en dehors de vos heures. La Direction le confie à un autre superviseur à la prochaine liste.</p><div class="unplan-l">${ag.none.map(x => `<span class="unchip" style="padding-right:10px">${esc(x.name)}${x.type === 'weak' ? ' <span class="rtag hot">maillon faible</span>' : ''}${x.why ? ` <span class="muted">· ${esc(x.why)}</span>` : ''}</span>`).join('')}</div></section>` : ''}
+    <p class="hint" style="margin:0">Un feedback par semaine pour chaque chatter attitré, et un feedback chaque jour où il travaille pour un maillon faible (pastille rouge), toujours sur des jours où vous travaillez pendant son shift : rien n’est placé sur vos jours OFF. Un feedback non fait passe en orange le lendemain, puis en rouge.</p>
   </div>`;
 }
 function bindGlCalendar(main, wk) {
@@ -6445,8 +6505,18 @@ function bindGlCalendar(main, wk) {
   }));
 }
 
+// Liste de la semaine (Direction) : étape 1 maillons faibles (vérifier, retirer / remplacer les erreurs, valider), étape 2 suivi global
+function weekStepsHTML(wk, step) {
+  const W = coachState.weeks[wk], ok = W && W.status === 'validated', adj = ok && W.globalAdj;
+  const st = (n, l, sub, on, done) => `<button type="button" class="wkstep ${on ? 'on' : ''} ${done ? 'done' : ''}" data-wkstep="${n}"><b>${done ? '✓' : n}</b><span>${l}<small>${sub}</small></span></button>`;
+  return `<nav class="wksteps" aria-label="Liste de la semaine">${st(1, 'Maillons faibles', ok ? 'validés' : W ? 'à vérifier puis valider' : 'à préparer', step === 1, ok)}<span class="wkarr">→</span>${st(2, 'Suivi global', ok ? 'tous les autres chatters' : 'après validation de l’étape 1', step === 2, false)}</nav>
+    ${step === 2 && !ok ? '<div class="alert warn" style="margin:0 0 12px">Étape 1 d’abord : validez les maillons faibles de la semaine (erreurs retirées et remplacées). Le suivi global se met ensuite à jour sans eux.</div>' : ''}
+    ${step === 2 && adj ? `<div class="alert" style="margin:0 0 12px"><strong>Ajustement de la ${esc(planWeekLabel(wk).toLowerCase())}</strong> · chaque chatter garde son superviseur, sauf s’il n’a plus d’heures en commun avec lui. ${adj.add.length ? `Nouveaux : ${adj.add.map(esc).join(', ')}. ` : ''}${adj.rm.length ? `Départs : ${adj.rm.map(esc).join(', ')}. ` : ''}${adj.moved.length ? `Changés de superviseur : ${adj.moved.map(m => `${esc(m.name)} (${esc(m.from)} → ${esc(m.to)})`).join(', ')}.` : 'Aucun changement de superviseur.'}</div>` : ''}`;
+}
+function bindWeekSteps(main) { main.querySelectorAll('[data-wkstep]').forEach(b => b.addEventListener('click', () => { if (b.dataset.wkstep === '1') { coachUI.mode = 'weak'; coachUI.tab = 'list'; } else { coachUI.mode = 'global'; coachUI.gtab = 'board'; } render(); })); }
 // ---------- Vue « Tous les chatters » : la répartition par superviseur ----------
-function glBoardHTML(wk) {
+function glBoardHTML(wk) { return (coachDir() ? weekStepsHTML(wk, 2) : '') + glBoardInner(wk); }
+function glBoardInner(wk) {
   const dir = coachDir(), G = coachGlobal(), sups = supList();
   if (!Object.keys(G).length) {
     const dry = glSync({dry: true}), ctx = glContext();
@@ -7078,7 +7148,7 @@ function renderGlobal(main, wk, head) {
   main.innerHTML = head + tabs + (tab === 'cal' ? glCalendarHTML(wk) : tab === 'fiches' ? fxPageHTML() : glBoardHTML(wk));
   bindCoachHead(wk);
   main.querySelectorAll('[data-gtab]').forEach(b => b.addEventListener('click', () => { coachUI.gtab = b.dataset.gtab; render(); }));
-  if (tab === 'cal') bindGlCalendar(main, wk); else if (tab === 'fiches') bindFx(main); else bindGlBoard(main, wk);
+  if (tab === 'cal') bindGlCalendar(main, wk); else if (tab === 'fiches') bindFx(main); else { bindGlBoard(main, wk); bindWeekSteps(main); }
 }
 
 /* ---------- Page ---------- */
@@ -7145,14 +7215,14 @@ function renderCoaching(main) {
         <div class="sub" style="margin:2px 0 0">${!it.sup && frByWeak[it.k] ? `<strong style="color:${FR_COLOR}">suivi par ${esc(frByWeak[it.k])} (sub français)</strong>` : esc(it.why || '')}</div></td></tr>`;
   };
   const tbl = pid => { const l = byPid(pid); return l.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table rank-table"><thead><tr><th class="num">#</th><th>Chatter</th><th>Plateforme</th><th class="num">Score 2 sem.</th><th class="num">CA</th><th class="num">Shifts</th><th>Superviseur</th></tr></thead><tbody>${l.map(row).join('')}</tbody></table></div>` : '<div class="empty" style="padding:20px">Aucun chatter.</div>'; };
-  main.innerHTML = head + tabsD + `<div class="stack">
+  main.innerHTML = head + tabsD + weekStepsHTML(wk, 1) + `<div class="stack">
     ${!W ? `<section class="panel empty"><h2 style="font-size:18px;margin-bottom:6px">Liste de la ${esc(planWeekLabel(wk))} pas encore préparée</h2>
       <p class="hint" style="margin:0 auto 14px;max-width:560px">Le site prend les ${cfg.n} chatters les moins performants sur OF et sur MYM, calculés sur les ${plural(cfg.span, 'semaine', 'semaines')} précédentes (du ${fmtDayFr(addDaysIso(wk, -7 * cfg.span))} au ${fmtDayFr(addDaysIso(wk, -1))}), puis les répartit entre superviseurs (${cfg.min} minimum, ${cfg.cap} maximum chacun) selon leurs horaires, leur focus et leurs modèles. Un superviseur sous le minimum reçoit les chatters suivants du classement qui travaillent pendant ses horaires.</p>
       <button class="btn primary" id="k-build" type="button">Préparer la liste de la semaine</button></section>`
     : `<section class="panel"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="pill ${W.status === 'validated' ? 'Strong' : 'Warning'}">${W.status === 'validated' ? `Validée${W.validatedBy ? ` par ${esc(W.validatedBy)}` : ''} · visible par les superviseurs` : 'Brouillon · pas encore visible par les superviseurs'}</span>
         <span class="hint" style="margin:0">Performances du ${esc(fmtDayFr(W.start))} au ${esc(fmtDayFr(W.end))} · OF : ${W.info && W.info.of ? plural(W.info.of.imports, 'import', 'imports') : '<strong class="sc-lo">aucun import</strong>'} · MYM : ${W.info && W.info.mym ? plural(W.info.mym.imports, 'import', 'imports') : '<strong class="sc-lo">aucun import</strong>'}</span>
-        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${loads.some(l => l.n < Math.min(cfg.min, cfg.cap)) ? `<button class="btn ghost" id="k-fill" type="button" title="Ajoute aux superviseurs qui en ont moins de ${cfg.min} les chatters les plus faibles du classement compatibles avec leur plateforme et leurs horaires">Compléter les superviseurs à ${cfg.min}</button>` : ''}<button class="btn ghost" id="k-give" type="button" title="Donner quelques chatters à un superviseur sans refaire toute la répartition">+ Superviseur en cours de semaine</button>${W.status !== 'validated' ? `<button class="btn ghost" id="k-del" type="button">Supprimer le brouillon</button><button class="btn ghost" id="k-rebuild" type="button">Recalculer</button><button class="btn primary" id="k-validate" type="button">Valider et envoyer aux superviseurs</button>` : '<button class="btn ghost" id="k-unvalidate" type="button">Repasser en brouillon</button>'}</div></div>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${loads.some(l => l.n < Math.min(cfg.min, cfg.cap)) ? `<button class="btn ghost" id="k-fill" type="button" title="Ajoute aux superviseurs qui en ont moins de ${cfg.min} les chatters les plus faibles du classement compatibles avec leur plateforme et leurs horaires">Compléter les superviseurs à ${cfg.min}</button>` : ''}<button class="btn ghost" id="k-give" type="button" title="Donner quelques chatters à un superviseur sans refaire toute la répartition">+ Superviseur en cours de semaine</button>${W.status !== 'validated' ? `<button class="btn ghost" id="k-del" type="button">Supprimer le brouillon</button><button class="btn ghost" id="k-rebuild" type="button">Recalculer</button><button class="btn primary" id="k-validate" type="button">Valider les maillons faibles → suivi global</button>` : '<button class="btn ghost" id="k-unvalidate" type="button">Repasser en brouillon</button>'}</div></div>
         <div class="kload">${loads.map(l => `<span class="kl ${l.n > cfg.cap ? 'over' : l.n < Math.min(cfg.min, cfg.cap) ? 'under' : ''}" style="--sc:${l.s.color}" title="${l.n < Math.min(cfg.min, cfg.cap) ? `Moins de ${cfg.min} chatters` : ''}"><span class="g-dot" style="background:${l.s.color}"></span>${esc(l.s.name)} <b>${l.n}</b>${supFocus(l.s) ? ` <small>${supFocus(l.s)}</small>` : ''}</span>`).join('')}${items.filter(i => !i.sup).length ? `<span class="kl over">Non attribués <b>${items.filter(i => !i.sup).length}</b></span>` : ''}${items.filter(i => i.sup && /aucune heure commune/.test(i.why || '')).length ? `<span class="kl over" title="Ces chatters ne travaillent jamais pendant les heures de leur superviseur : pas assez de superviseurs sur leurs shifts">Sans heure commune <b>${items.filter(i => i.sup && /aucune heure commune/.test(i.why || '')).length}</b></span>` : ''}</div></section>
       ${W.info && W.info.noPlan ? `<div class="alert err">Aucun planning trouvé pour la ${esc(planWeekLabel(wk))} ni la semaine d’avant : le site ne sait pas quand les chatters travaillent, la répartition par horaires est donc impossible. Préparez le planning de la semaine, puis cliquez sur « Recalculer ».</div>`
         : W.info && W.info.planWeek && W.info.planWeek !== wk ? `<div class="alert warn">Le planning de la ${esc(planWeekLabel(wk))} n’existe pas encore : la répartition s’appuie sur celui de la ${esc(planWeekLabel(W.info.planWeek))}. Recalculez une fois le planning de la semaine prêt.</div>` : ''}
@@ -7172,7 +7242,7 @@ function renderCoaching(main) {
         <label>Semaines de performances<select id="kc-span"><option value="1" ${cfg.span === 1 ? 'selected' : ''}>1 semaine</option><option value="2" ${cfg.span === 2 ? 'selected' : ''}>2 semaines</option></select></label></div>
       <button class="btn primary" id="kc-save" type="button" style="margin-top:12px">Enregistrer</button></details>` : ''}
   </div>`;
-  bindCoachHead(wk); bindTabs();
+  bindCoachHead(wk); bindTabs(); bindWeekSteps(main);
   main.querySelectorAll('[data-kall]').forEach(b => b.addEventListener('click', () => { coachLoadNotes(); coachDetail(b.dataset.kall); }));
   const build = () => { const removed = W && W.removed; const r = coachBuild(wk, removed ? {removed} : null); coachState.weeks[wk] = {status: 'draft', items: r.items, excluded: r.excluded, info: r.info, start: r.start, end: r.end, builtAt: Date.now(), ...(removed ? {removed} : {})}; saveCoach(); render(); };
   // Rebuild en gardant la répartition existante : seuls les nouveaux entrants sont attribués
@@ -7219,8 +7289,12 @@ function renderCoaching(main) {
   document.getElementById('k-rebuild')?.addEventListener('click', async () => { if (await modal('Recalculer la liste', '<p>Recalculer remplace la liste et la répartition actuelles (vos changements manuels de superviseur seront perdus).</p>', 'Recalculer')) build(); });
   document.getElementById('k-validate')?.addEventListener('click', async () => {
     const none = items.filter(i => !i.sup).length;
-    if (!(await modal('Valider la liste', `<p>Envoyer la liste aux superviseurs ? Chacun verra ses chatters dans « Suivi des chatters ».${none ? ` <strong>${plural(none, 'chatter n’a', 'chatters n’ont')} pas de superviseur.</strong>` : ''}</p>`, 'Valider'))) return;
-    W.status = 'validated'; W.validatedBy = (Sync.email() || '').split('@')[0]; W.validatedAt = Date.now(); saveCoach(); toast('Liste validée et envoyée aux superviseurs.'); render();
+    if (!(await modal('Valider les maillons faibles', `<p>Les erreurs sont retirées et remplacées ? Après validation, la liste part aux superviseurs et l’étape 2 s’ouvre : le suivi global de tous les autres chatters (les maillons faibles en sont exclus cette semaine, ils sont suivis par leur superviseur maillon faible).${none ? ` <strong>${plural(none, 'chatter n’a', 'chatters n’ont')} pas de superviseur.</strong>` : ''}</p>`, 'Valider et passer au suivi global'))) return;
+    W.status = 'validated'; W.validatedBy = (Sync.email() || '').split('@')[0]; W.validatedAt = Date.now();
+    let msg = 'Maillons faibles validés.';
+    if (Object.keys(coachGlobal()).length && glCanSync()) { const r = glSync(), mv = glAdjust(wk); W.globalAdj = {at: Date.now(), add: r.add.map(x => x.name), rm: r.rm.map(x => x.name), moved: mv};
+      msg += ` Suivi global mis à jour : ${plural(r.add.length, 'nouveau', 'nouveaux')}, ${plural(mv.length, 'changement de superviseur', 'changements de superviseur')}.`; }
+    saveCoach(); toast(msg); coachUI.mode = 'global'; coachUI.gtab = 'board'; render(); window.scrollTo(0, 0);
   });
   document.getElementById('k-unvalidate')?.addEventListener('click', () => { W.status = 'draft'; saveCoach(); render(); });
   document.getElementById('k-del')?.addEventListener('click', async () => {
@@ -7502,7 +7576,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611232;
+  const APP_BUILD = 202611233;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
