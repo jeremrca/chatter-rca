@@ -6993,11 +6993,14 @@ function frPropose() {
     return ok.length ? {slot: +ok[0][0], n: ok[0][1]} : null; };
   const give = (c, f, s) => { taken.add(c.k); load[f.id]++; loadSlot[f.id][s.slot] = (loadSlot[f.id][s.slot] || 0) + 1;
     out[c.k] = {sup: f.id, name: c.name, slot: s.slot, since: wk, until: wk, wkly: true, why: c.why, pid: c.pid, start: isoOf(new Date()), ...(c.weak ? {weak: true, wkey: c.wkey, wsup: c.wsup} : {})}; };
-  // 1) Maillons faibles : au même sub français que la semaine passée s'il peut, sinon au moins chargé
+  // 1) Maillons faibles : au même sub français que la semaine passée s'il peut, sinon au moins chargé.
+  //    Un superviseur malgache garde toujours au moins le minimum de maillons faibles (réglage « minimum », 4) : les subs français ne prennent que le surplus.
+  const wMin = frWeakMin(), supLoad = frSupWeakLoad(wk);
   for (const c of cands.filter(c => c.weak)) {
+    if (c.wsup && (supLoad[c.wsup] || 0) <= wMin) continue;
     const opts = sups.filter(f => load[f.id] < FR_MAX).map(f => ({f, s: slotFor(c, f)})).filter(x => x.s)
       .sort((a, b) => (b.f.id === lastFr[c.k]) - (a.f.id === lastFr[c.k]) || load[a.f.id] - load[b.f.id] || b.s.n - a.s.n);
-    if (opts.length) give(c, opts[0].f, opts[0].s);
+    if (opts.length) { give(c, opts[0].f, opts[0].s); if (c.wsup) supLoad[c.wsup]--; }
   }
   // 2) Chatters à remonter (les plus faibles du classement), sur les places libres ; même sub français que la semaine passée si possible
   for (let round = 0; round < FR_MAX; round++) {
@@ -7009,6 +7012,22 @@ function frPropose() {
     }
   }
   return out;
+}
+// Minimum de maillons faibles qu'un superviseur malgache garde, et nombre qu'il a cette semaine
+const frWeakMin = () => { const cfg = coachCfg(); return Math.min(cfg.min ?? 4, cfg.cap); };
+function frSupWeakLoad(wk) { const W = coachState.weeks[wk], n = {}; for (const it of Object.values((W && W.items) || {})) if (it.sup) n[it.sup] = (n[it.sup] || 0) + 1; return n; }
+// Rend à leur superviseur les maillons faibles pris par les subs français quand il est passé sous le minimum (les plus faibles d'abord)
+function frGiveBack(wk) {
+  const W = coachState.weeks[wk]; if (!W || W.status !== 'validated') return 0;
+  const S = frState(), min = frWeakMin(), load = frSupWeakLoad(wk); let n = 0;
+  const taken = Object.entries(S.items).filter(([, it]) => it.weak && it.wsup && W.items[it.wkey] && !W.items[it.wkey].sup)
+    .sort((a, b) => (W.items[a[1].wkey].rank || 99) - (W.items[b[1].wkey].rank || 99));
+  for (const [k, it] of taken) {
+    if ((load[it.wsup] || 0) >= min) continue;
+    const wi = W.items[it.wkey]; wi.sup = it.wsup; delete wi.fr; wi.why = `rendu à son superviseur (il garde au moins ${min} maillons faibles)`;
+    (S.hist ||= []).unshift({k, ...it, ended: wk, removed: true, returned: true}); delete S.items[k]; load[it.wsup] = (load[it.wsup] || 0) + 1; n++;
+  }
+  return n;
 }
 // Verdicts des subs français : maillon faible → sur la liste de la semaine (comme les superviseurs) ; autre chatter → coachState.frv[semaine][clé] (facultatif)
 const frvWeek = wk => ((coachState.frv ||= {})[wk] ||= {});
@@ -7058,7 +7077,7 @@ function frPageHTML(wk) {
     <section class="panel frhead"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Suivi français</h2>
       ${dir && !draft && free ? `<button class="btn primary" type="button" id="fr-propose" style="margin-left:auto">${nAct ? `Compléter la liste (${free} place${free > 1 ? 's' : ''} libre${free > 1 ? 's' : ''}${orph ? ` · ${plural(orph, 'maillon faible sans superviseur', 'maillons faibles sans superviseur')}` : ''})` : `Préparer la liste de la ${esc(planWeekLabel(wk).toLowerCase())}`}</button>` : ''}
       ${dir ? `<select id="fr-cal" style="width:auto;${dir && !draft && free ? '' : 'margin-left:auto'}"><option value="">Voir le calendrier de…</option>${fl.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('')}</select>` : ''}</div>
-      <p class="hint" style="margin:8px 0 0">Chaque semaine, Carel, Iliane et Kenzo reçoivent jusqu’à ${FR_MAX} nouveaux chatters de leurs modèles, sur leurs créneaux. D’abord les maillons faibles de la semaine (ceux sans superviseur en premier ; les autres sont retirés à leur superviseur pour la semaine), avec ${GL_WEAK_FB} feedbacks et un verdict, comme chez les superviseurs. Les places restantes (${FR_MAX} chatters au plus par sub français) vont aux plus faibles du classement (moitié basse, le plus bas d’abord), qui doivent remonter la pente, avec ${FR_FB} feedbacks (verdict si besoin). Pendant la semaine, c’est le sub français qui fait leurs feedbacks, pas leur superviseur attitré.</p></section>
+      <p class="hint" style="margin:8px 0 0">Chaque semaine, Carel, Iliane et Kenzo reçoivent jusqu’à ${FR_MAX} nouveaux chatters de leurs modèles, sur leurs créneaux. D’abord les maillons faibles de la semaine : ceux sans superviseur, puis le surplus des superviseurs (chaque superviseur garde au moins ${frWeakMin()} maillons faibles), avec ${GL_WEAK_FB} feedbacks et un verdict, comme chez les superviseurs. Les places restantes (${FR_MAX} chatters au plus par sub français) vont aux plus faibles du classement (moitié basse, le plus bas d’abord), qui doivent remonter la pente, avec ${FR_FB} feedbacks (verdict si besoin). Pendant la semaine, c’est le sub français qui fait leurs feedbacks, pas leur superviseur attitré.</p></section>
     ${draft ? `<section class="panel alert warn"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0;font-size:16px">Proposition · ${Object.keys(draft).length} chatters</h2><span class="hint" style="margin:0">Retirez ceux qui ne conviennent pas, puis validez.</span>
       <button class="btn ghost" type="button" id="fr-cancel" style="margin-left:auto">Annuler</button><button class="btn primary" type="button" id="fr-validate">Valider la proposition</button></div>
       <div class="frgrid" style="margin-top:12px">${fl.map(f => frCardHTML(f, wk, {items: draft, edit: true})).join('')}</div></section>` : ''}
@@ -7178,6 +7197,7 @@ function bindCoachMode(main) {
 }
 function renderCoaching(main) {
   const wk = coachUI.week ||= mondayOf(isoOf(new Date()));
+  if (Sync.canDirect() && glCanSync() && wk === glWeekNow() && coachUI.giveBackWk !== wk) { coachUI.giveBackWk = wk; const n = frGiveBack(wk); if (n) { saveCoach(); setTimeout(() => toast(`${plural(n, 'maillon faible rendu', 'maillons faibles rendus')} à son superviseur : chacun garde au moins ${frWeakMin()} maillons faibles.`), 300); } }
   const W = coachState.weeks[wk];
   const head = `<div class="top"><h1><span class="pbadge lg coach" aria-hidden="true">★</span><span>Suivi des chatters</span></h1>
     <div class="picker viewpick"><button class="btn ghost small-btn" id="kw-prev" type="button" aria-label="Semaine précédente">‹</button>
