@@ -3962,14 +3962,18 @@ function renderPlanning(main) {
   const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
   const hl = newHighlights();
   const q = normName(planUI.q);
-  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button></div>`;
+  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'conges' ? 'on' : ''}" data-ptab="conges">Congés ${(() => { const n = congeList('ch').filter(r => (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button></div>`;
   if (planUI.tab === 'abs') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Demandes d'absence</span></h1></div>` + tabs + absReqHTML();
     bindPlanTabs(main); bindAbsReq(main); return;
   }
+  if (planUI.tab === 'conges') {
+    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Congés des chatteurs</span></h1></div>` + tabs + `<div class="stack">${congesHTML('ch')}</div>`;
+    bindPlanTabs(main); bindConges(main); return;
+  }
   if (planUI.tab === 'sups') {
-    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning des superviseurs</span></h1></div>` + tabs + supPlanHTML() + supAssignHTML();
-    bindPlanTabs(main); bindSupPlan(main); bindFrSup(main); bindSupAssign(main); return;
+    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning des superviseurs</span></h1></div>` + tabs + `<div class="stack" style="margin-bottom:16px">${congesHTML('sup')}</div>` + supPlanHTML() + supAssignHTML();
+    bindPlanTabs(main); bindConges(main); bindSupPlan(main); bindFrSup(main); bindSupAssign(main); return;
   }
   if (planUI.tab === 'bilan') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Planning</span></h1>
@@ -4031,7 +4035,7 @@ function renderPlanning(main) {
       const date = addDaysIso(wk, d), reqs = absReqsOnDate(date);
       const reqClash = [];
       for (let s = 0; s < PLAN_SHIFTS.length; s++) for (const m of dayModels) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) { const w = workerOf(e); if (w && !e.a && absReqFor(w, date, s)) reqClash.push(`${w} (${modelLabel(m)} ${PLAN_SHIFTS[s]})`); }
-      const reqHTML = reqs.length ? `<div class="absbox"><div class="absbox-h">Absences demandées ce ${PLAN_DAYS_LONG[d].toLowerCase()} · ${reqs.length}</div><div class="absbox-l">${reqs.map(r => `<button type="button" class="abschip" data-arid="${r.id}" title="Modifier la demande"><strong>${esc(r.name)}</strong> <span>${esc(shiftsLabel(r.shifts))}</span>${r.status === 'wait' ? ' <span class="pill Warning">en attente</span>' : ''}${r.note ? `<em>${esc(r.note)}</em>` : ''}</button>`).join('')}</div>
+      const reqHTML = reqs.length ? `<div class="absbox"><div class="absbox-h">${reqs.some(r => r.conge) ? 'Absences et congés' : 'Absences demandées'} ce ${PLAN_DAYS_LONG[d].toLowerCase()} · ${reqs.length}</div><div class="absbox-l">${reqs.map(r => `<button type="button" class="abschip" ${r.conge ? `data-cgid="${r.id}" title="Congé validé"` : `data-arid="${r.id}" title="Modifier la demande"`}><strong>${esc(r.name)}</strong> <span>${r.conge ? `Congé ${esc(absDates(r))}` : esc(shiftsLabel(r.shifts))}</span>${r.status === 'wait' ? ' <span class="pill Warning">en attente</span>' : ''}${r.note ? `<em>${esc(r.note)}</em>` : ''}</button>`).join('')}</div>
         ${reqClash.length ? `<div class="absbox-w">⚠ Planifié(e)s malgré leur demande : ${reqClash.map(esc).join(' · ')}</div>` : ''}</div>` : '';
       const unHTML = un.length ? `<div class="unplan"><div class="unplan-h">⚠ Reste à planifier · ${plural(un.length, 'chatter', 'chatters')} pas OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} et sur aucun shift</div><div class="unplan-l">${un.map(x => `<span class="unchip">${esc(x.n)}<button type="button" data-ign="${esc(x.k)}" data-ignn="${esc(x.n)}" title="A quitté l’agence ou ne plus le rappeler" aria-label="Retirer ${esc(x.n)}">×</button></span>`).join('')}</div></div>`
         : `<div class="unplan ok"><span>✓ Tous les chatters de l'équipe sont planifiés ou OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()}.</span>${noRoster ? ' <span class="muted">Remplissez l’onglet « Jours OFF / Base chatters » pour que toute l’équipe soit vérifiée.</span>' : ''}</div>`;
@@ -4076,6 +4080,7 @@ function renderPlanning(main) {
   document.getElementById('p-gonext')?.addEventListener('click', () => { planUI.week = nextWk; planUI.day = 0; render(); });
   document.getElementById('p-unav').addEventListener('click', () => unavailability(wk));
   main.querySelectorAll('.offbar [data-arid]').forEach(b => b.addEventListener('click', () => absReqEdit(b.dataset.arid)));
+  main.querySelectorAll('.offbar [data-cgid]').forEach(b => b.addEventListener('click', () => congeEdit('ch', b.dataset.cgid)));
   main.querySelectorAll('[data-ign]').forEach(b => b.addEventListener('click', () => chatterLeave(b.dataset.ignn, b.dataset.ign, 'remind')));
   document.getElementById('p-xls')?.addEventListener('click', () => importExcelModal(wk));
   main.querySelectorAll('[data-dispq]').forEach(b => b.addEventListener('click', () => { planUI.q = b.dataset.dispq; render(); window.scrollTo(0, 0); }));
@@ -4337,16 +4342,17 @@ const fmtH = h => { const x = ((h % 24) + 24) % 24; const hh = Math.floor(x), mm
 const SUP_PF = {MYM: {label: 'MYM', color: '#f472b6'}, OF: {label: 'OnlyFans', color: '#38bdf8'}, REVEAL: {label: 'Reveal', color: '#a855f7'}, '': {label: 'Sans focus', color: '#94a3b8'}};
 const focusKey = f => /mym/i.test(f || '') ? 'MYM' : /only|^\s*of\s*$/i.test(f || '') ? 'OF' : /reveal/i.test(f || '') ? 'REVEAL' : '';
 const supDayFocus = (s, d) => focusKey((s.focusDays && s.focusDays[d]) || s.focus);
-function supBlocks(s, d) {
+function supBlocks(s, d, date) {   // date (facultative) : jour précis, pour tenir compte des congés validés
   const out = [];
-  const own = parseShift(s.days[d]); if (own) out.push({start: own.start, end: Math.min(24, own.end), label: s.days[d], pf: supDayFocus(s, d)});
-  const pd = (d + 6) % 7, prev = parseShift(s.days[pd]); if (prev && prev.end > 24) out.push({start: 0, end: prev.end - 24, label: `${s.days[pd]} (depuis la veille)`, carry: true, pf: supDayFocus(s, pd)});
+  const own = parseShift(s.days[d]); if (own && !supOnLeave(s, date)) out.push({start: own.start, end: Math.min(24, own.end), label: s.days[d], pf: supDayFocus(s, d)});
+  const pd = (d + 6) % 7, prev = parseShift(s.days[pd]); if (prev && prev.end > 24 && !supOnLeave(s, date && addDaysIso(date, -1))) out.push({start: 0, end: prev.end - 24, label: `${s.days[pd]} (depuis la veille)`, carry: true, pf: supDayFocus(s, pd)});
   return out;
 }
 // pf : '' = tous les superviseurs, 'MYM' ou 'OF' = seulement ceux qui sont sur cette plateforme à cette heure-là
 function supCoverage(pf = '') {
   const grid = Array.from({length: 7}, () => Array(24).fill(0)), who = Array.from({length: 7}, () => Array.from({length: 24}, () => []));
-  for (const s of supList()) for (let d = 0; d < 7; d++) for (const b of supBlocks(s, d)) if (!pf || b.pf === pf) for (let h = 0; h < 24; h++) if (h + 0.5 > b.start && h + 0.5 < b.end) { grid[d][h]++; who[d][h].push(s.name); }
+  const cwk = planUI.week || thisMonday();
+  for (const s of supList()) for (let d = 0; d < 7; d++) for (const b of supBlocks(s, d, addDaysIso(cwk, d))) if (!pf || b.pf === pf) for (let h = 0; h < 24; h++) if (h + 0.5 > b.start && h + 0.5 < b.end) { grid[d][h]++; who[d][h].push(s.name); }
   return {grid, who};
 }
 /* ---------- Responsables du dispatch : un superviseur référent par shift (4h, 10h, 16h, 22h) et par plateforme ----------
@@ -4474,8 +4480,9 @@ function supPlanHTML() {
   for (let dd = 0; dd < 7; dd++) { let h = 0; while (h < 24) { if (!grid[dd][h]) { const s = h; while (h < 24 && !grid[dd][h]) h++; holes.push(`${PLAN_DAYS[dd]} ${s}h-${h}h`); } else h++; } }
   const ticks = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24];
   // Rangement du jour : chacun dans la plateforme de son shift du jour ; un superviseur OFF qui finit sa nuit de la veille suit le focus de la veille
-  const rowOf = s => { const blocks = supBlocks(s, d), own = blocks.find(b => !b.carry), carry = blocks.find(b => b.carry);
-    return {s, blocks, own, off: isOff(s.days[d]), key: own ? own.pf : carry ? carry.pf : 'OFF'}; };
+  const dDate = addDaysIso(planUI.week || thisMonday(), d);
+  const rowOf = s => { const blocks = supBlocks(s, d, dDate), own = blocks.find(b => !b.carry), carry = blocks.find(b => b.carry), leave = supOnLeave(s, dDate);
+    return {s, blocks, own, leave, off: isOff(s.days[d]) || leave, key: own ? own.pf : carry ? carry.pf : 'OFF'}; };
   const rows = list.map(rowOf);
   const order = ['MYM', 'OF', 'REVEAL', '', 'OFF'];
   const groups = order.map(k => ({k, rows: rows.filter(r => r.key === k)})).filter(g => g.rows.length);
@@ -4485,7 +4492,7 @@ function supPlanHTML() {
     return `<div class="g-row" style="--pc:${pfOf(r.key).color}"><div class="g-name"><span class="g-dot" style="background:${s.color}"></span>${esc(s.name)}${r.own && s.focusDays && s.focusDays[d] ? ' <span class="sfx" title="Focus différent de son focus habituel ce jour-là">ce jour</span>' : ''}</div>
       <div class="g-track">${ticks.map(t => `<span class="g-grid" style="left:${t / 24 * 100}%"></span>`).join('')}${dspActive() ? [4, 10, 16, 22].map(h => `<span class="g-dline" style="left:${h / 24 * 100}%"></span>`).join('') + DSP_PF.flatMap(([pf]) => [0, 1, 2, 3].filter(sl => dspWho(pf, sl, addDaysIso(planUI.week || thisMonday(), d)).id === s.id).map(sl => `<span class="g-dspb${dspHour(sl) >= 20 ? ' r' : ''}" style="left:${dspHour(sl) / 24 * 100}%;--pc:${pf === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}" title="${esc(s.name)} est responsable du dispatch ${pf === 'of' ? 'OnlyFans' : 'MYM'} ${dspHour(sl)}h (réunion ${(dspHour(sl) + 23) % 24}h)">🎯 ${pf === 'of' ? 'OF' : 'MYM'} ${dspHour(sl)}h</span>`)).join('') : ''}
         ${blocks.map(b => `<div class="g-bar ${b.carry ? 'carry' : ''}" style="left:${b.start / 24 * 100}%;width:${(b.end - b.start) / 24 * 100}%;background:${s.color};color:${textOn(s.color)};--bc:${SUP_PF[b.pf].color}" title="${esc(s.name)} · ${esc(b.label)} · ${SUP_PF[b.pf].label}">${b.end - b.start >= 2.5 ? esc(b.carry ? s.days[(d + 6) % 7] : s.days[d]) : ''}</div>`).join('')}
-        ${off && !blocks.length ? '<span class="g-off">OFF</span>' : off ? '<span class="g-off right">OFF</span>' : ''}
+        ${off && !blocks.length ? `<span class="g-off">${r.leave ? 'CONGÉ' : 'OFF'}</span>` : off ? `<span class="g-off right">${r.leave ? 'CONGÉ' : 'OFF'}</span>` : ''}
         ${d === today ? `<span class="g-now" style="left:${nowH / 24 * 100}%"></span>` : ''}</div></div>`; };
   const covRow = (label, arr, color, names) => `<div class="g-row"><div class="g-name" style="color:${color}">${label}</div><div class="g-track g-cov">${arr.map((n, h) => `<span class="g-cell c${Math.min(n, 4)}" style="left:${h / 24 * 100}%;width:${100 / 24}%" title="${h}h-${h + 1}h : ${n} ${label}${names ? ` · ${esc(names[h].join(', ') || 'personne')}` : ''}">${n}</span>`).join('')}</div></div>`;
   // Cartes « qui est sur quoi » du jour choisi (shifts qui commencent ce jour-là)
@@ -4750,10 +4757,12 @@ const absReqs = () => (planState.absreq ||= {});
 const absList = () => Object.entries(planState.absreq || {}).map(([id, r]) => ({id, ...r}));
 // Demande (non refusée) d'un chatter couvrant une date et un shift
 function absReqFor(name, date, s) {
-  if (!planState.absreq || !name) return null; const k = rosterKey(name);
-  return absList().find(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from) && (r.shifts || []).includes(+s) && nearKey(rosterKey(r.name), k)) || null;
+  if (!name) return null; const k = rosterKey(name);
+  return absList().find(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from) && (r.shifts || []).includes(+s) && nearKey(rosterKey(r.name), k))
+    || congeAsAbs(congeList('ch').find(r => date >= r.from && date <= (r.to || r.from) && nearKey(rosterKey(r.name), k))) || null;
 }
-const absReqsOnDate = date => absList().filter(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from)).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+const absReqsOnDate = date => [...absList().filter(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from)),
+  ...congeList('ch').filter(r => date >= r.from && date <= (r.to || r.from)).map(congeAsAbs)].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
 const shiftsLabel = sh => (sh || []).length === PLAN_SHIFTS.length ? 'journée entière' : (sh || []).slice().sort().map(s => PLAN_SHIFTS[s]).join(' + ');
 const absDates = r => !r.to || r.to === r.from ? fmtDayFr(r.from) : `du ${fmtDayFr(r.from)} au ${fmtDayFr(r.to)}`;
 function absReqHTML() {
@@ -4819,6 +4828,77 @@ function absReqEdit(id, prefill) {
     savePlan(); close(); toast(id ? 'Demande mise à jour.' : `Demande d’absence de ${canon} ajoutée : elle apparaît dans le planning du ${fmtDayFr(from)}.`); render();
   });
   document.body.appendChild(bg); form.name.focus();
+}
+
+/* ---------- Congés validés ----------
+   Chatteurs (planState.conges) : saisis par toute l'équipe de management.
+   Superviseurs (planState.supConges) : saisis seulement par la Direction (vous, Billy, Clément, Mika = admins + Direction).
+   Un chatteur en congé compte comme absent prévenu toute la journée ; un superviseur en congé n'a ni shift ni feedback ce jour-là. */
+const CONGE_KEY = {ch: 'conges', sup: 'supConges'};
+const congeList = kind => Object.entries(planState[CONGE_KEY[kind]] || {}).map(([id, r]) => ({id, ...r}));
+const congeAsAbs = r => r ? {...r, shifts: PLAN_SHIFTS.map((_, i) => i), status: 'ok', conge: true, note: r.note ? `Congé · ${r.note}` : 'Congé'} : null;
+const supOnLeave = (s, date) => !!(date && s && planState.supConges) && congeList('sup').some(r => r.sup === s.id && date >= r.from && date <= (r.to || r.from));
+const congeCanEdit = kind => kind === 'ch' || Sync.canDirect();
+const congeDays = r => Math.round((parseDate(r.to || r.from) - parseDate(r.from)) / 864e5) + 1;
+const congeWho = r => r.sup ? ((supsMap()[r.sup] || {}).name || r.name || '?') : r.name;
+function congesHTML(kind) {
+  const today = isoOf(new Date()), fk = kind === 'ch' ? 'cgf' : 'cgsf', f = planUI[fk] || 'next', edit = congeCanEdit(kind);
+  const rows = congeList(kind).filter(r => f === 'all' || (f === 'next' ? (r.to || r.from) >= today : (r.to || r.from) < today))
+    .sort((a, b) => f === 'past' ? b.from.localeCompare(a.from) : a.from.localeCompare(b.from));
+  const now = congeList(kind).filter(r => today >= r.from && today <= (r.to || r.from));
+  const title = kind === 'ch' ? 'Congés validés des chatteurs' : 'Congés validés des superviseurs';
+  const hint = kind === 'ch' ? 'Congés accordés par l’équipe de management, après demande du chatteur. Chaque superviseur peut en ajouter. Un chatteur en congé n’apparaît plus dans « reste à planifier », et s’il est quand même planifié, il est signalé.'
+    : `Congés accordés par la Direction (Billy, Clément, Mika ou le propriétaire), après demande du superviseur. ${edit ? 'Vous pouvez les ajouter et les modifier.' : 'Seule la Direction peut les ajouter ou les modifier.'} Ces jours-là, le superviseur n’apparaît pas dans la couverture et aucun feedback ne lui est placé.`;
+  return `<section class="panel abs-card"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 style="margin:0">🌴 ${title}</h2>
+      ${now.length ? `<span class="pill Warning">En congé aujourd’hui : ${now.map(r => esc(congeWho(r))).join(', ')}</span>` : ''}</div>
+    <p class="hint" style="margin:0 0 10px">${hint}</p>
+    <div class="sui-bar">${edit ? `<button class="btn primary" type="button" data-cgadd="${kind}">+ Ajouter un congé validé</button>` : ''}
+      <div class="qrow">${[['next', 'En cours et à venir'], ['past', 'Passés'], ['all', 'Tous']].map(([k, l]) => `<button type="button" class="qpt ${f === k ? 'on' : ''}" data-cgf="${kind}|${k}" style="--tc:#34d399">${l}</button>`).join('')}</div></div>
+    ${rows.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table"><thead><tr><th>Dates</th><th>${kind === 'ch' ? 'Chatteur' : 'Superviseur'}</th><th>Durée</th><th>Remarque</th><th>Validé par</th></tr></thead><tbody>
+      ${rows.map(r => `<tr class="${edit ? 'click' : ''} ${(r.to || r.from) < today ? 'muted' : ''}" ${edit ? `data-cgid="${kind}|${r.id}"` : ''}><td style="white-space:nowrap"><strong>${esc(absDates(r))}</strong>${today >= r.from && today <= (r.to || r.from) ? ' <span class="pill Warning">en cours</span>' : ''}</td>
+        <td><strong>${esc(congeWho(r))}</strong></td><td>${plural(congeDays(r), 'jour', 'jours')}</td><td style="min-width:180px">${esc(r.note || '')}</td><td class="muted" style="font-size:12.5px">${esc(r.by || '')}</td></tr>`).join('')}
+    </tbody></table></div>` : `<div class="empty" style="padding:26px 10px"><div style="font-size:15px;color:var(--text);font-weight:600">${f === 'next' ? 'Aucun congé en cours ou à venir' : 'Aucun congé'}</div></div>`}
+  </section>`;
+}
+function bindConges(main) {
+  main.querySelectorAll('[data-cgf]').forEach(b => b.addEventListener('click', () => { const [kind, f] = b.dataset.cgf.split('|'); planUI[kind === 'ch' ? 'cgf' : 'cgsf'] = f; const y = window.scrollY; render(); window.scrollTo(0, y); }));
+  main.querySelectorAll('[data-cgadd]').forEach(b => b.addEventListener('click', () => congeEdit(b.dataset.cgadd, null)));
+  main.querySelectorAll('tr[data-cgid]').forEach(tr => tr.addEventListener('click', () => { const [kind, id] = tr.dataset.cgid.split('|'); congeEdit(kind, id); }));
+}
+function congeEdit(kind, id) {
+  if (!congeCanEdit(kind)) { toast('Seule la Direction peut modifier les congés des superviseurs.', true); return; }
+  const store = planState[CONGE_KEY[kind]] ||= {}, cur = id ? {...store[id]} : {from: isoOf(new Date())};
+  if (id && !store[id]) return;
+  const sups = supList(), bg = document.createElement('div'); bg.className = 'modal-bg';
+  const f = (label, html, wide) => `<label class="sf ${wide ? 'wide' : ''}"><span>${label}</span>${html}</label>`;
+  bg.innerHTML = `<div class="modal sui-modal" role="dialog" aria-modal="true" style="--tc:#34d399;max-width:560px"><h3><span class="sdot"></span>${id ? 'Modifier le congé' : 'Nouveau congé validé'}${kind === 'sup' ? ' · superviseur' : ''}</h3>
+    <form class="sform" novalidate>
+      ${kind === 'ch' ? f('Chatteur', `<input type="text" name="name" list="cg-names" value="${esc(cur.name || '')}" placeholder="Prénom">`, true)
+        : f('Superviseur', `<select name="sup"><option value="">Choisir…</option>${sups.map(s => `<option value="${s.id}" ${cur.sup === s.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select>`, true)}
+      ${f('Premier jour de congé', `<input type="date" name="from" value="${esc(cur.from || '')}">`)}
+      ${f('Dernier jour de congé', `<input type="date" name="to" value="${esc(cur.to || cur.from || '')}">`)}
+      ${f('Remarque (facultatif)', `<textarea name="note" rows="2" placeholder="Congé annuel, mariage, voyage…">${esc(cur.note || '')}</textarea>`, true)}
+    </form>${kind === 'ch' ? `<datalist id="cg-names">${knownChatters().map(n => `<option value="${esc(n)}">`).join('')}</datalist>` : ''}
+    <div id="cg-err" class="sc-lo" style="min-height:18px;font-size:13px;margin-top:6px"></div>
+    <div class="acts">${id ? '<button class="btn danger" data-a="del" type="button" style="margin-right:auto">Supprimer</button>' : ''}<button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">${id ? 'Enregistrer' : 'Ajouter le congé'}</button></div></div>`;
+  const form = bg.querySelector('form'), close = () => bg.remove();
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  bg.addEventListener('click', async e => {
+    if (e.target === bg) return close();
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === '0') return close();
+    if (a.dataset.a === 'del') { if (!(await modal('Supprimer le congé', `<p>Supprimer le congé de <strong>${esc(congeWho(cur))}</strong> (${esc(absDates(cur))}) ?</p>`, 'Supprimer'))) return; delete store[id]; savePlan(); close(); toast('Congé supprimé.'); render(); return; }
+    const from = form.from.value, to = form.to.value || from;
+    const name = kind === 'ch' ? form.name.value.trim() : '', sup = kind === 'sup' ? form.sup.value : '';
+    const err = kind === 'ch' && !name ? 'Indiquez le chatteur.' : kind === 'sup' && !sup ? 'Choisissez le superviseur.' : !from ? 'Choisissez le premier jour.' : to < from ? 'Le dernier jour est avant le premier.' : '';
+    if (err) { bg.querySelector('#cg-err').textContent = err; return; }
+    const r = {from, at: cur.at || Date.now(), by: cur.by || Sync.email() || lsGet(LS_SUIVI_SUP, '') || ''};
+    if (kind === 'ch') r.name = knownChatters().find(n => normName(n) === normName(name)) || name; else { r.sup = sup; r.name = (supsMap()[sup] || {}).name || ''; }
+    if (to !== from) r.to = to; const note = form.note.value.trim(); if (note) r.note = note;
+    store[id || 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)] = r;
+    savePlan(); close(); toast(id ? 'Congé mis à jour.' : `Congé de ${congeWho(r)} ajouté (${absDates(r)}).`); render();
+  });
+  document.body.appendChild(bg); (form.name || form.sup).focus();
 }
 
 /* ---------- Bilan des absences et retards ---------- */
@@ -5057,7 +5137,7 @@ function editCell(wk, key) {
     bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:640px"><h3>${esc(m ? modelLabel(m) : mid)} · ${PLAN_DAYS_LONG[d]} ${parseDate(addDaysIso(wk, +d)).toLocaleDateString('fr-FR', {day:'numeric', month:'long'})} · ${PLAN_SHIFTS[s]}</h3>
       <datalist id="pl-names">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
       ${list.length ? `<div class="pe-list">${list.map((e, i) => `<div class="pe-row">
-        <strong class="${e.a && !e.r ? 'sc-lo' : ''}">${esc(e.n)}${e.a ? '' : mtag(e.n)}${e.r ? mtag(e.r.split('/')[0].trim()) : ''}${absReqFor(e.n, addDaysIso(wk, +d), +s) ? ` <b class="abstag" title="${esc(absReqFor(e.n, addDaysIso(wk, +d), +s).note || 'Demande d’absence')}">ABS demandée</b>` : ''}</strong>
+        <strong class="${e.a && !e.r ? 'sc-lo' : ''}">${esc(e.n)}${e.a ? '' : mtag(e.n)}${e.r ? mtag(e.r.split('/')[0].trim()) : ''}${absReqFor(e.n, addDaysIso(wk, +d), +s) ? ` <b class="abstag" title="${esc(absReqFor(e.n, addDaysIso(wk, +d), +s).note || 'Demande d’absence')}">${absReqFor(e.n, addDaysIso(wk, +d), +s).conge ? 'Congé' : 'ABS demandée'}</b>` : ''}</strong>
         <label class="check"><input type="checkbox" data-abs="${i}" ${e.a ? 'checked' : ''}> Absent</label>
         <label class="check" title="Coupure de courant"><input type="checkbox" data-cut="${i}" ${e.c ? 'checked' : ''}> Coupure</label>
         <label class="check" title="Arrivé(e) en retard"><input type="checkbox" data-late="${i}" ${e.l ? 'checked' : ''}> Retard</label>
@@ -6097,7 +6177,7 @@ function coachShifts(planName, weeks) {
 function coachOverlap(sup, shifts) {
   let h = 0;
   for (const x of shifts) { if (x.dup) continue; const [a, b] = SHIFT_HOURS[x.s];
-    for (let t = a; t < b; t++) { const d = (x.d + Math.floor(t / 24)) % 7, hh = t % 24; if (supBlocks(sup, d).some(bl => hh + 0.5 > bl.start && hh + 0.5 < bl.end)) h++; } }
+    for (let t = a; t < b; t++) { const d = (x.d + Math.floor(t / 24)) % 7, hh = t % 24; if (supBlocks(sup, d, x.wk ? addDaysIso(x.wk, x.d + Math.floor(t / 24)) : null).some(bl => hh + 0.5 > bl.start && hh + 0.5 < bl.end)) h++; } }
   return h;
 }
 function coachPeriod(pid, start, end) {
@@ -6294,7 +6374,7 @@ function glOverlap(sup, shifts) {
   let h = 0;
   for (const x of shifts) { const [a, b] = SHIFT_HOURS[x.s], want = x.g === 'of' ? 'OF' : x.g === 'mym' ? 'MYM' : '';
     for (let t = a; t < b; t++) { const d = (x.d + Math.floor(t / 24)) % 7, hh = t % 24;
-      if (supBlocks(sup, d).some(bl => hh + 0.5 > bl.start && hh + 0.5 < bl.end && (!want || !bl.pf || bl.pf === want || supAlso(sup) === want))) h++; } }
+      if (supBlocks(sup, d, x.wk ? addDaysIso(x.wk, x.d + Math.floor(t / 24)) : null).some(bl => hh + 0.5 > bl.start && hh + 0.5 < bl.end && (!want || !bl.pf || bl.pf === want || supAlso(sup) === want))) h++; } }
   return h;
 }
 const glPid = sh => { const n = {of: 0, mym: 0}; sh.forEach(x => { if (n[x.g] != null) n[x.g]++; });
@@ -6472,7 +6552,7 @@ function glCalendarHTML(wk) {
       ${ag.estimated ? '<p class="hint" style="margin:8px 0 0">Le planning de cette semaine n’est pas encore fait : jours placés d’après le planning de la semaine dernière.</p>' : ''}
     </section>
     <div class="glcal">${PLAN_DAYS_LONG.map((dn, d) => { const date = addDaysIso(wk, d), list = ag.days[d];
-      return `<div class="glday ${date === today ? 'now' : ''} ${date < today ? 'past' : ''}"><div class="glday-h"><b>${dn}</b><span>${esc(fmtDayFr(date))}</span>${date < (coachState.globalStart || '') ? '<i>avant le lancement</i>' : list.length ? `<i>${list.filter(x => glState(wk, x) === 'done').length}/${list.length}</i>` : ''}</div>${list.map(chip).join('') || `<p class="hint" style="margin:6px 2px;font-size:12px">${isOff(sup.days[d]) ? 'OFF' : '—'}</p>`}</div>`; }).join('')}</div>
+      return `<div class="glday ${date === today ? 'now' : ''} ${date < today ? 'past' : ''}"><div class="glday-h"><b>${dn}</b><span>${esc(fmtDayFr(date))}</span>${date < (coachState.globalStart || '') ? '<i>avant le lancement</i>' : list.length ? `<i>${list.filter(x => glState(wk, x) === 'done').length}/${list.length}</i>` : ''}</div>${list.map(chip).join('') || `<p class="hint" style="margin:6px 2px;font-size:12px">${supOnLeave(sup, date) ? 'Congé' : isOff(sup.days[d]) ? 'OFF' : '—'}</p>`}</div>`; }).join('')}</div>
     ${ag.none.length ? `<section class="panel"><h2 style="font-size:15px;margin:0 0 6px">Pas de feedback possible cette semaine</h2><p class="hint" style="margin:0 0 8px">Pas de shift au planning (congé, absent, pas encore planifié), ou ses shifts tombent uniquement sur vos jours OFF ou en dehors de vos heures. La Direction le confie à un autre superviseur à la prochaine liste.</p><div class="unplan-l">${ag.none.map(x => `<span class="unchip" style="padding-right:10px">${esc(x.name)}${x.type === 'weak' ? ' <span class="rtag hot">maillon faible</span>' : ''}${x.why ? ` <span class="muted">· ${esc(x.why)}</span>` : ''}</span>`).join('')}</div></section>` : ''}
     <p class="hint" style="margin:0">Un feedback par semaine pour chaque chatter attitré, et un feedback chaque jour où il travaille pour un maillon faible (pastille rouge), toujours sur des jours où vous travaillez pendant son shift : rien n’est placé sur vos jours OFF. Un feedback non fait passe en orange le lendemain, puis en rouge.</p>
   </div>`;
@@ -7597,7 +7677,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611242;
+  const APP_BUILD = 202611243;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
