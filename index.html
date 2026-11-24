@@ -7597,7 +7597,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611241;
+  const APP_BUILD = 202611242;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
@@ -7740,7 +7740,7 @@ const Sync = (() => {
   async function login(email, password) {
     const b = await api('/auth/v1/token?grant_type=password', {method: 'POST', body: JSON.stringify({email, password})}, false);
     keepSession(b);
-    meta.version = {}; meta.base = {}; saveMeta();
+    meta.version = {}; saveMeta();   // la base est gardée : elle sert à ne renvoyer que les vraies modifications faites ici
     firstDone = false; isAdmin = false; rolesConfigured = false;
     await pull(true);
     start();
@@ -7819,8 +7819,12 @@ const Sync = (() => {
         }
         if (known === undefined) {   // première synchronisation de cette donnée (connexion, ou ligne nouvellement créée)
           if (row.version === 0 || remoteEmpty(key, row.data)) { if (hasLocal(key) && (!PROTECTED.has(key) || isAdmin)) dirty.add(key); meta.version[key] = row.version; meta.base[key] = clone(row.data); continue; }
-          if (hasLocal(key) && key !== 'settings') {
-            const merged = merge(key, EMPTY[key], getData(key), row.data, true);
+          // Planning, primes, cams, suivi : la copie de ce navigateur ne doit jamais écraser le travail des autres.
+          // On ne reprend que ce qui a vraiment été modifié ici depuis la dernière synchronisation (base gardée) ;
+          // sans base connue, c'est la version partagée qui fait foi.
+          const deep = key === 'planning' || key === 'suivi' || key === 'cams' || key === 'coaching';
+          if (hasLocal(key) && key !== 'settings' && (!deep || meta.base[key])) {
+            const merged = merge(key, deep ? meta.base[key] : EMPTY[key], getData(key), row.data, true);
             setData(key, merged); if (!same(merged, row.data)) dirty.add(key);
           } else setData(key, row.data);
           meta.version[key] = row.version; meta.base[key] = clone(row.data); changed = true;
