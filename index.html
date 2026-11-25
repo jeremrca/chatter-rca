@@ -5099,9 +5099,33 @@ function planFeedback(wk, d, name, cell) {
   bg.addEventListener('keydown', e => { if (e.key === 'Escape') bg.remove(); });
   document.body.appendChild(bg); bg.querySelector('#pfb-note').focus();
 }
+/* Fusion d'une case du planning (liste de chatters) : base commune b, version l, version r.
+   Chaque chatter est comparé un par un (ajout, retrait, absent, retard, coupure, renfort, remplaçant) :
+   deux superviseurs qui modifient la même case en même temps ne s'écrasent plus. null = fusion impossible. */
+function mergeCellList(b, l, r) {
+  const ok = a => Array.isArray(a) && a.every(e => e && typeof e === 'object' && typeof e.n === 'string');
+  if (!ok(l) || !ok(r) || (b != null && !ok(b))) return null;
+  const id = e => normName(e.n), uniq = a => new Set(a.map(id)).size === a.length;
+  if (!uniq(l) || !uniq(r) || (b && !uniq(b))) return null;
+  const S = (x, y) => JSON.stringify(x ?? null) === JSON.stringify(y ?? null);
+  const B = new Map((b || []).map(e => [id(e), e])), L = new Map(l.map(e => [id(e), e])), R = new Map(r.map(e => [id(e), e]));
+  const out = [];
+  for (const k of new Set([...R.keys(), ...L.keys()])) {
+    const bb = B.get(k), ll = L.get(k), rr = R.get(k);
+    if (ll && rr) {
+      const o = {};
+      for (const f of new Set([...Object.keys(ll), ...Object.keys(rr)])) { const v = !S(ll[f], bb && bb[f]) ? ll[f] : rr[f]; if (v !== undefined) o[f] = v; }
+      out.push(o);
+    } else if (ll) { if (!bb || !S(ll, bb)) out.push(ll); }   // ajouté ici, ou modifié ici alors que retiré ailleurs
+    else if (rr) { if (!bb || !S(rr, bb)) out.push(rr); }     // ajouté ailleurs, ou modifié ailleurs alors que retiré ici
+  }
+  return out;
+}
+
 function editCell(wk, key) {
   const [d, s, mid] = key.split('|'); const m = allModels().find(x => x.id === mid);
   const W = weekOf(wk);
+  const start = JSON.parse(JSON.stringify(W.cells[key] || []));   // la case telle qu'elle était à l'ouverture de la fenêtre
   let list = (W.cells[key] || []).map(e => ({...e}));
   const names = baseOn() ? baseList() : knownChatters();
   const orig = new Set(list.flatMap(e => [e.n, ...(e.r ? e.r.split('/') : [])]).map(n => rosterKey(String(n).trim())));
@@ -5192,7 +5216,10 @@ function editCell(wk, key) {
         for (const e of list) if (e.r) e.r = e.r.split('/').map(x => x.trim()).filter(Boolean).map(n => { if (orig.has(rosterKey(n))) return n; const b = baseName(n); if (!b) bad.push(n); return b || n; }).join('/') || undefined;
         if (bad.length) { err = notInBaseMsg(bad); draw(); return; } }
       const clean = list.map(e => { const o = {n: e.n}; if (e.a) o.a = 1; if (e.c) o.c = 1; if (e.l) o.l = 1; if (e.rf) o.rf = 1; if (e.r) o.r = e.r; return o; });
-      if (clean.length) W.cells[key] = clean; else delete W.cells[key];
+      // Si quelqu'un d'autre a modifié cette case pendant que la fenêtre était ouverte, on garde aussi ses changements
+      const now = W.cells[key] || [];
+      const fin = JSON.stringify(now) === JSON.stringify(start) ? clean : (mergeCellList(start, clean, now) || clean);
+      if (fin.length) W.cells[key] = fin; else delete W.cells[key];
       // Même changement sur les autres jours de la semaine (et les semaines suivantes déjà préparées)
       const df = diff(); let nAdd = 0, nDel = 0;
       if (scope !== 'day' && (df.added.length || df.removed.length)) {
@@ -7771,16 +7798,20 @@ const Sync = (() => {
   const pick = (b, l, r) => !same(l, b) ? l : r;
   const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
   // Fusion clé par clé (planning) : deux personnes qui modifient des cases différentes ne s'écrasent jamais.
-  function deepMerge(b, l, r) {
+  function deepMerge(b, l, r, path = []) {
     if (isObj(l) && isObj(r)) {
       const out = {};
       for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) {
         const bb = isObj(b) ? b[k] : undefined, ll = l[k], rr = r[k];
         if (ll === undefined) { if (bb === undefined || !same(rr, bb)) out[k] = rr; continue; }
         if (rr === undefined) { if (bb === undefined || !same(ll, bb)) out[k] = ll; continue; }
-        out[k] = deepMerge(bb, ll, rr);
+        out[k] = deepMerge(bb, ll, rr, [...path, k]);
       }
       return out;
+    }
+    // Case du planning modifiée des deux côtés : on fusionne chatter par chatter au lieu de garder une seule des deux listes
+    if (path.length === 4 && path[0] === 'weeks' && path[2] === 'cells' && !same(l, b) && !same(r, b) && !same(l, r)) {
+      const m = mergeCellList(b, l, r); if (m) return m;
     }
     return !same(l, b) ? l : r;
   }
