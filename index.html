@@ -297,7 +297,7 @@ tr.issue-error .issues{color:var(--red)}
 .fx-ava{width:76px;height:76px;border-radius:22px;display:grid;place-items:center;font-size:26px;font-weight:900;flex:none;background:linear-gradient(135deg,var(--pc),#a855f7);box-shadow:0 0 24px color-mix(in srgb,var(--pc) 55%,transparent)}
 .fx-nm{font-size:25px;font-weight:900;line-height:1.1}.fx-sub{color:#a1a1aa;font-size:13px;margin-top:5px}
 .fx-pill{display:inline-block;font-size:11px;font-weight:900;padding:1px 9px;border-radius:99px;background:var(--pc);color:#0b0b0f;margin-right:6px;letter-spacing:.04em}
-.fx-weak{display:inline-block;margin-top:6px;font-size:11px;font-weight:900;padding:2px 9px;border-radius:7px;background:linear-gradient(90deg,#ef4444,#f97316);text-transform:uppercase;letter-spacing:.04em}.fx-weak.new{background:#38bdf8;color:#04131d}
+.fx-weak{display:inline-block;margin-top:6px;font-size:11px;font-weight:900;padding:2px 9px;border-radius:7px;background:linear-gradient(90deg,#ef4444,#f97316);text-transform:uppercase;letter-spacing:.04em}.fx-weak.new{background:#22c55e;color:#052e16}
 .fx-grade{margin-left:auto;text-align:center;flex:none}.fx-grade b{display:block;font-size:46px;font-weight:900;line-height:1;color:#facc15;text-shadow:0 0 18px rgba(250,204,21,.6)}.fx-grade span{font-size:11px;color:#a1a1aa;font-weight:700}
 .fx-rings{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:20px 0 6px}
 .fx-ring{text-align:center}.fx-ring svg{width:84px;height:84px;max-width:100%}.fx-ring text{font-size:17px;font-weight:900;fill:#fff}.fx-ring p{margin:2px 0 0;font-size:12px;color:#a1a1aa;font-weight:700}
@@ -586,7 +586,7 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .pcell .pc{cursor:pointer}.pcell .pc:hover{text-decoration:underline;text-underline-offset:2px}
 .pchip{display:block;font-size:12.5px;line-height:1.35;margin:1px 0}
 .pc{color:var(--text)}
-.pc.new{color:#60a5fa;font-weight:700}
+.pc.new{background:#22c55e;color:#052e16;font-weight:800;border-radius:5px;padding:0 5px}
 .pc.abs{color:#f87171;font-weight:700;text-decoration:none}
 .pchip.rep s{color:#f87171;opacity:.85}
 .pchip .arr{color:var(--faint);margin:0 3px}
@@ -1008,6 +1008,17 @@ table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:point
 .pp-alert{display:flex;align-items:flex-start;gap:10px;background:var(--raised);border:1px solid var(--flame);border-radius:12px;padding:12px 14px;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:14px}
 .pp-alert a{color:var(--flame);font-weight:700;margin-left:auto}.pp-alert button{background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer;line-height:1}
 @media (max-width:900px){.pp-dayg{grid-template-columns:1fr}.pp-acts{margin-left:0}.pp-rec{grid-template-columns:1fr}}
+/* Onboarding : les nouveaux chatters sont toujours en vert */
+.rtag.newc{background:#22c55e;color:#052e16}
+.onb-row{cursor:pointer}.onb-row:hover td{background:rgba(34,197,94,.06)}
+.pill.onbp{background:#22c55e;color:#052e16}
+.onb-ul{margin:4px 0 0;padding-left:20px;line-height:1.6}
+.onb-tag{display:inline-block;margin-left:6px;font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:5px;background:#22c55e;color:#052e16;white-space:nowrap}
+.glc.new{background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.06));border-color:rgba(34,197,94,.6)}
+.glc-w.new{background:#22c55e;color:#052e16}
+.launch-banner.onb{padding:10px 14px;background:rgba(34,197,94,.13);border-color:rgba(34,197,94,.6);color:#bbf7d0;font-size:13.5px}
+.launch-banner.onb strong{color:#fff}
+.onb-dot{width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e;flex:none}
 </style>
 </head>
 <body>
@@ -4315,14 +4326,176 @@ function bindPerso(main) {
   autosave(root.querySelector('#pp-wnote'), 'wnote:' + perso.week);
 }
 
+/* ---------- Onboarding des nouveaux chatters ----------
+   planState.onboard = {[id]: {name, pf: 'mym'|'of', shifts: [s], off: 0-6, date, time, appr, note, at, by, sup?, applied: {[lundi]: 1}}}
+   À l'enregistrement : jour OFF et shifts dans la liste Jours OFF, chatter « nouveau » (vert) à partir de sa date,
+   placé dans la colonne BACKUP de sa plateforme sur ses shifts, tous les jours sauf son OFF (semaines du planning déjà créées,
+   puis les suivantes au fur et à mesure), et confié au superviseur le plus présent sur sa plateforme et ses horaires
+   le lendemain de l'onboarding (suivi global). */
+const ONB_APPR = [['', 'Choisir…'], ['top', 'Très bon'], ['ok', 'Bon'], ['moy', 'Moyen'], ['low', 'Juste / à surveiller']];
+const ONB_PF = {mym: 'MYM', of: 'OnlyFans'};
+const onbMap = () => (planState.onboard ||= {});
+const onbList = () => Object.entries(planState.onboard || {}).map(([id, o]) => ({id, ...o})).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.time || '').localeCompare(a.time || ''));
+const onbShiftsTxt = o => (o.shifts || []).map(s => `${SHIFT_HOURS[s][0]}h-${SHIFT_HOURS[s][1] % 24}h`).join(' + ');
+// Premier jour de suivi : le lendemain de l'onboarding (ou le jour travaillé suivant si c'est son OFF)
+function onbFollowDay(o) { let d = addDaysIso(o.date, 1); for (let i = 0; i < 7 && persoDow(d) === +o.off; i++) d = addDaysIso(d, 1); return d; }
+// Shifts de sa première semaine (à partir du lendemain), au format du suivi global
+function onbShifts(o, from = onbFollowDay(o), n = 7) {
+  const out = [];
+  for (let i = 0; i < n; i++) { const day = addDaysIso(from, i), d = persoDow(day); if (d === +o.off) continue; for (const s of o.shifts || []) out.push({wk: mondayOf(day), d, s, g: o.pf, day}); }
+  return out;
+}
+// Superviseur : de sa plateforme, le plus présent sur ses horaires le premier jour de suivi, puis sur la semaine ; à égalité, le moins chargé
+function onbPickSup(o) {
+  const G = coachGlobal(), load = {}; for (const g of Object.values(G)) load[g.sup] = (load[g.sup] || 0) + 1;
+  const first = onbShifts(o, onbFollowDay(o), 1), week = onbShifts(o);
+  const opts = supList().filter(s => glFits(s, o.pf)).map(s => ({s, d1: glOverlap(s, first), w: glOverlap(s, week), sec: glSecondary(s, o.pf)})).filter(x => x.d1 + x.w > 0);
+  opts.sort((a, b) => a.sec - b.sec || b.d1 - a.d1 || b.w - a.w || (load[a.s.id] || 0) - (load[b.s.id] || 0));
+  return opts[0] ? opts[0].s : null;
+}
+function onbApply(o, opt = {}) {
+  const name = o.name.trim(), today = isoOf(new Date());
+  if (!name || !o.date) return;
+  if (opt.full) {
+    const ok = offKey(name), cur = dayOff()[ok] || Object.values(planState.dayoff || {}).find(x => rosterKey(x.name) === rosterKey(name));
+    const entry = cur || (dayOff()[ok] = {name, days: []});
+    if (o.off !== '' && o.off != null) entry.days = [+o.off];
+    if ((o.shifts || []).length) entry.shifts = [...o.shifts].sort();
+    planState.chatters[normName(name)] = {...(planState.chatters[normName(name)] || {}), name, isNew: true, since: o.date};
+    if ((planState.ignored || {})[rosterKey(name)]) delete planState.ignored[rosterKey(name)];
+  }
+  // Planning : colonne BACKUP de sa plateforme, sur les semaines existantes (une seule fois par semaine : les déplacements faits ensuite sont gardés)
+  o.applied ||= {};
+  const mid = `${o.pf}-backup`, until = addDaysIso(o.date, 13);
+  let n = 0;
+  for (const [wk, W] of Object.entries(planState.weeks || {})) {
+    if (o.applied[wk] || addDaysIso(wk, 6) < o.date || wk > until) continue;
+    W.cells ||= {};
+    for (let d = 0; d < 7; d++) {
+      const day = addDaysIso(wk, d); if (day < o.date || day > until || d === +o.off) continue;
+      for (const s of o.shifts || []) {
+        const here = Object.entries(W.cells).some(([k, l]) => k.startsWith(`${d}|${s}|`) && l.some(e => [e.n, ...(e.r ? e.r.split('/') : [])].some(x => rosterKey(x) === rosterKey(name))));
+        if (here) continue;
+        (W.cells[cellKey(d, s, mid)] ||= []).push({n: name}); n++;
+      }
+    }
+    o.applied[wk] = 1;
+  }
+  // Superviseur attitré (suivi global)
+  {
+    const k = rosterKey(name), G = coachGlobal(), g = G[k];
+    if (!g ? (opt.full || !o.sup) : g.by === 'onboarding' && opt.resup) {
+      const s = onbPickSup(o);
+      if (s) { o.sup = s.id; if (Object.keys(G).length || coachState.globalStart) { G[k] = {sup: s.id, name, since: o.date < today ? today : o.date, by: 'onboarding'}; saveCoach(); } }
+      else delete o.sup;
+    } else o.sup = g.sup;
+  }
+  return n;
+}
+// Semaines créées après coup : on y place les nouveaux encore dans leurs 2 premières semaines
+function onbCatchUp() {
+  const today = isoOf(new Date()); let ch = false;
+  for (const o of Object.values(planState.onboard || {})) {
+    if (!o.date || addDaysIso(o.date, 13) < today) continue;
+    const before = JSON.stringify(o.applied || {});
+    const n = onbApply(o); if (n || before !== JSON.stringify(o.applied || {})) ch = true;
+  }
+  if (ch) savePlan();
+}
+const onbSupName = o => { const s = o.sup && supList().find(x => x.id === o.sup); return s ? s.name : ''; };
+// Suivi « nouveau » du superviseur : le lendemain de l'onboarding
+const onbFollowFor = (supId, date) => onbList().filter(o => o.sup === supId && o.date && onbFollowDay(o) === date);
+
+function onbHTML() {
+  const today = isoOf(new Date()), L = onbList();
+  const up = L.filter(o => o.date >= addDaysIso(today, -7)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)), past = L.filter(o => o.date < addDaysIso(today, -7));
+  const row = o => { const st = o.date === today ? '<span class="pill onbp">aujourd’hui</span>' : onbFollowDay(o) === today ? '<span class="pill onbp">1er jour de suivi</span>' : o.date > today ? '<span class="pill">à venir</span>' : '';
+    return `<tr data-onb="${esc(o.id)}" tabindex="0" class="onb-row"><td><span class="pc new">${esc(o.name)}</span> ${st}</td><td>${esc(ONB_PF[o.pf] || '')}</td><td>${esc(onbShiftsTxt(o))}</td><td>${o.off !== '' && o.off != null ? esc(PLAN_DAYS_LONG[+o.off]) : '—'}</td>
+      <td>${esc(fmtDayFr(o.date))}${o.time ? ` · ${esc(fmtHour(o.time))}` : ''}</td><td>${esc((ONB_APPR.find(a => a[0] === o.appr) || ['', ''])[1])}${o.note ? `<div class="sub" style="margin:2px 0 0;white-space:normal">${esc(o.note)}</div>` : ''}</td><td>${onbSupName(o) ? esc(onbSupName(o)) : '<span class="muted">à attribuer</span>'}</td></tr>`; };
+  const tbl = list => `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Chatteur</th><th>Plateforme</th><th>Shift</th><th>Jour off</th><th>Onboarding</th><th>Appréciation du test</th><th>Suivi par</th></tr></thead><tbody>${list.map(row).join('')}</tbody></table></div>`;
+  return `<div class="stack">
+    <section class="panel"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Onboarding des nouveaux chatteurs</h2><button class="btn primary" id="onb-add" type="button" style="margin-left:auto">+ Ajouter une nouvelle intégration</button></div>
+      <p class="hint" style="margin:8px 0 0">À l’enregistrement, le chatteur est ajouté automatiquement :</p>
+      <ul class="hint onb-ul"><li>dans <strong>Jours OFF / Base chatters</strong>, avec son jour off et son shift ;</li><li>au <strong>planning</strong>, en <span class="pc new">vert</span>, dans la colonne BACKUP de sa plateforme, sur son shift, tous les jours sauf son off, à partir de la date de l’onboarding ;</li><li>au <strong>suivi des chatters</strong>, chez le superviseur de sa plateforme le plus présent sur son shift le lendemain. Ce superviseur le voit en vert : « Nouveau chatter à suivre ».</li></ul>
+      <p class="hint" style="margin:6px 0 0">Le jour de l’onboarding et le lendemain, un bandeau prévient toute l’équipe.</p></section>
+    <section class="panel"><h2>À venir et en cours · ${up.length}</h2>${up.length ? tbl(up) : '<p class="hint" style="margin:6px 0 0">Aucune intégration prévue.</p>'}</section>
+    ${past.length ? `<section class="panel"><h2>Intégrations passées · ${past.length}</h2>${tbl(past)}</section>` : ''}
+  </div>`;
+}
+function onbEdit(id) {
+  const cur = id ? onbMap()[id] : null, today = isoOf(new Date());
+  if (id && !cur) return;
+  const o = cur || {name: '', pf: '', shifts: [], off: '', date: today, time: '', appr: '', note: ''};
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="onb-t" style="max-width:600px"><h3 id="onb-t">${cur ? `Intégration de ${esc(cur.name)}` : 'Nouvelle intégration'}</h3>
+    <form id="onb-f" class="onb-f">
+      <label class="pp-fl">Nom du chatteur<input type="text" name="name" required value="${esc(o.name)}" list="onb-names" autocomplete="off"><datalist id="onb-names">${knownChatters().map(n => `<option value="${esc(n)}">`).join('')}</datalist></label>
+      <div class="pp-row">
+        <label class="pp-fl">Plateforme<select name="pf" required><option value="">Choisir…</option>${Object.entries(ONB_PF).map(([k, l]) => `<option value="${k}" ${o.pf === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        <label class="pp-fl">Jour off souhaité<select name="off" required><option value="">Choisir…</option>${PLAN_DAYS_LONG.map((x, i) => `<option value="${i}" ${String(o.off) === String(i) ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+      </div>
+      <fieldset class="pp-rep"><legend>Shift souhaité <span class="muted">(plusieurs choix possibles)</span></legend><div class="pp-days" style="margin:4px 0 0">${PLAN_SHIFTS.map((x, s) => `<label class="pp-db"><input type="checkbox" name="sh" value="${s}" ${(o.shifts || []).includes(s) ? 'checked' : ''}> ${SHIFT_HOURS[s][0]}h-${SHIFT_HOURS[s][1] % 24}h</label>`).join('')}</div></fieldset>
+      <div class="pp-row">
+        <label class="pp-fl">Date de l’onboarding<input type="date" name="date" required value="${esc(o.date)}"></label>
+        <label class="pp-fl">Heure<input type="time" name="time" value="${esc(o.time || '')}"></label>
+      </div>
+      <label class="pp-fl">Appréciation lors de son test<select name="appr">${ONB_APPR.map(([k, l]) => `<option value="${k}" ${o.appr === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="pp-fl">Autres remarques<textarea name="note" rows="3" placeholder="Points forts, points à travailler, disponibilités…">${esc(o.note || '')}</textarea></label>
+      ${cur ? `<p class="hint" style="font-size:12px;margin:0">Suivi par : <strong>${esc(onbSupName(cur) || 'pas encore attribué')}</strong>. Si vous changez le shift, la plateforme ou la date, le planning déjà rempli ne bouge pas : modifiez les cases à la main si besoin.</p>` : ''}
+      <div class="acts" style="flex-wrap:wrap">${cur ? '<button type="button" class="btn ghost danger" data-onba="del">Supprimer la fiche</button>' : ''}<span style="flex:1"></span><button type="button" class="btn ghost" data-onba="cancel">Annuler</button><button type="submit" class="btn primary">Sauvegarder</button></div>
+    </form></div>`;
+  const close = () => { bg.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey); document.body.appendChild(bg);
+  const f = bg.querySelector('form'); f.elements.name.focus();
+  bg.addEventListener('click', async e => {
+    if (e.target === bg) return close();
+    const a = e.target.closest('[data-onba]'); if (!a) return;
+    if (a.dataset.onba === 'cancel') return close();
+    if (a.dataset.onba === 'del') { close(); if (!(await modal('Supprimer la fiche', `<p>Supprimer la fiche d’onboarding de <strong>${esc(cur.name)}</strong> ? Le chatteur reste au planning, dans la liste Jours OFF et dans le suivi : retirez-le de là si besoin.</p>`, 'Supprimer'))) return; delete onbMap()[id]; savePlan(); toast('Fiche supprimée.'); render(); }
+  });
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    const sh = [...f.querySelectorAll('[name=sh]:checked')].map(c => +c.value);
+    if (!sh.length) { toast('Cochez au moins un shift.', true); return; }
+    const name = f.elements.name.value.trim().replace(/\s+/g, ' ');
+    const nv = {name, pf: f.elements.pf.value, shifts: sh, off: +f.elements.off.value, date: f.elements.date.value, time: f.elements.time.value || '', appr: f.elements.appr.value, note: f.elements.note.value.trim()};
+    const changed = !cur || ['name', 'pf', 'off', 'date'].some(k => String(cur[k]) === String(nv[k]) ? false : true) || JSON.stringify(cur.shifts) !== JSON.stringify(sh);
+    const rec = cur ? Object.assign(cur, nv) : (onbMap()['o' + Date.now().toString(36)] = {...nv, at: Date.now(), by: who(Sync.email()) || 'local'});
+    if (changed && cur) rec.applied = {};   // nouvelle date / nouveau shift : placé à nouveau là où il manque
+    const n = onbApply(rec, {full: true, resup: changed && !!cur});
+    savePlan(); close();
+    const sup = onbSupName(rec);
+    toast(`${name} enregistré(e)${n ? ` · ${plural(n, 'shift ajouté', 'shifts ajoutés')} au planning` : ''}${sup ? ` · suivi par ${sup}` : ''}.`);
+    render();
+  });
+}
+function bindOnb(main) {
+  main.querySelector('#onb-add')?.addEventListener('click', () => onbEdit());
+  main.querySelectorAll('[data-onb]').forEach(r => { const open = () => onbEdit(r.dataset.onb); r.addEventListener('click', open); r.addEventListener('keydown', e => { if (e.key === 'Enter') open(); }); });
+}
+// Bandeau : le jour de l'onboarding et le premier jour de suivi
+function onbBannerHTML() {
+  const today = isoOf(new Date()), L = onbList();
+  const a = L.filter(o => o.date === today).sort((x, y) => (x.time || '').localeCompare(y.time || '')).map(o => `onboarding de <strong>${esc(o.name)}</strong>${o.time ? ` à ${esc(fmtHour(o.time))}` : ''} (${esc(ONB_PF[o.pf] || '')} · ${esc(onbShiftsTxt(o))})${onbSupName(o) ? `, suivi par ${esc(onbSupName(o))} dès demain` : ''}`);
+  const b = L.filter(o => onbFollowDay(o) === today).map(o => `nouveau chatter à suivre : <strong>${esc(o.name)}</strong> (${esc(ONB_PF[o.pf] || '')} · ${esc(onbShiftsTxt(o))})${onbSupName(o) ? ` → <strong>${esc(onbSupName(o))}</strong>` : ''}`);
+  if (!a.length && !b.length) return '';
+  return `<span class="onb-dot"></span><span>${a.length ? `Aujourd’hui : ${a.join(' · ')}` : ''}${a.length && b.length ? '<br>' : ''}${b.length ? `Attention, ${b.join(' · ')}` : ''}</span>`;
+}
+
 function renderPlanning(main) {
+  onbCatchUp();
   const wk = planWeekKey(), W = weekOf(wk), d = planDay(wk);
   const models = activeModels();
   const allWeeks = [...new Set([...Object.keys(planState.weeks), thisMonday(), addDaysIso(thisMonday(), 7), wk])].sort().reverse();
   const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
   const hl = newHighlights();
   const q = normName(planUI.q);
-  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'conges' ? 'on' : ''}" data-ptab="conges">Congés ${(() => { const n = congeList('ch').filter(r => (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button>${persoVisible() ? `<button type="button" class="${planUI.tab === 'perso' ? 'on' : ''}" data-ptab="perso">${persoIsOwner() ? 'Mon planning' : `Planning de ${esc(persoOwnerLabel())}`}</button>` : ''}</div>`;
+  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'onb' ? 'on' : ''}" data-ptab="onb">Onboarding ${(() => { const t = isoOf(new Date()), n = onbList().filter(o => o.date >= t).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'conges' ? 'on' : ''}" data-ptab="conges">Congés ${(() => { const n = congeList('ch').filter(r => (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button>${persoVisible() ? `<button type="button" class="${planUI.tab === 'perso' ? 'on' : ''}" data-ptab="perso">${persoIsOwner() ? 'Mon planning' : `Planning de ${esc(persoOwnerLabel())}`}</button>` : ''}</div>`;
+  if (planUI.tab === 'onb') {
+    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Onboarding</span></h1></div>` + tabs + onbHTML();
+    bindPlanTabs(main); bindOnb(main); return;
+  }
   if (planUI.tab === 'perso' && persoVisible()) {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>${persoIsOwner() ? 'Mon planning' : `Planning de ${esc(persoOwnerLabel())}`}</span></h1></div>` + tabs + `<div class="pp-root">${persoHTML()}</div>`;
     bindPlanTabs(main); bindPerso(main); persoLoad(); return;
@@ -4853,7 +5026,7 @@ function supPlanHTML() {
   const pfOf = k => SUP_PF[k] || {label: 'OFF ce jour', color: '#52525b'};
   const pM = supCoverage('MYM').grid[d], pO = supCoverage('OF').grid[d], all = supCoverage().grid[d], allWho = supCoverage().who[d];
   const ganttRow = r => { const {s, blocks, off} = r;
-    return `<div class="g-row" style="--pc:${pfOf(r.key).color}"><div class="g-name"><span class="g-dot" style="background:${s.color}"></span>${esc(s.name)}${r.own && s.focusDays && s.focusDays[d] ? ' <span class="sfx" title="Focus différent de son focus habituel ce jour-là">ce jour</span>' : ''}</div>
+    return `<div class="g-row" style="--pc:${pfOf(r.key).color}"><div class="g-name"><span class="g-dot" style="background:${s.color}"></span>${esc(s.name)}${onbFollowFor(s.id, dDate).map(o => `<span class="onb-tag" title="Attention, nouveau chatter à suivre ce jour-là (${esc(ONB_PF[o.pf] || '')} · ${esc(onbShiftsTxt(o))})">Nouveau : ${esc(o.name)}</span>`).join('')}${r.own && s.focusDays && s.focusDays[d] ? ' <span class="sfx" title="Focus différent de son focus habituel ce jour-là">ce jour</span>' : ''}</div>
       <div class="g-track">${ticks.map(t => `<span class="g-grid" style="left:${t / 24 * 100}%"></span>`).join('')}${dspActive() ? [4, 10, 16, 22].map(h => `<span class="g-dline" style="left:${h / 24 * 100}%"></span>`).join('') + DSP_PF.flatMap(([pf]) => [0, 1, 2, 3].filter(sl => dspWho(pf, sl, addDaysIso(planUI.week || thisMonday(), d)).id === s.id).map(sl => `<span class="g-dspb${dspHour(sl) >= 20 ? ' r' : ''}" style="left:${dspHour(sl) / 24 * 100}%;--pc:${pf === 'of' ? SUP_PF.OF.color : SUP_PF.MYM.color}" title="${esc(s.name)} est responsable du dispatch ${pf === 'of' ? 'OnlyFans' : 'MYM'} ${dspHour(sl)}h (réunion ${(dspHour(sl) + 23) % 24}h)">🎯 ${pf === 'of' ? 'OF' : 'MYM'} ${dspHour(sl)}h</span>`)).join('') : ''}
         ${blocks.map(b => `<div class="g-bar ${b.carry ? 'carry' : ''}" style="left:${b.start / 24 * 100}%;width:${(b.end - b.start) / 24 * 100}%;background:${s.color};color:${textOn(s.color)};--bc:${SUP_PF[b.pf].color}" title="${esc(s.name)} · ${esc(b.label)} · ${SUP_PF[b.pf].label}">${b.end - b.start >= 2.5 ? esc(b.carry ? s.days[(d + 6) % 7] : s.days[d]) : ''}</div>`).join('')}
         ${off && !blocks.length ? `<span class="g-off">${r.leave ? 'CONGÉ' : 'OFF'}</span>` : off ? `<span class="g-off right">${r.leave ? 'CONGÉ' : 'OFF'}</span>` : ''}
@@ -5761,6 +5934,8 @@ function launchBanner(main, rt) {
   if (Sync.needsLogin() || rt.page === 'partage') return;
   const list = upcomingLaunches(), bans = upcomingBanners();
   const weekP = rt.page === 'planning' ? allPromos().filter(P => P.type === 'week' && P.week === thisMonday()) : [];
+  const onb = rt.page === 'partage' ? '' : onbBannerHTML();
+  if (onb) { const b = document.createElement('div'); b.className = 'launch-banner onb'; b.innerHTML = onb + (rt.page === 'planning' ? '' : `<a class="btn ghost" href="#${rt.pid}/planning" data-onbgo>Voir l’onboarding</a>`); b.querySelector('[data-onbgo]')?.addEventListener('click', () => { planUI.tab = 'onb'; }); main.prepend(b); }
   if (!list.length && !bans.length && !weekP.length) return;
   const hotBan = bans.filter(P => new Date() >= P.s || daysUntil(P.date) <= LAUNCH_SOON), softBan = bans.filter(P => !hotBan.includes(P));
   const hot = [...list.filter(L => L.days <= LAUNCH_SOON).map(L => `🚀 ${launchHotText(L)}`), ...hotBan.map(bannerHotText)];
@@ -6897,7 +7072,11 @@ function glAgenda(wk, sup) {
     if (!picks.length) { none.push({k, name: it.plan || it.name, type: 'weak', why: shifts.length ? 'aucun jour commun avec vos horaires' : ''}); continue; }
     for (const x of picks) { days[x.d].push({k, name: it.plan || it.name, type: 'weak', d: x.d, fbk: `${k}|w|${x.d}`, label: label(x), g: x.g}); load[x.d]++; }
   }
-  const mine = Object.entries(coachGlobal()).filter(([k, g]) => g.sup === sup.id && !weakKeys.has(k)).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'));
+  // Nouveaux chatters (onboarding) : à suivre le lendemain de leur onboarding, en vert
+  const newKeys = new Set();
+  for (const o of onbList()) { if (o.sup !== sup.id || !o.date) continue; const fd = onbFollowDay(o); if (fd < wk || fd > addDaysIso(wk, 6)) continue;
+    const k = rosterKey(o.name), d = persoDow(fd); newKeys.add(k); days[d].push({k, name: o.name, type: 'new', d, fbk: `${k}|n`, label: `${onbShiftsTxt(o)} · ${ONB_PF[o.pf] || ''}`, g: o.pf}); load[d]++; }
+  const mine = Object.entries(coachGlobal()).filter(([k, g]) => g.sup === sup.id && !weakKeys.has(k) && !newKeys.has(k)).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'));
   for (const [k, g] of mine) {
     const [x] = pickDay(glShifts(g.name, [sw]), 1, [coachState.globalStart || '', g.since || ''].sort().pop());
     if (!x) { const sh = glShifts(g.name, [sw]); none.push({k, name: g.name, type: 'global', why: sh.length ? 'aucun jour commun avec vos horaires' : ''}); continue; }
@@ -6931,7 +7110,7 @@ function glCalendarHTML(wk) {
   const canMark = !coachAs() && (dir || (me && me.id === sup.id));
   const chip = it => { const s = glState(wk, it);
     return `<button type="button" class="glc ${it.type} ${s}" data-glfb="${esc(it.fbk)}" data-gld="${it.d}" ${canMark ? '' : 'disabled'} style="--pc:${SUP_PF[it.g === 'of' ? 'OF' : it.g === 'mym' ? 'MYM' : ''].color}" title="${s === 'done' ? 'Feedback fait · cliquez pour annuler' : canMark ? 'Cliquez quand le feedback est fait' : ''}">
-      <span class="glc-n">${s === 'done' ? '✓ ' : ''}${esc(it.name)}<span class="glc-f" data-fxopen="${esc(it.type === 'weak' ? glKeyOfWeak(it.k, glWeak(wk)[it.k] || {}) || it.k : it.k)}" title="Ouvrir sa fiche">fiche</span></span>${it.type === 'weak' ? '<span class="glc-w">Maillon faible</span>' : ''}<span class="glc-s">${esc(it.label)}</span>${s === 'very' ? '<span class="glc-l">en retard</span>' : s === 'late' ? '<span class="glc-l">d’hier</span>' : ''}</button>`; };
+      <span class="glc-n">${s === 'done' ? '✓ ' : ''}${esc(it.name)}<span class="glc-f" data-fxopen="${esc(it.type === 'weak' ? glKeyOfWeak(it.k, glWeak(wk)[it.k] || {}) || it.k : it.k)}" title="Ouvrir sa fiche">fiche</span></span>${it.type === 'weak' ? '<span class="glc-w">Maillon faible</span>' : ''}${it.type === 'new' ? '<span class="glc-w new">Nouveau chatter à suivre</span>' : ''}<span class="glc-s">${esc(it.label)}</span>${s === 'very' ? '<span class="glc-l">en retard</span>' : s === 'late' ? '<span class="glc-l">d’hier</span>' : ''}</button>`; };
   const todayIdx = PLAN_DAYS.findIndex((_, d) => addDaysIso(wk, d) === today);
   const todays = todayIdx >= 0 ? ag.days[todayIdx] : [], todo = todays.filter(x => glState(wk, x) !== 'done'), late = ag.days.flat().filter(x => ['late', 'very'].includes(glState(wk, x)));
   return `<div class="stack">
@@ -7698,7 +7877,7 @@ function renderCoaching(main) {
     const elig = sups.filter(s => it.pid === 'both' ? supEligible(s, 'of') || supEligible(s, 'mym') : supEligible(s, it.pid));
     return `<tr class="${it.sup ? '' : 'nosup'} ${it.isIn ? 'newin' : ''}"><td class="num"><span class="rnum">${it.rank}</span><button type="button" class="krm" data-krm="${esc(it.k)}" title="Retirer ou remplacer ce chatter" aria-label="Retirer ${esc(it.plan || it.name)}">×</button></td>
       <td><button type="button" class="linkbtn" data-kall="${esc(it.k)}" title="Voir la fiche"><strong>${esc(it.plan || it.name)}</strong></button>${it.verdict ? ' ' + verdictBadge(it.verdict) : ''}${it.plan && rosterKey(it.plan) !== rosterKey(it.name) ? `<div class="sub" style="margin:0">import : ${esc(it.name)}</div>` : ''}
-        <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag warm">Nouveau · à vérifier</span>' : ''}${it.pid === 'both' ? `<span class="rtag">aussi ${esc(it.alsoRank || '')}</span>` : ''}${!it.plan ? '<span class="rtag hot">introuvable au planning</span>' : ''}</div></td>
+        <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag newc">Nouveau · à vérifier</span>' : ''}${it.pid === 'both' ? `<span class="rtag">aussi ${esc(it.alsoRank || '')}</span>` : ''}${!it.plan ? '<span class="rtag hot">introuvable au planning</span>' : ''}</div></td>
       <td>${it.pid === 'both' ? platBadge('OF') + ' ' + platBadge('MYM') : platBadge(it.pid === 'of' ? 'OF' : 'MYM')}</td>
       <td class="num"><strong>${nf(it.score, 0, 1)}</strong>${it.malus ? ` <span class="sc-lo" title="Malus pour le classement des maillons faibles : ${esc(it.malusWhy || '')}">−${it.malus}</span>` : ''} <span class="badge ${it.grade} g${it.grade}" style="width:22px;height:22px;font-size:12px">${it.grade}</span></td>
       <td class="num">${it.ca != null ? moneyP(PLATFORMS[it.pid === 'both' ? 'of' : it.pid], it.ca) : '—'}</td>
@@ -7929,7 +8108,7 @@ function coachCardHTML(it, wk, curWk, me, editable) {
   const v = it.verdict || {}, locked = !!it.decision;
   return `<article class="panel kcard2 ${it.streak > 1 ? 'again' : ''}" data-kcard="${esc(it.k)}">
     <div class="kcard-h"><strong style="font-size:17px">${esc(it.plan || it.name)}</strong> ${it.pid === 'both' ? platBadge('OF') + platBadge('MYM') : platBadge(it.pid === 'of' ? 'OF' : 'MYM')}
-      ${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag warm">Nouveau · à vérifier</span>' : ''}
+      ${it.streak > 1 ? `<span class="rtag hot">${it.streak}e semaine dans la liste</span>` : ''}${it.isNew ? '<span class="rtag newc">Nouveau · à vérifier</span>' : ''}
       <span class="sub" style="margin:0 0 0 auto">Rang ${it.rank}/${it.of} · score ${nf(it.score, 0, 1)}${it.malus ? ` · malus −${it.malus} (${esc(it.malusWhy || '')})` : ''} · grade ${it.grade}</span></div>
     ${coachPerfHTML(it, wk)}
     <div class="kshifts">${sh.length ? sh.sort((a, b) => a.d - b.d || a.s - b.s).map(x => { const m = allModels().find(mm => mm.id === x.mid); const mine2 = me && coachOverlap(me, [x]) > 0; return `<span class="shc ${mine2 ? 'mine' : 'other'}" title="${mine2 ? 'Pendant vos heures' : ''}">${PLAN_DAYS[x.d]} ${PLAN_SHIFTS[x.s]}${m ? ` · ${esc(m.name)}` : ''}</span>`; }).join('') : '<span class="muted">Pas de shift trouvé au planning cette semaine</span>'}</div>
@@ -8068,7 +8247,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611243;
+  const APP_BUILD = 202611251;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
