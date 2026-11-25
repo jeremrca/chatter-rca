@@ -1020,6 +1020,7 @@ table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:point
 .launch-banner.onb strong{color:#fff}
 .onb-dot{width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e;flex:none}
 .monet-row{background:rgba(34,197,94,.06);border-radius:8px}.monet-row .lab{font-weight:700}
+.frs-free{margin-top:14px;padding:12px 14px;border:1px dashed #f59e0b;border-radius:12px}.frs-free-h{font-weight:800;font-size:13.5px;color:#fcd34d;margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -5259,7 +5260,12 @@ function frSupHTML() {
       const block = gid => { const g = PLAN_GROUPS.find(x => x.id === gid), l = ids.filter(id => mm[id].group === gid).sort((a, b) => mm[a].name.localeCompare(mm[b].name, 'fr'));
         return l.length ? `<div class="frs-g"><div class="frs-gh" style="--gc:${g.color}"><span></span>${gid === 'of' ? 'OnlyFans' : gid === 'mym' ? 'MYM' : 'Reveal'} <b>${l.length}</b></div><div class="frs-chips">${l.map(id => `<span class="frs-chip" style="--gc:${grp(id).color}">${esc(mm[id].name)}</span>`).join('')}</div></div>` : ''; };
       return `<article class="frs-card"><header><strong>${esc(f.name)}</strong><span class="muted">${plural(ids.length, 'modèle', 'modèles')}${f.email ? ` · ${esc(f.email)}` : ' · compte non relié'}</span>${edit ? `<button class="btn ghost small-btn" type="button" data-fredit="${esc(f.id)}">Modifier</button>` : ''}</header>
-        ${['mym', 'of', 'other'].map(block).join('') || '<p class="hint" style="margin:0">Aucune modèle.</p>'}</article>`; }).join('')}</div></section>`;
+        ${['mym', 'of', 'other'].map(block).join('') || '<p class="hint" style="margin:0">Aucune modèle.</p>'}</article>`; }).join('')}</div>
+    ${(() => { const taken = new Set(frList().flatMap(f => Object.keys(f.models || {}))), free = storedModels().filter(m => live(m.id) && !taken.has(m.id));
+      if (!free.length) return '<div class="unplan ok" style="margin-top:12px">✓ Toutes les modèles ont un superviseur français.</div>';
+      return `<div class="frs-free"><div class="frs-free-h">Modèles sans superviseur français · ${free.length}</div>${['mym', 'of', 'other'].map(gid => { const g = PLAN_GROUPS.find(x => x.id === gid), l = free.filter(m => m.group === gid).sort((x, y) => x.name.localeCompare(y.name, 'fr'));
+        return l.length ? `<div class="frs-g"><div class="frs-gh" style="--gc:${g.color}"><span></span>${gid === 'of' ? 'OnlyFans' : gid === 'mym' ? 'MYM' : 'Reveal / Telegram'} <b>${l.length}</b></div><div class="frs-chips">${l.map(m => `<span class="frs-chip" style="--gc:${g.color}">${esc(m.name)}</span>`).join('')}</div></div>` : ''; }).join('')}</div>`; })()}
+  </section>`;
 }
 function bindFrSup(main) {
   main.querySelectorAll('[data-fredit]').forEach(b => b.addEventListener('click', () => {
