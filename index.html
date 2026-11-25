@@ -1019,6 +1019,7 @@ table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:point
 .launch-banner.onb{padding:10px 14px;background:rgba(34,197,94,.13);border-color:rgba(34,197,94,.6);color:#bbf7d0;font-size:13.5px}
 .launch-banner.onb strong{color:#fff}
 .onb-dot{width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e;flex:none}
+.monet-row{background:rgba(34,197,94,.06);border-radius:8px}.monet-row .lab{font-weight:700}
 </style>
 </head>
 <body>
@@ -1064,7 +1065,11 @@ const RCA = (() => {
         {key:'golden', label:'Golden Ratio', kind:'pct', pctRule:'golden', scoring:'bands', agg:'wavg', by:'revenue',
           aliases:['golden ratio','golden %','golden rate','golden','ratio golden']},
         {key:'fan', label:'Dépense moyenne par fan', kind:'money', dec:2, scoring:'bands', agg:'wavg', by:'revenue',
-          aliases:['average fan spend','avg fan spend','average spend','avg spend','fan spend','avg earnings per fan who spent money','average earnings per fan who spent money','earnings per fan who spent money','avg earnings per paying fan','average earnings per paying fan','depense moyenne par fan','depense moyenne','depense par fan','panier moyen']}
+          aliases:['average fan spend','avg fan spend','average spend','avg spend','fan spend','avg earnings per fan who spent money','average earnings per fan who spent money','earnings per fan who spent money','avg earnings per paying fan','average earnings per paying fan','depense moyenne par fan','depense moyenne','depense par fan','panier moyen']},
+        {key:'msgs', label:'Messages envoyés', kind:'count', scoring:'info', optional:true, hideCol:true,
+          aliases:['messages envoyes','messages sent','sent messages','nombre de messages','nb messages','total messages','messages','msgs envoyes']},
+        {key:'tipsn', label:'Tips reçus (nombre)', kind:'count', scoring:'info', optional:true, hideCol:true,
+          aliases:['nombre de tips','nb tips','tips count','number of tips','tips recus','tips received','nombre tips','tips (nombre)']}
       ],
       dashStats: [['sum','revenue',`CA de l'équipe`],['avg','unlock','Unlock Ratio moyen'],['sum','ppv','Ventes PPV'],['sum','tips','Tips']],
       defaults: {
@@ -1099,7 +1104,11 @@ const RCA = (() => {
         {key:'proposed', label:'Proposé', kind:'count', scoring:'info', optional:true,
           aliases:['propose','proposes','ppv proposes','medias proposes','offered','sent','ppv sent']},
         {key:'sold', label:'Vendu', kind:'count', scoring:'info', optional:true,
-          aliases:['vendu','vendus','ppv vendus','medias vendus','sold','ppv sold']}
+          aliases:['vendu','vendus','ppv vendus','medias vendus','sold','ppv sold']},
+        {key:'msgs', label:'Messages envoyés', kind:'count', scoring:'info', optional:true, hideCol:true,
+          aliases:['messages envoyes','messages sent','sent messages','nombre de messages','nb messages','total messages','messages','msgs envoyes']},
+        {key:'tipsn', label:'Tips reçus (nombre)', kind:'count', scoring:'info', optional:true, hideCol:true,
+          aliases:['nombre de tips','nb tips','tips count','number of tips','tips recus','tips received','nombre tips','tips (nombre)']}
       ],
       dashStats: [['sum','total',`CA de l'équipe`],['avg','conv','Taux de conversion moyen'],['avg','react','Réactivité moyenne'],['sum','ppv','CA PPV (info)']],
       defaults: {
@@ -2306,13 +2315,28 @@ function emptyState(P, title) {
 
 /* ---------- Tableau de classement ---------- */
 const STATUS_ORDER = ['Strong','On track','Warning','At risk','Critical'];
+/* Monétisation pour 100 messages = (G × U ÷ 100) + T
+   G = PPV proposés pour 100 messages (Golden Ratio), U = unlock rate (OF) ou taux de conversion (MYM), en %,
+   T = tips reçus pour 100 messages (nombre de tips ÷ messages envoyés × 100, si l'import les contient).
+   MYM : sans colonne « messages », on les déduit des PPV proposés et du Golden Ratio. */
+function monetOf(P, row) {
+  if (!row) return null;
+  const G = row.golden, U = P.id === 'mym' ? row.conv : row.unlock;
+  let msgs = row.msgs; if (!(msgs > 0) && row.proposed > 0 && G > 0) msgs = row.proposed / G * 100;
+  const T = row.tipsn != null && msgs > 0 ? row.tipsn / msgs * 100 : null;
+  if (G == null || U == null) return null;
+  const buy = G * U / 100;
+  return {G, U, T, buy, val: buy + (T || 0), noT: T == null};
+}
+const monetTxt = (m, d = 2) => m ? nf(m.val, 0, d) : '—';
 function columns(P) {
   return [
     {k:'rank', l:'Rang', num:true, v:r => r.rank, h:r => r.rank === 1 ? '1<sup>er</sup>' : `${r.rank}<sup>e</sup>`},
     {k:'name', l:'Chatter', v:r => r.name.toLowerCase(), h:r => `<strong>${esc(r.name)}</strong>`},
     {k:'final', l:'Score final', num:true, v:r => r.final, h:r => `<div class="scorecell"><span class="minibar"><i style="width:${r.final}%;background:${scColor(r.final)}"></i></span><strong>${num(r.final)}</strong></div>`},
     {k:'grade', l:'Grade', v:r => GRADE_ORDER.indexOf(r.grade), h:r => gradeBadge(P, r)},
-    ...P.kpis.map(k => ({k:k.key, l:k.label, num:true, v:r => r.row[k.key] ?? -Infinity,
+    {k:'monet', l:'Monétisation / 100 msg', num:true, v:r => { const m = monetOf(P, r.row); return m ? m.val : -Infinity; }, h:r => { const m = monetOf(P, r.row); return m ? `<strong>${monetTxt(m)}</strong>${m.noT ? '<span class="sub" title="Sans les tips : le nombre de tips et de messages n’est pas dans l’import">sans tips</span>' : ''}` : '—'; }},
+    ...P.kpis.filter(k => !k.hideCol).map(k => ({k:k.key, l:k.label, num:true, v:r => r.row[k.key] ?? -Infinity,
       h:r => `${fmtK(P, k, r.row[k.key])}${k.scoring !== 'info' ? `<span class="sub ${scClass(r.scores[k.key])}">${num(r.scores[k.key], 0)}</span>` : ''}`})),
     {k:'status', l:'Statut', v:r => STATUS_ORDER.indexOf(r.status), h:r => statusPill(r.status)}
   ];
@@ -2498,7 +2522,11 @@ function renderDetail(main, P, name) {
         <div class="bar" role="img" aria-label="Score ${esc(k.label)} : ${r.scores[k.key]} sur 100"><i style="width:${r.scores[k.key]}%;background:${scColor(r.scores[k.key])}"></i></div>
         <div class="math"><b class="${scClass(r.scores[k.key])}">${num(r.scores[k.key], r.scores[k.key] % 1 ? 1 : 0)}</b>/100 × ${nf(s.weights[k.key], 0, 2)} % = <b>${num(r.contrib[k.key], 2)}</b></div>
       </div>`).join('')}
-      ${info.map(k => `<div class="kpi-row"><div class="lab">${k.label}</div><div class="raw">${fmtK(P, k, r.row[k.key])}</div><div></div><div class="math">Information, non noté</div></div>`).join('')}
+      ${info.filter(k => !k.hideCol || r.row[k.key] != null).map(k => `<div class="kpi-row"><div class="lab">${k.label}</div><div class="raw">${fmtK(P, k, r.row[k.key])}</div><div></div><div class="math">Information, non noté</div></div>`).join('')}
+      ${(() => { const m = monetOf(P, r.row); const U = P.id === 'mym' ? 'conversion' : 'unlock';
+        return `<div class="kpi-row monet-row"><div class="lab">Monétisation / 100 messages</div><div class="raw"><b>${monetTxt(m)}</b></div><div></div><div class="math">${m
+          ? `(G ${nf(m.G, 0, 1)} × ${U} ${nf(m.U, 0, 1)} % ÷ 100) = <b>${nf(m.buy, 0, 2)}</b> PPV achetés pour 100 messages${m.noT ? ' · <span class="muted">tips pas encore comptés : il faut « Messages envoyés » et « Nombre de tips » dans l’import</span>' : ` + T ${nf(m.T, 0, 2)} tips = <b>${nf(m.val, 0, 2)}</b> pour 100 messages`}`
+          : `<span class="muted">Il faut le Golden Ratio et l’${U} dans l’import.</span>`}</div></div>`; })()}
       <div class="kpi-row" style="border-top:1px solid var(--line)"><div class="lab">Score final</div><div></div><div></div><div class="math"><b>${num(r.final)}</b> → grade <b class="g${r.grade}">${r.grade}</b></div></div>
     </section>
     <div class="grid2">
@@ -2572,7 +2600,8 @@ function renderAnalytics(main, P) {
   main.innerHTML = topbar(P, `Analyse d'équipe`, true) + `<div class="stack">
     <section class="stats stats-auto">
       <div class="stat"><div class="k">Score moyen</div><div class="v ${scClass(st.avgScore)}">${num(st.avgScore)}</div></div>
-      ${P.kpis.map(k => k.kind === 'money' || k.kind === 'count'
+      ${(() => { const ms = res.results.map(r => monetOf(P, r.row)).filter(Boolean); return ms.length ? `<div class="stat"><div class="k">Monétisation / 100 msg (moyenne)</div><div class="v">${nf(ms.reduce((t, m) => t + m.val, 0) / ms.length, 0, 2)}</div></div>` : ''; })()}
+      ${P.kpis.filter(k => !k.hideCol || st.sum[k.key]).map(k => k.kind === 'money' || k.kind === 'count'
         ? `<div class="stat"><div class="k">${esc(k.label)} (total)</div><div class="v">${fmtK(P, k, st.sum[k.key], 0)}</div></div>`
         : `<div class="stat"><div class="k">${esc(k.label)} (moyenne)</div><div class="v">${fmtK(P, k, st.avg[k.key])}</div></div>`).join('')}
     </section>
