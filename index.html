@@ -4335,6 +4335,8 @@ function bindPerso(main) {
 const ONB_APPR = [['', 'Choisir…'], ['top', 'Très bon'], ['ok', 'Bon'], ['moy', 'Moyen'], ['low', 'Juste / à surveiller']];
 const ONB_PF = {mym: 'MYM', of: 'OnlyFans'};
 const onbMap = () => (planState.onboard ||= {});
+// Chatter parti (« A quitté l’agence » dans Jours OFF) : plus jamais replacé au planning ni signalé
+const onbGone = o => !!((planState.ignored || {})[rosterKey(o.name)] || {}).left;
 const onbList = () => Object.entries(planState.onboard || {}).map(([id, o]) => ({id, ...o})).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.time || '').localeCompare(a.time || ''));
 const onbShiftsTxt = o => (o.shifts || []).map(s => `${SHIFT_HOURS[s][0]}h-${SHIFT_HOURS[s][1] % 24}h`).join(' + ');
 // Premier jour de suivi : le lendemain de l'onboarding (ou le jour travaillé suivant si c'est son OFF)
@@ -4396,7 +4398,7 @@ function onbApply(o, opt = {}) {
 function onbCatchUp() {
   const today = isoOf(new Date()); let ch = false;
   for (const o of Object.values(planState.onboard || {})) {
-    if (!o.date || addDaysIso(o.date, 13) < today) continue;
+    if (!o.date || addDaysIso(o.date, 13) < today || onbGone(o)) continue;
     const before = JSON.stringify(o.applied || {});
     const n = onbApply(o); if (n || before !== JSON.stringify(o.applied || {})) ch = true;
   }
@@ -4404,12 +4406,12 @@ function onbCatchUp() {
 }
 const onbSupName = o => { const s = o.sup && supList().find(x => x.id === o.sup); return s ? s.name : ''; };
 // Suivi « nouveau » du superviseur : le lendemain de l'onboarding
-const onbFollowFor = (supId, date) => onbList().filter(o => o.sup === supId && o.date && onbFollowDay(o) === date);
+const onbFollowFor = (supId, date) => onbList().filter(o => !onbGone(o) && o.sup === supId && o.date && onbFollowDay(o) === date);
 
 function onbHTML() {
   const today = isoOf(new Date()), L = onbList();
   const up = L.filter(o => o.date >= addDaysIso(today, -7)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)), past = L.filter(o => o.date < addDaysIso(today, -7));
-  const row = o => { const st = o.date === today ? '<span class="pill onbp">aujourd’hui</span>' : onbFollowDay(o) === today ? '<span class="pill onbp">1er jour de suivi</span>' : o.date > today ? '<span class="pill">à venir</span>' : '';
+  const row = o => { const st = onbGone(o) ? '<span class="pill">a quitté l’agence</span>' : o.date === today ? '<span class="pill onbp">aujourd’hui</span>' : onbFollowDay(o) === today ? '<span class="pill onbp">1er jour de suivi</span>' : o.date > today ? '<span class="pill">à venir</span>' : '';
     return `<tr data-onb="${esc(o.id)}" tabindex="0" class="onb-row"><td><span class="pc new">${esc(o.name)}</span> ${st}</td><td>${esc(ONB_PF[o.pf] || '')}</td><td>${esc(onbShiftsTxt(o))}</td><td>${o.off !== '' && o.off != null ? esc(PLAN_DAYS_LONG[+o.off]) : '—'}</td>
       <td>${esc(fmtDayFr(o.date))}${o.time ? ` · ${esc(fmtHour(o.time))}` : ''}</td><td>${esc((ONB_APPR.find(a => a[0] === o.appr) || ['', ''])[1])}${o.note ? `<div class="sub" style="margin:2px 0 0;white-space:normal">${esc(o.note)}</div>` : ''}</td><td>${onbSupName(o) ? esc(onbSupName(o)) : '<span class="muted">à attribuer</span>'}</td></tr>`; };
   const tbl = list => `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Chatteur</th><th>Plateforme</th><th>Shift</th><th>Jour off</th><th>Onboarding</th><th>Appréciation du test</th><th>Suivi par</th></tr></thead><tbody>${list.map(row).join('')}</tbody></table></div>`;
@@ -4477,8 +4479,8 @@ function bindOnb(main) {
 // Bandeau : le jour de l'onboarding et le premier jour de suivi
 function onbBannerHTML() {
   const today = isoOf(new Date()), L = onbList();
-  const a = L.filter(o => o.date === today).sort((x, y) => (x.time || '').localeCompare(y.time || '')).map(o => `onboarding de <strong>${esc(o.name)}</strong>${o.time ? ` à ${esc(fmtHour(o.time))}` : ''} (${esc(ONB_PF[o.pf] || '')} · ${esc(onbShiftsTxt(o))})${onbSupName(o) ? `, suivi par ${esc(onbSupName(o))} dès demain` : ''}`);
-  const b = L.filter(o => onbFollowDay(o) === today).map(o => `nouveau chatter à suivre : <strong>${esc(o.name)}</strong> (${esc(ONB_PF[o.pf] || '')} · ${esc(onbShiftsTxt(o))})${onbSupName(o) ? ` → <strong>${esc(onbSupName(o))}</strong>` : ''}`);
+  const a = L.filter(o => o.date === today && !onbGone(o)).sort((x, y) => (x.time || '').localeCompare(y.time || '')).map(o => `onboarding de <strong>${esc(o.name)}</strong>${o.time ? ` à ${esc(fmtHour(o.time))}` : ''} (${esc(ONB_PF[o.pf] || '')} · ${esc(onbShiftsTxt(o))})${onbSupName(o) ? `, suivi par ${esc(onbSupName(o))} dès demain` : ''}`);
+  const b = L.filter(o => onbFollowDay(o) === today && !onbGone(o)).map(o => `nouveau chatter à suivre : <strong>${esc(o.name)}</strong> (${esc(ONB_PF[o.pf] || '')} · ${esc(onbShiftsTxt(o))})${onbSupName(o) ? ` → <strong>${esc(onbSupName(o))}</strong>` : ''}`);
   if (!a.length && !b.length) return '';
   return `<span class="onb-dot"></span><span>${a.length ? `Aujourd’hui : ${a.join(' · ')}` : ''}${a.length && b.length ? '<br>' : ''}${b.length ? `Attention, ${b.join(' · ')}` : ''}</span>`;
 }
@@ -7074,7 +7076,7 @@ function glAgenda(wk, sup) {
   }
   // Nouveaux chatters (onboarding) : à suivre le lendemain de leur onboarding, en vert
   const newKeys = new Set();
-  for (const o of onbList()) { if (o.sup !== sup.id || !o.date) continue; const fd = onbFollowDay(o); if (fd < wk || fd > addDaysIso(wk, 6)) continue;
+  for (const o of onbList()) { if (o.sup !== sup.id || !o.date || onbGone(o)) continue; const fd = onbFollowDay(o); if (fd < wk || fd > addDaysIso(wk, 6)) continue;
     const k = rosterKey(o.name), d = persoDow(fd); newKeys.add(k); days[d].push({k, name: o.name, type: 'new', d, fbk: `${k}|n`, label: `${onbShiftsTxt(o)} · ${ONB_PF[o.pf] || ''}`, g: o.pf}); load[d]++; }
   const mine = Object.entries(coachGlobal()).filter(([k, g]) => g.sup === sup.id && !weakKeys.has(k) && !newKeys.has(k)).sort((a, b) => a[1].name.localeCompare(b[1].name, 'fr'));
   for (const [k, g] of mine) {
