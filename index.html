@@ -956,6 +956,58 @@ table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:point
 .rank-table tr.newin td{background:rgba(56,189,248,.08)}
 .ksugg{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 4px}
 .ksugg .qpt{padding:3px 9px;font-size:12px}
+/* Planning personnel */
+.pp-head{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 16px;margin-bottom:12px}
+.pp-nav{display:flex;align-items:center;gap:8px}.pp-nav strong{min-width:180px;text-align:center;text-transform:capitalize}
+.pp-views{margin:0}.pp-acts{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.pp-wsum{display:flex;align-items:center;gap:14px;padding:12px 16px;margin-bottom:12px}.pp-wsum .pp-bar{flex:1;margin:0}
+.pp-bar{height:6px;border-radius:99px;background:var(--line-soft);overflow:hidden;margin:6px 0 10px}.pp-bar i{display:block;height:100%;background:var(--green);border-radius:99px;transition:width .25s}
+.pp-week{display:grid;grid-template-columns:repeat(7,minmax(170px,1fr));gap:10px;overflow-x:auto;padding-bottom:4px}
+.pp-col{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:10px;display:flex;flex-direction:column;min-height:220px}
+.pp-col.today{border-color:var(--ember);box-shadow:0 0 0 1px var(--ember) inset}
+.pp-col.off{background:repeating-linear-gradient(135deg,var(--surface) 0 10px,rgba(255,255,255,.02) 10px 20px)}
+.pp-col.past{opacity:.82}
+.pp-ch{display:flex;align-items:baseline;gap:6px;background:none;border:0;color:var(--text);padding:2px 2px 4px;cursor:pointer;text-align:left;font:inherit}
+.pp-ch span{color:var(--muted);font-size:12px}.pp-ch em{margin-left:auto;font-style:normal;font-size:12px;color:var(--muted);font-weight:700}
+.pp-ch:hover b{color:var(--flame)}
+.pp-list{display:flex;flex-direction:column;gap:6px}
+.pp-it{display:flex;align-items:flex-start;gap:8px;background:var(--raised);border:1px solid var(--line-soft);border-radius:10px;padding:7px 8px}
+.pp-it.done{opacity:.55}.pp-it.done .pp-ti{text-decoration:line-through}
+.pp-it.carried{border-color:rgba(242,164,60,.55);background:rgba(242,164,60,.08)}
+.pp-it.late:not(.done){border-left:3px solid var(--orange)}
+.pp-ck{flex:none;width:22px;height:22px;border-radius:6px;border:2px solid var(--line);background:var(--bg);color:#0b2117;font-weight:900;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.pp-ck[aria-pressed=true]{background:var(--green);border-color:var(--green)}
+.pp-ck:hover{border-color:var(--green)}
+.pp-tx{flex:1;min-width:0;background:none;border:0;padding:0;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.pp-tm{font-weight:800;color:var(--flame);font-size:12px}.pp-ti{line-height:1.3}
+.pp-no{color:var(--muted);font-size:12px;line-height:1.3;white-space:pre-wrap}.pp-me{color:var(--faint);font-size:11px}
+.pp-dn{margin-top:8px;background:rgba(160,140,255,.08);border:1px dashed var(--line);color:var(--muted);border-radius:8px;padding:5px 7px;font-size:12px;text-align:left;cursor:pointer}
+.pp-plus{margin-top:auto;padding-top:10px;background:none;border:0;color:var(--faint);font:inherit;font-size:13px;cursor:pointer;text-align:left}.pp-plus:hover{color:var(--text)}
+.pp-offbox{color:var(--muted);font-size:13px;padding:8px 0}
+.pp-daytabs{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px}
+.pp-daytabs .ptab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;font:inherit}
+.pp-daytabs .ptab.on{color:var(--text);border-color:var(--ember);background:linear-gradient(90deg,rgba(224,51,106,.16),rgba(91,63,208,.12))}
+.pp-daytabs .ptab.today b{color:var(--flame)}.pp-daytabs .ptab span{font-size:12px}.pp-daytabs .pp-off{opacity:.6}
+.pp-dayg{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:12px;align-items:start}
+.pp-dayg .pp-it{padding:10px 12px}.pp-dayg .pp-tx{font-size:14px}
+.pp-dh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}.pp-dh h2{margin:0}
+.pp-next{background:rgba(247,160,52,.1);border:1px solid rgba(247,160,52,.4);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:14px}
+.pp-sec{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 6px}
+.pp-quick{display:flex;gap:8px;margin-top:12px}.pp-quick input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;min-height:38px;color:var(--text)}
+.pp-modal{max-width:600px}.pp-fl{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;margin-bottom:10px}
+.pp-fl input,.pp-fl select{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;min-height:38px;color:var(--text);font:inherit;font-weight:400}
+.pp-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.pp-rep{border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;margin:0 0 10px}.pp-rep legend{font-size:13px;font-weight:600;padding:0 4px}
+.pp-rb{display:flex;align-items:center;gap:6px;font-size:13px;margin:4px 0}
+.pp-days{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px 22px}.pp-days.dim{opacity:.45}
+.pp-db{display:flex;align-items:center;gap:4px;font-size:13px;border:1px solid var(--line);border-radius:99px;padding:4px 10px;cursor:pointer}
+.pp-reclist{display:flex;flex-direction:column;gap:6px;max-height:55vh;overflow:auto}
+.pp-rec{display:grid;grid-template-columns:120px 70px 1fr;gap:8px;align-items:baseline;text-align:left;background:var(--raised);border:1px solid var(--line-soft);border-radius:10px;padding:8px 10px;color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.pp-rec .pp-no{display:block}.pp-rd{color:var(--muted);font-size:12px}
+#pp-alerts{position:fixed;right:18px;bottom:18px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:min(380px,92vw)}
+.pp-alert{display:flex;align-items:flex-start;gap:10px;background:var(--raised);border:1px solid var(--flame);border-radius:12px;padding:12px 14px;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:14px}
+.pp-alert a{color:var(--flame);font-weight:700;margin-left:auto}.pp-alert button{background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer;line-height:1}
+@media (max-width:900px){.pp-dayg{grid-template-columns:1fr}.pp-acts{margin-left:0}.pp-rec{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -2219,6 +2271,7 @@ function render() {
   if (rt.page === 'partage') { renderPartage(main); return; }
   if (Sync.needsLogin()) { renderLogin(main); return; }
   camsReminder();
+  persoBoot();
   setTimeout(() => camsBanner(main, rt), 0);
   setTimeout(() => launchBanner(main, rt), 0);
   if (rt.page === 'planning') { renderPlanning(main); return; }
@@ -3955,6 +4008,313 @@ function dispersionHTML(wk, WC) {
     </tbody></table></div>` : `<p class="hint" style="margin:0">✓ Aucun chatter au-delà de ${MODEL_MAX} modèles cette semaine.</p>`}
   </details></section>`;
 }
+/* ---------- Planning personnel (« Mon planning ») ----------
+   Table privée perso_planning (une ligne par élément), accès réglé par perso_planning_acces (RLS).
+   Hors connexion (aperçu local) : gardé dans ce navigateur. Heures à l'heure de Madagascar ;
+   une heure avant 5 h est la nuit qui suit le jour (« 4h (nuit) »). Samedi = jour off. */
+const PERSO_TZ = 'Indian/Antananarivo', PERSO_NIGHT = 300, PERSO_OFF = 5;
+const PERSO_RAPPELS = [[null, 'Aucun rappel'], [0, 'À l’heure'], [5, '5 min avant'], [10, '10 min avant'], [15, '15 min avant'], [30, '30 min avant'], [60, '1 h avant']];
+const PERSO_SEED = [
+  ['s01', 'Lancer la nouvelle liste des nouveaux chatteurs à suivre sur le CRM + message aux sups', '', [0]],
+  ['s02', 'Point avec Clément', '16:00', [0, 3]],
+  ['s03', 'Point sup', '17:30', [0], 'Rappel du suivi des chatteurs ; rappeler aux sups que s’il y a une erreur dans la liste, il faut la faire remonter'],
+  ['s04', 'Faire le point sur les priorités de la semaine', '', [0]],
+  ['s05', 'Suivre les modèles et lancements à surveiller', '', [0]],
+  ['s06', 'Envoyer les infos pour le call général de demain', '', [0, 3]],
+  ['s07', 'Call général chatteurs', '10:00', [1, 4]],
+  ['s08', 'Call général chatteurs', '16:00', [1, 4]],
+  ['s09', 'Call général chatteurs', '22:00', [1, 4]],
+  ['s10', 'Call général chatteurs', '04:00', [1, 4]],
+  ['s11', 'Suivi des actions décidées', '', [1]],
+  ['s12', 'Point sup', '17:30', [1, 2, 6]],
+  ['s13', 'Suivre les performances des modèles et l’intégration des nouveaux chatteurs', '', [2]],
+  ['s14', 'Avancer sur les lancements et les sujets opérationnels', '', [2]],
+  ['s15', 'Contrôle des nouveaux chatteurs arrivés depuis quelques jours', '', [2, 6]],
+  ['s16', 'Suivi quotidien (modèles, nouveaux chatteurs)', '', [3]],
+  ['s17', 'Point sup', '17:30', [3], 'Vérifier l’avancement des actions des superviseurs et les besoins de planning'],
+  ['s18', 'Point sup', '17:30', [4], 'Faire un bilan intermédiaire de la semaine'],
+  ['s19', 'Examiner les résultats et décider de la liste des maillons faibles de la semaine suivante', '', [6]],
+  ['s20', 'Appels de suivi avec les nouveaux chatteurs', '16:00', [6]]
+];
+const perso = {checkedFor: null, owner: null, role: null, nom: '', remote: false, rows: new Map(), loadedAt: 0, loading: false, view: 'week', week: null, day: null, timer: null};
+const LS_PERSO = 'rca.perso.', LS_PERSO_FIRED = 'rca.perso.fired';
+function persoNow() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {timeZone: PERSO_TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date()).map(x => [x.type, x.value]));
+  return {iso: `${p.year}-${p.month}-${p.day}`, min: (+p.hour % 24) * 60 + +p.minute};
+}
+const persoMin = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null; };
+const persoSortMin = t => { const m = persoMin(t); return m == null ? 1e5 : m < PERSO_NIGHT ? m + 1440 : m; };
+const persoHour = t => { const m = persoMin(t); if (m == null) return ''; const s = `${Math.floor(m / 60)}h${m % 60 ? pad2(m % 60) : ''}`; return m < PERSO_NIGHT ? `${s} (nuit)` : s; };
+const persoDow = iso => (parseDate(iso).getDay() + 6) % 7;
+const persoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const persoGet = k => (perso.rows.get(k) || {}).v;
+const persoOwnerLabel = () => perso.owner ? perso.owner[0].toUpperCase() + perso.owner.slice(1) : '';
+const persoIsOwner = () => perso.role === 'proprio';
+const persoVisible = () => !!perso.owner;
+
+// Accès : vérifié une fois par compte (table perso_planning_acces, chacun ne lit que sa propre ligne)
+async function persoBoot() {
+  const me = Sync.connected() ? String(Sync.email() || '').toLowerCase() : '(local)';
+  if (perso.checkedFor === me || Sync.needsLogin()) return;
+  perso.checkedFor = me; perso.owner = null; perso.rows = new Map(); perso.loadedAt = 0;
+  if (!Sync.connected()) { Object.assign(perso, {owner: 'billy', role: 'proprio', nom: 'Billy', remote: false}); }
+  else {
+    try { const r = (await Sync.persoApi('/rest/v1/perso_planning_acces?select=owner,role,nom')) || []; if (!r.length) return; Object.assign(perso, {owner: r[0].owner, role: r[0].role, nom: r[0].nom || who(Sync.email()), remote: true}); }
+    catch (e) { if (e.offline) perso.checkedFor = null; return; }   // table pas encore créée ou pas d'accès : onglet caché
+  }
+  await persoLoad(true);
+  if (!perso.timer) perso.timer = setInterval(() => { persoRemind(); if (Date.now() - perso.loadedAt > 120000) persoLoad(); }, 30000);
+  persoRemind();
+  if (route().page === 'planning') { const y = window.scrollY; render(); window.scrollTo(0, y); }
+}
+async function persoLoad(force) {
+  if (!perso.owner || perso.loading || (!force && Date.now() - perso.loadedAt < 20000)) return;
+  perso.loading = true;
+  try {
+    let list;
+    if (perso.remote) list = (await Sync.persoApi(`/rest/v1/perso_planning?owner=eq.${encodeURIComponent(perso.owner)}&select=k,v,updated_by,updated_at`)) || [];
+    else list = Object.entries(lsGet(LS_PERSO + perso.owner, {})).map(([k, v]) => ({k, v}));
+    const before = JSON.stringify([...perso.rows]);
+    perso.rows = new Map(list.map(r => [r.k, r]));
+    perso.loadedAt = Date.now();
+    if (!perso.rows.has('meta:seed')) await persoSeed();
+    const editing = document.activeElement && document.activeElement.closest && document.activeElement.closest('.pp-root textarea, .pp-root input');
+    if (!force && before !== JSON.stringify([...perso.rows]) && route().page === 'planning' && planUI.tab === 'perso' && !editing && !document.querySelector('.modal-bg')) { const y = window.scrollY; render(); window.scrollTo(0, y); }
+  } catch (e) { if (force) toast('Planning personnel : ' + e.message, true); }
+  perso.loading = false;
+}
+async function persoSeed() {
+  const from = mondayOf(persoNow().iso);
+  const rows = PERSO_SEED.map(([id, title, time, days, note]) => ({k: 'rec:' + id, v: {title, time, days, note: note || '', rappel: time ? 10 : null, from}}));
+  rows.push({k: 'meta:seed', v: {at: new Date().toISOString(), day: persoNow().iso}});
+  if (perso.remote) await Sync.persoApi('/rest/v1/perso_planning', {method: 'POST', headers: {Prefer: 'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify(rows.map(r => ({owner: perso.owner, ...r})))});
+  for (const r of rows) if (!perso.rows.has(r.k)) perso.rows.set(r.k, r);
+  if (!perso.remote) persoSaveLocal();
+}
+function persoSaveLocal() { lsSet(LS_PERSO + perso.owner, Object.fromEntries([...perso.rows].map(([k, r]) => [k, r.v]))); }
+async function persoPut(k, v) {
+  perso.rows.set(k, {k, v, updated_by: perso.nom});
+  if (!perso.remote) { persoSaveLocal(); return; }
+  try { await Sync.persoApi('/rest/v1/perso_planning', {method: 'POST', headers: {Prefer: 'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify([{owner: perso.owner, k, v}])}); }
+  catch (e) { toast('Pas enregistré : ' + e.message, true); persoLoad(true).then(render); }
+}
+async function persoDel(k) {
+  perso.rows.delete(k);
+  if (!perso.remote) { persoSaveLocal(); return; }
+  try { await Sync.persoApi(`/rest/v1/perso_planning?owner=eq.${encodeURIComponent(perso.owner)}&k=eq.${encodeURIComponent(k)}`, {method: 'DELETE'}); }
+  catch (e) { toast('Pas supprimé : ' + e.message, true); persoLoad(true).then(render); }
+}
+
+// Éléments d'une journée : tâches récurrentes du jour + tâches ponctuelles (+ reportées si c'est aujourd'hui)
+function persoRecs() { return [...perso.rows].filter(([k]) => k.startsWith('rec:')).map(([k, r]) => ({id: k.slice(4), ...r.v})); }
+function persoTasks() { return [...perso.rows].filter(([k]) => k.startsWith('task:')).map(([k, r]) => ({id: k.slice(5), ...r.v})); }
+const persoRecOn = (r, iso) => (r.days || []).includes(persoDow(iso)) && (!r.from || iso >= r.from) && (!r.until || iso <= r.until) && !perso.rows.has(`skip:${iso}:${r.id}`);
+function persoItems(iso, today = persoNow().iso) {
+  const out = [];
+  for (const r of persoRecs()) if (persoRecOn(r, iso)) out.push({kind: 'rec', id: r.id, date: iso, title: r.title, time: r.time, note: r.note, rappel: r.rappel, by: r.by, days: r.days, done: perso.rows.has(`done:${iso}:${r.id}`)});
+  for (const t of persoTasks()) if (t.date === iso) out.push({kind: 'task', id: t.id, date: iso, title: t.title, time: t.time, note: t.note, rappel: t.rappel, by: t.by, done: !!t.done, late: !t.done && !t.time && iso < today});
+  const start = ((persoGet('meta:seed') || {}).day) || '';
+  for (const x of out) if (x.kind === 'rec' && !x.done && !x.time && iso < today && iso >= start) x.late = true;
+  if (iso === today && persoDow(today) !== PERSO_OFF) out.push(...persoCarried(today));
+  return out.sort((a, b) => (b.carried ? 1 : 0) - (a.carried ? 1 : 0) || persoSortMin(a.time) - persoSortMin(b.time));
+}
+// Reportées : tâches sans heure non cochées des jours passés (ponctuelles : 60 jours ; récurrentes : 7 jours)
+function persoCarried(today) {
+  const start = ((persoGet('meta:seed') || {}).day) || '';   // rien n'est reporté d'avant la mise en place
+  const out = [], lim = [addDaysIso(today, -60), start].sort().pop(), lim7 = [addDaysIso(today, -7), start].sort().pop();
+  for (const t of persoTasks()) if (!t.done && !t.time && t.date < today && t.date >= lim) out.push({kind: 'task', id: t.id, date: t.date, title: t.title, note: t.note, by: t.by, carried: true, done: false});
+  for (const r of persoRecs()) if (!r.time) for (let d = lim7; d < today; d = addDaysIso(d, 1)) if (persoRecOn(r, d) && !perso.rows.has(`done:${d}:${r.id}`)) out.push({kind: 'rec', id: r.id, date: d, title: r.title, note: r.note, by: r.by, days: r.days, carried: true, done: false});
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+function persoToggle(kind, id, date) {
+  if (kind === 'rec') { const k = `done:${date}:${id}`; perso.rows.has(k) ? persoDel(k) : persoPut(k, {at: new Date().toISOString(), by: perso.nom}); }
+  else { const k = 'task:' + id, t = persoGet(k); if (t) persoPut(k, {...t, done: t.done ? null : persoNow().iso}); }
+}
+
+// Rappels : seulement pour le propriétaire du planning, quand le site est ouvert (notification du navigateur + bandeau)
+function persoRemind() {
+  if (!perso.owner || !persoIsOwner()) return;
+  const now = persoNow(), fired = lsGet(LS_PERSO_FIRED, {}), absNow = Math.round(parseDate(now.iso).getTime() / 864e5) * 1440 + now.min;
+  let changed = false;
+  for (const d of [addDaysIso(now.iso, -1), now.iso]) for (const x of persoItems(d, now.iso)) {
+    if (x.carried || x.done || x.rappel == null || persoMin(x.time) == null) continue;
+    const m = persoMin(x.time), at = Math.round(parseDate(d).getTime() / 864e5) * 1440 + (m < PERSO_NIGHT ? m + 1440 : m) - x.rappel, key = `${d}|${x.kind}|${x.id}`;
+    if (absNow < at || absNow > at + 15 || fired[key]) continue;
+    fired[key] = Date.now(); changed = true;
+    const msg = `${persoHour(x.time)} · ${x.title}${x.rappel ? ` (dans ${x.rappel} min)` : ''}`;
+    persoBanner(msg);
+    try { if ('Notification' in window && Notification.permission === 'granted') new Notification('Rappel · Mon planning', {body: msg, tag: key}); } catch (e) {}
+  }
+  if (changed) { for (const k of Object.keys(fired)) if (Date.now() - fired[k] > 3 * 864e5) delete fired[k]; lsSet(LS_PERSO_FIRED, fired); }
+}
+function persoBanner(msg) {
+  let box = document.getElementById('pp-alerts');
+  if (!box) { box = document.createElement('div'); box.id = 'pp-alerts'; document.body.appendChild(box); }
+  const el = document.createElement('div'); el.className = 'pp-alert'; el.setAttribute('role', 'alert');
+  el.innerHTML = `<span>🔔</span><div><b>Rappel</b><div>${esc(msg)}</div></div><a href="#of/planning" data-ppgo>Voir</a><button type="button" aria-label="Fermer">×</button>`;
+  el.querySelector('button').addEventListener('click', () => el.remove());
+  el.querySelector('[data-ppgo]').addEventListener('click', () => { planUI.tab = 'perso'; perso.view = 'day'; perso.day = persoNow().iso; el.remove(); setTimeout(render, 0); });
+  box.appendChild(el);
+}
+
+// Affichage
+function persoItemHTML(x, ro, compact) {
+  const rp = x.rappel != null && x.time ? `🔔 ${x.rappel ? x.rappel + ' min' : 'à l’heure'}` : '';
+  const meta = [x.carried ? `↻ reportée du ${esc(fmtDayFr(x.date))}` : '', x.kind === 'rec' ? `<span title="Revient chaque semaine : ${esc((x.days || []).map(i => PLAN_DAYS[i]).join(', '))}">⟳ chaque semaine</span>` : '', rp, x.by && x.by !== persoOwnerLabel() ? `ajoutée par ${esc(x.by)}` : ''].filter(Boolean);
+  return `<div class="pp-it${x.done ? ' done' : ''}${x.carried ? ' carried' : ''}${x.late ? ' late' : ''}" data-ppk="${x.kind}" data-ppid="${esc(x.id)}" data-ppd="${x.date}">
+    <button type="button" class="pp-ck" data-ppck aria-pressed="${x.done}" aria-label="${x.done ? 'Décocher' : 'Cocher'} : ${esc(x.title)}"${ro ? ' disabled' : ''}>${x.done ? '✓' : ''}</button>
+    <button type="button" class="pp-tx" data-ppedit>${x.time ? `<span class="pp-tm">${esc(persoHour(x.time))}</span>` : ''}<span class="pp-ti">${esc(x.title)}</span>${x.note && !compact ? `<span class="pp-no">${esc(x.note)}</span>` : ''}${meta.length && !compact ? `<span class="pp-me">${meta.join(' · ')}</span>` : x.carried ? `<span class="pp-me">↻ reportée</span>` : ''}</button></div>`;
+}
+const persoProg = list => { const own = list.filter(x => !x.carried), d = own.filter(x => x.done).length; return {d, n: own.length, pct: own.length ? Math.round(d / own.length * 100) : 0}; };
+const persoBar = p => `<div class="pp-bar" title="${p.d} sur ${p.n} faites"><i style="width:${p.pct}%"></i></div>`;
+function persoHTML() {
+  const now = persoNow(), today = now.iso;
+  perso.week ||= mondayOf(today); perso.day ||= today;
+  const wk = perso.week, owner = persoOwnerLabel(), isOwn = persoIsOwner();
+  if (!perso.loadedAt) return `<div class="panel empty"><p class="hint">Chargement du planning…</p></div>`;
+  const days = [...Array(7)].map((_, i) => addDaysIso(wk, i));
+  const notif = isOwn && 'Notification' in window && Notification.permission === 'default' ? `<button class="btn ghost" id="pp-notif" type="button">🔔 Activer les rappels</button>` : '';
+  const bar = `<section class="panel pp-head">
+    <div class="pp-nav"><button class="btn ghost small-btn" id="pp-prev" type="button" aria-label="${perso.view === 'week' ? 'Semaine' : 'Jour'} précédent(e)">‹</button>
+      <strong>${perso.view === 'week' ? esc(planWeekLabel(wk)) : esc(parseDate(perso.day).toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'}))}</strong>
+      <button class="btn ghost small-btn" id="pp-next" type="button" aria-label="Suivant">›</button>
+      <button class="btn ghost" id="pp-today" type="button">Aujourd’hui</button></div>
+    <div class="ptopt pp-views" role="tablist"><button type="button" class="${perso.view === 'week' ? 'on' : ''}" data-ppview="week">Semaine</button><button type="button" class="${perso.view === 'day' ? 'on' : ''}" data-ppview="day">Journée</button></div>
+    <div class="pp-acts">${notif}<button class="btn ghost" id="pp-recs" type="button">⟳ Tâches récurrentes</button><button class="btn primary" id="pp-add" type="button">+ Ajouter</button></div>
+  </section>`;
+  const intro = isOwn ? '' : `<div class="alert ok" style="margin-bottom:12px">Planning personnel de ${esc(owner)} : vous pouvez lui ajouter des tâches (elles seront marquées « ajoutée par ${esc(perso.nom)} »). Ses notes sont en lecture seule.</div>`;
+  if (perso.view === 'day') {
+    const iso = perso.day, list = persoItems(iso, today), p = persoProg(list), off = persoDow(iso) === PERSO_OFF, wkd = mondayOf(iso);
+    const nxt = iso === today ? list.filter(x => !x.done && x.time && persoSortMin(x.time) >= now.min)[0] : null;
+    const carried = list.filter(x => x.carried), own = list.filter(x => !x.carried);
+    const note = (persoGet('note:' + iso) || {}).t || '';
+    return intro + bar + `<div class="pp-daytabs">${[...Array(7)].map((_, i) => { const d = addDaysIso(wkd, i), pr = persoProg(persoItems(d, today)); return `<button type="button" class="ptab ${d === iso ? 'on' : ''}${d === today ? ' today' : ''}${i === PERSO_OFF ? ' pp-off' : ''}" data-ppday="${d}"><b>${PLAN_DAYS[i]}</b><span>${i === PERSO_OFF ? 'off' : pr.n ? `${pr.d}/${pr.n}` : '–'}</span></button>`; }).join('')}</div>
+    <div class="pp-dayg">
+      <section class="panel">
+        <div class="pp-dh"><h2>${esc(PLAN_DAYS_LONG[persoDow(iso)])} ${esc(parseDate(iso).toLocaleDateString('fr-FR', {day: 'numeric', month: 'long'}))}${iso === today ? ' <span class="pill On track">aujourd’hui</span>' : ''}</h2><span class="muted">${p.n ? `${p.d} / ${p.n} faites · ${p.pct} %` : ''}</span></div>
+        ${p.n ? persoBar(p) : ''}
+        ${off ? `<div class="pp-offbox">🌴 Jour off${own.length ? '' : ' : rien de prévu, repos.'}</div>` : ''}
+        ${nxt ? `<div class="pp-next">Prochain : <b>${esc(persoHour(nxt.time))}</b> · ${esc(nxt.title)}</div>` : ''}
+        ${carried.length ? `<div class="pp-sec">↻ Reportées (pas cochées les jours précédents) · ${carried.length}</div>${carried.map(x => persoItemHTML(x)).join('')}<div class="pp-sec">Prévu ce jour</div>` : ''}
+        <div class="pp-list">${own.map(x => persoItemHTML(x)).join('') || (off ? '' : '<p class="hint" style="margin:8px 0">Rien de prévu ce jour.</p>')}</div>
+        <form class="pp-quick" id="pp-quick"><input type="text" name="t" placeholder="Ajouter une tâche pour ce jour, puis Entrée" aria-label="Nouvelle tâche" autocomplete="off"><button class="btn" type="submit">Ajouter</button></form>
+      </section>
+      <section class="panel"><h2>Notes du jour</h2>
+        <textarea id="pp-dnote" rows="9" placeholder="${isOwn ? 'Comptes rendus de calls, points à retenir, idées…' : 'Aucune note.'}"${isOwn ? '' : ' readonly'}>${esc(note)}</textarea>
+        <p class="hint" style="margin:6px 0 0;font-size:12px">${isOwn ? `Enregistré automatiquement. Visible seulement par vous, ${perso.remote ? 'Jérémy et Clément' : 'dans ce navigateur'}.` : `Écrit par ${esc(owner)}.`}</p></section>
+    </div>`;
+  }
+  const wnote = (persoGet('wnote:' + wk) || {}).t || '';
+  const all = days.map(d => persoItems(d, today)), wp = persoProg(all.flat());
+  return intro + bar + `<section class="panel pp-wsum"><span><b>${wp.d} / ${wp.n}</b> tâches faites cette semaine · ${wp.pct} %</span>${persoBar(wp)}</section>
+    <div class="pp-week">${days.map((d, i) => { const list = all[i], p = persoProg(list), off = i === PERSO_OFF, dn = (persoGet('note:' + d) || {}).t;
+      return `<section class="pp-col${d === today ? ' today' : ''}${off ? ' off' : ''}${d < today ? ' past' : ''}">
+        <button type="button" class="pp-ch" data-ppday="${d}" title="Ouvrir la journée"><b>${PLAN_DAYS_LONG[i]}</b><span>${esc(parseDate(d).toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'}))}</span>${p.n ? `<em>${p.d}/${p.n}</em>` : ''}</button>
+        ${p.n ? persoBar(p) : ''}
+        ${off && !list.length ? '<div class="pp-offbox">🌴 Jour off</div>' : ''}
+        <div class="pp-list">${list.map(x => persoItemHTML(x, false, true)).join('')}</div>
+        ${dn ? `<button type="button" class="pp-dn" data-ppday="${d}" title="${esc(dn)}">📝 ${esc(dn.split('\n')[0].slice(0, 60))}</button>` : ''}
+        <button type="button" class="pp-plus" data-ppadd="${d}">+ Ajouter</button></section>`; }).join('')}</div>
+    <section class="panel" style="margin-top:14px"><h2>Notes de la semaine</h2>
+      <textarea id="pp-wnote" rows="5" placeholder="${isOwn ? 'À caler plus tard, réunions à organiser, idées, points à remonter…' : 'Aucune note.'}"${isOwn ? '' : ' readonly'}>${esc(wnote)}</textarea>
+      <p class="hint" style="margin:6px 0 0;font-size:12px">Cliquez sur un jour pour l’ouvrir en grand (notes du jour, tâches reportées). Une tâche sans heure qui n’est pas cochée passe automatiquement au jour suivant.</p></section>`;
+}
+
+// Fenêtre d'ajout / de modification d'une tâche
+function persoEdit({kind, id, date} = {}) {
+  const isRec = kind === 'rec', cur = kind ? persoGet((isRec ? 'rec:' : 'task:') + id) : null;
+  if (kind && !cur) return;
+  const d0 = date || perso.day || persoNow().iso;
+  const days = isRec ? cur.days || [] : [persoDow(d0)];
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal pp-modal" role="dialog" aria-modal="true" aria-labelledby="pp-mt"><h3 id="pp-mt">${cur ? 'Modifier la tâche' : 'Nouvelle tâche'}</h3>
+    <form id="pp-f">
+      <label class="pp-fl">Tâche<input type="text" name="title" required value="${esc(cur ? cur.title : '')}" placeholder="Ex. : Call avec Mika, préparer le bilan…"></label>
+      <div class="pp-row">
+        <label class="pp-fl" ${isRec ? 'hidden' : ''}>Date<input type="date" name="date" value="${esc(cur && !isRec ? cur.date : d0)}"></label>
+        <label class="pp-fl">Heure <span class="muted">(facultatif)</span><input type="time" name="time" value="${esc(cur ? cur.time || '' : '')}"></label>
+        <label class="pp-fl">Rappel<select name="rappel">${PERSO_RAPPELS.map(([v, l]) => `<option value="${v ?? ''}" ${String((cur ? cur.rappel : 10) ?? '') === String(v ?? '') ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      </div>
+      <fieldset class="pp-rep"><legend>Répétition</legend>
+        <label class="pp-rb"><input type="radio" name="rep" value="once" ${isRec ? 'disabled' : 'checked'}> Une seule fois</label>
+        <label class="pp-rb"><input type="radio" name="rep" value="week" ${isRec ? 'checked' : ''}> Chaque semaine, le :</label>
+        <div class="pp-days">${PLAN_DAYS.map((x, i) => `<label class="pp-db"><input type="checkbox" name="d" value="${i}" ${days.includes(i) ? 'checked' : ''}> ${x}</label>`).join('')}</div>
+        <button type="button" class="btn ghost small-btn" id="pp-all" style="font-size:13px">Tous les jours sauf samedi</button>
+      </fieldset>
+      <label class="pp-fl">Détail <span class="muted">(avec qui, ordre du jour…)</span><textarea name="note" rows="3">${esc(cur ? cur.note || '' : '')}</textarea></label>
+      <p class="hint" style="font-size:12px;margin:4px 0 0">Heures de Madagascar. Une heure avant 5 h compte pour la nuit qui suit le jour (ex. : 4h du mardi = nuit de mardi à mercredi). Les rappels s’affichent quand le site est ouvert${'Notification' in window && Notification.permission === 'granted' ? ' et en notification' : ''}.</p>
+      <div class="acts" style="flex-wrap:wrap">
+        ${cur ? (isRec ? `<button type="button" class="btn ghost" data-ppa="skip">Retirer seulement le ${esc(fmtDayFr(d0))}</button><button type="button" class="btn ghost danger" data-ppa="del">Supprimer de toutes les semaines</button>` : `<button type="button" class="btn ghost danger" data-ppa="del">Supprimer</button>`) : ''}
+        <span style="flex:1"></span><button type="button" class="btn ghost" data-ppa="cancel">Annuler</button><button type="submit" class="btn primary">Enregistrer</button></div>
+    </form></div>`;
+  const close = () => { bg.remove(); document.removeEventListener('keydown', onKey); render(); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(bg);
+  const f = bg.querySelector('form');
+  const syncRep = () => { const w = f.rep.value === 'week'; bg.querySelector('.pp-days').classList.toggle('dim', !w); f.date.closest('label').hidden = w || isRec; };
+  f.querySelectorAll('[name=rep]').forEach(r => r.addEventListener('change', syncRep));
+  f.querySelectorAll('[name=d]').forEach(c => c.addEventListener('change', () => { if (c.checked && f.rep.value !== 'week') { f.rep.value = 'week'; syncRep(); } }));
+  bg.querySelector('#pp-all').addEventListener('click', () => { f.querySelectorAll('[name=d]').forEach(c => { c.checked = +c.value !== PERSO_OFF; }); f.rep.value = 'week'; syncRep(); });
+  syncRep(); f.elements.title.focus();
+  bg.addEventListener('click', async e => {
+    if (e.target === bg) return close();
+    const a = e.target.closest('[data-ppa]'); if (!a) return;
+    if (a.dataset.ppa === 'cancel') return close();
+    if (a.dataset.ppa === 'skip') { await persoPut(`skip:${d0}:${id}`, {at: new Date().toISOString()}); toast(`Retirée du ${fmtDayFr(d0)} seulement.`); return close(); }
+    if (a.dataset.ppa === 'del') { if (isRec) { await persoPut('rec:' + id, {...cur, until: addDaysIso(persoNow().iso, -1)}); toast('Tâche récurrente arrêtée (l’historique des semaines passées est gardé).'); } else { await persoDel('task:' + id); toast('Tâche supprimée.'); } return close(); }
+  });
+  f.addEventListener('submit', async e => {
+    e.preventDefault();
+    const title = f.elements.title.value.trim(); if (!title) return;
+    const time = f.time.value || '', rappel = f.rappel.value === '' ? null : +f.rappel.value, note = f.note.value.trim();
+    const ds = [...f.querySelectorAll('[name=d]:checked')].map(c => +c.value);
+    if (f.rep.value === 'week') {
+      if (!ds.length) { toast('Choisissez au moins un jour.', true); return; }
+      const nid = isRec ? id : persoId();
+      await persoPut('rec:' + nid, {...(isRec ? cur : {by: (cur && cur.by) || perso.nom, from: mondayOf(f.date.value || d0)}), title, time, rappel, note, days: ds});
+      if (kind === 'task') await persoDel('task:' + id);
+    } else {
+      const nid = kind === 'task' ? id : persoId();
+      await persoPut('task:' + nid, {...(kind === 'task' ? cur : {by: perso.nom}), title, time, rappel, note, date: f.date.value || d0});
+    }
+    toast('Enregistré.'); close();
+  });
+}
+function persoRecsModal() {
+  const recs = persoRecs().filter(r => !r.until || r.until >= persoNow().iso).sort((a, b) => Math.min(...a.days) - Math.min(...b.days) || persoSortMin(a.time) - persoSortMin(b.time));
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal pp-modal" role="dialog" aria-modal="true"><h3>Tâches récurrentes</h3><p class="hint" style="margin:0 0 10px">Elles reviennent toutes les semaines. Cliquez sur une tâche pour changer ses jours, son heure ou son rappel.</p>
+    <div class="pp-reclist">${recs.map(r => `<button type="button" class="pp-rec" data-recid="${esc(r.id)}"><span class="pp-rd">${r.days.map(i => PLAN_DAYS[i]).join(' · ')}</span><span class="pp-tm">${esc(persoHour(r.time))}</span><span>${esc(r.title)}${r.note ? `<span class="pp-no">${esc(r.note)}</span>` : ''}</span></button>`).join('') || '<p class="hint">Aucune.</p>'}</div>
+    <div class="acts"><button type="button" class="btn" data-new>+ Nouvelle tâche récurrente</button><button type="button" class="btn primary" data-close>Fermer</button></div></div>`;
+  const close = () => bg.remove();
+  bg.addEventListener('click', e => {
+    if (e.target === bg || e.target.closest('[data-close]')) return close();
+    const r = e.target.closest('[data-recid]'); if (r) { close(); const rec = persoGet('rec:' + r.dataset.recid); const td = persoNow().iso; let d = td; for (let i = 0; i < 7 && !rec.days.includes(persoDow(d)); i++) d = addDaysIso(d, 1); persoEdit({kind: 'rec', id: r.dataset.recid, date: d}); }
+    if (e.target.closest('[data-new]')) { close(); persoEdit({}); setTimeout(() => { const f = document.getElementById('pp-f'); if (f) { f.rep.value = 'week'; f.rep[1].dispatchEvent(new Event('change')); } }, 0); }
+  });
+  document.body.appendChild(bg);
+}
+function bindPerso(main) {
+  const root = main.querySelector('.pp-root'); if (!root) return;
+  const go = n => { if (perso.view === 'week') perso.week = addDaysIso(perso.week, n * 7); else { perso.day = addDaysIso(perso.day, n); perso.week = mondayOf(perso.day); } render(); };
+  root.querySelector('#pp-prev')?.addEventListener('click', () => go(-1));
+  root.querySelector('#pp-next')?.addEventListener('click', () => go(1));
+  root.querySelector('#pp-today')?.addEventListener('click', () => { perso.day = persoNow().iso; perso.week = mondayOf(perso.day); render(); });
+  root.querySelectorAll('[data-ppview]').forEach(b => b.addEventListener('click', () => { perso.view = b.dataset.ppview; if (perso.view === 'day' && mondayOf(perso.day) !== perso.week) perso.day = perso.week === mondayOf(persoNow().iso) ? persoNow().iso : perso.week; render(); }));
+  root.querySelectorAll('[data-ppday]').forEach(b => b.addEventListener('click', () => { perso.day = b.dataset.ppday; perso.week = mondayOf(perso.day); perso.view = 'day'; render(); window.scrollTo(0, 0); }));
+  root.querySelectorAll('[data-ppadd]').forEach(b => b.addEventListener('click', () => persoEdit({date: b.dataset.ppadd})));
+  root.querySelector('#pp-add')?.addEventListener('click', () => persoEdit({date: perso.view === 'day' ? perso.day : (perso.week === mondayOf(persoNow().iso) ? persoNow().iso : perso.week)}));
+  root.querySelector('#pp-recs')?.addEventListener('click', persoRecsModal);
+  root.querySelector('#pp-notif')?.addEventListener('click', async () => { try { await Notification.requestPermission(); } catch (e) {} render(); });
+  root.querySelectorAll('[data-ppck]').forEach(b => b.addEventListener('click', () => { const it = b.closest('[data-ppk]'); persoToggle(it.dataset.ppk, it.dataset.ppid, it.dataset.ppd); const y = window.scrollY; render(); window.scrollTo(0, y); }));
+  root.querySelectorAll('[data-ppedit]').forEach(b => b.addEventListener('click', () => { const it = b.closest('[data-ppk]'); persoEdit({kind: it.dataset.ppk, id: it.dataset.ppid, date: it.dataset.ppd}); }));
+  root.querySelector('#pp-quick')?.addEventListener('submit', async e => { e.preventDefault(); const t = e.target.t.value.trim(); if (!t) return; await persoPut('task:' + persoId(), {title: t, date: perso.day, time: '', rappel: null, note: '', by: perso.nom}); render(); document.querySelector('#pp-quick input')?.focus(); });
+  const autosave = (el, key) => { if (!el || el.readOnly) return; let tm; el.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(() => { const t = el.value; if (t.trim()) persoPut(key, {t}); else if (perso.rows.has(key)) persoDel(key); }, 700); }); };
+  autosave(root.querySelector('#pp-dnote'), 'note:' + perso.day);
+  autosave(root.querySelector('#pp-wnote'), 'wnote:' + perso.week);
+}
+
 function renderPlanning(main) {
   const wk = planWeekKey(), W = weekOf(wk), d = planDay(wk);
   const models = activeModels();
@@ -3962,7 +4322,11 @@ function renderPlanning(main) {
   const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
   const hl = newHighlights();
   const q = normName(planUI.q);
-  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'conges' ? 'on' : ''}" data-ptab="conges">Congés ${(() => { const n = congeList('ch').filter(r => (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button></div>`;
+  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'conges' ? 'on' : ''}" data-ptab="conges">Congés ${(() => { const n = congeList('ch').filter(r => (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button>${persoVisible() ? `<button type="button" class="${planUI.tab === 'perso' ? 'on' : ''}" data-ptab="perso">${persoIsOwner() ? 'Mon planning' : `Planning de ${esc(persoOwnerLabel())}`}</button>` : ''}</div>`;
+  if (planUI.tab === 'perso' && persoVisible()) {
+    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>${persoIsOwner() ? 'Mon planning' : `Planning de ${esc(persoOwnerLabel())}`}</span></h1></div>` + tabs + `<div class="pp-root">${persoHTML()}</div>`;
+    bindPlanTabs(main); bindPerso(main); persoLoad(); return;
+  }
   if (planUI.tab === 'abs') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Demandes d'absence</span></h1></div>` + tabs + absReqHTML();
     bindPlanTabs(main); bindAbsReq(main); return;
@@ -8071,7 +8435,7 @@ const Sync = (() => {
   return {configured, connected, cfg, login, logout, pull, changed, init, drawStatus, status: () => status, lastError: () => lastError,
     saveLocalCfg(url, key) { lsSet(LS_CFG, url ? {url, anonKey: key} : null); session = null; lsSet(LS_SES, null); meta.version = {}; meta.base = {}; saveMeta(); drawStatus(); },
     needsLogin: () => configured() && !session, email: () => session?.email || '', _merge: merge,
-    canManage, isAdmin: () => isAdmin, canDirect, notesList, notesAdd, notesDelete, isDirection: () => isDirection, direction: () => direction.slice(), directionConfigured: () => directionConfigured, addDirection, removeDirection, planningShared: () => connected() && !missing.has('planning'), rolesConfigured: () => rolesConfigured, admins: () => admins.slice(), addAdmin, removeAdmin, refreshRoles};
+    canManage, isAdmin: () => isAdmin, canDirect, notesList, notesAdd, notesDelete, isDirection: () => isDirection, persoApi: (path, opts) => api(path, opts), direction: () => direction.slice(), directionConfigured: () => directionConfigured, addDirection, removeDirection, planningShared: () => connected() && !missing.has('planning'), rolesConfigured: () => rolesConfigured, admins: () => admins.slice(), addAdmin, removeAdmin, refreshRoles};
 })();
 
 /* ---------- Écrans : connexion et page « Partage des données » ---------- */
