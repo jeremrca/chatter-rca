@@ -604,6 +604,27 @@ input[type=email],input[type=password]{background:var(--bg);border:1px solid var
 .ptopt button{padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-weight:700;cursor:pointer}
 .ptopt button.on{color:var(--text);border-color:var(--ember);background:linear-gradient(90deg,rgba(224,51,106,.16),rgba(91,63,208,.12))}
 .offbar{padding:12px 16px}
+.dsh-g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:1100px){.dsh-g{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.dsh-g{grid-template-columns:1fr}}
+.dsh{border:1px solid var(--line);border-radius:var(--r-md);padding:10px;background:var(--bg);min-width:0}
+.dsh-nr{margin-top:10px}
+.dsh-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800;font-size:16px;margin-bottom:8px}
+.dsh-n{font-size:12px;font-weight:800;padding:2px 9px;border-radius:99px;background:#ef4444;color:#fff}.dsh-n.z{background:transparent;color:var(--faint);border:1px solid var(--line)}
+.dsh-top{margin-bottom:10px;font-size:14px}.dsh-top strong{color:#f87171}
+.dcat{border-top:2px solid var(--line);padding:8px 0 4px}.dcat:first-of-type{border-top:0}
+.dcat-t{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+.dcat.rp .dcat-t{color:#f87171}.dcat.rp.on{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.55);border-radius:var(--r-md);padding:8px;margin-bottom:4px}
+.dcat.ab{border-top-color:rgba(168,85,247,.45)}.dcat.ab .dcat-t{color:#c084fc}
+.dcat.of{border-top-color:rgba(148,163,184,.4)}.dcat.of .dcat-t{color:#cbd5e1}
+.dcat-0{font-size:12px;color:var(--faint);font-style:italic}
+.dcat-w{margin-top:6px;font-size:12px;font-weight:600;color:var(--muted)}.dcat.ab .dcat-w{color:#d8b4fe}
+.unchip.rp{border-color:rgba(239,68,68,.6);background:rgba(239,68,68,.16)}
+.dcat.ab .abschip{border-color:rgba(168,85,247,.5);background:rgba(168,85,247,.12);padding:3px 8px;gap:4px}.dcat.ab .abschip span{color:#d8b4fe}
+.pft{font-size:10px;font-weight:800;padding:1px 5px;border-radius:99px;margin-right:5px;line-height:1.4}
+.pft.mym{background:#22c55e;color:#062b14}.pft.of{background:#eab308;color:#2a1d02}.pft.u{border:1px dashed var(--line);color:var(--faint)}
+.dsh-lg{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:10px;font-size:12px;color:var(--muted)}
+.dsh-lg .lg{padding:2px 9px;border-radius:99px;font-weight:700}.dsh-lg .lg.rp{background:rgba(239,68,68,.16);color:#f87171}.dsh-lg .lg.ab{background:rgba(168,85,247,.14);color:#c084fc}.dsh-lg .lg.of{background:rgba(148,163,184,.14);color:#cbd5e1}
 .bigpaste{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;min-height:180px}
 .pbadge.sui{background:linear-gradient(135deg,#f0605e,#f2a43c 50%,#45d08f);font-size:18px}
 .sui-tabs button{display:inline-flex;align-items:center;gap:7px}
@@ -4526,7 +4547,7 @@ function renderPlanning(main) {
   const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
   const hl = newHighlights();
   const q = normName(planUI.q);
-  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'onb' ? 'on' : ''}" data-ptab="onb">Onboarding ${(() => { const t = isoOf(new Date()), n = onbList().filter(o => o.date >= t && !onbGone(o)).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'conges' ? 'on' : ''}" data-ptab="conges">Congés ${(() => { const n = congeList('ch').filter(r => (r.to || r.from) >= isoOf(new Date())).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button>${persoVisible() ? `<button type="button" class="${planUI.tab === 'perso' ? 'on' : ''}" data-ptab="perso">${persoIsOwner() ? 'Mon planning' : `Planning de ${esc(persoOwnerLabel())}`}</button>` : ''}</div>`;
+  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'onb' ? 'on' : ''}" data-ptab="onb">Onboarding ${(() => { const t = isoOf(new Date()), n = onbList().filter(o => o.date >= t && !onbGone(o)).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date()) && reqLive(r)).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'conges' ? 'on' : ''}" data-ptab="conges">Congés ${(() => { const n = congeList('ch').filter(r => (r.to || r.from) >= isoOf(new Date()) && reqLive(r)).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button>${persoVisible() ? `<button type="button" class="${planUI.tab === 'perso' ? 'on' : ''}" data-ptab="perso">${persoIsOwner() ? 'Mon planning' : `Planning de ${esc(persoOwnerLabel())}`}</button>` : ''}</div>`;
   if (planUI.tab === 'onb') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Onboarding</span></h1></div>` + tabs + onbHTML();
     bindPlanTabs(main); bindOnb(main); return;
@@ -4600,18 +4621,48 @@ function renderPlanning(main) {
     </section>
     ${q ? `<section class="panel"><h2>Planning de « ${esc(planUI.q)} » · ${esc(planWeekLabel(wk))}</h2>${found.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Jour</th><th>Shift</th><th>Modèle</th><th>Statut</th></tr></thead><tbody>${found.map(x => `<tr><td>${PLAN_DAYS_LONG[x.dd]} ${parseDate(addDaysIso(wk, x.dd)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</td><td>${PLAN_SHIFTS[x.s]}</td><td>${esc(modelLabel(x.m))}</td><td>${x.e.r ? `remplacé(e) par ${esc(x.e.r)}` : x.e.a ? '<span class="sc-lo">absent</span>' : x.e.c ? '<span class="pc cut">coupure de courant</span>' : x.e.l ? '<span class="pc late">retard</span>' : 'prévu'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Aucun shift trouvé cette semaine.</p>'}</section>` : ''}
     ${(() => {
-      const offs = Object.values(planState.dayoff || {}).filter(o => (o.days || []).includes(d)).map(o => o.name).sort((a, b) => a.localeCompare(b, 'fr'));
-      const clash = [];
-      for (let s = 0; s < PLAN_SHIFTS.length; s++) for (const m of dayModels) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) { const w = workerOf(e); if (w && offOn(w, d)) clash.push(`${w} (${modelLabel(m)} ${PLAN_SHIFTS[s]})`); }
-      const un = unplannedOn(wk, d), noRoster = !Object.keys(planState.dayoff || {}).length;
-      const date = addDaysIso(wk, d), reqs = absReqsOnDate(date);
-      const reqClash = [];
-      for (let s = 0; s < PLAN_SHIFTS.length; s++) for (const m of dayModels) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) { const w = workerOf(e); if (w && !e.a && absReqFor(w, date, s)) reqClash.push(`${w} (${modelLabel(m)} ${PLAN_SHIFTS[s]})`); }
-      const reqHTML = reqs.length ? `<div class="absbox"><div class="absbox-h">${reqs.some(r => r.conge) ? 'Absences et congés' : 'Absences demandées'} ce ${PLAN_DAYS_LONG[d].toLowerCase()} · ${reqs.length}</div><div class="absbox-l">${reqs.map(r => `<button type="button" class="abschip" ${r.conge ? `data-cgid="${r.id}" title="Congé validé"` : `data-arid="${r.id}" title="Modifier la demande"`}><strong>${esc(r.name)}</strong> <span>${r.conge ? `Congé ${esc(absDates(r))}` : esc(shiftsLabel(r.shifts))}</span>${r.status === 'wait' ? ' <span class="pill Warning">en attente</span>' : ''}${r.note ? `<em>${esc(r.note)}</em>` : ''}</button>`).join('')}</div>
-        ${reqClash.length ? `<div class="absbox-w">⚠ Planifié(e)s malgré leur demande : ${reqClash.map(esc).join(' · ')}</div>` : ''}</div>` : '';
-      const unHTML = un.length ? `<div class="unplan"><div class="unplan-h">⚠ Reste à planifier · ${plural(un.length, 'chatter', 'chatters')} pas OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} et sur aucun shift</div><div class="unplan-l">${un.map(x => `<span class="unchip">${esc(x.n)}<button type="button" data-ign="${esc(x.k)}" data-ignn="${esc(x.n)}" title="A quitté l’agence ou ne plus le rappeler" aria-label="Retirer ${esc(x.n)}">×</button></span>`).join('')}</div></div>`
-        : `<div class="unplan ok"><span>✓ Tous les chatters de l'équipe sont planifiés ou OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()}.</span>${noRoster ? ' <span class="muted">Remplissez l’onglet « Jours OFF / Base chatters » pour que toute l’équipe soit vérifiée.</span>' : ''}</div>`;
-      return `<section class="panel offbar">${reqHTML}${unHTML}${clash.length ? `<div class="alert warn" style="margin:10px 0 ${offs.length ? '10px' : '0'}"><strong>${plural(clash.length, 'créneau', 'créneaux')} sur un jour OFF :</strong> ${clash.map(esc).join(' · ')}</div>` : ''}${offs.length ? `<div class="muted" style="font-size:13px;margin-top:10px"><strong style="color:var(--text)">OFF ce ${PLAN_DAYS_LONG[d].toLowerCase()} (${offs.length}) :</strong> ${offs.map(esc).join(', ')}</div>` : ''}</section>`;
+      // Rappels du jour rangés par shift : Reste à planifier (rouge, le plus urgent), Absences demandées (violet), OFF (gris).
+      // Shift d'un chatter = son shift habituel (liste Jours OFF) ; sans shift renseigné : ligne « Shift habituel non renseigné ».
+      const R = nameResolver(), date = addDaysIso(wk, d), DL = PLAN_DAYS_LONG[d].toLowerCase(), NS = PLAN_SHIFTS.length;
+      const offOf = k => Object.values(planState.dayoff || {}).find(o => rosterKey(o.name) === k || R.key(o.name) === k);
+      const habit = k => { const o = offOf(k); return o && Array.isArray(o.shifts) && o.shifts.length ? o.shifts.map(Number) : null; };
+      // Plateforme : modèles où il est planifié (cette semaine et les 2 d'avant), sinon fiche d'onboarding, sinon MYM / OF à la fin du nom
+      const PF = new Map(), mm = planModelsMap();
+      for (const w of [wk, addDaysIso(wk, -7), addDaysIso(wk, -14)]) for (const [ck, list] of Object.entries((planState.weeks[w] || {}).cells || {})) {
+        const mid = ck.split('|')[2], g = mid === 'mym-backup' ? 'mym' : mid === 'of-backup' ? 'of' : (mm[mid] || {}).group; if (g !== 'mym' && g !== 'of') continue;
+        for (const e of list) [e.n, ...(e.r ? e.r.split('/') : [])].forEach(n => { const k = R.key(String(n || '').trim()); if (k) (PF.get(k) || PF.set(k, new Set()).get(k)).add(g); });
+      }
+      for (const o of onbList()) if (o.pf) { const k = R.key(o.name); if (k && !PF.has(k)) PF.set(k, new Set([o.pf])); }
+      const pfTags = n => { const k = R.key(n); let set = PF.get(k); if (!set) { const m = String(n).match(/\b(mym|of)\s*$/i); if (m) set = new Set([m[1].toLowerCase()]); }
+        return set && set.size ? ['mym', 'of'].filter(x => set.has(x)).map(x => `<span class="pft ${x}">${x === 'mym' ? 'MYM' : 'OF'}</span>`).join('') : '<span class="pft u" title="Plateforme inconnue">?</span>'; };
+      const clean = n => String(n).replace(/\s+(mym|of)$/i, '').trim() || n;
+      const col = () => Array.from({length: NS + 1}, () => []);   // index NS = shift non renseigné
+      // Reste à planifier
+      const un = unplannedOn(wk, d), noRoster = !Object.keys(planState.dayoff || {}).length, U = col();
+      for (const x of un) (habit(x.k) || [NS]).forEach(s => U[s].push(x));
+      // Absences et congés
+      const reqs = absReqsOnDate(date), A = col(), AW = col();
+      for (const r of reqs) { const sh = (r.shifts || []).length ? r.shifts.map(Number) : Array.from({length: NS}, (_, i) => i); sh.forEach(s => A[s].push(r)); }
+      for (let s = 0; s < NS; s++) for (const m of dayModels) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) { const w = workerOf(e); if (w && !e.a && absReqFor(w, date, s)) AW[s].push(`${w} (${modelLabel(m)})`); }
+      // OFF et créneaux planifiés sur un jour OFF
+      const O = col(), CL = col();
+      for (const o of Object.values(planState.dayoff || {})) if ((o.days || []).includes(d)) ((Array.isArray(o.shifts) && o.shifts.length ? o.shifts.map(Number) : null) || [NS]).forEach(s => O[s].push(o.name));
+      for (let s = 0; s < NS; s++) for (const m of dayModels) for (const e of (W.cells[cellKey(d, s, m.id)] || [])) { const w = workerOf(e); if (w && offOn(w, d)) CL[s].push(`${w} (${modelLabel(m)})`); }
+      const byName = (a, b) => String(a.n || a.name || a).localeCompare(String(b.n || b.name || b), 'fr');
+      const uChip = x => `<span class="unchip rp">${pfTags(x.n)}${esc(clean(x.n))}<button type="button" data-ign="${esc(x.k)}" data-ignn="${esc(x.n)}" title="A quitté l’agence ou ne plus le rappeler" aria-label="Retirer ${esc(x.n)}">×</button></span>`;
+      const aChip = r => `<button type="button" class="abschip" ${r.conge ? `data-cgid="${r.id}" title="Congé validé"` : `data-arid="${r.id}" title="Modifier la demande"`}>${pfTags(r.name)}<strong>${esc(clean(r.name))}</strong>${r.conge ? ` <span>Congé ${esc(absDates(r))}</span>` : (r.shifts || []).length === NS ? ' <span>journée</span>' : ''}${r.status === 'wait' ? ' <span class="pill Warning">en attente</span>' : ''}${r.note ? `<em>${esc(r.note)}</em>` : ''}</button>`;
+      const oChip = n => `<span class="unchip off">${pfTags(n)}${esc(clean(n))}</span>`;
+      const cell = s => { const u = U[s].sort(byName), a = A[s].sort(byName), o = O[s].sort(byName), last = s === NS;
+        return `<div class="dsh${last ? ' dsh-nr' : ''}"><div class="dsh-h"><span>${last ? 'Shift habituel non renseigné' : PLAN_SHIFTS[s]}</span>${u.length ? `<span class="dsh-n">${u.length} à placer</span>` : last ? '' : '<span class="dsh-n z">0 à placer</span>'}</div>
+          ${last ? '<div class="hint" style="font-size:12px;margin:-2px 0 6px">À compléter dans Jours OFF / Base chatters.</div>' : ''}
+          <div class="dcat rp${u.length ? ' on' : ''}"><div class="dcat-t">⚠ Reste à planifier</div>${u.length ? `<div class="unplan-l">${u.map(uChip).join('')}</div>` : '<div class="dcat-0">tout est placé</div>'}</div>
+          ${last && !a.length ? '' : `<div class="dcat ab"><div class="dcat-t">Absences demandées</div>${a.length ? `<div class="unplan-l">${a.map(aChip).join('')}</div>` : '<div class="dcat-0">aucune</div>'}${AW[s] && AW[s].length ? `<div class="dcat-w">Planifié(e)s malgré leur demande : ${AW[s].map(esc).join(' · ')}</div>` : ''}</div>`}
+          ${last && !o.length ? '' : `<div class="dcat of"><div class="dcat-t">OFF · ${o.length}</div>${o.length ? `<div class="unplan-l">${o.map(oChip).join('')}</div>` : '<div class="dcat-0">personne</div>'}${CL[s] && CL[s].length ? `<div class="dcat-w">Planifié(e)s sur leur jour OFF : ${CL[s].map(esc).join(' · ')}</div>` : ''}</div>`}</div>`; };
+      const showNR = U[NS].length || A[NS].length || O[NS].length;
+      const head = un.length ? `<div class="dsh-top"><strong>⚠ Reste à planifier ce ${DL} · ${plural(un.length, 'chatter', 'chatters')}</strong> <span class="muted">pas OFF et sur aucun shift</span></div>`
+        : `<div class="unplan ok" style="margin-bottom:10px"><span>✓ Tous les chatters de l'équipe sont planifiés ou OFF ce ${DL}.</span>${noRoster ? ' <span class="muted">Remplissez l’onglet « Jours OFF / Base chatters » pour que toute l’équipe soit vérifiée.</span>' : ''}</div>`;
+      return `<section class="panel offbar">${head}<div class="dsh-g">${Array.from({length: NS}, (_, s) => cell(s)).join('')}</div>${showNR ? cell(NS) : ''}
+        <div class="dsh-lg"><span class="lg rp">Reste à planifier</span><span class="lg ab">Absence demandée</span><span class="lg of">Jour OFF</span><span style="margin-left:auto"><span class="pft mym">MYM</span> <span class="pft of">OF</span> <span class="pft u">?</span> plateforme</span></div></section>`;
     })()}
     <section class="panel" style="padding:12px">
       <div class="tbl-wrap pgrid-wrap" style="max-height:none"><table class="pgrid"><thead>
@@ -5332,22 +5383,25 @@ function bindSupAssign(main) {
 const ABS_STATUS = {ok: ['Acceptée', 'Strong'], wait: ['En attente', 'Warning'], no: ['Refusée', 'Critical']};
 const absReqs = () => (planState.absreq ||= {});
 const absList = () => Object.entries(planState.absreq || {}).map(([id, r]) => ({id, ...r}));
+// Chatteur parti (« A quitté l’agence ») à cette date : ses absences et congés ne sont plus affichés ni comptés à partir de son départ
+const goneOn = (name, date) => { const g = (planState.ignored || {})[rosterKey(name)]; return !!(g && g.left && date >= g.left); };
+const reqLive = r => !goneOn(r.name, r.to || r.from);
 // Demande (non refusée) d'un chatter couvrant une date et un shift
 function absReqFor(name, date, s) {
-  if (!name) return null; const k = rosterKey(name);
+  if (!name || goneOn(name, date)) return null; const k = rosterKey(name);
   return absList().find(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from) && (r.shifts || []).includes(+s) && nearKey(rosterKey(r.name), k))
     || congeAsAbs(congeList('ch').find(r => date >= r.from && date <= (r.to || r.from) && nearKey(rosterKey(r.name), k))) || null;
 }
 const absReqsOnDate = date => [...absList().filter(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from)),
-  ...congeList('ch').filter(r => date >= r.from && date <= (r.to || r.from)).map(congeAsAbs)].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  ...congeList('ch').filter(r => date >= r.from && date <= (r.to || r.from)).map(congeAsAbs)].filter(r => !goneOn(r.name, date)).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
 const shiftsLabel = sh => (sh || []).length === PLAN_SHIFTS.length ? 'journée entière' : (sh || []).slice().sort().map(s => PLAN_SHIFTS[s]).join(' + ');
 const absDates = r => !r.to || r.to === r.from ? fmtDayFr(r.from) : `du ${fmtDayFr(r.from)} au ${fmtDayFr(r.to)}`;
 function absReqHTML() {
   const today = isoOf(new Date()), f = planUI.absf || 'next', q = normName(planUI.absq || '');
-  const rows = absList().filter(r => f === 'all' || (f === 'next' ? (r.to || r.from) >= today : (r.to || r.from) < today))
+  const rows = absList().filter(r => f === 'all' || (f === 'next' ? (r.to || r.from) >= today && reqLive(r) : (r.to || r.from) < today))
     .filter(r => !q || normName(r.name).includes(q) || normName(r.note).includes(q))
     .sort((a, b) => f === 'past' ? b.from.localeCompare(a.from) : a.from.localeCompare(b.from));
-  const wait = absList().filter(r => r.status === 'wait' && (r.to || r.from) >= today).length;
+  const wait = absList().filter(r => r.status === 'wait' && (r.to || r.from) >= today && reqLive(r)).length;
   return `<div class="stack"><section class="panel abs-card">
     <div class="sui-bar"><button class="btn primary" id="ar-add" type="button">+ Nouvelle demande</button>
       <div class="qrow">${[['next', 'À venir'], ['past', 'Passées'], ['all', 'Toutes']].map(([k, l]) => `<button type="button" class="qpt ${f === k ? 'on' : ''}" data-arf="${k}" style="--tc:#f87171">${l}</button>`).join('')}</div>
@@ -5420,9 +5474,9 @@ const congeDays = r => Math.round((parseDate(r.to || r.from) - parseDate(r.from)
 const congeWho = r => r.sup ? ((supsMap()[r.sup] || {}).name || r.name || '?') : r.name;
 function congesHTML(kind) {
   const today = isoOf(new Date()), fk = kind === 'ch' ? 'cgf' : 'cgsf', f = planUI[fk] || 'next', edit = congeCanEdit(kind);
-  const rows = congeList(kind).filter(r => f === 'all' || (f === 'next' ? (r.to || r.from) >= today : (r.to || r.from) < today))
+  const rows = congeList(kind).filter(r => f === 'all' || (f === 'next' ? (r.to || r.from) >= today && (kind !== 'ch' || reqLive(r)) : (r.to || r.from) < today))
     .sort((a, b) => f === 'past' ? b.from.localeCompare(a.from) : a.from.localeCompare(b.from));
-  const now = congeList(kind).filter(r => today >= r.from && today <= (r.to || r.from));
+  const now = congeList(kind).filter(r => today >= r.from && today <= (r.to || r.from) && (kind !== 'ch' || !goneOn(r.name, today)));
   const title = kind === 'ch' ? 'Congés validés des chatteurs' : 'Congés validés des superviseurs';
   const hint = kind === 'ch' ? 'Congés accordés par l’équipe de management, après demande du chatteur. Chaque superviseur peut en ajouter. Un chatteur en congé n’apparaît plus dans « reste à planifier », et s’il est quand même planifié, il est signalé.'
     : `Congés accordés par la Direction (Billy, Clément, Mika ou le propriétaire), après demande du superviseur. ${edit ? 'Vous pouvez les ajouter et les modifier.' : 'Seule la Direction peut les ajouter ou les modifier.'} Ces jours-là, le superviseur n’apparaît pas dans la couverture et aucun feedback ne lui est placé.`;
