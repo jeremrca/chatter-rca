@@ -6773,6 +6773,13 @@ let coachState = (() => { const s = lsGet(LS_COACH, null) || {}; s.weeks ||= {};
 const saveCoach = () => { lsSet(LS_COACH, coachState); Sync.changed('coaching'); };
 const COACH_DEF = {n: 20, cap: 6, min: 4, minShifts: 2, span: 2};
 const WEAK_MALUS_FROM = '2026-11-23';
+// À partir du 30/11 : un maillon faible va à un superviseur présent sur (presque) tout son shift : parmi les shifts où ils se croisent,
+// au moins 80 % où le superviseur est là au moins 5 h sur 6 (jamais « juste les 2 dernières heures »), et au moins 2 shifts suivis ainsi,
+// quitte à dépasser le plafond d'un chatter. La semaine en cours n'est jamais refaite.
+const WEAK_FULL_FROM = '2026-11-30', WEAK_FULL = 0.8, WEAK_FULL_H = 5;
+// Chatter parti (« A quitté l’agence ») : retiré tout de suite de la liste des maillons faibles, même en cours de semaine
+const coachGoneIt = (k, it) => { const ig = planState.ignored || {}, g = ig[k] || ig[rosterKey(it.plan || it.name)]; return !!(g && g.left && g.left <= isoOf(new Date())); };
+const coachEntries = W => Object.entries((W && W.items) || {}).filter(([k, it]) => !coachGoneIt(k, it));
 const coachCfg = () => ({...COACH_DEF, ...(coachState.cfg || {})});
 const coachUI = {week: null};
 const BAD_NAME = /acc[eè]s\s+r[eé]voqu|superviseu?r|\bsup\b|\bmanager\b|@/i;
@@ -6834,6 +6841,14 @@ function coachShifts(planName, weeks) {
   return out;
 }
 // Heures communes entre les shifts d'un chatter et un superviseur
+// Shift par shift : full = superviseur présent ≥ 5 h sur 6, part = présent moins longtemps (début ou fin de shift seulement)
+function coachCover(sup, shifts) {
+  let full = 0, part = 0, ov = 0;
+  for (const x of shifts) { if (x.dup) continue; const [a, b] = SHIFT_HOURS[x.s]; let h = 0;
+    for (let t = a; t < b; t++) { const d = (x.d + Math.floor(t / 24)) % 7, hh = t % 24; if (supBlocks(sup, d, x.wk ? addDaysIso(x.wk, x.d + Math.floor(t / 24)) : null).some(bl => hh + 0.5 > bl.start && hh + 0.5 < bl.end)) h++; }
+    ov += h; if (h >= WEAK_FULL_H) full++; else if (h > 0) part++; }
+  return {full, part, ov, q: full + part ? full / (full + part) : 0};
+}
 function coachOverlap(sup, shifts) {
   let h = 0;
   for (const x of shifts) { if (x.dup) continue; const [a, b] = SHIFT_HOURS[x.s];
@@ -6908,26 +6923,33 @@ function coachBuild(wk, keepFrom, opt = {}) {
     const sh = it.plan ? coachShifts(it.plan, [curShiftWeek]) : [];
     const mids = new Set(sh.map(x => x.mid));
     const pids = it.pid === 'both' ? ['of', 'mym'] : [it.pid];
+    const hours = sh.filter(x => !x.dup).length * 6;
     const opts = sups.filter(s => pids.some(p => supEligible(s, p))).map(s => {
       const ov = coachOverlap(s, sh), mod = [...mids].filter(m => planState.supAssign && planState.supAssign[s.id] && planState.supAssign[s.id][m]).length;
-      return {s, ov, mod};
+      const cv = coachCover(s, sh);
+      return {s, ov, mod, cv};
     });
     const kept = keepFrom && keepFrom.items && keepFrom.items[key];
     if (kept) { it.sup = kept.sup || ''; it.why = kept.why; if (kept.isIn) it.isIn = true; if (kept.verdict) it.verdict = kept.verdict; if (kept.decision) it.decision = kept.decision; }
-    return {key, it, opts, kept: !!kept, prevSup: prev && prev.items && prev.items[key] ? prev.items[key].sup : null};
+    return {key, it, opts, hours, kept: !!kept, prevSup: prev && prev.items && prev.items[key] ? prev.items[key].sup : null};
   });
+  const full = wk >= WEAK_FULL_FROM, good = o => o.cv.full >= 2 && o.cv.q >= WEAK_FULL;
   for (const x of prep) if (x.kept && x.it.sup && load[x.it.sup] != null) load[x.it.sup]++;
-  prep.sort((a, b) => a.opts.filter(o => o.ov > 0).length - b.opts.filter(o => o.ov > 0).length);
+  prep.sort(full ? (a, b) => a.opts.filter(good).length - b.opts.filter(good).length || a.opts.filter(o => o.ov > 0).length - b.opts.filter(o => o.ov > 0).length
+    : (a, b) => a.opts.filter(o => o.ov > 0).length - b.opts.filter(o => o.ov > 0).length);
   for (const x of prep) {
     if (x.kept) continue;   // déjà attribué dans la liste en cours : on n'y touche pas
-    const cap = cfg.cap;
+    const cap = full ? cfg.cap + 1 : cfg.cap, ok = o => load[o.s.id] < cap && (!full || !x.hours || good(o));
     // Priorité au superviseur attitré du suivi global (un seul superviseur par chatter), sinon celui de la semaine dernière
+    // (à partir du 30/11 : seulement s'il est présent sur au moins 80 % du shift du chatter)
     const gk = glKeyOfWeak(x.key, x.it), gsup = gk && coachState.global[gk].sup;
-    const keepG = gsup && x.opts.find(o => o.s.id === gsup && load[o.s.id] < cap);
-    const keepPrev = !keepG && x.prevSup && x.opts.find(o => o.s.id === x.prevSup && load[o.s.id] < cap);
+    const keepG = gsup && x.opts.find(o => o.s.id === gsup && ok(o));
+    const keepPrev = !keepG && x.prevSup && x.opts.find(o => o.s.id === x.prevSup && ok(o));
     const keep = keepPrev || keepG;
-    const best = keep || x.opts.filter(o => load[o.s.id] < cap).sort((a, b) => (b.ov + b.mod * 3 - load[b.s.id] * 2) - (a.ov + a.mod * 3 - load[a.s.id] * 2))[0];
-    if (best) { x.it.sup = best.s.id; x.it.why = (keepFrom && keepFrom.items ? 'entré dans la liste · ' : '') + (keepPrev ? 'même superviseur que la semaine dernière' : keepG ? 'son superviseur attitré (suivi global)' : best.ov ? `${best.ov} h communes${best.mod ? ` · ${plural(best.mod, 'modèle attribuée', 'modèles attribuées')}` : ''}` : 'aucune heure commune trouvée'); x.it.isIn = !!(keepFrom && keepFrom.items); load[best.s.id]++; }
+    const best = keep || (full
+      ? x.opts.filter(o => load[o.s.id] < cap).sort((a, b) => (good(b) - good(a)) || (b.cv.full - a.cv.full) || (b.cv.q - a.cv.q) || (b.mod - a.mod) || (load[a.s.id] - load[b.s.id]))[0]
+      : x.opts.filter(o => load[o.s.id] < cap).sort((a, b) => (b.ov + b.mod * 3 - load[b.s.id] * 2) - (a.ov + a.mod * 3 - load[a.s.id] * 2))[0]);
+    if (best) { x.it.sup = best.s.id; x.it.why = (keepFrom && keepFrom.items ? 'entré dans la liste · ' : '') + (keepPrev ? 'même superviseur que la semaine dernière' : keepG ? 'son superviseur attitré (suivi global)' : best.ov ? `${best.ov} h communes${best.mod ? ` · ${plural(best.mod, 'modèle attribuée', 'modèles attribuées')}` : ''}` : 'aucune heure commune trouvée'); x.it.isIn = !!(keepFrom && keepFrom.items); if (full && x.hours) x.it.why += ` · là tout le shift sur ${plural(best.cv.full, 'shift', 'shifts')}${best.cv.part ? `, en partie sur ${best.cv.part}` : ''}${good(best) ? '' : ' (aucun superviseur là tout le shift : le meilleur possible)'}`; load[best.s.id]++; }
     else { x.it.sup = ''; x.it.why = 'aucun superviseur disponible (plafond atteint ou focus incompatible)'; }
   }
   const ctx = {wk, cands, prev, curShiftWeek, isIn: !!(keepFrom && keepFrom.items)};
@@ -6953,7 +6975,10 @@ function coachFill(items, ctx, opts) {
     const s = sups.filter(x => need[x.id] > 0 && !done.has(x.id)).sort((a, b) => load[a.id] - load[b.id])[0];
     if (!s) break;
     let pick = null;
-    for (const x of pool) { if (items[x.key] || !supEligible(s, x.pid)) continue; const ov = coachOverlap(s, shifts(x)); if (ov > 0) { pick = {x, ov}; break; } }
+    // À partir du 30/11 : seulement un chatter dont le superviseur couvre au moins 80 % du shift
+    const fullW = ctx.wk >= WEAK_FULL_FROM;
+    for (const x of pool) { if (items[x.key] || !supEligible(s, x.pid)) continue; const sh = shifts(x), cv = coachCover(s, sh);
+      if (cv.ov > 0 && (!fullW || (cv.full >= 2 && cv.q >= WEAK_FULL))) { pick = {x, ov: cv.ov}; break; } }
     if (!pick) { done.add(s.id); continue; }
     const {x, ov} = pick, prev = ctx.prev;
     items[x.key] = {name: x.c.r.name, plan: x.c.plan, pid: x.pid, rank: x.rank, of: x.total, score: Math.round(x.c.r.final * 10) / 10, grade: x.c.r.grade, ca: x.c.r.row.revenue ?? x.c.r.row.total ?? null, shifts: x.c.shifts,
@@ -7133,7 +7158,7 @@ function glReview(ctx) {
   return out;
 }
 // Maillons faibles validés de la semaine : clé → item
-const glWeak = wk => { const W = coachState.weeks[wk]; return W && W.status === 'validated' ? W.items || {} : {}; };
+const glWeak = wk => { const W = coachState.weeks[wk]; return W && W.status === 'validated' ? Object.fromEntries(coachEntries(W)) : {}; };
 // Clé du suivi global d'un maillon faible (le nom de l'import peut différer du prénom du planning : « Manitra » / « Manitra Jessy »)
 function glKeyOfWeak(k, it, R = nameResolver()) {
   const G = coachGlobal(), cands = [k, R.key(it.plan || ''), R.key(it.name || ''), rosterKey(it.plan || ''), rosterKey(it.name || '')].filter(Boolean);
@@ -7759,7 +7784,7 @@ function frPropose() {
 }
 // Minimum de maillons faibles qu'un superviseur malgache garde, et nombre qu'il a cette semaine
 const frWeakMin = () => { const cfg = coachCfg(); return Math.min(cfg.min ?? 4, cfg.cap); };
-function frSupWeakLoad(wk) { const W = coachState.weeks[wk], n = {}; for (const it of Object.values((W && W.items) || {})) if (it.sup) n[it.sup] = (n[it.sup] || 0) + 1; return n; }
+function frSupWeakLoad(wk) { const W = coachState.weeks[wk], n = {}; for (const [, it] of coachEntries(W)) if (it.sup) n[it.sup] = (n[it.sup] || 0) + 1; return n; }
 // Rend à leur superviseur les maillons faibles pris par les subs français quand il est passé sous le minimum (les plus faibles d'abord)
 function frGiveBack(wk) {
   const W = coachState.weeks[wk]; if (!W || W.status !== 'validated') return 0;
@@ -7960,7 +7985,7 @@ function renderCoaching(main) {
   if (coachUI.tab === 'sups') { main.innerHTML = head + tabsD + coachSupsHTML(wk); bindCoachHead(wk); bindTabs(); return; }
   if (coachUI.tab === 'mine' && meSup) { main.innerHTML = head + tabsD + coachSupView(wk); bindCoachHead(wk); bindTabs(); bindCoachCards(main, wk); return; }
   const cfg = coachCfg(), sups = supList();
-  const items = W ? Object.entries(W.items || {}).map(([k, it]) => ({k, ...it})) : [];
+  const items = W ? coachEntries(W).map(([k, it]) => ({k, ...it})) : [];
   const supName = id => (sups.find(s => s.id === id) || {}).name || '';
   const loads = sups.map(s => ({s, n: items.filter(i => i.sup === s.id).length}));
   const unmatched = items.filter(i => !i.plan);
@@ -8073,7 +8098,7 @@ function renderCoaching(main) {
     toast(msg + (f.short.length ? ` Toujours sous ${f.min} : ${f.short.map(x => `${x.sup} (${x.n})`).join(', ')}, aucun chatter compatible (plateforme et horaires) dans le classement.` : ''), !f.added.length); render();
   });
   document.getElementById('k-give')?.addEventListener('click', () => {
-    const all = Object.entries(W.items || {}).map(([k, it]) => ({k, ...it}));
+    const all = coachEntries(W).map(([k, it]) => ({k, ...it}));
     const load = id => all.filter(i => i.sup === id).length;
     const active = new Set(all.map(i => i.sup).filter(Boolean)).size || 1;
     const bg = document.createElement('div'); bg.className = 'modal-bg';
@@ -8169,8 +8194,8 @@ function coachSupView(wk) {
   if (!me) return `<div class="panel empty"><h2 style="font-size:18px">Votre compte n'est pas encore relié à un superviseur</h2><p class="hint" style="margin:6px auto 0;max-width:460px">Demandez à un administrateur d'indiquer votre e-mail dans Planning → Planning superviseurs, colonne « Compte ».</p></div>`;
   if (!W || W.status !== 'validated') return `<div class="panel empty"><h2 style="font-size:18px">La liste de la ${esc(planWeekLabel(wk))} n'est pas encore prête</h2><p class="hint" style="margin:6px 0 0">Elle apparaîtra ici dès que la Direction l'aura validée.</p></div>`;
   coachLoadNotes();
-  const mine = Object.entries(W.items || {}).map(([k, it]) => ({k, ...it})).filter(it => it.sup === me.id);
-  const others = Object.values(W.items || {}).filter(it => it.sup && it.sup !== me.id);
+  const mine = coachEntries(W).map(([k, it]) => ({k, ...it})).filter(it => it.sup === me.id);
+  const others = coachEntries(W).map(([, it]) => it).filter(it => it.sup && it.sup !== me.id);
   const curWk = planState.weeks[wk] ? wk : addDaysIso(wk, -7);
   const done = mine.filter(it => it.verdict).length;
   return `<div class="stack"><section class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Cette semaine, vous suivez ${plural(mine.length, 'chatter', 'chatters')}</h2>
@@ -8273,7 +8298,7 @@ function coachCaEvolution(key, wk) {
 function coachDecisionsHTML(wk) {
   const W = coachState.weeks[wk]; if (!W) return '<div class="panel empty">Pas de liste pour cette semaine.</div>';
   coachLoadNotes();
-  const items = [...Object.entries(W.items || {}).map(([k, it]) => ({k, ...it})),
+  const items = [...coachEntries(W).map(([k, it]) => ({k, ...it})),
     ...Object.entries((coachState.frv || {})[wk] || {}).filter(([, x]) => x.verdict).map(([k, x]) => ({k, src: 'fr', name: x.name || k, pid: x.pid || 'of', fr: x.fr, verdict: x.verdict, decision: x.decision}))];   // chatters du suivi français avec un verdict
   const frName = id => (frList().find(f => f.id === id) || {}).name;
   const supName = id => (supList().find(s => s.id === id) || {}).name || '—';
@@ -8298,7 +8323,7 @@ function coachDecisionsHTML(wk) {
 function coachSupsHTML(wk) {
   const W = coachState.weeks[wk]; if (!W) return '<div class="panel empty">Pas de liste pour cette semaine.</div>';
   coachLoadNotes();
-  const items = Object.entries(W.items || {}).map(([k, it]) => ({k, ...it}));
+  const items = coachEntries(W).map(([k, it]) => ({k, ...it}));
   const rows = [...supList(), ...frList().map(f => ({...f, fr: true, color: FR_COLOR, name: `${f.name} (sub français)`}))].map(s => { const mine = items.filter(it => s.fr ? !it.sup && it.fr === s.id : it.sup === s.id); const notes = coachNotes.list.filter(n => n.week === wk && mine.some(it => it.k === n.chatter_key)).length; const v = mine.filter(it => it.verdict).length; return {s, n: mine.length, notes, v}; }).filter(r => r.n);
   return `<section class="panel"><h2>Les superviseurs font-ils le suivi ? · ${esc(planWeekLabel(wk))}</h2><p class="hint">Notes prises cette semaine et verdicts donnés. En rouge : aucun suivi ou verdicts manquants.</p>
     <div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Superviseur</th><th class="num">Chatters</th><th class="num">Notes cette semaine</th><th class="num">Verdicts</th></tr></thead><tbody>
