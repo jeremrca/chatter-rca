@@ -3885,8 +3885,9 @@ function chatterLeave(name, k, origin) {
         <input type="date" id="lv-from" value="${today}" style="width:auto;display:inline-block;padding:2px 6px">. Les semaines passées ne changent pas. <b id="lv-n"></b></small></span></label>
       ${origin === 'off'
         ? `<label class="lv-o"><input type="radio" name="lv" value="list"><span><strong>Erreur ou doublon dans la liste</strong><small>Retiré(e) seulement de la liste Jours OFF. Le planning ne change pas.</small></span></label>`
-        : `<label class="lv-o"><input type="radio" name="lv" value="mute"><span><strong>Ne plus le rappeler</strong><small>N’apparaît plus dans « Reste à planifier ». Le planning ne change pas.</small></span></label>`}
+        : inList ? '' : `<label class="lv-o"><input type="radio" name="lv" value="mute"><span><strong>Ne plus le rappeler</strong><small>N’apparaît plus dans « Reste à planifier ». Le planning ne change pas.</small></span></label>`}
     </div>
+    ${origin !== 'off' && inList ? `<p class="hint" style="font-size:12.5px;margin:10px 0 0">${esc(inList[1].name || name)} est dans la liste Jours OFF : tant qu’il ou elle fait partie de l’équipe, le rappel le ou la suit chaque jour. S’il s’agit d’une erreur de nom dans une case du planning, corrigez plutôt la case.</p>` : ''}
     <div class="acts"><button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">Retirer</button></div></div>`;
   document.body.appendChild(bg);
   const cnt = () => { const f = bg.querySelector('#lv-from').value || today, n = leaveScan(k, f, false); bg.querySelector('#lv-n').textContent = n ? `${plural(n, 'shift à enlever', 'shifts à enlever')}.` : 'Aucun shift à venir.'; };
@@ -3896,9 +3897,9 @@ function chatterLeave(name, k, origin) {
     const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === '0') return bg.remove();
     const mode = bg.querySelector('input[name="lv"]:checked').value;
     if (mode === 'list') { if (inList) delete planState.dayoff[inList[0]]; savePlan(); if (coachState.global && coachState.global[k] && !leaveScan(k, today, false)) { delete coachState.global[k]; saveCoach(); } bg.remove(); toast(`${name} retiré(e) de la liste Jours OFF.`); return render(); }
-    if (mode === 'mute') { (planState.ignored ||= {})[k] = {name, at: Date.now()}; savePlan(); bg.remove(); toast(`${name} n’est plus rappelé(e). Réactivable dans l’onglet Jours OFF.`); return render(); }
+    if (mode === 'mute') { (planState.ignored ||= {})[k] = {name, at: Date.now(), by: who(Sync.email()) || 'local'}; savePlan(); bg.remove(); toast(`${name} n’est plus rappelé(e). Réactivable dans l’onglet Jours OFF.`); return render(); }
     const from = bg.querySelector('#lv-from').value || today, n = leaveScan(k, from, true);
-    (planState.ignored ||= {})[k] = {name, at: Date.now(), left: from, ...(inList ? {off: inList[1]} : {})};
+    (planState.ignored ||= {})[k] = {name, at: Date.now(), by: who(Sync.email()) || 'local', left: from, ...(inList ? {off: inList[1]} : {})};
     if (inList) delete planState.dayoff[inList[0]];
     savePlan();
     if (!(coachState.ignore || {})[k]) { (coachState.ignore ||= {})[k] = {name, at: Date.now(), why: 'left', plan: 1}; saveCoach(); }
@@ -5590,7 +5591,7 @@ function offViewHTML() {
       })()}
       ${(() => {
         const g = Object.entries(planState.ignored || {}).sort((a, b) => (b[1].at || 0) - (a[1].at || 0)), left = g.filter(([, o]) => o.left), mute = g.filter(([, o]) => !o.left);
-        const chip = ([k, o]) => `<span class="unchip off">${esc(o.name || k)}${o.left ? ` <small>parti(e) le ${esc(fmtDayFr(o.left))}</small>` : ''}<button type="button" data-unign="${esc(k)}" title="Remettre dans l’équipe" aria-label="Remettre ${esc(o.name || k)}">↺</button></span>`;
+        const chip = ([k, o]) => `<span class="unchip off">${esc(o.name || k)}${o.left ? ` <small>parti(e) le ${esc(fmtDayFr(o.left))}</small>` : ''}<small>${o.by ? ` · par ${esc(o.by)}` : ''}${o.at ? ` · retiré(e) le ${esc(new Date(o.at).toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'}))}` : ''}</small><button type="button" data-unign="${esc(k)}" title="Remettre dans l’équipe" aria-label="Remettre ${esc(o.name || k)}">↺</button></span>`;
         return (left.length ? `<div style="margin-top:14px"><strong style="font-size:13px">Ont quitté l’agence · ${left.length}</strong> <span class="hint" style="font-size:12px">(supprimés du planning)</span><div class="unplan-l" style="margin-top:6px">${left.map(chip).join('')}</div></div>` : '')
           + (mute.length ? `<details style="margin-top:12px"><summary class="hint" style="cursor:pointer;font-size:12.5px">Chatters non rappelés · ${mute.length} <span>(exclus de « Reste à planifier »)</span></summary><div class="unplan-l" style="margin-top:6px">${mute.map(chip).join('')}</div></details>` : '');
       })()}
@@ -5626,8 +5627,8 @@ function bindOffView() {
   }));
   document.querySelectorAll('[data-offn]').forEach(inp => inp.addEventListener('change', () => { const o = dayOff()[inp.dataset.offn]; if (inp.value.trim()) o.note = inp.value.trim(); else delete o.note; savePlan(); }));
   document.querySelectorAll('[data-offx]').forEach(b => b.addEventListener('click', () => { const o = dayOff()[b.dataset.offx]; if (o) chatterLeave(o.name, rosterKey(o.name), 'off'); }));
-  document.querySelectorAll('[data-offadd]').forEach(b => b.addEventListener('click', () => { const n = b.dataset.offadd, k = offKey(n); if (!dayOff()[k]) dayOff()[k] = {name: n, days: []}; savePlan(); toast(`${n} ajouté(e) : cochez son jour OFF.`); planUI.offq = n; render(); }));
-  document.getElementById('off-add').addEventListener('click', () => { const n = document.getElementById('off-new').value.trim(); if (!n) return; const k = offKey(n); if (!dayOff()[k]) dayOff()[k] = {name: n, days: []}; savePlan(); render(); });
+  document.querySelectorAll('[data-offadd]').forEach(b => b.addEventListener('click', () => { const n = b.dataset.offadd, k = offKey(n); if ((planState.ignored || {})[rosterKey(n)]) chatterBack(rosterKey(n)); if (!dayOff()[k]) dayOff()[k] = {name: n, days: []}; savePlan(); toast(`${n} ajouté(e) : cochez son jour OFF.`); planUI.offq = n; render(); }));
+  document.getElementById('off-add').addEventListener('click', () => { const n = document.getElementById('off-new').value.trim(); if (!n) return; const k = offKey(n); if ((planState.ignored || {})[rosterKey(n)]) { chatterBack(rosterKey(n)); toast(`${n} est de nouveau dans l’équipe.`); } if (!dayOff()[k]) dayOff()[k] = {name: n, days: []}; savePlan(); render(); });
 }
 function bindPlanningHead(main, wk) {
   bindPlanTabs(main);
@@ -8289,7 +8290,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611262;
+  const APP_BUILD = 202611263;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
