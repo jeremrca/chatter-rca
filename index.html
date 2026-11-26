@@ -995,7 +995,16 @@ table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:point
 .pp-it{display:flex;align-items:flex-start;gap:8px;background:var(--raised);border:1px solid var(--line-soft);border-radius:10px;padding:7px 8px}
 .pp-it.done{opacity:.55}.pp-it.done .pp-ti{text-decoration:line-through}
 .pp-it.carried{border-color:rgba(242,164,60,.55);background:rgba(242,164,60,.08)}
-.pp-it.late:not(.done){border-left:3px solid var(--orange)}
+.pp-it.col{border-left:5px solid var(--pc);border-top-left-radius:4px;border-bottom-left-radius:4px}.pp-it.col .pp-tm{color:var(--pc)}
+.pp-late{color:#f87171;font-weight:700}
+.pp-cols{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin:4px 0 6px}
+.pp-cb{position:relative;height:34px;border-radius:8px;background:var(--pc);border:2px solid transparent;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pp-cb input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.pp-cb:has(input:checked){outline:3px solid var(--text);outline-offset:2px}
+.pp-cb:has(input:focus-visible){outline:3px solid var(--flame);outline-offset:2px}
+.pp-cb.none{background:var(--bg);border:1px dashed var(--line);color:var(--muted);font-size:11px;font-weight:600}
+.pp-same{display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 10px}
+.pp-rec.col{border-left:5px solid var(--pc)}.pp-rec.col .pp-tm{color:var(--pc)}
 .pp-ck{flex:none;width:22px;height:22px;border-radius:6px;border:2px solid var(--line);background:var(--bg);color:#0b2117;font-weight:900;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px}
 .pp-ck[aria-pressed=true]{background:var(--green);border-color:var(--green)}
 .pp-ck:hover{border-color:var(--green)}
@@ -1028,6 +1037,7 @@ table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:point
 #pp-alerts{position:fixed;right:18px;bottom:18px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:min(380px,92vw)}
 .pp-alert{display:flex;align-items:flex-start;gap:10px;background:var(--raised);border:1px solid var(--flame);border-radius:12px;padding:12px 14px;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:14px}
 .pp-alert a{color:var(--flame);font-weight:700;margin-left:auto}.pp-alert button{background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer;line-height:1}
+@media (max-width:560px){.pp-cols{grid-template-columns:repeat(4,1fr)}}
 @media (max-width:900px){.pp-dayg{grid-template-columns:1fr}.pp-acts{margin-left:0}.pp-rec{grid-template-columns:1fr}}
 /* Onboarding : les nouveaux chatters sont toujours en vert */
 .rtag.newc{background:#22c55e;color:#052e16}
@@ -4077,6 +4087,9 @@ function dispersionHTML(wk, WC) {
    une heure avant 5 h est la nuit qui suit le jour (« 4h (nuit) »). Samedi = jour off. */
 const PERSO_TZ = 'Indian/Antananarivo', PERSO_NIGHT = 300, PERSO_OFF = 5;
 const PERSO_RAPPELS = [[null, 'Aucun rappel'], [0, 'À l’heure'], [5, '5 min avant'], [10, '10 min avant'], [15, '15 min avant'], [30, '30 min avant'], [60, '1 h avant']];
+// Couleurs des tâches (« color » dans la tâche ; 'none' = aucune). Sans choix : couleur de départ des tâches prévues.
+const PERSO_COLORS = [['orange', 'Orange', '#f97316'], ['rouge', 'Rouge', '#ef4444'], ['rose', 'Rose', '#ec4899'], ['fuchsia', 'Fuchsia', '#d946ef'], ['violet', 'Violet', '#a855f7'], ['indigo', 'Indigo', '#6366f1'], ['bleu', 'Bleu', '#3b82f6'], ['ciel', 'Ciel', '#38bdf8'], ['turquoise', 'Turquoise', '#14b8a6'], ['vert', 'Vert', '#22c55e'], ['citron', 'Citron', '#84cc16'], ['jaune', 'Jaune', '#eab308'], ['marron', 'Marron', '#b45309'], ['gris', 'Gris', '#94a3b8'], ['blanc', 'Blanc', '#f5f5f4']];
+const PERSO_SEEDCOL = {s01: 'vert', s02: 'bleu', s03: 'orange', s04: 'gris', s05: 'turquoise', s06: 'indigo', s07: 'violet', s08: 'violet', s09: 'violet', s10: 'violet', s11: 'gris', s12: 'orange', s13: 'vert', s14: 'turquoise', s15: 'vert', s16: 'vert', s17: 'orange', s18: 'orange', s19: 'rose', s20: 'vert'};
 const PERSO_SEED = [
   ['s01', 'Lancer la nouvelle liste des nouveaux chatteurs à suivre sur le CRM + message aux sups', '', [0]],
   ['s02', 'Point avec Clément', '16:00', [0, 3]],
@@ -4171,6 +4184,16 @@ async function persoDel(k) {
 // Éléments d'une journée : tâches récurrentes du jour + tâches ponctuelles (+ reportées si c'est aujourd'hui)
 function persoRecs() { return [...perso.rows].filter(([k]) => k.startsWith('rec:')).map(([k, r]) => ({id: k.slice(4), ...r.v})); }
 function persoTasks() { return [...perso.rows].filter(([k]) => k.startsWith('task:')).map(([k, r]) => ({id: k.slice(5), ...r.v})); }
+const persoTitleKey = t => String(t || '').trim().toLowerCase().replace(/\s+/g, ' ');
+const persoColorId = (kind, id) => { const v = persoGet((kind === 'rec' ? 'rec:' : 'task:') + id) || {}; return v.color ? (v.color === 'none' ? null : v.color) : PERSO_SEEDCOL[kind === 'rec' ? id : ''] || null; };
+const persoHex = c => (PERSO_COLORS.find(x => x[0] === c) || [])[2] || '';
+// Tâches (encore actives) qui portent le même nom ; la couleur déjà donnée à ce nom
+function persoSameTitle(title, except) {
+  const k = persoTitleKey(title), today = persoNow().iso; if (!k) return [];
+  return [...persoRecs().filter(r => !r.until || r.until >= today).map(r => ({kind: 'rec', id: r.id, title: r.title})), ...persoTasks().map(t => ({kind: 'task', id: t.id, title: t.title}))]
+    .filter(x => persoTitleKey(x.title) === k && !(except && x.kind === except.kind && x.id === except.id));
+}
+const persoTitleColor = title => { for (const x of persoSameTitle(title)) { const c = persoColorId(x.kind, x.id); if (c) return c; } return null; };
 const persoRecOn = (r, iso) => (r.days || []).includes(persoDow(iso)) && (!r.from || iso >= r.from) && (!r.until || iso <= r.until) && !perso.rows.has(`skip:${iso}:${r.id}`);
 function persoItems(iso, today = persoNow().iso) {
   const out = [];
@@ -4224,9 +4247,11 @@ function persoBanner(msg) {
 function persoItemHTML(x, ro, compact) {
   const rp = x.rappel != null && x.time ? `🔔 ${x.rappel ? x.rappel + ' min' : 'à l’heure'}` : '';
   const meta = [x.carried ? `↻ reportée du ${esc(fmtDayFr(x.date))}` : '', x.kind === 'rec' ? `<span title="Revient chaque semaine : ${esc((x.days || []).map(i => PLAN_DAYS[i]).join(', '))}">⟳ chaque semaine</span>` : '', rp, x.by && x.by !== persoOwnerLabel() ? `ajoutée par ${esc(x.by)}` : ''].filter(Boolean);
-  return `<div class="pp-it${x.done ? ' done' : ''}${x.carried ? ' carried' : ''}${x.late ? ' late' : ''}" data-ppk="${x.kind}" data-ppid="${esc(x.id)}" data-ppd="${x.date}">
+  const hx = persoHex(persoColorId(x.kind, x.id));
+  if (x.late && !x.done && !compact) meta.unshift('<span class="pp-late">en retard</span>');
+  return `<div class="pp-it${x.done ? ' done' : ''}${x.carried ? ' carried' : ''}${x.late ? ' late' : ''}${hx ? ' col' : ''}"${hx ? ` style="--pc:${hx}"` : ''} data-ppk="${x.kind}" data-ppid="${esc(x.id)}" data-ppd="${x.date}">
     <button type="button" class="pp-ck" data-ppck aria-pressed="${x.done}" aria-label="${x.done ? 'Décocher' : 'Cocher'} : ${esc(x.title)}"${ro ? ' disabled' : ''}>${x.done ? '✓' : ''}</button>
-    <button type="button" class="pp-tx" data-ppedit>${x.time ? `<span class="pp-tm">${esc(persoHour(x.time))}</span>` : ''}<span class="pp-ti">${esc(x.title)}</span>${x.note && !compact ? `<span class="pp-no">${esc(x.note)}</span>` : ''}${meta.length && !compact ? `<span class="pp-me">${meta.join(' · ')}</span>` : x.carried ? `<span class="pp-me">↻ reportée</span>` : ''}</button></div>`;
+    <button type="button" class="pp-tx" data-ppedit>${x.time ? `<span class="pp-tm">${esc(persoHour(x.time))}</span>` : ''}<span class="pp-ti">${esc(x.title)}</span>${x.note && !compact ? `<span class="pp-no">${esc(x.note)}</span>` : ''}${meta.length && !compact ? `<span class="pp-me">${meta.join(' · ')}</span>` : x.carried ? `<span class="pp-me">↻ reportée</span>` : x.late && !x.done ? `<span class="pp-me pp-late">en retard</span>` : ''}</button></div>`;
 }
 const persoProg = list => { const own = list.filter(x => !x.carried), d = own.filter(x => x.done).length; return {d, n: own.length, pct: own.length ? Math.round(d / own.length * 100) : 0}; };
 const persoBar = p => `<div class="pp-bar" title="${p.d} sur ${p.n} faites"><i style="width:${p.pct}%"></i></div>`;
@@ -4289,10 +4314,13 @@ function persoEdit({kind, id, date} = {}) {
   if (kind && !cur) return;
   const d0 = date || perso.day || persoNow().iso;
   const days = isRec ? cur.days || [] : [persoDow(d0)];
+  const col0 = kind ? persoColorId(kind, id) : null;
   const bg = document.createElement('div'); bg.className = 'modal-bg';
   bg.innerHTML = `<div class="modal pp-modal" role="dialog" aria-modal="true" aria-labelledby="pp-mt"><h3 id="pp-mt">${cur ? 'Modifier la tâche' : 'Nouvelle tâche'}</h3>
     <form id="pp-f">
       <label class="pp-fl">Tâche<input type="text" name="title" required value="${esc(cur ? cur.title : '')}" placeholder="Ex. : Call avec Mika, préparer le bilan…"></label>
+      <div class="pp-fl" style="margin-bottom:0">Couleur<div class="pp-cols" role="radiogroup" aria-label="Couleur de la tâche">${PERSO_COLORS.map(([c, l, h]) => `<label class="pp-cb" style="--pc:${h}" title="${l}"><input type="radio" name="color" value="${c}" aria-label="${l}" ${col0 === c ? 'checked' : ''}></label>`).join('')}<label class="pp-cb none" title="Aucune couleur"><input type="radio" name="color" value="none" aria-label="Aucune couleur" ${col0 ? '' : 'checked'}>Aucune</label></div></div>
+      <label class="pp-same" hidden><input type="checkbox" name="same" checked> <span></span></label>
       <div class="pp-row">
         <label class="pp-fl" ${isRec ? 'hidden' : ''}>Date<input type="date" name="date" value="${esc(cur && !isRec ? cur.date : d0)}"></label>
         <label class="pp-fl">Heure <span class="muted">(facultatif)</span><input type="time" name="time" value="${esc(cur ? cur.time || '' : '')}"></label>
@@ -4320,6 +4348,17 @@ function persoEdit({kind, id, date} = {}) {
   f.querySelectorAll('[name=d]').forEach(c => c.addEventListener('change', () => { if (c.checked && f.rep.value !== 'week') { f.rep.value = 'week'; syncRep(); } }));
   bg.querySelector('#pp-all').addEventListener('click', () => { f.querySelectorAll('[name=d]').forEach(c => { c.checked = +c.value !== PERSO_OFF; }); f.rep.value = 'week'; syncRep(); });
   syncRep(); f.elements.title.focus();
+  // Même nom = même couleur : proposée d'office pour une nouvelle tâche, et appliquée aux autres tâches du même nom
+  let picked = !!kind;
+  const sameBox = bg.querySelector('.pp-same');
+  const syncSame = () => {
+    const n = persoSameTitle(f.elements.title.value, kind ? {kind, id} : null).length;
+    sameBox.hidden = !n;
+    sameBox.querySelector('span').textContent = `Mettre aussi cette couleur sur ${n > 1 ? `les ${n} autres tâches` : 'l’autre tâche'} « ${f.elements.title.value.trim()} »`;
+    if (!picked) { const c = persoTitleColor(f.elements.title.value); const r = f.querySelector(`[name=color][value="${c || 'none'}"]`); if (r) r.checked = true; }
+  };
+  f.querySelectorAll('[name=color]').forEach(r => r.addEventListener('change', () => { picked = true; }));
+  f.elements.title.addEventListener('input', syncSame); syncSame();
   bg.addEventListener('click', async e => {
     if (e.target === bg) return close();
     const a = e.target.closest('[data-ppa]'); if (!a) return;
@@ -4332,14 +4371,18 @@ function persoEdit({kind, id, date} = {}) {
     const title = f.elements.title.value.trim(); if (!title) return;
     const time = f.time.value || '', rappel = f.rappel.value === '' ? null : +f.rappel.value, note = f.note.value.trim();
     const ds = [...f.querySelectorAll('[name=d]:checked')].map(c => +c.value);
+    const color = (f.querySelector('[name=color]:checked') || {}).value || 'none';
+    if (!sameBox.hidden && f.elements.same.checked) for (const x of persoSameTitle(title, kind ? {kind, id} : null)) {
+      const k = (x.kind === 'rec' ? 'rec:' : 'task:') + x.id, v = persoGet(k); if (v && persoColorId(x.kind, x.id) !== (color === 'none' ? null : color)) await persoPut(k, {...v, color});
+    }
     if (f.rep.value === 'week') {
       if (!ds.length) { toast('Choisissez au moins un jour.', true); return; }
       const nid = isRec ? id : persoId();
-      await persoPut('rec:' + nid, {...(isRec ? cur : {by: (cur && cur.by) || perso.nom, from: mondayOf(f.date.value || d0)}), title, time, rappel, note, days: ds});
+      await persoPut('rec:' + nid, {...(isRec ? cur : {by: (cur && cur.by) || perso.nom, from: mondayOf(f.date.value || d0)}), title, time, rappel, note, color, days: ds});
       if (kind === 'task') await persoDel('task:' + id);
     } else {
       const nid = kind === 'task' ? id : persoId();
-      await persoPut('task:' + nid, {...(kind === 'task' ? cur : {by: perso.nom}), title, time, rappel, note, date: f.date.value || d0});
+      await persoPut('task:' + nid, {...(kind === 'task' ? cur : {by: perso.nom}), title, time, rappel, note, color, date: f.date.value || d0});
     }
     toast('Enregistré.'); close();
   });
@@ -4348,7 +4391,7 @@ function persoRecsModal() {
   const recs = persoRecs().filter(r => !r.until || r.until >= persoNow().iso).sort((a, b) => Math.min(...a.days) - Math.min(...b.days) || persoSortMin(a.time) - persoSortMin(b.time));
   const bg = document.createElement('div'); bg.className = 'modal-bg';
   bg.innerHTML = `<div class="modal pp-modal" role="dialog" aria-modal="true"><h3>Tâches récurrentes</h3><p class="hint" style="margin:0 0 10px">Elles reviennent toutes les semaines. Cliquez sur une tâche pour changer ses jours, son heure ou son rappel.</p>
-    <div class="pp-reclist">${recs.map(r => `<button type="button" class="pp-rec" data-recid="${esc(r.id)}"><span class="pp-rd">${r.days.map(i => PLAN_DAYS[i]).join(' · ')}</span><span class="pp-tm">${esc(persoHour(r.time))}</span><span>${esc(r.title)}${r.note ? `<span class="pp-no">${esc(r.note)}</span>` : ''}</span></button>`).join('') || '<p class="hint">Aucune.</p>'}</div>
+    <div class="pp-reclist">${recs.map(r => `<button type="button" class="pp-rec${persoHex(persoColorId('rec', r.id)) ? ' col' : ''}" style="--pc:${persoHex(persoColorId('rec', r.id))}" data-recid="${esc(r.id)}"><span class="pp-rd">${r.days.map(i => PLAN_DAYS[i]).join(' · ')}</span><span class="pp-tm">${esc(persoHour(r.time))}</span><span>${esc(r.title)}${r.note ? `<span class="pp-no">${esc(r.note)}</span>` : ''}</span></button>`).join('') || '<p class="hint">Aucune.</p>'}</div>
     <div class="acts"><button type="button" class="btn" data-new>+ Nouvelle tâche récurrente</button><button type="button" class="btn primary" data-close>Fermer</button></div></div>`;
   const close = () => bg.remove();
   bg.addEventListener('click', e => {
