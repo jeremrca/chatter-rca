@@ -124,6 +124,7 @@ input[type=number]{width:100%}
 .pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
 .pill.Critical{background:rgba(240,96,94,.15);color:var(--red)}
 .pill.Warning{background:rgba(242,164,60,.15);color:var(--orange)}
+.cg-wait{border-color:rgba(242,164,60,.55);box-shadow:0 0 0 1px rgba(242,164,60,.25) inset}
 .pill.Strong{background:rgba(69,208,143,.14);color:var(--green)}
 .pill.OnTrack{background:rgba(160,140,255,.14);color:var(--purple-soft)}
 .pill.AtRisk{background:rgba(240,96,94,.1);color:#F59A98}
@@ -4590,7 +4591,7 @@ function renderPlanning(main) {
   const prevExisting = Object.keys(planState.weeks).filter(k => k < wk).sort().pop();
   const hl = newHighlights();
   const q = normName(planUI.q);
-  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'onb' ? 'on' : ''}" data-ptab="onb">Onboarding ${(() => { const t = isoOf(new Date()), n = onbList().filter(o => o.date >= t && !onbGone(o)).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date()) && reqLive(r)).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'conges' ? 'on' : ''}" data-ptab="conges">Congés ${(() => { const n = congeList('ch').filter(r => (r.to || r.from) >= isoOf(new Date()) && reqLive(r)).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button>${persoVisible() ? `<button type="button" class="${planUI.tab === 'perso' ? 'on' : ''}" data-ptab="perso">${persoIsOwner() ? 'Mon planning' : `Planning de ${esc(persoOwnerLabel())}`}</button>` : ''}</div>`;
+  const tabs = `<div class="ptopt" role="tablist"><button type="button" class="${planUI.tab === 'week' || !planUI.tab ? 'on' : ''}" data-ptab="week">Planning de la semaine</button><button type="button" class="${planUI.tab === 'onb' ? 'on' : ''}" data-ptab="onb">Onboarding ${(() => { const t = isoOf(new Date()), n = onbList().filter(o => o.date >= t && !onbGone(o)).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'off' ? 'on' : ''}" data-ptab="off">Jours OFF / Base chatters <span class="sub">${Object.keys(planState.dayoff || {}).length || ''}</span></button><button type="button" class="${planUI.tab === 'abs' ? 'on' : ''}" data-ptab="abs">Demandes d'absence ${(() => { const n = absList().filter(r => r.status !== 'no' && (r.to || r.from) >= isoOf(new Date()) && reqLive(r)).length; return n ? `<span class="nbadge">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'conges' ? 'on' : ''}" data-ptab="conges">Congés ${(() => { const w = congeWaiting().length; if (w && congeCanDecide()) return `<span class="nbadge" title="${plural(w, 'demande', 'demandes')} à valider">${w}</span>`; const n = congeValid('ch').filter(r => (r.to || r.from) >= isoOf(new Date()) && reqLive(r)).length; return n ? `<span class="sub">${n}</span>` : ''; })()}</button><button type="button" class="${planUI.tab === 'bilan' ? 'on' : ''}" data-ptab="bilan">Bilan absences & retards</button><button type="button" class="${planUI.tab === 'sups' ? 'on' : ''}" data-ptab="sups">Planning superviseurs</button>${persoVisible() ? `<button type="button" class="${planUI.tab === 'perso' ? 'on' : ''}" data-ptab="perso">${persoIsOwner() ? 'Mon planning' : `Planning de ${esc(persoOwnerLabel())}`}</button>` : ''}</div>`;
   if (planUI.tab === 'onb') {
     main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Onboarding</span></h1></div>` + tabs + onbHTML();
     bindPlanTabs(main); bindOnb(main); return;
@@ -4604,7 +4605,7 @@ function renderPlanning(main) {
     bindPlanTabs(main); bindAbsReq(main); return;
   }
   if (planUI.tab === 'conges') {
-    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Congés des chatteurs</span></h1></div>` + tabs + `<div class="stack">${congesHTML('ch')}</div>`;
+    main.innerHTML = `<div class="top"><h1><span class="pbadge lg plan" aria-hidden="true">P</span><span>Congés des chatteurs</span></h1></div>` + tabs + `<div class="stack">${congeWaitHTML()}${congesHTML('ch')}</div>`;
     bindPlanTabs(main); bindConges(main); return;
   }
   if (planUI.tab === 'sups') {
@@ -5433,10 +5434,10 @@ const reqLive = r => !goneOn(r.name, r.to || r.from);
 function absReqFor(name, date, s) {
   if (!name || goneOn(name, date)) return null; const k = rosterKey(name);
   return absList().find(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from) && (r.shifts || []).includes(+s) && nearKey(rosterKey(r.name), k))
-    || congeAsAbs(congeList('ch').find(r => date >= r.from && date <= (r.to || r.from) && nearKey(rosterKey(r.name), k))) || null;
+    || congeAsAbs(congeValid('ch').find(r => date >= r.from && date <= (r.to || r.from) && nearKey(rosterKey(r.name), k))) || null;
 }
 const absReqsOnDate = date => [...absList().filter(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from)),
-  ...congeList('ch').filter(r => date >= r.from && date <= (r.to || r.from)).map(congeAsAbs)].filter(r => !goneOn(r.name, date)).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  ...congeValid('ch').filter(r => date >= r.from && date <= (r.to || r.from)).map(congeAsAbs)].filter(r => !goneOn(r.name, date)).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
 const shiftsLabel = sh => (sh || []).length === PLAN_SHIFTS.length ? 'journée entière' : (sh || []).slice().sort().map(s => PLAN_SHIFTS[s]).join(' + ');
 const absDates = r => !r.to || r.to === r.from ? fmtDayFr(r.from) : `du ${fmtDayFr(r.from)} au ${fmtDayFr(r.to)}`;
 function absReqHTML() {
@@ -5505,7 +5506,8 @@ function absReqEdit(id, prefill) {
 }
 
 /* ---------- Congés validés ----------
-   Chatteurs (planState.conges) : saisis par toute l'équipe de management.
+   Chatteurs (planState.conges) : demandés par les superviseurs (status 'wait'), acceptés ou refusés (status 'no') par Billy
+   ou la Direction (dec = {by, at}). Sans status = congé validé (les congés saisis avant ce changement le restent).
    Superviseurs (planState.supConges) : saisis seulement par la Direction (vous, Billy, Clément, Mika = admins + Direction).
    Un chatteur en congé compte comme absent prévenu toute la journée ; un superviseur en congé n'a ni shift ni feedback ce jour-là. */
 const CONGE_KEY = {ch: 'conges', sup: 'supConges'};
@@ -5513,39 +5515,72 @@ const congeList = kind => Object.entries(planState[CONGE_KEY[kind]] || {}).map((
 const congeAsAbs = r => r ? {...r, shifts: PLAN_SHIFTS.map((_, i) => i), status: 'ok', conge: true, note: r.note ? `Congé · ${r.note}` : 'Congé'} : null;
 const supOnLeave = (s, date) => !!(date && s && planState.supConges) && congeList('sup').some(r => r.sup === s.id && date >= r.from && date <= (r.to || r.from));
 const congeCanEdit = kind => kind === 'ch' || Sync.canDirect();
+const congeCanDecide = () => !Sync.connected() || Sync.canDirect();
+const congeValid = kind => congeList(kind).filter(r => !r.status);
+const congeWaiting = () => congeList('ch').filter(r => r.status === 'wait' && (r.to || r.from) >= isoOf(new Date()) && reqLive(r)).sort((a, b) => a.from.localeCompare(b.from));
+const congeMe = () => perso.nom || who(Sync.email()) || 'local';
+const congeByName = b => String(b || '').includes('@') ? who(b) : String(b || '');
+const congeOverlap = r => congeList('ch').filter(x => x.id !== r.id && x.status !== 'no' && x.from <= (r.to || r.from) && (x.to || x.from) >= r.from && reqLive(x));
+function congeStatusPill(r) {
+  if (r.status === 'wait') return '<span class="pill Warning">En attente de validation</span>';
+  if (r.status === 'no') return `<span class="pill Critical">Refusé${r.dec && r.dec.by ? ` par ${esc(r.dec.by)}` : ''}</span>`;
+  return r.dec && r.dec.by ? `<span class="pill Strong">Validé par ${esc(r.dec.by)}</span>` : `<span class="muted" style="font-size:12.5px">${esc(congeByName(r.by))}</span>`;
+}
+// Cadre « À valider » (Billy / Direction : boutons Accepter, Refuser) ou « Demandes en attente » (superviseurs)
+function congeWaitHTML() {
+  const L = congeWaiting(), dec = congeCanDecide(); if (!L.length) return '';
+  return `<section class="panel abs-card cg-wait"><h2 style="margin:0 0 4px">${dec ? `À valider · ${plural(L.length, 'demande', 'demandes')}` : `Demandes en attente de validation · ${L.length}`}</h2>
+    <p class="hint" style="margin:0 0 10px">${dec ? 'Demandes faites par les superviseurs. Tant qu’elle n’est pas acceptée, le chatteur n’est pas compté en congé.' : 'Billy (ou la Direction) doit les accepter. Tant que ce n’est pas fait, le chatteur n’est pas compté en congé.'}</p>
+    <div class="tbl-wrap" style="max-height:none"><table class="sui-table"><thead><tr><th>Dates</th><th>Chatteur</th><th>${dec ? 'Décision' : 'Statut'}</th><th>Durée</th><th>Remarque</th></tr></thead><tbody>
+    ${L.map(r => { const ov = congeOverlap(r); return `<tr class="click" data-cgid="ch|${r.id}"><td style="white-space:nowrap"><strong>${esc(absDates(r))}</strong></td><td><strong>${esc(r.name)}</strong></td><td style="white-space:nowrap">${dec ? `<button type="button" class="btn primary small-btn" data-cgdec="ok|${r.id}">Accepter</button> <button type="button" class="btn ghost small-btn" data-cgdec="no|${r.id}">Refuser</button>` : congeStatusPill(r)}</td><td>${plural(congeDays(r), 'jour', 'jours')}</td>
+      <td style="min-width:160px">${esc(r.note || '')}<div class="muted" style="font-size:12px">Demandé${r.by ? ` par ${esc(congeByName(r.by))}` : ''}${r.at ? ` le ${esc(fmtDayFr(isoOf(new Date(r.at))))}` : ''}</div>${ov.length ? `<div style="font-size:12px;color:var(--orange)">Aussi en congé ces jours-là : ${ov.map(x => esc(x.name) + (x.status === 'wait' ? ' (demande)' : '')).join(', ')}</div>` : ''}</td>
+</tr>`; }).join('')}
+    </tbody></table></div></section>`;
+}
 const congeDays = r => Math.round((parseDate(r.to || r.from) - parseDate(r.from)) / 864e5) + 1;
 const congeWho = r => r.sup ? ((supsMap()[r.sup] || {}).name || r.name || '?') : r.name;
 function congesHTML(kind) {
   const today = isoOf(new Date()), fk = kind === 'ch' ? 'cgf' : 'cgsf', f = planUI[fk] || 'next', edit = congeCanEdit(kind);
-  const rows = congeList(kind).filter(r => f === 'all' || (f === 'next' ? (r.to || r.from) >= today && (kind !== 'ch' || reqLive(r)) : (r.to || r.from) < today))
+  const rows = congeList(kind).filter(r => r.status !== 'wait').filter(r => f === 'all' || (f === 'next' ? (r.to || r.from) >= today && (kind !== 'ch' || reqLive(r)) : (r.to || r.from) < today))
     .sort((a, b) => f === 'past' ? b.from.localeCompare(a.from) : a.from.localeCompare(b.from));
-  const now = congeList(kind).filter(r => today >= r.from && today <= (r.to || r.from) && (kind !== 'ch' || !goneOn(r.name, today)));
+  const now = congeValid(kind).filter(r => today >= r.from && today <= (r.to || r.from) && (kind !== 'ch' || !goneOn(r.name, today)));
   const title = kind === 'ch' ? 'Congés validés des chatteurs' : 'Congés validés des superviseurs';
-  const hint = kind === 'ch' ? 'Congés accordés par l’équipe de management, après demande du chatteur. Chaque superviseur peut en ajouter. Un chatteur en congé n’apparaît plus dans « reste à planifier », et s’il est quand même planifié, il est signalé.'
+  const hint = kind === 'ch' ? `Les superviseurs font la demande, Billy (ou la Direction) l’accepte ou la refuse. Un chatteur en congé validé n’apparaît plus dans « reste à planifier », et s’il est quand même planifié, il est signalé.`
     : `Congés accordés par la Direction (Billy, Clément, Mika ou le propriétaire), après demande du superviseur. ${edit ? 'Vous pouvez les ajouter et les modifier.' : 'Seule la Direction peut les ajouter ou les modifier.'} Ces jours-là, le superviseur n’apparaît pas dans la couverture et aucun feedback ne lui est placé.`;
   return `<section class="panel abs-card"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 style="margin:0">🌴 ${title}</h2>
       ${now.length ? `<span class="pill Warning">En congé aujourd’hui : ${now.map(r => esc(congeWho(r))).join(', ')}</span>` : ''}</div>
     <p class="hint" style="margin:0 0 10px">${hint}</p>
-    <div class="sui-bar">${edit ? `<button class="btn primary" type="button" data-cgadd="${kind}">+ Ajouter un congé validé</button>` : ''}
+    <div class="sui-bar">${edit ? `<button class="btn primary" type="button" data-cgadd="${kind}">${kind === 'ch' && !congeCanDecide() ? '+ Demander un congé pour un chatteur' : '+ Ajouter un congé validé'}</button>` : ''}
       <div class="qrow">${[['next', 'En cours et à venir'], ['past', 'Passés'], ['all', 'Tous']].map(([k, l]) => `<button type="button" class="qpt ${f === k ? 'on' : ''}" data-cgf="${kind}|${k}" style="--tc:#34d399">${l}</button>`).join('')}</div></div>
-    ${rows.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table"><thead><tr><th>Dates</th><th>${kind === 'ch' ? 'Chatteur' : 'Superviseur'}</th><th>Durée</th><th>Remarque</th><th>Validé par</th></tr></thead><tbody>
-      ${rows.map(r => `<tr class="${edit ? 'click' : ''} ${(r.to || r.from) < today ? 'muted' : ''}" ${edit ? `data-cgid="${kind}|${r.id}"` : ''}><td style="white-space:nowrap"><strong>${esc(absDates(r))}</strong>${today >= r.from && today <= (r.to || r.from) ? ' <span class="pill Warning">en cours</span>' : ''}</td>
-        <td><strong>${esc(congeWho(r))}</strong></td><td>${plural(congeDays(r), 'jour', 'jours')}</td><td style="min-width:180px">${esc(r.note || '')}</td><td class="muted" style="font-size:12.5px">${esc(r.by || '')}</td></tr>`).join('')}
+    ${rows.length ? `<div class="tbl-wrap" style="max-height:none"><table class="sui-table"><thead><tr><th>Dates</th><th>${kind === 'ch' ? 'Chatteur' : 'Superviseur'}</th><th>Durée</th><th>Remarque</th><th>${kind === 'ch' ? 'Décision' : 'Validé par'}</th></tr></thead><tbody>
+      ${rows.map(r => `<tr class="${edit ? 'click' : ''} ${(r.to || r.from) < today || r.status === 'no' ? 'muted' : ''}" ${edit ? `data-cgid="${kind}|${r.id}"` : ''}><td style="white-space:nowrap"><strong>${esc(absDates(r))}</strong>${today >= r.from && today <= (r.to || r.from) ? ' <span class="pill Warning">en cours</span>' : ''}</td>
+        <td><strong>${esc(congeWho(r))}</strong></td><td>${plural(congeDays(r), 'jour', 'jours')}</td><td style="min-width:180px">${esc(r.note || '')}</td><td style="white-space:nowrap">${kind === 'ch' ? congeStatusPill(r) : `<span class="muted" style="font-size:12.5px">${esc(congeByName(r.by))}</span>`}</td></tr>`).join('')}
     </tbody></table></div>` : `<div class="empty" style="padding:26px 10px"><div style="font-size:15px;color:var(--text);font-weight:600">${f === 'next' ? 'Aucun congé en cours ou à venir' : 'Aucun congé'}</div></div>`}
   </section>`;
 }
 function bindConges(main) {
   main.querySelectorAll('[data-cgf]').forEach(b => b.addEventListener('click', () => { const [kind, f] = b.dataset.cgf.split('|'); planUI[kind === 'ch' ? 'cgf' : 'cgsf'] = f; const y = window.scrollY; render(); window.scrollTo(0, y); }));
   main.querySelectorAll('[data-cgadd]').forEach(b => b.addEventListener('click', () => congeEdit(b.dataset.cgadd, null)));
+  main.querySelectorAll('[data-cgdec]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const [d, id] = b.dataset.cgdec.split('|'); congeDecide(id, d === 'ok'); }));
   main.querySelectorAll('tr[data-cgid]').forEach(tr => tr.addEventListener('click', () => { const [kind, id] = tr.dataset.cgid.split('|'); congeEdit(kind, id); }));
+}
+async function congeDecide(id, ok) {
+  const store = planState.conges || {}, r = store[id];
+  if (!r || !congeCanDecide()) return;
+  if (!ok && !(await modal('Refuser le congé', `<p>Refuser le congé de <strong>${esc(r.name)}</strong> (${esc(absDates(r))}) ? Le superviseur verra « Refusé ».</p>`, 'Refuser'))) return;
+  if (ok) delete r.status; else r.status = 'no';
+  r.dec = {by: congeMe(), at: Date.now()};
+  savePlan(); toast(ok ? `Congé de ${r.name} accepté (${absDates(r)}).` : `Congé de ${r.name} refusé.`); const y = window.scrollY; render(); window.scrollTo(0, y);
 }
 function congeEdit(kind, id) {
   if (!congeCanEdit(kind)) { toast('Seule la Direction peut modifier les congés des superviseurs.', true); return; }
   const store = planState[CONGE_KEY[kind]] ||= {}, cur = id ? {...store[id]} : {from: isoOf(new Date())};
   if (id && !store[id]) return;
+  const dec = kind !== 'ch' || congeCanDecide(), ask = !dec && (!id || cur.status === 'wait');
+  if (id && !dec && cur.status !== 'wait') { toast(cur.status === 'no' ? 'Ce congé a été refusé : faites une nouvelle demande si besoin.' : 'Ce congé est validé : seuls Billy et la Direction peuvent le modifier.', true); return; }
   const sups = supList(), bg = document.createElement('div'); bg.className = 'modal-bg';
   const f = (label, html, wide) => `<label class="sf ${wide ? 'wide' : ''}"><span>${label}</span>${html}</label>`;
-  bg.innerHTML = `<div class="modal sui-modal" role="dialog" aria-modal="true" style="--tc:#34d399;max-width:560px"><h3><span class="sdot"></span>${id ? 'Modifier le congé' : 'Nouveau congé validé'}${kind === 'sup' ? ' · superviseur' : ''}</h3>
+  bg.innerHTML = `<div class="modal sui-modal" role="dialog" aria-modal="true" style="--tc:#34d399;max-width:560px"><h3><span class="sdot"></span>${ask ? (id ? 'Modifier la demande de congé' : 'Demander un congé') : id ? 'Modifier le congé' : 'Nouveau congé validé'}${kind === 'sup' ? ' · superviseur' : ''}</h3>${ask ? '<p class="hint" style="margin:0 0 8px">Billy (ou la Direction) recevra la demande et l’acceptera ou la refusera.</p>' : ''}
     <form class="sform" novalidate>
       ${kind === 'ch' ? f('Chatteur', `<input type="text" name="name" list="cg-names" value="${esc(cur.name || '')}" placeholder="Prénom">`, true)
         : f('Superviseur', `<select name="sup"><option value="">Choisir…</option>${sups.map(s => `<option value="${s.id}" ${cur.sup === s.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select>`, true)}
@@ -5554,7 +5589,7 @@ function congeEdit(kind, id) {
       ${f('Remarque (facultatif)', `<textarea name="note" rows="2" placeholder="Congé annuel, mariage, voyage…">${esc(cur.note || '')}</textarea>`, true)}
     </form>${kind === 'ch' ? `<datalist id="cg-names">${knownChatters().map(n => `<option value="${esc(n)}">`).join('')}</datalist>` : ''}
     <div id="cg-err" class="sc-lo" style="min-height:18px;font-size:13px;margin-top:6px"></div>
-    <div class="acts">${id ? '<button class="btn danger" data-a="del" type="button" style="margin-right:auto">Supprimer</button>' : ''}<button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">${id ? 'Enregistrer' : 'Ajouter le congé'}</button></div></div>`;
+    <div class="acts">${id ? '<button class="btn danger" data-a="del" type="button" style="margin-right:auto">Supprimer</button>' : ''}<button class="btn ghost" data-a="0" type="button">Annuler</button><button class="btn primary" data-a="1" type="button">${id ? 'Enregistrer' : ask ? 'Envoyer la demande' : 'Ajouter le congé'}</button></div></div>`;
   const form = bg.querySelector('form'), close = () => bg.remove();
   bg.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   bg.addEventListener('click', async e => {
@@ -5569,8 +5604,9 @@ function congeEdit(kind, id) {
     const r = {from, at: cur.at || Date.now(), by: cur.by || Sync.email() || lsGet(LS_SUIVI_SUP, '') || ''};
     if (kind === 'ch') r.name = knownChatters().find(n => normName(n) === normName(name)) || name; else { r.sup = sup; r.name = (supsMap()[sup] || {}).name || ''; }
     if (to !== from) r.to = to; const note = form.note.value.trim(); if (note) r.note = note;
+    if (kind === 'ch') { if (ask) r.status = 'wait'; else if (cur.status) { r.status = cur.status; if (cur.dec) r.dec = cur.dec; } else r.dec = cur.dec || {by: congeMe(), at: Date.now()}; }
     store[id || 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)] = r;
-    savePlan(); close(); toast(id ? 'Congé mis à jour.' : `Congé de ${congeWho(r)} ajouté (${absDates(r)}).`); render();
+    savePlan(); close(); toast(ask ? (id ? 'Demande mise à jour.' : `Demande de congé de ${congeWho(r)} envoyée (${absDates(r)}) : en attente de validation.`) : id ? 'Congé mis à jour.' : `Congé de ${congeWho(r)} ajouté (${absDates(r)}).`); render();
   });
   document.body.appendChild(bg); (form.name || form.sup).focus();
 }
@@ -8414,7 +8450,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611263;
+  const APP_BUILD = 202611271;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
