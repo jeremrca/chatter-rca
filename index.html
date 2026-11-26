@@ -8126,16 +8126,21 @@ function coachSupView(wk) {
 function coachPerfHTML(it, wk) {
   const roster = coachRoster(wk), keys = new Set([rosterKey(it.plan || it.name), rosterKey(it.name)]);
   const pids = it.pid === 'both' ? ['of', 'mym'] : [it.pid];
-  const weeks = [[addDaysIso(wk, -7), 'Semaine passée'], [addDaysIso(wk, -14), 'Semaine d’avant']];
+  // Les deux dernières semaines importées (une semaine pas encore importée ne cache plus les chiffres des précédentes)
+  const last = addDaysIso(wk, -7), labs = ['Semaine passée', 'Semaine d’avant'];
   const blocks = pids.flatMap(pid => { const P = PLATFORMS[pid], uk = pid === 'mym' ? 'conv' : 'unlock', K = P.kpis.find(k => k.key === uk);
-    return weeks.map(([st, lab]) => {
-      const en = addDaysIso(st, 6), d = coachPeriod(pid, st, en);
+    const found = [];
+    for (let i = 1; i <= 8 && found.length < 2; i++) { const st = addDaysIso(wk, -7 * i), d = coachPeriod(pid, st, addDaysIso(st, 6)); if (d) found.push([st, d]); }
+    const weeks = found.length ? found.map(([st, d], i) => [st, st === addDaysIso(wk, -7 * (i + 1)) ? labs[i] : i ? 'Import d’avant' : 'Dernier import', d]) : [[last, labs[0], null]];
+    const miss = found.length && found[0][0] !== last ? `<div class="kp"><div class="kp-h">${pids.length > 1 ? `${pid.toUpperCase()} · ` : ''}Semaine passée <span>${esc(fmtRange(last, addDaysIso(last, 6)))}</span></div><div class="kp-v muted">pas encore importée</div></div>` : '';
+    return [miss, ...weeks.map(([st, lab, d]) => {
+      const en = addDaysIso(st, 6);
       const r = d && d.res.results.find(x => keys.has(rosterKey(x.name)) || keys.has(rosterKey(coachMatch(x.name, roster) || '')));
       const ca = r ? (r.row.revenue ?? r.row.total ?? null) : null, un = r ? r.row[uk] : null;
       return `<div class="kp"><div class="kp-h">${pids.length > 1 ? `${pid.toUpperCase()} · ` : ''}${lab} <span>${esc(fmtRange(st, en))}</span></div>
         ${!d ? '<div class="kp-v muted">pas d’import</div>' : !r ? '<div class="kp-v muted">pas dans l’import</div>'
           : `<div class="kp-v"><b>${esc(moneyP(P, ca))}</b> <span>CA</span> · <b>${esc(K ? fmtK(P, K, un) : un == null ? '—' : nf(un, 0, 1) + ' %')}</b> <span>unlock</span></div>`}</div>`;
-    }); });
+    })]; });
   return `<div class="kperf">${blocks.join('')}</div>`;
 }
 function coachCardHTML(it, wk, curWk, me, editable) {
@@ -8284,7 +8289,7 @@ const Sync = (() => {
   /* Version du site : à augmenter (AAAAMMJJ + chiffre) à chaque mise en ligne qui change la forme des données.
      Chaque enregistrement porte cette version (_app). Un onglet resté sur une version plus ancienne n'écrit plus rien
      et se recharge tout seul : il ne peut plus effacer des données qu'il ne connaît pas. */
-  const APP_BUILD = 202611251;
+  const APP_BUILD = 202611262;
   const STAMP = {coaching: () => coachState, planning: () => planState, suivi: () => suiviState, cams: () => camsState};
   let outdated = false;
   function markOutdated() {
