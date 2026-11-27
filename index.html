@@ -717,6 +717,20 @@ table.dsp th,table.dsp td{text-align:left;white-space:nowrap}.dsp-h{cursor:point
 .offsh{display:flex;gap:3px}.offsh button{font:inherit;font-size:11px;font-weight:700;padding:3px 6px;border-radius:7px;border:1px solid var(--line-soft);background:var(--bg);color:var(--faint);cursor:pointer;white-space:nowrap}
 .offsh button.on{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.6);color:#e0f2fe}.offsh.none button{border-style:dashed}
 .fx-plan{margin:14px 0 4px;display:flex;flex-direction:column;gap:10px}
+.pdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px;flex:none}.pdot.g{background:#22c55e}.pdot.a{background:#f59e0b}.pdot.r{background:#ef4444}
+.pq-modal{max-width:760px;width:min(760px,94vw)}
+.pq-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}.pq-head h3{margin:0}
+.pq-why{font-size:12.5px;font-weight:700;border-radius:99px;padding:2px 10px}.pq-why.g{background:rgba(34,197,94,.14);color:#4ade80}.pq-why.a{background:rgba(245,158,11,.15);color:#fbbf24}.pq-why.r{background:rgba(239,68,68,.15);color:#f87171}
+.pq-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0}
+.pq-k>span{border-radius:12px;padding:8px 10px;background:rgba(255,255,255,.04);border:1px solid var(--line-soft)}
+.pq-k small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:800;margin-bottom:3px}.pq-k b{font-size:15px}.pq-k em{display:block;font-style:normal;font-size:11.5px;color:var(--muted)}
+.pq-wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:6px}
+.pq-d{border:1px solid var(--line-soft);border-radius:10px;padding:6px 7px;min-height:64px;font-size:12px;background:rgba(255,255,255,.02)}
+.pq-d.on{border-color:var(--ember)}.pq-d>b{display:block;font-size:12px;margin-bottom:3px}.pq-d>b span{color:var(--muted);font-weight:400}
+.pq-s{display:block;line-height:1.3;margin-bottom:3px}.pq-s i{font-style:normal;color:var(--flame);font-weight:800}.pq-s.abs{color:#f87171}.pq-s.rep{color:var(--muted);text-decoration:line-through}
+.pq-off{color:var(--faint);font-weight:700}.pq-cg{color:#34d399;font-weight:700}
+.pq-note{margin-top:12px;font-size:13px;background:rgba(160,140,255,.07);border:1px solid var(--line-soft);border-radius:10px;padding:8px 10px}
+@media (max-width:700px){.pq-wk{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .fx-pl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.fx-pl>span{border-radius:12px;padding:8px 10px;background:rgba(255,255,255,.04);border:1px solid var(--line-soft);min-width:0}
 .fx-pl small,.fx-mods small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:800;margin-bottom:3px}
 .fx-pl b{font-size:13px}.fx-pl .warn{border-color:rgba(245,158,11,.5)}.fx-pl .warn b{color:#fbbf24}.fx-pl .bad{border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.1)}.fx-pl .bad b{color:#fca5a5}
@@ -4055,7 +4069,7 @@ function createWeek(wk, fromWk) {
 /* ---------- Affichage ---------- */
 function chipHTML(e, wk, d, s, hl, ov) {
   const nk = n => hl.get(`${wk}|${d}|${s}|${normName(n)}`);
-  const nm0 = n => { const i = nk(n); return i ? `<span class="pc new" title="Nouveau : shift ${i}/${NEW_SHIFTS}">${esc(n)}</span>` : `<span class="pc">${esc(n)}</span>`; };
+  const nm0 = n => { const i = nk(n); return i ? `<span class="pc new" title="Nouveau : shift ${i}/${NEW_SHIFTS}">${planDot(n)}${esc(n)}</span>` : `<span class="pc">${planDot(n)}${esc(n)}</span>`; };
   const nm = n => { const o = ov && ov.get(rosterKey(n)); return o ? `<span class="mover" title="${esc(n)} : ${o} modèles cette semaine (maximum ${MODEL_MAX}). Cette modèle n’est pas une de ses ${MODEL_MAX} principales.">${nm0(n)}<b>${o}</b></span>` : nm0(n); };
   if (e.r) return `<span class="pchip rep" title="${esc(e.n)} remplacé(e) par ${esc(e.r)}"><s>${esc(e.n)}</s><span class="arr">→</span>${e.r.split('/').map(x => nm(x.trim())).join(' / ')}</span>`;
   if (e.a) return `<span class="pchip"><span class="pc abs" title="Absent(e)">${esc(e.n)}</span></span>`;
@@ -4655,13 +4669,14 @@ function renderPlanning(main) {
       <div class="ptabs" role="tablist">${PLAN_DAYS.map((x, i) => `<button type="button" role="tab" class="ptab ${i === d ? 'on' : ''}${addDaysIso(wk, i) === isoOf(new Date()) ? ' today' : ''}" data-day="${i}" aria-selected="${i === d}"><b>${x}${launchesOn(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Lancement ce jour-là">🚀</span>' : ''}${bannersOnDay(addDaysIso(wk, i)).length ? ' <span class="ptl" title="Bannière ce jour-là">⚡</span>' : ''}</b><span>${parseDate(addDaysIso(wk, i)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</span></button>`).join('')}</div>
       <div class="pactions">
         <input type="search" id="p-q" placeholder="Rechercher un chatter" value="${esc(planUI.q)}" aria-label="Rechercher un chatter">
+        <button class="btn ghost" id="p-prof" type="button" aria-pressed="${planProfOn()}" title="Pastille verte, orange ou rouge devant chaque prénom">${planProfOn() ? 'Masquer les profils' : 'Afficher les profils'}</button>
         <button class="btn" id="p-unav" type="button">Indisponibilité</button>
         <button class="btn" id="p-addm" type="button">+ Ajouter une modèle</button>
         ${Sync.canManage() ? '<button class="btn" id="p-launch" type="button">🚀 Lancement</button>' : ''}
         ${planState.weeks[nextWk] ? `<button class="btn ghost" id="p-gonext" type="button">Voir la semaine suivante ›</button>` : dspAnyRef() ? `<button class="btn primary" id="p-next" type="button">Préparer la semaine suivante</button>` : ''}
         ${dspAnyRef() ? '<button class="btn ghost" id="p-xls" type="button">Importer un Excel</button>' : ''}
       </div>
-      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="pc late">Prénom</span> retard</span><span><span class="offwrap"><span class="pc renf">Prénom</span><b class="rftag">RENFORT</b></span> renfort</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span><span class="mover"><span class="pc">Prénom</span><b>6</b></span> plus de ${MODEL_MAX} modèles cette semaine</span><span class="muted">Cliquez sur un prénom pour lui faire un feedback, sur le reste de la case pour la modifier.</span></div>
+      <div class="plegend"><span><span class="pc new">Prénom</span> nouveau (${NEW_SHIFTS} premiers shifts)</span><span><span class="pc abs">Prénom</span> absent</span><span><span class="pc cut">Prénom</span> coupure de courant</span><span><span class="pc late">Prénom</span> retard</span><span><span class="offwrap"><span class="pc renf">Prénom</span><b class="rftag">RENFORT</b></span> renfort</span><span><span class="offwrap"><span class="pc">Prénom</span><b class="offtag">OFF</b></span> planifié sur son jour OFF</span><span><span class="pchip rep"><s>Prévu</s><span class="arr">→</span><span class="pc">Remplaçant</span></span> remplacement</span><span><span class="mover"><span class="pc">Prénom</span><b>6</b></span> plus de ${MODEL_MAX} modèles cette semaine</span>${planProfOn() ? '<span><span class="pdot g"></span><span class="pdot a"></span><span class="pdot r"></span>profil du chatteur, comme dans le suivi (survolez pour la raison)</span>' : ''}<span class="muted">Cliquez sur un prénom pour voir son profil et lui faire un feedback, sur le reste de la case pour la modifier.</span></div>
     </section>
     ${q ? `<section class="panel"><h2>Planning de « ${esc(planUI.q)} » · ${esc(planWeekLabel(wk))}</h2>${found.length ? `<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th>Jour</th><th>Shift</th><th>Modèle</th><th>Statut</th></tr></thead><tbody>${found.map(x => `<tr><td>${PLAN_DAYS_LONG[x.dd]} ${parseDate(addDaysIso(wk, x.dd)).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}</td><td>${PLAN_SHIFTS[x.s]}</td><td>${esc(modelLabel(x.m))}</td><td>${x.e.r ? `remplacé(e) par ${esc(x.e.r)}` : x.e.a ? '<span class="sc-lo">absent</span>' : x.e.c ? '<span class="pc cut">coupure de courant</span>' : x.e.l ? '<span class="pc late">retard</span>' : 'prévu'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Aucun shift trouvé cette semaine.</p>'}</section>` : ''}
     ${(() => {
@@ -4736,8 +4751,9 @@ function renderPlanning(main) {
   qi.addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => { planUI.q = qi.value; render(); const n = document.getElementById('p-q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 300); });
   main.querySelectorAll('[data-cell]').forEach(td => { const open = () => editCell(wk, td.dataset.cell); td.addEventListener('click', open); td.addEventListener('keydown', e => { if (e.key === 'Enter') open(); }); });
   // Clic sur le prénom d'un chatter : feedback (gardé dans sa fiche) ; la case reste modifiable depuis la fenêtre
-  main.querySelectorAll('[data-cell] .pc').forEach(sp => { sp.title = `${sp.title ? sp.title + ' · ' : ''}Cliquez pour lui faire un feedback`;
-    sp.addEventListener('click', e => { e.stopPropagation(); const key = sp.closest('[data-cell]').dataset.cell; planFeedback(wk, +key.split('|')[0], sp.textContent.trim(), key); }); });
+  main.querySelectorAll('[data-cell] .pc').forEach(sp => { sp.title = `${sp.title ? sp.title + ' · ' : ''}Cliquez pour voir son profil (shifts de la semaine, chiffres) et lui faire un feedback`;
+    sp.addEventListener('click', e => { e.stopPropagation(); const key = sp.closest('[data-cell]').dataset.cell; planChatterCard(wk, +key.split('|')[0], sp.textContent.trim(), key); }); });
+  document.getElementById('p-prof')?.addEventListener('click', () => { planUI.prof = !planProfOn(); lsSet(LS_PLAN_PROF, planUI.prof); const y = window.scrollY; render(); window.scrollTo(0, y); });
   const nt = document.getElementById('p-note'); let ntt;
   nt.addEventListener('input', () => { clearTimeout(ntt); ntt = setTimeout(() => { W.notes ||= {}; if (nt.value.trim()) W.notes[d] = nt.value; else delete W.notes[d]; savePlan(); }, 600); });
   document.getElementById('p-next')?.addEventListener('click', async () => {
@@ -5808,6 +5824,86 @@ function planFeedback(wk, d, name, cell) {
   });
   bg.addEventListener('keydown', e => { if (e.key === 'Escape') bg.remove(); });
   document.body.appendChild(bg); bg.querySelector('#pfb-note').focus();
+}
+/* ---------- Profil d'un chatteur dans le planning ----------
+   Pastille (vert / orange / rouge, même calcul que la fiche du suivi) devant chaque prénom, et fiche rapide au clic :
+   ses shifts de la semaine affichée, ses chiffres, sa ponctualité, ses habitudes de planning, son dernier feedback. */
+const LS_PLAN_PROF = 'rca.planprof';
+const planProfOn = () => planUI.prof ?? (planUI.prof = lsGet(LS_PLAN_PROF, true) !== false);
+let planProfC = {at: 0, m: new Map()};
+function planProf(n) {
+  if (Date.now() - planProfC.at > 15000) planProfC = {at: Date.now(), m: new Map()};
+  const nn = String(n || '').trim(); if (planProfC.m.has(nn)) return planProfC.m.get(nn);
+  let v = null;
+  try { const X = fxIndex(), k = X.keyOf(nn); if (k) { const d = fxData(k, nn); if (d.main || d.weak || d.lt.late + d.lt.abs || d.pen4.length) v = {st: d.st, why: d.why || (d.st === 'g' ? 'rien à signaler' : '')}; } } catch (e) { v = null; }
+  planProfC.m.set(nn, v); return v;
+}
+function planDot(n) { if (!planProfOn()) return ''; const p = planProf(n); return p ? `<i class="pdot ${p.st}" title="${esc(p.why)}" aria-label="${esc(p.why)}"></i>` : ''; }
+// Shifts d'un chatteur sur une semaine du planning, jour par jour (prévu, absent, retard, remplacé, remplaçant)
+function planWeekOf(wk, name) {
+  const W = planState.weeks[wk], mm = planModelsMap(), k = rosterKey(name), out = [...Array(7)].map(() => []);
+  if (!W || !k) return out;
+  const same = n => { const x = rosterKey(n); return !!x && (x === k || nearKey(x, k)); };
+  for (const [key, list] of Object.entries(W.cells || {})) {
+    const [d, sh, mid] = key.split('|'), m = mm[mid] || PLAN_BACKUPS.find(b => b.id === mid), ml = m ? modelLabel(m) : '';
+    for (const e of list) {
+      const reps = e.r ? e.r.split('/').map(x => x.trim()) : [];
+      if (same(e.n)) out[+d].push({s: +sh, ml, st: e.r ? 'rep' : e.a ? 'abs' : e.c ? 'cut' : e.l ? 'late' : e.rf ? 'renf' : 'ok', who: e.r || ''});
+      else if (reps.some(same)) out[+d].push({s: +sh, ml, st: 'for', who: e.n});
+    }
+  }
+  out.forEach(l => l.sort((a, b) => a.s - b.s || a.ml.localeCompare(b.ml, 'fr')));
+  return out;
+}
+function planChatterCard(wk, d, name, cell) {
+  const X = fxIndex(), k = X.keyOf(name) || nameResolver().key(name), D = fxData(k, name), M = D.main, P = D.P;
+  const sup = D.G && supList().find(x => x.id === D.G.sup), wsup = D.weak && supList().find(x => x.id === D.weak.sup);
+  const days = planWeekOf(wk, name), today = isoOf(new Date()), rk = rosterKey(name);
+  const cg = date => congeValid('ch').find(r => date >= r.from && date <= (r.to || r.from) && nearKey(rosterKey(r.name), rk));
+  const cgw = congeList('ch').filter(r => r.status === 'wait' && (r.to || r.from) >= today && nearKey(rosterKey(r.name), rk));
+  const ST = {abs: ' · absent', cut: ' · coupure', late: ' · retard', renf: ' · renfort', rep: '', for: ''};
+  const dayHTML = i => {
+    const date = addDaysIso(wk, i), list = days[i], c = cg(date), off = offOn(name, i);
+    const byS = new Map(); for (const x of list) (byS.get(x.s) || byS.set(x.s, []).get(x.s)).push(x);
+    const lines = [...byS].map(([sh, xs]) => { const bad = xs.every(x => x.st === 'abs'), rp = xs.every(x => x.st === 'rep');
+      return `<span class="pq-s${bad ? ' abs' : rp ? ' rep' : ''}" title="${esc(xs.map(x => x.ml + (x.st === 'rep' ? ` (remplacé par ${x.who})` : x.st === 'for' ? ` (remplace ${x.who})` : ST[x.st])).join(', '))}"><i>${shiftLbl(sh)}</i> ${esc(xs.map(x => x.ml.replace(/\s+(MYM|OF)$/, '')).join(', '))}${xs.some(x => x.st === 'for') ? ' · remplaçant' : ''}${bad ? ' · absent' : rp ? ' · remplacé' : xs.some(x => x.st === 'late') ? ' · retard' : ''}</span>`; });
+    const ab = !c && PLAN_SHIFTS.map((_, sh) => absReqFor(name, date, sh)).find(Boolean);
+    return `<div class="pq-d${i === d ? ' on' : ''}"><b>${PLAN_DAYS[i]} <span>${parseDate(date).getDate()}</span></b>${c ? '<span class="pq-cg">Congé</span>' : ''}${ab ? '<span class="pq-s abs">Absence demandée</span>' : ''}${lines.join('')}${!lines.length && !c ? (off ? '<span class="pq-off">OFF</span>' : '<span class="muted">—</span>') : ''}</div>`;
+  };
+  const nShifts = new Set(days.flatMap((l, i) => l.filter(x => x.st !== 'rep').map(x => `${i}|${x.s}`))).size;
+  const ca = D.ca, un = D.un, nl = D.lt.late + D.lt.abs;
+  const pl = D.both.length > 1 ? 'MYM + OF' : D.pid === 'of' ? 'OF' : 'MYM';
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal pq-modal" role="dialog" aria-modal="true" aria-labelledby="pq-t">
+    <div class="pq-head"><h3 id="pq-t">${esc(name)}</h3><span class="fx-pill" style="--pc:${D.pid === 'of' && D.both.length < 2 ? SUP_PF.OF.color : SUP_PF.MYM.color}">${pl}</span>${M || D.weak ? `<span class="pq-why ${D.st}">${esc(D.why || 'rien à signaler')}</span>` : ''}</div>
+    <p class="hint" style="margin:0">${D.weak ? `<strong style="color:#f87171">Maillon faible cette semaine</strong>${wsup ? ` · suivi par ${esc(wsup.name)}` : ''} · ` : ''}${sup && sup !== wsup ? `Superviseur de suivi : ${esc(sup.name)}` : ''}${D.isNew ? ' · <span class="pc new">nouveau</span>' : ''}</p>
+    <div class="pq-k">
+      <span><small>CA dernier import</small><b>${ca == null ? '—' : esc(moneyP(P, ca))}</b><em>${M ? esc(fmtRange(M.p.start, M.p.end)) : 'pas dans les imports'}</em></span>
+      <span><small>${D.pid === 'mym' ? 'Conversion' : 'Unlock'}</small><b>${un == null ? '—' : nf(un, 0, 0) + ' %'}</b><em>${D.unAvg ? `moyenne ${nf(D.unAvg, 0, 0)} %` : '&nbsp;'}</em></span>
+      <span><small>Note</small><b>${M ? esc(M.r.grade) : '—'}</b><em>${M ? `${M.rank}e sur ${M.of}` : '&nbsp;'}${D.h.length >= 3 ? (D.trend > 5 ? ' · en hausse ↗' : D.trend < -5 ? ' · en baisse ↘' : ' · stable') : ''}</em></span>
+      <span><small>4 dernières semaines</small><b style="color:${nl ? (nl >= 2 ? '#f87171' : '#fbbf24') : 'inherit'}">${D.lt.late} retard${D.lt.late > 1 ? 's' : ''} · ${D.lt.abs} abs.</b><em>${D.pen4.length ? plural(D.pen4.length, 'pénalité', 'pénalités') : 'aucune pénalité'}</em></span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b>Sa semaine</b><span class="muted" style="font-size:12.5px">${esc(planWeekLabel(wk))} · ${plural(nShifts, 'shift', 'shifts')}${cgw.length ? ` · congé demandé du ${esc(absDates(cgw[0]))}, en attente de validation` : ''}</span></div>
+    <div class="pq-wk">${[0, 1, 2, 3, 4, 5, 6].map(dayHTML).join('')}</div>
+    ${fxPlanHTML(D)}
+    <div id="pq-note"></div>
+    <div class="acts" style="flex-wrap:wrap"><button class="btn ghost" data-a="edit" type="button" style="margin-right:auto">Modifier la case</button><button class="btn ghost" data-a="fiche" type="button">Voir la fiche complète</button><button class="btn ghost" data-a="0" type="button">Fermer</button><button class="btn primary" data-a="fb" type="button">Faire un feedback</button></div></div>`;
+  const close = () => bg.remove();
+  bg.addEventListener('click', e => {
+    if (e.target === bg) return close();
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    close();
+    if (a.dataset.a === 'edit') return editCell(wk, cell);
+    if (a.dataset.a === 'fb') return planFeedback(wk, d, name, cell);
+    if (a.dataset.a === 'fiche') { coachLoadNotes(); location.hash = '#of/coaching'; return setTimeout(() => fxOpen(k)); }
+  });
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  document.body.appendChild(bg); bg.querySelector('[data-a="fb"]').focus();
+  // Dernier feedback (notes visibles par ce compte : les siennes, ou toutes pour la Direction)
+  const showNote = () => { const box = bg.querySelector('#pq-note'); if (!box) return;
+    const keys = new Set([k, nameResolver().key(name)]), n = [...keys].flatMap(x => notesFor(x)).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0];
+    box.innerHTML = n ? `<div class="pq-note"><b>Dernier feedback</b> · ${esc(fmtDayFr(String(n.created_at).slice(0, 10)))} · ${esc(who(n.author))}${(n.tags || []).filter(t => t !== 'fb').map(t => ` <span class="ktag ${tagInfo(t)[2]}">${esc(tagInfo(t)[1])}</span>`).join('')}${n.body ? `<div style="margin-top:3px">${esc(n.body)}</div>` : ''}</div>` : ''; };
+  showNote(); Promise.resolve(coachLoadNotes()).then(showNote).catch(() => {});
 }
 /* Fusion d'une case du planning (liste de chatters) : base commune b, version l, version r.
    Chaque chatter est comparé un par un (ajout, retrait, absent, retard, coupure, renfort, remplaçant) :
