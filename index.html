@@ -3877,6 +3877,15 @@ function nameResolver() {
   };
   return {known, res, key: n => res(rosterKey(n))};
 }
+// Même chatter ? Deux prénoms distincts de la liste « Jours OFF » (Tahiana / Tatiana) ne sont jamais confondus ;
+// la tolérance d'une lettre ne sert qu'aux fautes de frappe (prénom hors liste).
+const nameRes = (() => { let c = null, t = 0; return () => { const n = Date.now(); if (!c || n - t > 2000) { c = nameResolver(); t = n; } return c; }; })();
+function sameKey(a, b, R = nameRes()) {
+  if (!a || !b) return false; if (a === b) return true;
+  const ra = R.res(a), rb = R.res(b); if (ra === rb) return true;
+  if (R.known.has(ra) && R.known.has(rb)) return false;
+  return nearKey(a, b);
+}
 function teamRoster(wk, R = nameResolver()) {
   const ign = planState.ignored || {}, roster = new Map(), extra = [];
   const ignKeys = Object.keys(ign), ignRes = new Set(ignKeys.map(R.res));
@@ -5449,8 +5458,8 @@ const reqLive = r => !goneOn(r.name, r.to || r.from);
 // Demande (non refusée) d'un chatter couvrant une date et un shift
 function absReqFor(name, date, s) {
   if (!name || goneOn(name, date)) return null; const k = rosterKey(name);
-  return absList().find(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from) && (r.shifts || []).includes(+s) && nearKey(rosterKey(r.name), k))
-    || congeAsAbs(congeValid('ch').find(r => date >= r.from && date <= (r.to || r.from) && nearKey(rosterKey(r.name), k))) || null;
+  return absList().find(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from) && (r.shifts || []).includes(+s) && sameKey(rosterKey(r.name), k))
+    || congeAsAbs(congeValid('ch').find(r => date >= r.from && date <= (r.to || r.from) && sameKey(rosterKey(r.name), k))) || null;
 }
 const absReqsOnDate = date => [...absList().filter(r => r.status !== 'no' && date >= r.from && date <= (r.to || r.from)),
   ...congeValid('ch').filter(r => date >= r.from && date <= (r.to || r.from)).map(congeAsAbs)].filter(r => !goneOn(r.name, date)).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
@@ -5793,7 +5802,7 @@ function bindPlanningHead(main, wk) {
 // Feedback depuis le planning : note « Feedback » dans la fiche du chatter ; si un feedback était prévu ce jour-là dans votre calendrier, il est coché
 function planFeedback(wk, d, name, cell) {
   const R = nameResolver(), k = R.key(name), me = typeof mySup === 'function' ? mySup() : null, fr = typeof myFr === 'function' ? myFr() : null;
-  const same = n => { const x = R.key(n); return x === k || nearKey(x, k); };
+  const same = n => sameKey(R.key(n), k, R);
   let planned = null;
   try {
     if (me) { const it = glAgenda(wk, me).days[d].find(x => same(x.name)); if (it) planned = it; }
@@ -5843,7 +5852,7 @@ function planDot(n) { if (!planProfOn()) return ''; const p = planProf(n); retur
 function planWeekOf(wk, name) {
   const W = planState.weeks[wk], mm = planModelsMap(), k = rosterKey(name), out = [...Array(7)].map(() => []);
   if (!W || !k) return out;
-  const same = n => { const x = rosterKey(n); return !!x && (x === k || nearKey(x, k)); };
+  const same = n => sameKey(rosterKey(n), k);
   for (const [key, list] of Object.entries(W.cells || {})) {
     const [d, sh, mid] = key.split('|'), m = mm[mid] || PLAN_BACKUPS.find(b => b.id === mid), ml = m ? modelLabel(m) : '';
     for (const e of list) {
@@ -5859,8 +5868,8 @@ function planChatterCard(wk, d, name, cell) {
   const X = fxIndex(), k = X.keyOf(name) || nameResolver().key(name), D = fxData(k, name), M = D.main, P = D.P;
   const sup = D.G && supList().find(x => x.id === D.G.sup), wsup = D.weak && supList().find(x => x.id === D.weak.sup);
   const days = planWeekOf(wk, name), today = isoOf(new Date()), rk = rosterKey(name);
-  const cg = date => congeValid('ch').find(r => date >= r.from && date <= (r.to || r.from) && nearKey(rosterKey(r.name), rk));
-  const cgw = congeList('ch').filter(r => r.status === 'wait' && (r.to || r.from) >= today && nearKey(rosterKey(r.name), rk));
+  const cg = date => congeValid('ch').find(r => date >= r.from && date <= (r.to || r.from) && sameKey(rosterKey(r.name), rk));
+  const cgw = congeList('ch').filter(r => r.status === 'wait' && (r.to || r.from) >= today && sameKey(rosterKey(r.name), rk));
   const ST = {abs: ' · absent', cut: ' · coupure', late: ' · retard', renf: ' · renfort', rep: '', for: ''};
   const dayHTML = i => {
     const date = addDaysIso(wk, i), list = days[i], c = cg(date), off = offOn(name, i);
@@ -7012,7 +7021,7 @@ function coachShifts(planName, weeks) {
   const k = rosterKey(planName), out = [], seen = new Set();
   for (const wk of weeks) { const W = planState.weeks[wk]; if (!W) continue;
     for (const [key, list] of Object.entries(W.cells || {})) { const [d, s, mid] = key.split('|');
-      for (const e of list) { const w = workerOf(e); if (!w) continue; if (w.split('/').some(n => nearKey(rosterKey(n), k))) { const sk = `${wk}|${d}|${s}`; if (!seen.has(sk)) { seen.add(sk); out.push({wk, d: +d, s: +s, mid}); } else out.push({wk, d: +d, s: +s, mid, dup: true}); } } } }
+      for (const e of list) { const w = workerOf(e); if (!w) continue; if (w.split('/').some(n => sameKey(rosterKey(n), k))) { const sk = `${wk}|${d}|${s}`; if (!seen.has(sk)) { seen.add(sk); out.push({wk, d: +d, s: +s, mid}); } else out.push({wk, d: +d, s: +s, mid, dup: true}); } } } }
   return out;
 }
 // Heures communes entre les shifts d'un chatter et un superviseur
@@ -7186,7 +7195,7 @@ const shiftLbl = s => `${SHIFT_HOURS[s][0]}h-${SHIFT_HOURS[s][1] % 24}h`;
 const creatorKey = n => normName(n).replace(/\s+(reveal|paid subs|\d+)$/, '').trim();
 const creatorName = n => String(n || '').replace(/\s+(reveal|paid subs|\d+)$/i, '').trim();
 const planWeeksUpTo = (wk, n) => Object.keys(planState.weeks || {}).filter(w => w <= wk).sort().slice(-n);
-function offEntryOf(name) { const k = rosterKey(name); if (!k) return null; return Object.values(planState.dayoff || {}).find(o => nearKey(rosterKey(o.name), k)) || null; }
+function offEntryOf(name) { const k = rosterKey(name); if (!k) return null; const L = Object.values(planState.dayoff || {}); return L.find(o => rosterKey(o.name) === k) || L.find(o => sameKey(rosterKey(o.name), k)) || null; }
 // Shifts habituels vus au planning : un créneau compte s'il revient sur au moins 35 % des jours travaillés
 function usualShifts(list) {
   const days = new Map(); for (const x of list) { const dk = `${x.wk}|${x.d}`; (days.get(dk) || days.set(dk, new Set()).get(dk)).add(x.s); }
